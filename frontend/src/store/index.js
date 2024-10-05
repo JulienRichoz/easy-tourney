@@ -15,7 +15,13 @@ export default createStore({
     LOGOUT(state) {
       state.isAuthenticated = false;
       state.user = null;
-    }
+    },
+    SET_ALERT_MESSAGE(state, message) {
+      state.alertMessage = message;
+    },
+    CLEAR_ALERT_MESSAGE(state) {
+      state.alertMessage = null;
+    },
   },
   actions: {
     async login({ commit }, { email, password }) {

@@ -2,19 +2,18 @@ import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Si tu utilises Vuex pour gérer les rôles
 import { requireAuth } from './guards/authGuard';
 
-
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
 import LoginPage from '../views/auth/LoginPage.vue';
 import RegisterPage from '../views/auth/RegisterPage.vue';
 import HomePage from '../views/HomePage.vue';
-
+import NotFoundPage from '../views/NotFound.vue';
 
 const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: () => import('../views/NotFound.vue')  // Crée une vue NotFound.vue
+    component: NotFoundPage // Crée une vue NotFound.vue
   },
   { path: '/', name: 'Home', component: HomePage },
   { path: '/login', name: 'Login', component: LoginPage },
