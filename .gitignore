@@ -1,0 +1,21 @@
+# local env files
+server/nodes_modules
+server/.env
+server/.env.*
+frontend/node_modules
+frontend/.env
+frontend/.env.*
+nodes_modules
+
+.DS_Store
+Thumbs.db
+.vscode/
+/dist
+server/dist
+forntend/dist
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
