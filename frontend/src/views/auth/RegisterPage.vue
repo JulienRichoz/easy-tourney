@@ -96,10 +96,16 @@ export default {
 
         this.$router.push('/user');
       } catch (err) {
-        this.error = 'Erreur lors de l\'inscription. Veuillez vérifier vos informations.';
+        console.error('Erreur lors de l\'inscription:', err);
+        if (err.response && err.response.data && err.response.data.message) {
+          this.error = err.response.data.message; // Utilise le message d'erreur renvoyé par le serveur
+        } else {
+          this.error = 'Erreur lors de l\'inscription. Veuillez vérifier vos informations.';
+        }
       }
     }
   }
 };
 </script>
+
 

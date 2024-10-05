@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
-import jwtDecode from 'jwt-decode'; // Remplace jwt par jwt-decode
+const jwt = require('jsonwebtoken');
+const { jwtDecode } = require('jwt-decode'); // Utilise require au lieu de import
 
 
 // Fonction pour générer un token JWT
@@ -28,7 +29,7 @@ exports.hasPermission = (roleId, permission) => {
 };
 
 // Vérifier si l'utilisateur est authentifié
-export function isAuthenticated() {
+exports.isAuthenticated = () => {
     const token = localStorage.getItem('token');
     if (!token) {
         console.log("Token non trouvé dans le localStorage.");
@@ -43,4 +44,4 @@ export function isAuthenticated() {
         console.error("Erreur lors de la vérification du token:", error);
         return false;
     }
-}
+};

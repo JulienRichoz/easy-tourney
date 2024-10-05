@@ -2,7 +2,6 @@ const { User } = require('../models');
 const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
 
-
 // Inscription
 exports.register = async (req, res) => {
     const { name, email, password, roleId } = req.body;
@@ -10,7 +9,7 @@ exports.register = async (req, res) => {
     try {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
-            return res.status(400).json({ message: 'Email déjà utilisé' });
+            return res.status(400).json({ message: 'Cet email est déjà utilisé. Veuillez en choisir un autre.' });
         }
 
         const hashedPassword = await authService.hashPassword(password);
@@ -28,10 +27,11 @@ exports.register = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error(error);
+        console.error('Erreur lors de l\'inscription :', error); // Ajoute ce log
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
 
 // Connexion
 exports.login = async (req, res) => {
