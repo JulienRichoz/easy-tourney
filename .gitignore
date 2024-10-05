@@ -1,20 +1,27 @@
-# local env files
-server/nodes_modules
+# Ignorer les dossiers node_modules pour le backend et le frontend
+server/node_modules/
+frontend/node_modules/
+node_modules/
+
+# Ignorer les fichiers d'environnement
 server/.env
 server/.env.*
-frontend/node_modules
 frontend/.env
 frontend/.env.*
-nodes_modules/
 
+# Fichiers système
 .DS_Store
 Thumbs.db
+
+# Configuration de l'éditeur
 .vscode/
+
+# Dossiers de build
 /dist
 server/dist
-forntend/dist
+frontend/dist
 
-# Log files
+# Fichiers de log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
