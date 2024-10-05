@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store'; // Si tu utilises Vuex pour gérer les rôles
-import { requireAuth } from './guards/authGuard';
-import { refreshToken } from '../services/authService';
-import authService from '@/services/authService';
+import store from '../store'; // Si vous utilisez Vuex pour gérer les rôles
+import { refreshToken, hasPermission } from '@/services/authService'; // Importez les fonctions nécessaires
+import { jwtDecode } from 'jwt-decode'; // Importez jwt-decode pour décoder le token
 
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
@@ -15,67 +14,80 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: NotFoundPage // Crée une vue NotFound.vue
+    component: NotFoundPage, // Crée une vue NotFound.vue
   },
   { path: '/', name: 'Home', component: HomePage },
   {
     path: '/login',
     name: 'Login',
     component: LoginPage,
-    beforeEnter: (to, from, next) => {
-      // Si l'utilisateur est authentifié, redirige vers la page appropriée
-      if (authService.isAuthenticated()) {
-        if (authService.isAdmin()) {
-          next({ path: '/admin', replace: true }); // Le replace true signifie que la redirection va remplacer l'entrée courante dans l'historique au lieu de l'ajouter. Cela a pour effet de ne pas laisser de trace de la page
-        } else {
-          next({ path: '/user', replace: true });
-        }
-      } else {
-        next();
-      }
-    },
   },
   { path: '/register', name: 'Register', component: RegisterPage },
   {
     path: '/admin',
     name: 'Admin',
     component: AdminPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' }
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
     path: '/user',
     name: 'User',
     component: UserPage,
-    meta: { requiresAuth: true, permission: 'viewUserPage' }
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
 });
 
+// Ajoutez le beforeEach global ici
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
 
-  // Si le token n'est pas présent et que la route nécessite une authentification
-  if (to.meta.requiresAuth && !token) {
-    store.commit('LOGOUT');
-    next('/login'); // Rediriger vers la page de login
-  } else if (token) {
-    // Si le token est présent, essayez de le rafraîchir
-    try {
-      await refreshToken();
-      requireAuth(to, from, next, store);
-    } catch (error) {
-      console.error('Erreur lors du rafraîchissement du token :', error);
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      console.log('Token non trouvé, redirection vers /login');
       store.commit('LOGOUT');
-      next('/login');
+      return next('/login'); // Rediriger vers la page de login si non authentifié
+    } else {
+      try {
+        // Rafraîchir le token si nécessaire
+        const newToken = await refreshToken();
+        localStorage.setItem('token', newToken);
+
+        // Décodez le nouveau token pour vérifier le rôle de l'utilisateur
+        const decoded = jwtDecode(newToken);
+        console.log('router.beforeEach -> Token décodé:', decoded);
+
+        store.commit('SET_AUTH', {
+          isAuthenticated: true,
+          user: decoded,
+        });
+
+        // Vérifiez si l'utilisateur a la permission d'accéder à la page demandée
+        const userRole = decoded.roleId;
+        console.log('router.beforeEach -> Vérification des permissions pour userRole:', userRole, 'permission:', to.meta.permission);
+
+        if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
+          console.log('Utilisateur sans les permissions nécessaires, redirection vers /');
+          return next('/'); // Rediriger à la page d'accueil si l'utilisateur n'a pas les permissions
+        }
+
+        return next(); // Continuer vers la route demandée
+      } catch (error) {
+        console.error('Erreur lors du rafraîchissement du token :', error);
+        store.commit('LOGOUT');
+        return next('/login');
+      }
     }
   } else {
-    // Pour les routes qui ne nécessitent pas d'authentification
-    requireAuth(to, from, next, store);
+    console.log('Route publique, accès autorisé.');
+    next(); // Pour les routes publiques
   }
 });
+
+
 
 export default router;

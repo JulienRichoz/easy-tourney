@@ -1,8 +1,8 @@
 const roles = {
-    ADMIN: 'admin',
-    ASSISTANT: 'assistant',
-    PLAYER: 'player',
-    GUEST: 'guest',
+    ADMIN: 1,
+    ASSISTANT: 2,
+    PLAYER: 3,
+    GUEST: 4,
 };
 
 const permissions = {

@@ -9,6 +9,7 @@ export default createStore({
   },
   mutations: {
     SET_AUTH(state, payload) {
+      console.log('SET_AUTH appelée avec payload:', payload);  // Ajoutez ce log pour vérifier le payload
       state.isAuthenticated = payload.isAuthenticated;
       state.user = payload.user;
     },
@@ -25,12 +26,19 @@ export default createStore({
   },
   actions: {
     async login({ commit }, { email, password }) {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const token = response.data.token;
+      try {
+        const response = await axios.post('/api/auth/login', { email, password });
+        const token = response.data.token;
 
-      localStorage.setItem('token', token);  // Stocke le token dans localStorage
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;  // Définit l'en-tête d'autorisation
-      commit('SET_AUTH', { isAuthenticated: true, user: response.data.user });
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        commit('SET_AUTH', { isAuthenticated: true, user: response.data.user });
+
+        console.log('Token stocké:', token); // Vérifiez que le token est stocké
+      } catch (error) {
+        console.error('Erreur de connexion:', error);
+        throw error;
+      }
     },
     logout({ commit }) {
       localStorage.removeItem('token');  // Supprime le token de localStorage
@@ -43,12 +51,16 @@ export default createStore({
     initializeAuth({ commit }) {
       const token = localStorage.getItem('token');
       if (token) {
-        const decoded = jwtDecode(token);
-        commit('SET_AUTH', {
-          isAuthenticated: true,
-          user: decoded,
-        });
+        try {
+          const decoded = jwtDecode(token);
+          commit('SET_AUTH', {
+            isAuthenticated: true,
+            user: decoded,
+          });
+        } catch (error) {
+          console.error("Erreur lors du décodage du token:", error);
+        }
       }
-    }
+    },
   }
 });

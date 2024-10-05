@@ -1,4 +1,4 @@
-import { permissions, roles } from '../../services/permissions';
+import { permissions } from '../../services/permissions';
 
 export function requireAuth(to, from, next, store) {
   const isAuthenticated = store.state.isAuthenticated;
@@ -12,8 +12,7 @@ export function requireAuth(to, from, next, store) {
 
   // Vérifie si la route nécessite une permission particulière
   if (to.meta.permission) {
-    const roleKey = Object.keys(roles).find(key => roles[key] === userRole);
-    if (!permissions[roleKey] || !permissions[roleKey].includes(to.meta.permission)) {
+    if (!permissions[userRole] || !permissions[userRole].includes(to.meta.permission)) {
       return next('/');
     }
   }

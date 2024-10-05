@@ -1,31 +1,44 @@
 <template>
-  <div class="login-container">
-    <h1>Connexion</h1>
-    <form @submit.prevent="handleLogin">
-      <!-- Champ email avec FormInputComponent -->
-      <FormInputComponent
-        id="email"
-        label="Email"
-        type="email"
-        v-model="email"
-        placeholder="Entrer votre email"
-        required
-      />
+  <div class="flex items-center justify-center pt-16 bg-gray-100">
+    <div class="bg-white p-10 rounded-lg shadow-md w-full max-w-sm">
+      <h1 class="text-2xl font-bold text-center mb-8">Connexion</h1>
+      <form @submit.prevent="handleLogin">
+        <!-- Champ email avec FormInputComponent -->
+        <FormInputComponent
+          id="email"
+          label="Email"
+          type="email"
+          v-model="email"
+          placeholder="Entrer votre email"
+          required
+          class="mb-6"
+        />
 
-      <!-- Champ mot de passe avec FormInputComponent -->
-      <FormInputComponent
-        id="password"
-        label="Mot de passe"
-        type="password"
-        v-model="password"
-        placeholder="Entrer votre mot de passe"
-        required
-      />
+        <!-- Champ mot de passe avec FormInputComponent -->
+        <FormInputComponent
+          id="password"
+          label="Mot de passe"
+          type="password"
+          v-model="password"
+          placeholder="Entrer votre mot de passe"
+          required
+          class="mb-6"
+        />
 
-      <button type="submit">Se connecter</button>
-    </form>
-    <p v-if="error" class="error-message">{{ error }}</p>
-    <p>Pas de compte ? <router-link to="/register">Créer un compte</router-link></p>
+        <ButtonComponent variant="primary" type="submit" class="w-full">
+          Se connecter
+        </ButtonComponent>
+      </form>
+      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">{{ error }}</p>
+      <p class="text-center mt-6">
+        Pas de compte ?
+        <router-link
+          to="/register"
+          class="text-green-500 hover:text-green-600 font-semibold"
+          >Créer un compte</router-link
+        >
+      </p>
+    </div>
   </div>
 </template>
 
@@ -33,11 +46,14 @@
 import apiService from "../../services/apiService";
 import { jwtDecode } from "jwt-decode";
 import FormInputComponent from "../../components/FormInputComponent.vue";
+import ButtonComponent from "../../components/ButtonComponent.vue";
+import { roles } from "@/services/permissions";
 
 export default {
   name: "LoginPage",
   components: {
     FormInputComponent,
+    ButtonComponent,
   },
   data() {
     return {
@@ -55,55 +71,30 @@ export default {
         });
 
         const token = response.data.token;
-        const decoded = jwtDecode(token);
 
+        // Stocker le token
         localStorage.setItem("token", token);
 
+        // Décoder le token
+        const decoded = jwtDecode(token);
+
+        // Mettre à jour le store avec les informations utilisateur
         this.$store.commit("SET_AUTH", {
           isAuthenticated: true,
-          userRole: decoded.roleId,
           user: decoded,
         });
 
         // Redirection selon le rôle de l'utilisateur
-        if (decoded.roleId === 1) {
+        if (decoded.roleId === roles.ADMIN) {
           this.$router.replace("/admin");
         } else {
           this.$router.replace("/user");
         }
       } catch (err) {
-        // Définit un message d'erreur simple et clair en cas d'identifiants incorrects
+        console.error("Erreur lors de la connexion:", err);
         this.error = "Identifiant ou mot de passe incorrect.";
       }
     },
   },
 };
 </script>
-
-<style scoped>
-.login-container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #37a774;
-}
-
-.error-message {
-  color: #ff4d4d; /* Rouge pour bien indiquer l'erreur */
-  margin-top: 10px;
-  font-weight: bold;
-}
-</style>

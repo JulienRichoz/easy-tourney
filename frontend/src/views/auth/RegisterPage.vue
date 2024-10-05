@@ -1,70 +1,87 @@
 <template>
-  <div class="register-container">
-    <h1>Inscription</h1>
-    <form @submit.prevent="handleRegister">
-      <!-- Champ Nom -->
-      <FormInputComponent
-        id="name"
-        label="Nom"
-        v-model="name"
-        placeholder="Entrer votre nom"
-        required
-      />
+  <div class="flex items-center justify-center pt-16 bg-gray-100">
+    <div class="bg-white p-10 rounded-lg shadow-md w-full max-w-sm">
+      <h1 class="text-2xl font-bold text-center mb-8">Inscription</h1>
+      <form @submit.prevent="handleRegister">
+        <!-- Champ Nom -->
+        <FormInputComponent
+          id="name"
+          label="Nom"
+          v-model="name"
+          placeholder="Entrer votre nom"
+          required
+          class="mb-6"
+        />
 
-      <!-- Champ Email -->
-      <FormInputComponent
-        id="email"
-        label="Email"
-        type="email"
-        v-model="email"
-        placeholder="Entrer votre email"
-        required
-      />
+        <!-- Champ Email -->
+        <FormInputComponent
+          id="email"
+          label="Email"
+          type="email"
+          v-model="email"
+          placeholder="Entrer votre email"
+          required
+          class="mb-6"
+        />
 
-      <!-- Champ Mot de Passe -->
-      <FormInputComponent
-        id="password"
-        label="Mot de passe"
-        type="password"
-        v-model="password"
-        placeholder="Entrer votre mot de passe"
-        required
-      />
+        <!-- Champ Mot de Passe -->
+        <FormInputComponent
+          id="password"
+          label="Mot de passe"
+          type="password"
+          v-model="password"
+          placeholder="Entrer votre mot de passe"
+          required
+          class="mb-6"
+        />
 
-      <!-- Champ Rôle -->
-      <div class="form-group">
-        <label for="role">Rôle</label>
-        <select v-model="roleId" id="role" required>
-          <option value="1">Admin</option>
-          <option value="2">Assistant</option>
-          <option value="3">Player</option>
-          <option value="4">Guest</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="role">Rôle</label>
+          <select
+            v-model="roleId"
+            id="role"
+            required
+            class="w-full p-3 mb-6 border border-gray-300 rounded-md"
+          >
+            <option value="1">Admin</option>
+            <option value="2">Assistant</option>
+            <option value="3">Player</option>
+            <option value="4">Guest</option>
+          </select>
+        </div>
 
-      <button type="submit">S'inscrire</button>
-    </form>
+        <ButtonComponent
+          variant="primary" 
+          type="submit"
+          class="w-full"
+        >
+          S'inscrire
+        </ButtonComponent>
+      </form>
 
-    <p v-if="error" class="error-message">{{ error }}</p>
+      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">{{ error }}</p>
+    </div>
   </div>
 </template>
 
 <script>
 import apiService from "../../services/apiService";
 import FormInputComponent from "../../components/FormInputComponent.vue";
+import ButtonComponent from "../../components/ButtonComponent.vue";
 
 export default {
   name: "RegisterPage",
   components: {
     FormInputComponent,
+    ButtonComponent,
   },
   data() {
     return {
-      name: '',
-      email: '',
-      password: '',
+      name: "",
+      email: "",
+      password: "",
       roleId: 3, // Valeur par défaut pour 'Player'
-      error: ''
+      error: "",
     };
   },
   methods: {
@@ -86,46 +103,3 @@ export default {
 };
 </script>
 
-<style scoped>
-.register-container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #37a774;
-}
-
-.error-message {
-  color: #ff4d4d;
-  margin-top: 10px;
-}
-</style>

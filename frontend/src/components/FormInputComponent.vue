@@ -60,25 +60,21 @@ export default {
 label {
   display: block;
   margin-bottom: 5px;
-  color: #2c3e50; /* même couleur que le label dans LoginPage.vue */
+  color: #2c3e50;
+  font-weight: bold;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: 0.75rem; /* Ajouté pour une meilleure apparence */
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 0.375rem; /* Taille standard de Tailwind pour border-radius */
   font-size: 1em;
 }
 
 input:focus {
   outline: none;
   border-color: #42b983;
-}
-
-button {
-  background: none;
-  border: none;
+  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.3); /* Effet de focus */
 }
 </style>

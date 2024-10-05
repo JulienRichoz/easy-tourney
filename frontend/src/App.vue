@@ -1,7 +1,9 @@
 <template>
-  <div id="app">
+  <div id="app" class="min-h-screen bg-gray-100">
     <Menu />
-    <router-view></router-view> <!-- Cela affichera les routes -->
+    <div class="p-4">
+      <router-view></router-view>
+    </div>
   </div>
 </template>
 
@@ -12,7 +14,7 @@ export default {
   name: 'App',
   components: {
     Menu
-  } // Importe le composant Menu
+  }
 };
 </script>
 
@@ -21,8 +23,6 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>

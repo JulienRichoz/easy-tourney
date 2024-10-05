@@ -1,34 +1,34 @@
 <template>
-  <nav class="navbar">
-    <ul class="left-section">
-      <li>
-        <router-link to="/">Accueil</router-link>
+  <nav class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between">
+    <!-- Section de gauche -->
+    <ul class="left-section flex items-center">
+      <li class="mr-6">
+        <router-link to="/" class="text-white font-semibold hover:text-green-400">Accueil</router-link>
       </li>
 
       <!-- Si l'utilisateur est admin, on affiche le lien vers la page admin -->
-      <li v-if="isAdmin">
-        <router-link to="/admin">Admin</router-link>
+      <li v-if="isAdmin" class="mr-6">
+        <router-link to="/admin" class="text-white font-semibold hover:text-green-400">Admin</router-link>
       </li>
     </ul>
 
-    <ul class="right-section">
+    <!-- Section de droite -->
+    <ul class="right-section flex items-center ml-auto">
       <!-- Si l'utilisateur est connecté, on affiche son profil et le bouton de déconnexion -->
-      <li v-if="isAuthenticated" class="profile-section">
-        <span class="username">
-          {{ userName }}
-        </span>
-        <router-link to="/profile" class="profile-link">
+      <li v-if="isAuthenticated" class="profile-section flex items-center">
+        <span class="username text-white font-bold mr-4">{{ userName }}</span>
+        <router-link to="/profile" class="profile-link text-green-400 mr-4">
           <i class="fas fa-user"></i>
         </router-link>
-        <button @click="logout" class="logout-btn">
+        <button @click="logout" class="text-red-500 text-xl hover:text-red-700">
           <i class="fas fa-power-off"></i>
         </button>
       </li>
 
       <!-- Si l'utilisateur n'est pas connecté, on affiche le bouton de connexion -->
-      <li v-if="!isAuthenticated">
-        <router-link to="/login" class="login-btn">
-          <i class="fas fa-power-on"></i> Se connecter
+      <li v-if="!isAuthenticated" class="ml-4">
+        <router-link to="/login" class="text-green-400 font-bold text-lg">
+          <i class="fas fa-power-on mr-2"></i>Se connecter
         </router-link>
       </li>
     </ul>
@@ -56,87 +56,14 @@ export default {
 </script>
 
 <style scoped>
-/* Style pour le menu de navigation */
+/* Style pour la barre de navigation - Tout est géré par Tailwind */
 .navbar {
-  background-color: #f0f0f0;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-
-li {
-  margin-right: 20px;
-}
-
-a {
-  text-decoration: none;
-  color: #333;
-  font-weight: bold;
-}
-
-a:hover {
-  color: #42b983;
-}
-
-.profile-section {
-  display: flex;
-  align-items: center;
-}
-
-.username {
-  font-weight: bold;
-  color: #444;
-  font-size: 1.1em;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-}
-
-.profile-link {
-  color: #42b983;
-  margin-right: 15px;
-}
-
-button {
-  background: none;
-  border: none;
-  color: #ff4d4d;
-  cursor: pointer;
-  font-size: 1.2em;
-}
-
-button:hover {
-  color: #ff0000;
-}
-
-.login-btn {
-  color: #42b983;
-  font-size: 1.2em;
-}
-
-.login-btn i {
-  margin-right: 5px;
-}
-
-/* Alignement des sections */
-.left-section {
-  display: flex;
-  align-items: center;
+  margin: 0; /* Supprime les marges qui pourraient causer l'espace blanc */
 }
 
 .right-section {
   display: flex;
   align-items: center;
-  margin-left: auto;
+  margin-left: auto; /* Ajoute cette ligne pour pousser les éléments à droite */
 }
 </style>
