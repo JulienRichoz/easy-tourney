@@ -2,27 +2,25 @@
   <div class="login-container">
     <h1>Connexion</h1>
     <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          type="email"
-          v-model="email"
-          id="email"
-          placeholder="Entrer votre email"
-          required
-        />
-      </div>
+      <!-- Champ email avec FormInputComponent -->
+      <FormInputComponent
+        id="email"
+        label="Email"
+        type="email"
+        v-model="email"
+        placeholder="Entrer votre email"
+        required
+      />
 
-      <div class="form-group">
-        <label for="password">Mot de passe</label>
-        <input
-          type="password"
-          v-model="password"
-          id="password"
-          placeholder="Entrer votre mot de passe"
-          required
-        />
-      </div>
+      <!-- Champ mot de passe avec FormInputComponent -->
+      <FormInputComponent
+        id="password"
+        label="Mot de passe"
+        type="password"
+        v-model="password"
+        placeholder="Entrer votre mot de passe"
+        required
+      />
 
       <button type="submit">Se connecter</button>
     </form>
@@ -31,12 +29,17 @@
     <p v-if="error">{{ error }}</p>
   </div>
 </template>
+
 <script>
-import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Corrige l'import
+import apiService from "../../services/apiService";
+import jwtDecode from "jwt-decode"; 
+import FormInputComponent from "../../components/FormInputComponent.vue";
 
 export default {
   name: "LoginPage",
+  components: {
+    FormInputComponent,
+  },
   data() {
     return {
       email: "",
@@ -47,34 +50,25 @@ export default {
   methods: {
     async handleLogin() {
       try {
-        // 1. Appel à l'API pour se connecter
-        const response = await axios.post("http://localhost:3000/api/auth/login", {
+        const response = await apiService.post("/auth/login", {
           email: this.email,
           password: this.password,
         });
 
-        // 2. Récupérer le token et décoder le JWT pour obtenir le rôle
         const token = response.data.token;
         const decoded = jwtDecode(token);
-        console.log("Decoded token:", decoded); // Ajoute ce log pour voir tout ce qui est décodé
-        console.log("Role ID:", decoded.roleId); // Log du roleId pour vérifier
-        console.log("name:", decoded.name); // Log du roleId pour vérifier
-        // 3. Stocker le token dans le localStorage
+
         localStorage.setItem("token", token);
 
-        // 4. Mettre à jour le store Vuex avec les informations d'authentification
         this.$store.commit("SET_AUTH", {
           isAuthenticated: true,
-          userRole: decoded.roleId, // Met à jour le rôle
-          user: decoded, // Stocke les informations de l'utilisateur
+          userRole: decoded.roleId,
+          user: decoded,
         });
 
-        // 5. Redirection en fonction du rôle
         if (decoded.roleId === 1) {
-          console.log("redirecting to admin");
           this.$router.push("/admin");
         } else {
-          console.log("redirecting to user");
           this.$router.push("/user");
         }
       } catch (err) {
@@ -86,28 +80,10 @@ export default {
 </script>
 
 <style scoped>
-/* Styles inchangés */
 .login-container {
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
 }
 
 button {
@@ -118,5 +94,9 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+button:hover {
+  background-color: #37a774;
 }
 </style>
