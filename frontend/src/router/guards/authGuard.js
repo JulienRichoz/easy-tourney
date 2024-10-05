@@ -1,12 +1,21 @@
+import { permissions, roles } from '../../services/permissions';
+
 export function requireAuth(to, from, next, store) {
   const isAuthenticated = store.state.isAuthenticated;
   const userRole = store.state.user?.roleId;
 
+  // Vérifie si la route nécessite une authentification
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login'); // Redirige vers login si non authentifié
-  } else if (to.meta.role && to.meta.role !== userRole) {
-    next('/'); // Redirige vers la page d'accueil si rôle incorrect
-  } else {
-    next(); // Passe à la route suivante
+    return next('/login');
   }
+
+  // Vérifie si la route nécessite une permission particulière
+  if (to.meta.permission) {
+    const roleKey = Object.keys(roles).find(key => roles[key] === userRole);
+    if (!permissions[roleKey] || !permissions[roleKey].includes(to.meta.permission)) {
+      return next('/');
+    }
+  }
+
+  next();
 }

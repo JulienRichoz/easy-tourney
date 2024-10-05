@@ -77,7 +77,7 @@ export default {
           roleId: this.roleId,
         });
 
-        this.$router.push('/login');
+        this.$router.push('/user');
       } catch (err) {
         this.error = 'Erreur lors de l\'inscription. Veuillez vérifier vos informations.';
       }

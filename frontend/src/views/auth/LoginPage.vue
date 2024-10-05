@@ -32,7 +32,7 @@
 
 <script>
 import apiService from "../../services/apiService";
-import jwtDecode from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 import FormInputComponent from "../../components/FormInputComponent.vue";
 
 export default {
