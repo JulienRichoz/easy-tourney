@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware pour vérifier le token JWT
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -12,8 +11,10 @@ const authenticateToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
+
         next();
     } catch (error) {
+        console.error('Erreur lors de la vérification du token:', error);
         res.status(403).json({ message: 'Token invalide.' });
     }
 };

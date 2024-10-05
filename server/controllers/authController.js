@@ -1,5 +1,7 @@
 const { User } = require('../models');
 const authService = require('../services/authService');
+const jwt = require('jsonwebtoken');
+
 
 // Inscription
 exports.register = async (req, res) => {
@@ -64,6 +66,31 @@ exports.login = async (req, res) => {
         return res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
+exports.refreshToken = async (req, res) => {
+    try {
+        // Vérifier si l'utilisateur est bien authentifié
+        if (!req.user) {
+            return res.status(401).json({ message: "Utilisateur non authentifié." });
+        }
+
+        const userId = req.user.id;
+        const roleId = req.user.roleId;
+
+        // Générer un nouveau token JWT
+        const newToken = jwt.sign(
+            { id: userId, roleId: roleId, name: req.user.name },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        return res.json({ token: newToken });
+    } catch (error) {
+        console.error('Erreur lors de la création du token de rafraîchissement:', error);
+        return res.status(500).json({ message: 'Erreur lors de la création du token de rafraîchissement' });
+    }
+};
+
 
 exports.getProfile = async (req, res) => {
     try {

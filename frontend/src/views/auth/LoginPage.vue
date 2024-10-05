@@ -24,9 +24,8 @@
 
       <button type="submit">Se connecter</button>
     </form>
+    <p v-if="error" class="error-message">{{ error }}</p>
     <p>Pas de compte ? <router-link to="/register">Créer un compte</router-link></p>
-
-    <p v-if="error">{{ error }}</p>
   </div>
 </template>
 
@@ -66,13 +65,15 @@ export default {
           user: decoded,
         });
 
+        // Redirection selon le rôle de l'utilisateur
         if (decoded.roleId === 1) {
-          this.$router.push("/admin");
+          this.$router.replace("/admin");
         } else {
-          this.$router.push("/user");
+          this.$router.replace("/user");
         }
       } catch (err) {
-        this.error = "Erreur lors de la connexion. Veuillez vérifier vos identifiants.";
+        // Définit un message d'erreur simple et clair en cas d'identifiants incorrects
+        this.error = "Identifiant ou mot de passe incorrect.";
       }
     },
   },
@@ -98,5 +99,11 @@ button {
 
 button:hover {
   background-color: #37a774;
+}
+
+.error-message {
+  color: #ff4d4d; /* Rouge pour bien indiquer l'erreur */
+  margin-top: 10px;
+  font-weight: bold;
 }
 </style>
