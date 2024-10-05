@@ -5,7 +5,7 @@ server/.env.*
 frontend/node_modules
 frontend/.env
 frontend/.env.*
-nodes_modules
+nodes_modules/
 
 .DS_Store
 Thumbs.db
