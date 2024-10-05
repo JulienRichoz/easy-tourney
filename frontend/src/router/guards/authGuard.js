@@ -6,6 +6,7 @@ export function requireAuth(to, from, next, store) {
 
   // Vérifie si la route nécessite une authentification
   if (to.meta.requiresAuth && !isAuthenticated) {
+    store.commit('SET_ERROR', 'Vous devez être connecté pour accéder à cette page.');
     return next('/login');
   }
 
