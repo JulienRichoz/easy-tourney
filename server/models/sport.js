@@ -1,9 +1,10 @@
+// models/sport.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Sport extends Model {
         static associate(models) {
-            // Associez des relations si nécessaire (par exemple, Sport pourrait avoir des tournois associés)
+            // Associez des relations si nécessaire
         }
     }
 
@@ -11,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
+            unique: true, // Ajout de la contrainte d'unicité
         },
         rule: {
             type: DataTypes.TEXT,
@@ -18,6 +20,14 @@ module.exports = (sequelize, DataTypes) => {
         },
         scoreSystem: {
             type: DataTypes.STRING,
+        },
+        image: {
+            type: DataTypes.STRING, // URL de l'image
+            defaultValue: '/path/to/default-image.png', // Image par défaut
+        },
+        color: {
+            type: DataTypes.STRING, // Hexadecimal pour la couleur
+            allowNull: true,
         },
     }, {
         sequelize,

@@ -11,7 +11,8 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true // Ajout pour rendre le nom unique
       },
       rule: {
         type: Sequelize.TEXT,
@@ -19,6 +20,14 @@ module.exports = {
       },
       scoreSystem: {
         type: Sequelize.STRING
+      },
+      image: {
+        type: Sequelize.STRING, // Chemin d'accès de l'image
+        defaultValue: '/public/images/default-sport.png' // Valeur par défaut
+      },
+      color: {
+        type: Sequelize.STRING, // Représentation de la couleur (hexadécimal)
+        defaultValue: '#000000' // Couleur par défaut (noir)
       },
       createdAt: {
         allowNull: false,
