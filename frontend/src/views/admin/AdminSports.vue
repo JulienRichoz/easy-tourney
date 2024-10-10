@@ -58,7 +58,7 @@
       v-if="showModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
     >
-      <div class="bg-white p-8 rounded-lg w-full max-w-md">
+      <div class="bg-white p-8 rounded-lg w-full max-w-md max-h-screen overflow-y-auto">
         <h2 class="text-2xl font-bold mb-4">
           {{ editingSportId ? "Modifier le Sport" : "Ajouter un Nouveau Sport" }}
         </h2>
@@ -284,6 +284,8 @@ button:hover {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1000;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-overlay {
