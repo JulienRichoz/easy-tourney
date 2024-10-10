@@ -6,9 +6,12 @@
         <router-link to="/" class="text-white font-semibold hover:text-green-400">Accueil</router-link>
       </li>
 
-      <!-- Si l'utilisateur est admin, on affiche le lien vers la page admin -->
+      <!-- Si l'utilisateur est admin, on affiche les liens vers les pages admin -->
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/admin" class="text-white font-semibold hover:text-green-400">Admin</router-link>
+        <router-link to="/tourneys" class="text-white font-semibold hover:text-green-400">Tournois</router-link>
+      </li>
+      <li v-if="isAdmin" class="mr-6">
+        <router-link to="/sports" class="text-white font-semibold hover:text-green-400">Sports</router-link>
       </li>
     </ul>
 
@@ -58,12 +61,12 @@ export default {
 <style scoped>
 /* Style pour la barre de navigation - Tout est géré par Tailwind */
 .navbar {
-  margin: 0; /* Supprime les marges qui pourraient causer l'espace blanc */
+  margin: 0;
 }
 
 .right-section {
   display: flex;
   align-items: center;
-  margin-left: auto; /* Ajoute cette ligne pour pousser les éléments à droite */
+  margin-left: auto;
 }
 </style>

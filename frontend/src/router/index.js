@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Si vous utilisez Vuex pour gérer les rôles
-import { refreshToken, hasPermission } from '@/services/authService'; // Importez les fonctions nécessaires
-import { jwtDecode } from 'jwt-decode'; // Importez jwt-decode pour décoder le token
+import { refreshToken, hasPermission } from '@/services/authService';
+import { jwtDecode } from 'jwt-decode';
 
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
@@ -9,12 +9,14 @@ import LoginPage from '../views/auth/LoginPage.vue';
 import RegisterPage from '../views/auth/RegisterPage.vue';
 import HomePage from '../views/HomePage.vue';
 import NotFoundPage from '../views/NotFound.vue';
+import TourneysPage from '../views/admin/TourneysPage.vue'; // Nouvelle vue pour les tournois
+import SportsPage from '../views/admin/SportsPage.vue'; // Nouvelle vue pour les sports
 
 const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: NotFoundPage, // Crée une vue NotFound.vue
+    component: NotFoundPage,
   },
   { path: '/', name: 'Home', component: HomePage },
   {
@@ -35,6 +37,18 @@ const routes = [
     component: UserPage,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
+  {
+    path: '/tourneys',
+    name: 'Tourneys',
+    component: TourneysPage,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/sports',
+    name: 'Sports',
+    component: SportsPage,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
 ];
 
 const router = createRouter({
@@ -42,7 +56,7 @@ const router = createRouter({
   routes,
 });
 
-// Ajoutez le beforeEach global ici
+// Gestion des gardiens d'authentification pour les rôles
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
 
@@ -87,7 +101,5 @@ router.beforeEach(async (to, from, next) => {
     next(); // Pour les routes publiques
   }
 });
-
-
 
 export default router;
