@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middlewares/authMiddleware'); // Middleware d'authentification
+const { authenticateToken } = require('../middlewares'); // Middleware d'authentification
 const authController = require('../controllers/authController');
 
 const router = express.Router();

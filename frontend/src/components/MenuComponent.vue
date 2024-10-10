@@ -11,7 +11,7 @@
         <router-link to="/tourneys" class="text-white font-semibold hover:text-green-400">Tournois</router-link>
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/sports" class="text-white font-semibold hover:text-green-400">Sports</router-link>
+        <router-link to="/admin/sports" class="text-white font-semibold hover:text-green-400">Sports</router-link>
       </li>
     </ul>
 

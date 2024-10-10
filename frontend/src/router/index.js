@@ -10,7 +10,7 @@ import RegisterPage from '../views/auth/RegisterPage.vue';
 import HomePage from '../views/HomePage.vue';
 import NotFoundPage from '../views/NotFound.vue';
 import TourneysPage from '../views/admin/TourneysPage.vue'; // Nouvelle vue pour les tournois
-import SportsPage from '../views/admin/SportsPage.vue'; // Nouvelle vue pour les sports
+import AdminSports from '../views/admin/AdminSports.vue'; // Nouvelle vue pour les sports
 
 const routes = [
   {
@@ -44,9 +44,9 @@ const routes = [
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/sports',
-    name: 'Sports',
-    component: SportsPage,
+    path: '/admin/sports',
+    name: 'AdminSports',
+    component: AdminSports,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
 ];
