@@ -9,7 +9,8 @@ import LoginPage from '../views/auth/LoginPage.vue';
 import RegisterPage from '../views/auth/RegisterPage.vue';
 import HomePage from '../views/HomePage.vue';
 import NotFoundPage from '../views/NotFound.vue';
-import TourneysPage from '../views/admin/TourneysPage.vue'; // Nouvelle vue pour les tournois
+import TourneysPage from '../views/admin/AdminTourneys.vue'; // Nouvelle vue pour les tournois
+import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Nouvelle vue pour les détails du tournoi
 import AdminSports from '../views/admin/AdminSports.vue'; // Nouvelle vue pour les sports
 
 const routes = [
@@ -41,6 +42,12 @@ const routes = [
     path: '/tourneys',
     name: 'Tourneys',
     component: TourneysPage,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/tourneys/:id',
+    name: 'TourneyDetails',
+    component: TourneyDetails,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {

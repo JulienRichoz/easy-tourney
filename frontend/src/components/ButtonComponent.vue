@@ -1,63 +1,65 @@
 <template>
-    <button
-      :class="['btn', `btn-${variant}`, { 'btn-disabled': disabled }]"
-      :disabled="disabled"
-      @click="handleClick"
-    >
-      <slot></slot>
-    </button>
-  </template>
-  
-  <script>
-  export default {
-    name: 'ButtonComponent',
-    props: {
-      variant: {
-        type: String,
-        default: 'primary',
-      },
-      disabled: {
-        type: Boolean,
-        default: false,
-      },
-      onClick: {
-        type: Function,
-        default: null,
-      },
+  <button
+    :class="buttonClasses"
+    @click="onClick"
+  >
+    <component
+      v-if="icon"
+      :is="icon"
+      class="w-5 h-5 mr-1 inline-block"
+    />
+    <slot />
+  </button>
+</template>
+
+<script>
+import { TrashIcon, PencilIcon } from '@heroicons/vue/24/outline';
+
+export default {
+  props: {
+    variant: {
+      type: String,
+      default: "primary", // Peut être "primary", "secondary", "danger", etc.
     },
-    methods: {
-      handleClick() {
-        if (!this.disabled && this.onClick) {
-          this.onClick();
-        }
-      },
+    icon: {
+      type: String,
+      default: null, // Nom de l'icône à afficher
     },
-  };
-  </script>
-  
-  <style scoped>
-  .btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
-  }
-  
-  .btn-primary {
-    background-color: #42b983;
-    color: white;
-  }
-  
-  .btn-secondary {
-    background-color: #ccc;
-    color: #333;
-  }
-  
-  .btn-disabled {
-    background-color: #e0e0e0;
-    color: #999;
-    cursor: not-allowed;
-  }
-  </style>
+  },
+  components: {
+    TrashIcon,
+    PencilIcon,
+  },
+  computed: {
+    buttonClasses() {
+      switch (this.variant) {
+        case "primary":
+          return "bg-green-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-600 transition-all";
+        case "secondary":
+          return "bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-all";
+        case "danger":
+          return "bg-red-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-600 transition-all";
+        case "warning":
+          return "bg-yellow-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-600 transition-all";
+        default:
+          return "bg-gray-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600 transition-all";
+      }
+    },
+  },
+  methods: {
+    onClick(event) {
+      this.$emit("click", event);
+    },
+  },
+};
+</script>
+
+<style scoped>
+button {
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+</style>

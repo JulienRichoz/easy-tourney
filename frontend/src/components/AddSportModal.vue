@@ -1,3 +1,4 @@
+<!--
 <template>
     <div class="modal" v-if="isVisible">
       <div class="modal-content">
@@ -104,4 +105,4 @@
     width: 100%;
   }
   </style>
-  
+-->
