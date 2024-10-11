@@ -1,6 +1,5 @@
-const { Tourney, ScheduleTourney, GroupSetup } = require('../models');
+const { Tourney, Field, SportField, Sport, GroupSetup, ScheduleTourney } = require('../models');
 
-// Créer un tournoi
 exports.createTourney = async (req, res) => {
     try {
         const { name, location, dateTourney, numberOfField, emergencyDetails } = req.body;
@@ -15,8 +14,16 @@ exports.createTourney = async (req, res) => {
             location,
             dateTourney,
             numberOfField,
-            emergencyDetails,
+            emergencyDetails
         });
+
+        // Créer les terrains associés
+        for (let i = 0; i < numberOfField; i++) {
+            await Field.create({
+                name: `Field ${i + 1}`,
+                tourneyId: newTourney.id,
+            });
+        }
 
         res.status(201).json(newTourney);
     } catch (error) {
@@ -29,29 +36,35 @@ exports.createTourney = async (req, res) => {
 exports.createScheduleTourney = async (req, res) => {
     try {
         const { tourneyId } = req.params;
-        const { startTime, endTime, timeMatchRotation, timePoolRotation, introductionTime, lunchTime, outroTime } = req.body;
+        const { startTime, endTime, timeMatchRotation, timePoolRotation, introductionStartTime, introductionEndTime, lunchStartTime, lunchEndTime, outroStartTime, outroEndTime } = req.body;
 
+        // Vérification de base pour s'assurer que les champs obligatoires sont présents
         if (!startTime || !endTime || !timeMatchRotation || !timePoolRotation) {
             return res.status(400).json({ message: "Les champs 'startTime', 'endTime', 'timeMatchRotation', et 'timePoolRotation' sont requis." });
         }
 
+        // Créer le planning (les hooks du modèle vont valider les heures)
         const schedule = await ScheduleTourney.create({
             tourneyId,
             startTime,
             endTime,
             timeMatchRotation,
             timePoolRotation,
-            introductionTime,
-            lunchTime,
-            outroTime,
+            introductionStartTime,
+            introductionEndTime,
+            lunchStartTime,
+            lunchEndTime,
+            outroStartTime,
+            outroEndTime,
         });
 
         res.status(201).json(schedule);
     } catch (error) {
         console.error('Erreur lors de la création du planning :', error);
-        res.status(500).json({ message: 'Erreur lors de la création du planning' });
+        res.status(500).json({ message: error.message || 'Erreur lors de la création du planning' });
     }
 };
+
 
 // Ajouter la configuration de groupe au tournoi
 exports.createGroupSetup = async (req, res) => {
@@ -88,19 +101,42 @@ exports.getTourneys = async (req, res) => {
     }
 };
 
-// Récupérer un tournoi par son ID
+// Récupérer un tournoi par son ID, y compris les terrains et les sports associés
 exports.getTourneyById = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id);
+        const tourney = await Tourney.findByPk(req.params.id, {
+            include: [
+                {
+                    model: Field,
+                    as: 'fields',
+                    include: [
+                        {
+                            model: SportField,
+                            as: 'sportFields',
+                            include: [
+                                {
+                                    model: Sport,
+                                    as: 'sport',
+                                    attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
+
         res.status(200).json(tourney);
     } catch (error) {
         console.error('Erreur lors de la récupération du tournoi :', error);
         res.status(500).json({ message: 'Erreur lors de la récupération du tournoi' });
     }
 };
+
 
 // Mettre à jour un tournoi
 exports.updateTourney = async (req, res) => {
@@ -132,5 +168,33 @@ exports.deleteTourney = async (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la suppression du tournoi :', error);
         res.status(500).json({ message: 'Erreur lors de la suppression du tournoi' });
+    }
+};
+
+// Récupérer les sports associés à un terrain
+exports.getSportsByField = async (req, res) => {
+    try {
+        const { fieldId } = req.params;
+
+        const sportFields = await SportField.findAll({
+            where: { fieldId },
+            include: [
+                {
+                    model: Sport,
+                    as: 'sport',
+                    attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
+                },
+            ],
+        });
+
+
+        if (sportFields.length === 0) {
+            return res.status(404).json({ message: "Aucun sport n'est associé à ce terrain." });
+        }
+
+        res.status(200).json(sportFields);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des sports par terrain :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
     }
 };

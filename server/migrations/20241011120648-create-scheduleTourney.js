@@ -26,15 +26,27 @@ module.exports = {
         type: Sequelize.TIME,
         allowNull: false,
       },
-      introductionTime: {
+      introductionStartTime: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      lunchTime: {
+      introductionEndTime: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      outroTime: {
+      lunchStartTime: {
+        type: Sequelize.TIME,
+        allowNull: true,
+      },
+      lunchEndTime: {
+        type: Sequelize.TIME,
+        allowNull: true,
+      },
+      outroStartTime: {
+        type: Sequelize.TIME,
+        allowNull: true,
+      },
+      outroEndTime: {
         type: Sequelize.TIME,
         allowNull: true,
       },

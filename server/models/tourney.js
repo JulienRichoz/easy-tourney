@@ -3,9 +3,11 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Tourney extends Model {
         static associate(models) {
-            // Un tournoi a un planning et une configuration de groupes
+            // Un tournoi a un planning, une configuration de groupes et des terrains
             Tourney.hasOne(models.ScheduleTourney, { foreignKey: 'tourneyId', as: 'schedule' });
             Tourney.hasOne(models.GroupSetup, { foreignKey: 'tourneyId', as: 'groupSetup' });
+            Tourney.hasMany(models.Field, { foreignKey: 'tourneyId', as: 'fields' });
+
         }
     }
 

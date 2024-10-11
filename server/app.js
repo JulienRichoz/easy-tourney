@@ -6,6 +6,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
 const sportRoutes = require('./routes/sport');
 const tourneyRoutes = require('./routes/tourney');
+const sportFieldRoutes = require('./routes/sportField'); // Importez le nouveau fichier de route
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -22,6 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/tourneys', tourneyRoutes);
+app.use('/api/sport-fields', sportFieldRoutes); // Corrigez ici en ajoutant le slash '/'
 
 // Gestion des erreurs
 app.use(errorHandler); // Utilisez le middleware de gestion des erreurs
