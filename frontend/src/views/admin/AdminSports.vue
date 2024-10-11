@@ -266,7 +266,7 @@ export default {
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px; /* Ajustez cette valeur selon la taille souhaitée */
+  max-width: 100%; /* Ajustez cette valeur selon la taille souhaitée */
 }
 
 button {
