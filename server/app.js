@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
-const { sequelize } = require('./models'); // Vérifiez que c'est bien configuré
+const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
-const sportRoutes = require('./routes/sport'); // Importez les routes des sports
-const { errorHandler, limiter } = require('./middlewares'); // Assurez-vous que l'importation correspond au nom dans middlewares/index.js
+const sportRoutes = require('./routes/sport');
+const tourneyRoutes = require('./routes/tourney');
+
+const { errorHandler, limiter } = require('./middlewares');
 
 const app = express();
 
@@ -18,7 +20,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/sports', sportRoutes); // Utilisez les routes des sports
+app.use('/api/sports', sportRoutes);
+app.use('/api/tourneys', tourneyRoutes);
 
 // Gestion des erreurs
 app.use(errorHandler); // Utilisez le middleware de gestion des erreurs
