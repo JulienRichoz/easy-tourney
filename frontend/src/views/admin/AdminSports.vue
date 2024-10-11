@@ -51,7 +51,11 @@
     </div>
 
     <!-- Modale pour ajouter/modifier un sport -->
-    <ModalComponent :isVisible="showModal" :title="editingSportId ? 'Modifier le Sport' : 'Ajouter un Nouveau Sport'" @close="closeModal">
+    <ModalComponent
+      :isVisible="showModal"
+      :title="editingSportId ? 'Modifier le Sport' : 'Ajouter un Nouveau Sport'"
+      @close="closeModal"
+    >
       <template #content>
         <form @submit.prevent="handleFormSubmit">
           <div class="mb-4">
@@ -59,11 +63,16 @@
             <input
               type="text"
               v-model="newSport.name"
-              :class="['w-full p-2 border rounded-md', nameError ? 'border-red-500' : 'border-gray-300']"
+              :class="[
+                'w-full p-2 border rounded-md',
+                nameError ? 'border-red-500' : 'border-gray-300',
+              ]"
               @input="validateName"
               required
             />
-            <p v-if="nameError" class="text-red-500 text-sm mt-1">Un sport avec ce nom existe déjà. Veuillez en choisir un autre.</p>
+            <p v-if="nameError" class="text-red-500 text-sm mt-1">
+              Un sport avec ce nom existe déjà. Veuillez en choisir un autre.
+            </p>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 font-semibold mb-2">Règles du sport</label>
@@ -86,7 +95,11 @@
           <div class="mb-4">
             <label class="block text-gray-700 font-semibold mb-2">Image du sport</label>
             <div v-if="editingSportId && newSport.image" class="mb-2">
-              <img :src="`http://localhost:3000${newSport.image}`" alt="Current sport image" class="w-full h-40 object-cover rounded-lg" />
+              <img
+                :src="`http://localhost:3000${newSport.image}`"
+                alt="Current sport image"
+                class="w-full h-40 object-cover rounded-lg"
+              />
             </div>
             <input
               type="file"
@@ -95,7 +108,9 @@
             />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2">Couleur (Hexadecimal)</label>
+            <label class="block text-gray-700 font-semibold mb-2"
+              >Couleur (Hexadecimal)</label
+            >
             <div class="flex items-center">
               <input
                 type="color"
@@ -106,13 +121,18 @@
             </div>
           </div>
           <div class="flex justify-end space-x-4 mt-6">
-            <ButtonComponent variant="secondary" @click.stop="closeModal" :nativeType="'button'">Annuler</ButtonComponent>
+            <ButtonComponent
+              variant="secondary"
+              @click.stop="closeModal"
+              :nativeType="'button'"
+              >Annuler</ButtonComponent
+            >
             <ButtonComponent
               variant="primary"
               :nativeType="'submit'"
               :disabled="nameError"
             >
-              {{ editingSportId ? 'Modifier' : 'Ajouter' }}
+              {{ editingSportId ? "Modifier" : "Ajouter" }}
             </ButtonComponent>
           </div>
         </form>
@@ -120,13 +140,25 @@
     </ModalComponent>
 
     <!-- Confirmation de suppression -->
-    <ModalComponent :isVisible="showDeleteConfirmation" title="Confirmation de suppression" @close="closeDeleteConfirmation">
+    <ModalComponent
+      :isVisible="showDeleteConfirmation"
+      title="Confirmation de suppression"
+      @close="closeDeleteConfirmation"
+    >
       <template #content>
-        <p class="mb-6">Êtes-vous sûr de vouloir supprimer ce sport ? Cette action est irréversible.</p>
+        <p class="mb-6">
+          Êtes-vous sûr de vouloir supprimer ce sport ? Cette action est irréversible.
+        </p>
       </template>
       <template #footer>
-        <ButtonComponent variant="secondary" @click.stop="closeDeleteConfirmation">Annuler</ButtonComponent>
-        <ButtonComponent variant="danger" @click.stop="deleteSport(confirmedDeleteSportId)" :disabled="isDeleting">
+        <ButtonComponent variant="secondary" @click.stop="closeDeleteConfirmation"
+          >Annuler</ButtonComponent
+        >
+        <ButtonComponent
+          variant="danger"
+          @click.stop="deleteSport(confirmedDeleteSportId)"
+          :disabled="isDeleting"
+        >
           Supprimer
         </ButtonComponent>
       </template>
@@ -138,7 +170,7 @@
 import apiService from "@/services/apiService";
 import ModalComponent from "@/components/ModalComponent.vue";
 import ButtonComponent from "@/components/ButtonComponent.vue";
-import truncateMixin from '@/mixins/truncateMixin';
+import truncateMixin from "@/mixins/truncateMixin";
 
 export default {
   components: {
@@ -179,7 +211,6 @@ export default {
       this.selectedFile = event.target.files[0];
     },
     openAddSportModal() {
-      console.log("AdminSports.vue - Ouverture de la modale pour ajouter un sport");
       this.editingSportId = null;
       this.newSport = {
         name: "",
@@ -193,7 +224,6 @@ export default {
       this.showModal = true;
     },
     editSport(sport) {
-      console.log("AdminSports.vue - Ouverture de la modale pour modifier un sport");
       this.editingSportId = sport.id;
       this.newSport = {
         ...sport,
@@ -205,13 +235,10 @@ export default {
     },
     handleFormSubmit() {
       if (this.isSubmitting) {
-        console.log("AdminSports.vue - Soumission déjà en cours, annulation de la nouvelle soumission.");
         return;
       }
       this.isSubmitting = true;
-      console.log("AdminSports.vue - handleFormSubmit déclenché");
       if (this.nameError) {
-        console.log("AdminSports.vue - Erreur dans le champ de nom, soumission annulée");
         this.isSubmitting = false;
         return;
       }
@@ -219,7 +246,6 @@ export default {
       this.saveSport();
     },
     async saveSport() {
-      console.log("AdminSports.vue - saveSport déclenché");
       const formData = new FormData();
       formData.append("name", this.newSport.name);
       formData.append("rule", this.newSport.rule);
@@ -253,17 +279,14 @@ export default {
       }
     },
     confirmDeleteSport(id) {
-      console.log(`AdminSports.vue - Confirmation suppression du sport avec ID: ${id}`);
       this.confirmedDeleteSportId = id;
       this.showDeleteConfirmation = true;
     },
     async deleteSport(id) {
       if (this.isDeleting) {
-        console.log(`AdminSports.vue - Suppression déjà en cours pour le sport ID: ${id}`);
-        return; // Évite la suppression en doublon
+        return;
       }
       this.isDeleting = true;
-      console.log(`AdminSports.vue - Suppression du sport avec ID: ${id}`);
       try {
         await apiService.delete(`/sports/${id}`);
         this.closeDeleteConfirmation();
@@ -275,23 +298,20 @@ export default {
       }
     },
     closeModal() {
-      console.log("AdminSports.vue - Fermeture de la modale");
       this.showModal = false;
       this.isSubmitting = false; // Réinitialise l'état
     },
     closeDeleteConfirmation() {
-      console.log("AdminSports.vue - Fermeture de la modale de confirmation de suppression");
       this.showDeleteConfirmation = false;
       this.confirmedDeleteSportId = null;
     },
     validateName() {
       this.nameError = !this.isNameUnique(this.newSport.name);
-      if (this.nameError) {
-        console.log("AdminSports.vue - Nom du sport en conflit, validation échouée");
-      }
     },
     isNameUnique(name) {
-      return !this.sports.some(sport => sport.name.toLowerCase() === name.toLowerCase());
+      return !this.sports.some(
+        (sport) => sport.name.toLowerCase() === name.toLowerCase()
+      );
     },
   },
   mounted() {

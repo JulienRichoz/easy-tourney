@@ -9,7 +9,6 @@ export default createStore({
   },
   mutations: {
     SET_AUTH(state, payload) {
-      console.log('SET_AUTH appelée avec payload:', payload);  // Ajoutez ce log pour vérifier le payload
       state.isAuthenticated = payload.isAuthenticated;
       state.user = payload.user;
     },

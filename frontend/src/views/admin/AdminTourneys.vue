@@ -311,11 +311,9 @@
       },
       handleFormSubmit() {
         if (this.isSubmitting) {
-            console.log("AdminTourneys.vue - handleFormSubmit (déjà en cours)");
-            return; // Empêche le double clic
+            return;
         }
         this.isSubmitting = true;
-        console.log("AdminTourneys.vue - déclenchement handleFormSubmit");
         // Appelle saveTourney après la validation des champs
         this.validateFields();
         if (!this.formHasErrors) {
@@ -325,12 +323,10 @@
       },
       async saveTourney() {
         if (this.isSaving) {
-            console.log("AdminTourneys.vue - saveTourney (déjà en cours)");
-            return; // Empêche plusieurs enregistrements simultanés 
+            return;
         }
         this.isSaving = true; // Empêche plusieurs enregistrements simultanés
-        console.log("AdminTourneys.vue - déclenchement saveTourney");
-        
+    
         try {
           if (this.editingTourneyId) {
             await apiService.put(`/tourneys/${this.editingTourneyId}`, this.newTourney);
@@ -349,9 +345,6 @@
         }
       },
       confirmDeleteTourney(id) {
-        
-        
-        console.log(`AdminTourney.vue - Confirmation suppression du tournoi avec ID: ${id}`);
         this.confirmedDeleteTourneyId = id;
         this.showDeleteConfirmation = true;
       },

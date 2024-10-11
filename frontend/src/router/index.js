@@ -69,7 +69,6 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.meta.requiresAuth) {
     if (!token) {
-      console.log('Token non trouvé, redirection vers /login');
       store.commit('LOGOUT');
       return next('/login'); // Rediriger vers la page de login si non authentifié
     } else {
@@ -80,8 +79,6 @@ router.beforeEach(async (to, from, next) => {
 
         // Décodez le nouveau token pour vérifier le rôle de l'utilisateur
         const decoded = jwtDecode(newToken);
-        console.log('router.beforeEach -> Token décodé:', decoded);
-
         store.commit('SET_AUTH', {
           isAuthenticated: true,
           user: decoded,
@@ -92,7 +89,6 @@ router.beforeEach(async (to, from, next) => {
         console.log('router.beforeEach -> Vérification des permissions pour userRole:', userRole, 'permission:', to.meta.permission);
 
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
-          console.log('Utilisateur sans les permissions nécessaires, redirection vers /');
           return next('/'); // Rediriger à la page d'accueil si l'utilisateur n'a pas les permissions
         }
 
@@ -104,7 +100,6 @@ router.beforeEach(async (to, from, next) => {
       }
     }
   } else {
-    console.log('Route publique, accès autorisé.');
     next(); // Pour les routes publiques
   }
 });

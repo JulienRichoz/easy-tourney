@@ -5,15 +5,10 @@ import { jwtDecode } from 'jwt-decode';
 
 // Vérifie si l'utilisateur a une permission spécifique
 export function hasPermission(userRole, permission) {
-    console.log('hasPermission -> userRole:', userRole, 'permission:', permission);
-
     // Trouver la clé du rôle directement
     const roleKey = Object.entries(roles).find(([, value]) => value === userRole)?.[0];
 
-    console.log('hasPermission -> roleKey trouvé:', roleKey);
-
     if (!roleKey) {
-        console.log('hasPermission -> Aucun rôle trouvé pour:', userRole);
         return false;
     }
 
@@ -29,7 +24,6 @@ export function hasPermission(userRole, permission) {
 // Vérifie si l'utilisateur est authentifié en fonction du token présent
 export function isAuthenticated() {
     const token = localStorage.getItem('token');
-    console.log('authService -> isAuthenticated', token);
     return !!token;
 }
 

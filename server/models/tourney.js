@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
         numberOfField: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            defaultValue: 0,
         },
         emergencyDetails: {
             type: DataTypes.TEXT,
