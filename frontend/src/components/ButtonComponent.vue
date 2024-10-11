@@ -1,5 +1,6 @@
 <template>
   <button
+    :type="nativeType"
     :class="buttonClasses"
     @click="onClick"
   >
@@ -19,11 +20,15 @@ export default {
   props: {
     variant: {
       type: String,
-      default: "primary", // Peut être "primary", "secondary", "danger", etc.
+      default: "primary",
     },
     icon: {
       type: String,
-      default: null, // Nom de l'icône à afficher
+      default: null,
+    },
+    nativeType: {
+      type: String,
+      default: "button", // Par défaut un bouton classique
     },
   },
   components: {
