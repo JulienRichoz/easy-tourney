@@ -6,30 +6,16 @@
       <h2 class="page-title">
         Gestion des Terrains pour le Tournoi : {{ tourney.name }}
       </h2>
+
       <div class="fields-grid">
-        <!-- Affichage des terrains -->
+        <!-- Affichage des terrains avec calendrier -->
         <div v-for="field in fields" :key="field.id" class="field-card">
           <h3>{{ field.name }}</h3>
           <p>{{ field.description }}</p>
-          <div class="timeline">
-            <!-- Affichage de la timeline pour chaque terrain -->
-            <div class="timeline-hour-labels">
-              <span v-for="hour in 13" :key="hour" class="hour-label">{{
-                7 + hour - 1 + ':00'
-              }}</span>
-            </div>
-            <div class="timeline-segments">
-              <div
-                v-for="sportField in field.sportFields"
-                :key="sportField.id"
-                class="timeline-segment"
-                :style="getTimelineSegmentStyle(sportField)"
-              >
-                {{ sportField.sport.name }} ({{ sportField.startTime }} -
-                {{ sportField.endTime }})
-              </div>
-            </div>
-          </div>
+
+          <!-- Calendrier FullCalendar pour chaque terrain -->
+          <FullCalendar :options="getFieldCalendarOptions(field)" />
+
           <div class="button-group">
             <ButtonComponent
               variant="primary"
@@ -109,6 +95,9 @@
   import ModalComponent from '@/components/ModalComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import FullCalendar from '@fullcalendar/vue3';
+  import timeGridPlugin from '@fullcalendar/timegrid';
+  import interactionPlugin from '@fullcalendar/interaction';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
 
@@ -117,13 +106,14 @@
       ModalComponent,
       ButtonComponent,
       DeleteConfirmationModal,
+      FullCalendar,
       TourneySubMenu,
     },
     data() {
       return {
         tourneyId: this.$route.params.id,
         tourney: {},
-        fields: [], // 'fields' sera mis à jour via fetchTourneyDetails
+        fields: [],
         showModal: false,
         showDeleteConfirmation: false,
         confirmedDeleteFieldId: null,
@@ -131,7 +121,7 @@
         selectedSport: null,
         startTime: '',
         endTime: '',
-        sports: [], // Liste de tous les sports disponibles pour l'ajout
+        sports: [],
       };
     },
     async mounted() {
@@ -141,15 +131,9 @@
     methods: {
       async fetchTourneyDetails() {
         try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/sport-fields`
-          );
+          const response = await apiService.get(`/tourneys/${this.tourneyId}`);
           this.tourney = response.data;
-          this.fields = response.data.fields; // Mise à jour des terrains associés
-
-          // Ajout d'un log pour vérifier les données récupérées
-          console.log('Détails du tournoi:', this.tourney);
-          console.log('Terrains:', this.fields);
+          this.fields = response.data.fields; // Mettre à jour les terrains
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
@@ -157,26 +141,10 @@
           );
         }
       },
-      async fetchFields() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/fields`
-          );
-          this.fields = response.data;
-
-          // Ajout d'un log pour vérifier les données récupérées
-          console.log('Données des terrains:', this.fields);
-        } catch (error) {
-          console.error('Erreur lors de la récupération des terrains:', error);
-        }
-      },
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
           this.sports = response.data;
-
-          // Ajout d'un log pour vérifier les données des sports
-          console.log('Données des sports:', this.sports);
         } catch (error) {
           console.error('Erreur lors de la récupération des sports:', error);
         }
@@ -204,12 +172,12 @@
             sportId: this.selectedSport,
             startTime: this.startTime,
             endTime: this.endTime,
-            information: '', // Ajouter un champ d'information si nécessaire
+            information: '',
           };
           await apiService.post('/sport-fields', data);
           alert('Sport ajouté au terrain avec succès.');
           this.closeModal();
-          await this.fetchFields();
+          await this.fetchTourneyDetails();
         } catch (error) {
           console.error(
             "Erreur lors de l'assignation du sport au terrain:",
@@ -217,49 +185,82 @@
           );
         }
       },
-      getSportName(sportId) {
-        const sport = this.sports.find((s) => s.id === sportId);
-        return sport ? sport.name : 'Sport inconnu';
-      },
-      getTimelineSegmentStyle(sportField) {
-        const sport = sportField.sport;
-        if (!sport) return {};
-
-        const start = this.convertTimeToDecimal(sportField.startTime);
-        const end = this.convertTimeToDecimal(sportField.endTime);
-        const totalHours = 13; // Nombre total d'heures sur la timeline (7h - 20h)
-        const width = ((end - start) / totalHours) * 100;
-        const left = (start / totalHours) * 100;
-
+      getFieldCalendarOptions(field) {
+        // Génère les options du calendrier pour un terrain spécifique
+        console.log(this.startDate);
         return {
-          backgroundColor: sport.color || '#cccccc',
-          width: `${width}%`,
-          left: `${left}%`,
+          plugins: [timeGridPlugin, interactionPlugin],
+          initialView: 'timeGridDay',
+          timeZone: 'locale',
+          initialDate: this.tourney.dateTourney,
+          locale: 'fr',
+          editable: true,
+          slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false, // Format 24h
+          },
+          headerToolbar: false, // Supprimer les onglets de navigation et la date
+          allDaySlot: false, // Supprimer le slot "all-day"
+          height: 500, // Agrandir la vue du calendrier dans la card
+          slotMinTime: '06:00:00', // Heure de début minimum
+          slotMaxTime: '20:00:00', // Heure de fin maximum
+          events: field.sportFields.map((sportField) => ({
+            id: sportField.id,
+            title: sportField.sport.name,
+            start: `${this.tourney.dateTourney}T${sportField.startTime}`,
+            end: `${this.tourney.dateTourney}T${sportField.endTime}`,
+            backgroundColor: sportField.sport.color || '#cccccc',
+            extendedProps: {
+              fieldId: field.id,
+            },
+          })),
+          eventDrop: this.handleEventDrop,
+          eventResize: this.handleEventResize,
         };
       },
-      convertTimeToDecimal(time) {
-        const [hours, minutes] = time.split(':').map(Number);
-        // Conversion à partir de 7:00 comme base de la journée
-        const startHour = 7;
-        return hours - startHour + minutes / 60;
+      handleEventDrop({ event }) {
+        // Mise à jour côté backend lorsque l'événement est déplacé
+        console.log('Événement déplacé:', event);
+
+        // Extraire l'heure de début et de fin en supprimant le fuseau horaire
+        const startTime = event.start.toISOString().split('T')[1].split('.')[0]; // Format HH:MM:SS
+        const endTime = event.end.toISOString().split('T')[1].split('.')[0]; // Format HH:MM:SS
+
+        const updatedEvent = {
+          id: event.id,
+          startTime,
+          endTime,
+          fieldId: event.extendedProps.fieldId,
+        };
+
+        this.updateEventInDatabase(updatedEvent);
+      },
+      handleEventResize({ event }) {
+        // Mise à jour côté backend lorsque l'événement est redimensionné
+        console.log('Événement redimensionné:', event);
+        const updatedEvent = {
+          id: event.id,
+          startTime: event.startStr.split('T')[1],
+          endTime: event.endStr.split('T')[1],
+          fieldId: event.extendedProps.fieldId,
+        };
+
+        this.updateEventInDatabase(updatedEvent);
       },
 
-      confirmDeleteField(fieldId) {
-        this.confirmedDeleteFieldId = fieldId;
-        this.showDeleteConfirmation = true;
-      },
-      async deleteField(id) {
+      async updateEventInDatabase(event) {
         try {
-          await apiService.delete(`/fields/${id}`);
-          this.closeDeleteConfirmation();
-          await this.fetchFields();
+          await apiService.put(`/sport-fields/${event.id}`, {
+            startTime: event.startTime,
+            endTime: event.endTime,
+            fieldId: event.fieldId,
+          });
+          alert('Les horaires ont été mis à jour avec succès.');
         } catch (error) {
-          console.error('Erreur lors de la suppression du terrain:', error);
+          console.error('Erreur lors de la mise à jour des horaires:', error);
+          alert('Une erreur est survenue.');
         }
-      },
-      closeDeleteConfirmation() {
-        this.showDeleteConfirmation = false;
-        this.confirmedDeleteFieldId = null;
       },
     },
   };
@@ -297,37 +298,5 @@
   .button-group {
     display: flex;
     gap: 0.5rem;
-  }
-  .timeline {
-    position: relative;
-    width: 100%;
-    height: 20rem;
-    background-color: #e2e8f0;
-    margin-top: 1rem;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-  }
-  .timeline-hour-labels {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.75rem;
-    color: #4a5568;
-    padding: 0.5rem;
-  }
-  .timeline-segments {
-    position: relative;
-    flex: 1;
-  }
-  .timeline-segment {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 0.75rem;
-    color: white;
-    line-height: 2rem;
-    overflow: hidden;
   }
 </style>
