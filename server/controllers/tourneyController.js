@@ -218,3 +218,46 @@ exports.getFieldsByTourneyId = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des terrains' });
     }
 }
+
+// Récupérer les sports associés aux terrains d'un tournoi
+exports.getSportFieldsByTourney = async (req, res) => {
+    try {
+        const tourneyId = req.params.id;
+
+        // Récupérer le tournoi et inclure les terrains et les sports associés
+        const tourney = await Tourney.findByPk(tourneyId, {
+            attributes: ['id', 'name', 'location', 'dateTourney'],
+            include: [
+                {
+                    model: Field,
+                    as: 'fields',
+                    attributes: ['id', 'name', 'description'],
+                    include: [
+                        {
+                            model: SportField,
+                            as: 'sportFields',
+                            attributes: ['id', 'startTime', 'endTime', 'information'],
+                            include: [
+                                {
+                                    model: Sport,
+                                    as: 'sport',
+                                    attributes: ['id', 'name', 'rule', 'scoreSystem', 'color'], // sans 'image' pour alléger la charge
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé' });
+        }
+
+        res.status(200).json(tourney);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des sports associés aux terrains du tournoi :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
+    }
+};
+
