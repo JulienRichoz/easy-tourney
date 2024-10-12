@@ -1,3 +1,6 @@
+// server/models/user.js
+// Purpose: Define the User model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

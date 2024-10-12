@@ -1,4 +1,6 @@
-// controllers/sportController.js
+// server/controllers/sportController.js
+// Contrôleur pour la gestion des sports
+
 const { Sport } = require('../models');
 const fs = require('fs');
 const path = require('path');
@@ -7,7 +9,7 @@ const multer = require('multer');
 // Configuration de multer pour la gestion des fichiers
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Assurez-vous que ce chemin est correct par rapport à votre projet
+        cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
@@ -35,7 +37,7 @@ exports.createSport = async (req, res) => {
             return res.status(400).json({ message: "Les champs 'name' et 'rule' sont requis." });
         }
 
-        let imagePath = '/public/images/default-sport.png'; // Chemin de l'image par défaut
+        let imagePath = '/public/images/default-sport.png';
 
         if (req.file) {
             imagePath = `/uploads/${req.file.filename}`;

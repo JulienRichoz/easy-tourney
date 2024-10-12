@@ -1,3 +1,6 @@
+// server/models/groupSetup.js
+// Purpose: Define the GroupSetup model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

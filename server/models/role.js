@@ -1,3 +1,6 @@
+// server/models/role.js
+// Purpose: Define the Role model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

@@ -1,3 +1,6 @@
+// server/routes/auth.js
+// Purpose: Define the routes for user authentication
+
 const express = require('express');
 const { authenticateToken } = require('../middlewares'); // Middleware d'authentification
 const authController = require('../controllers/authController');

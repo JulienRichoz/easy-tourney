@@ -1,7 +1,10 @@
+// server/routes/sport.js
+// Purpose: Define the routes for managing sports
+
 const express = require('express');
 const router = express.Router();
 const { createSport, getSports, updateSport, deleteSport, getSportById, upload } = require('../controllers/sportController');
-const { isAuthenticated, isAdmin } = require('../middlewares'); // Import des middlewares
+const { isAuthenticated, isAdmin } = require('../middlewares');
 
 // Routes pour gérer les sports
 

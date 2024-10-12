@@ -1,4 +1,6 @@
-// models/field.js
+// server/models/field.js
+// Modèle pour la gestion des terrains
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

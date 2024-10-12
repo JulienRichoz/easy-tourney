@@ -1,3 +1,6 @@
+// server/app.js
+// Purpose: Define the main application file. This file is the entry point of the application.
+
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -6,7 +9,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
 const sportRoutes = require('./routes/sport');
 const tourneyRoutes = require('./routes/tourney');
-const sportFieldRoutes = require('./routes/sportField'); // Importez le nouveau fichier de route
+const sportFieldRoutes = require('./routes/sportField');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -15,7 +18,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(limiter); // Utilisez le middleware de limitation du nombre de requêtes
+app.use(limiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -23,10 +26,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/tourneys', tourneyRoutes);
-app.use('/api/sport-fields', sportFieldRoutes); // Corrigez ici en ajoutant le slash '/'
+app.use('/api/sport-fields', sportFieldRoutes);
 
 // Gestion des erreurs
-app.use(errorHandler); // Utilisez le middleware de gestion des erreurs
+app.use(errorHandler);
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;

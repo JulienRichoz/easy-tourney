@@ -1,4 +1,6 @@
-// backend/routes/sportField.js
+// server/routes/sportField.js
+// Purpose: Define the routes for sport fields
+
 const express = require('express');
 const router = express.Router();
 const { createSportField } = require('../controllers/sportFieldController');

@@ -1,6 +1,10 @@
+// server/services/authService.js
+// Purpose: Implement the authentication service functions. 
+// This file contains functions for generating a JWT token, comparing passwords, hashing passwords, checking permissions based on roles, and checking if a user is authenticated.
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { jwtDecode } = require('jwt-decode'); // Utilise require au lieu de import
+const { jwtDecode } = require('jwt-decode');
 
 
 // Fonction pour générer un token JWT

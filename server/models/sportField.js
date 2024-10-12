@@ -1,3 +1,6 @@
+// server/models/sportField.js
+// Purpose: Define the SportField model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

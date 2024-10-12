@@ -1,3 +1,6 @@
+// server/models/tourney.js
+// Purpose: Define the Tourney model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
@@ -7,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
             Tourney.hasOne(models.ScheduleTourney, { foreignKey: 'tourneyId', as: 'schedule' });
             Tourney.hasOne(models.GroupSetup, { foreignKey: 'tourneyId', as: 'groupSetup' });
             Tourney.hasMany(models.Field, { foreignKey: 'tourneyId', as: 'fields' });
-
         }
     }
 

@@ -1,3 +1,6 @@
+// server/controllers/sportFieldController.js
+// Contrôleur pour la gestion des associations SportField
+
 const { Field, Sport, SportField } = require('../models');
 
 // Créer une association SportField

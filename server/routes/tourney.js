@@ -1,4 +1,6 @@
-// --- backend/routes/tourney.js (ajout de la route pour SportField) ---
+// server/routes/tourney.js
+// Purpose: Define the routes for managing tournaments
+
 const express = require('express');
 const router = express.Router();
 const { createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney, createGroupSetup, getSportsByField } = require('../controllers/tourneyController');

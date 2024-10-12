@@ -1,3 +1,6 @@
+// server/middlewares/index.js
+// Middleware regroupées pour l'authentification, la gestion des erreurs, les limites de requêtes et les rôles
+
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 
@@ -55,10 +58,10 @@ const authorizeRoles = (...roles) => {
 };
 
 module.exports = {
-    isAuthenticated: authenticateToken, // Change `isAuthenticated` en `authenticateToken` pour correspondre au nom utilisé ici
+    isAuthenticated: authenticateToken, // Alias pour authenticateToken
     authenticateToken,
     errorHandler,
-    limiter, // Change `rateLimiter` en `limiter` pour correspondre au nom utilisé ici
+    limiter,
     isAdmin,
     authorizeRoles,
 };

@@ -1,3 +1,6 @@
+// server/models/scheduleTourney.js
+// Purpose: Define the ScheduleTourney model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

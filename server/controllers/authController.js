@@ -1,3 +1,6 @@
+//server/controllers/authController.js
+// Contrôleur pour l'authentification des utilisateurs
+
 const { User } = require('../models');
 const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
@@ -27,7 +30,7 @@ exports.register = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Erreur lors de l\'inscription :', error); // Ajoute ce log
+        console.error('Erreur lors de l\'inscription :', error);
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };

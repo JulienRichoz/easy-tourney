@@ -1,10 +1,12 @@
-// models/sport.js
+// server/models/sport.js
+// Purpose: Define the Sport model and its associations
+
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Sport extends Model {
         static associate(models) {
-            // Associez des relations si nécessaire
+            // Associer des relations si nécessaire
         }
     }
 
@@ -12,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true, // Ajout de la contrainte d'unicité
+            unique: true,
         },
         rule: {
             type: DataTypes.TEXT,
@@ -22,11 +24,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
         },
         image: {
-            type: DataTypes.STRING, // URL de l'image
-            defaultValue: '/path/to/default-image.png', // Image par défaut
+            type: DataTypes.STRING,
+            defaultValue: '/path/to/default-image.png',
         },
         color: {
-            type: DataTypes.STRING, // Hexadecimal pour la couleur
+            type: DataTypes.STRING,
             allowNull: true,
         },
     }, {
