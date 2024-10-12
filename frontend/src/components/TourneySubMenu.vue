@@ -1,19 +1,19 @@
 <template>
   <div class="tourney-nav">
-    <div
+    <router-link
+      :to="`/tourneys/${tourneyId}`"
       class="tourney-nav-item"
-      :class="{ active: activeTab === 'details' }"
-      @click="selectTab('details')"
+      :class="{ active: $route.name === 'TourneyDetails' }"
     >
       Détails du Tournoi
-    </div>
-    <div
+    </router-link>
+    <router-link
+      :to="`/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item"
-      :class="{ active: activeTab === 'fields' }"
-      @click="selectTab('fields')"
+      :class="{ active: $route.name === 'FieldsManagement' }"
     >
       Assignation des Terrains
-    </div>
+    </router-link>
     <div
       class="tourney-nav-item"
       :class="{ active: activeTab === 'groups' }"
@@ -42,6 +42,12 @@
       selectTab(tab) {
         this.activeTab = tab;
         // Éventuellement, émet un événement ou fait une navigation pour charger le bon contenu
+      },
+    },
+    props: {
+      tourneyId: {
+        type: String,
+        required: true,
       },
     },
   };

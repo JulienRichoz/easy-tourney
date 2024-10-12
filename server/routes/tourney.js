@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney, createGroupSetup, getSportsByField } = require('../controllers/tourneyController');
+const { createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney, createGroupSetup, getSportsByField, getFieldsByTourneyId } = require('../controllers/tourneyController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 // Routes pour gérer les tournois
@@ -17,6 +17,8 @@ router.put('/:id', isAuthenticated, isAdmin, updateTourney); // Mettre à jour u
 router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
 
 router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
+router.get('/:tourneyId/fields', isAuthenticated, getFieldsByTourneyId); // Récupérer les terrains d'un tournoi
+
 
 
 // Ajouter la route manquante pour les SportFields

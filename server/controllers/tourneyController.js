@@ -201,3 +201,20 @@ exports.getSportsByField = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
     }
 };
+
+exports.getFieldsByTourneyId = async (req, res) => {
+    try {
+        const tourneyId = req.params.tourneyId;
+
+        const fields = await Field.findAll({ where: { tourneyId } });
+
+        if (!fields) {
+            return res.status(404).json({ message: "Aucun terrain n'est associé à ce tournoi." });
+        }
+
+        res.status(200).json(fields);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des terrains pour ce tournoi :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des terrains' });
+    }
+}

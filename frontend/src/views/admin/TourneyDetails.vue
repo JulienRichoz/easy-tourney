@@ -1,7 +1,11 @@
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
-    <TourneySubMenu :tourneyId="tourneyId" :tourneyName="tourney.name" />
+    <TourneySubMenu
+      :tourneyId="tourneyId"
+      :tourneyName="tourney.name"
+      @selectTab="selectTab"
+    />
 
     <!-- Contenu principal -->
     <div class="tourney-details-container">
@@ -109,6 +113,9 @@
       formatDate(dateString) {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
+      },
+      selectTab(tab) {
+        this.activeTab = tab;
       },
     },
   };
