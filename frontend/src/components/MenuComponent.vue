@@ -1,17 +1,33 @@
+<!-- frontend/src/components/MenuComponent.vue -->
+
 <template>
-  <nav class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between">
+  <nav
+    class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between"
+  >
     <!-- Section de gauche -->
     <ul class="left-section flex items-center">
       <li class="mr-6">
-        <router-link to="/" class="text-white font-semibold hover:text-green-400">Accueil</router-link>
+        <router-link
+          to="/"
+          class="text-white font-semibold hover:text-green-400"
+          >Accueil</router-link
+        >
       </li>
 
       <!-- Si l'utilisateur est admin, on affiche les liens vers les pages admin -->
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/tourneys" class="text-white font-semibold hover:text-green-400">Tournois</router-link>
+        <router-link
+          to="/tourneys"
+          class="text-white font-semibold hover:text-green-400"
+          >Tournois</router-link
+        >
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/admin/sports" class="text-white font-semibold hover:text-green-400">Sports</router-link>
+        <router-link
+          to="/admin/sports"
+          class="text-white font-semibold hover:text-green-400"
+          >Sports</router-link
+        >
       </li>
     </ul>
 
@@ -39,34 +55,34 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+  import { mapState } from 'vuex';
 
-export default {
-  computed: {
-    ...mapState({
-      isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
-      isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
-      userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
-    }),
-  },
-  methods: {
-    logout() {
-      this.$store.dispatch("logout"); // Déconnexion
-      this.$router.push("/login"); // Redirection après la déconnexion
+  export default {
+    computed: {
+      ...mapState({
+        isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
+        isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
+        userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
+      }),
     },
-  },
-};
+    methods: {
+      logout() {
+        this.$store.dispatch('logout'); // Déconnexion
+        this.$router.push('/login'); // Redirection après la déconnexion
+      },
+    },
+  };
 </script>
 
 <style scoped>
-/* Style pour la barre de navigation - Tout est géré par Tailwind */
-.navbar {
-  margin: 0;
-}
+  /* Style pour la barre de navigation - Tout est géré par Tailwind */
+  .navbar {
+    margin: 0;
+  }
 
-.right-section {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
+  .right-section {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
 </style>

@@ -29,7 +29,9 @@
           Se connecter
         </ButtonComponent>
       </form>
-      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">{{ error }}</p>
+      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">
+        {{ error }}
+      </p>
       <p class="text-center mt-6">
         Pas de compte ?
         <router-link
@@ -43,58 +45,58 @@
 </template>
 
 <script>
-import apiService from "../../services/apiService";
-import { jwtDecode } from "jwt-decode";
-import FormInputComponent from "../../components/FormInputComponent.vue";
-import ButtonComponent from "../../components/ButtonComponent.vue";
-import { roles } from "@/services/permissions";
+  import apiService from '../../services/apiService';
+  import { jwtDecode } from 'jwt-decode';
+  import FormInputComponent from '../../components/FormInputComponent.vue';
+  import ButtonComponent from '../../components/ButtonComponent.vue';
+  import { roles } from '@/services/permissions';
 
-export default {
-  name: "LoginPage",
-  components: {
-    FormInputComponent,
-    ButtonComponent,
-  },
-  data() {
-    return {
-      email: "",
-      password: "",
-      error: "",
-    };
-  },
-  methods: {
-    async handleLogin() {
-      try {
-        const response = await apiService.post("/auth/login", {
-          email: this.email,
-          password: this.password,
-        });
-
-        const token = response.data.token;
-
-        // Stocker le token
-        localStorage.setItem("token", token);
-
-        // Décoder le token
-        const decoded = jwtDecode(token);
-
-        // Mettre à jour le store avec les informations utilisateur
-        this.$store.commit("SET_AUTH", {
-          isAuthenticated: true,
-          user: decoded,
-        });
-
-        // Redirection selon le rôle de l'utilisateur
-        if (decoded.roleId === roles.ADMIN) {
-          this.$router.replace("/admin");
-        } else {
-          this.$router.replace("/user");
-        }
-      } catch (err) {
-        console.error("Erreur lors de la connexion:", err);
-        this.error = "Identifiant ou mot de passe incorrect.";
-      }
+  export default {
+    name: 'LoginPage',
+    components: {
+      FormInputComponent,
+      ButtonComponent,
     },
-  },
-};
+    data() {
+      return {
+        email: '',
+        password: '',
+        error: '',
+      };
+    },
+    methods: {
+      async handleLogin() {
+        try {
+          const response = await apiService.post('/auth/login', {
+            email: this.email,
+            password: this.password,
+          });
+
+          const token = response.data.token;
+
+          // Stocker le token
+          localStorage.setItem('token', token);
+
+          // Décoder le token
+          const decoded = jwtDecode(token);
+
+          // Mettre à jour le store avec les informations utilisateur
+          this.$store.commit('SET_AUTH', {
+            isAuthenticated: true,
+            user: decoded,
+          });
+
+          // Redirection selon le rôle de l'utilisateur
+          if (decoded.roleId === roles.ADMIN) {
+            this.$router.replace('/admin');
+          } else {
+            this.$router.replace('/user');
+          }
+        } catch (err) {
+          console.error('Erreur lors de la connexion:', err);
+          this.error = 'Identifiant ou mot de passe incorrect.';
+        }
+      },
+    },
+  };
 </script>

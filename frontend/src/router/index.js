@@ -1,3 +1,5 @@
+// frontend/src/router/index.js
+
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Si vous utilisez Vuex pour gérer les rôles
 import { refreshToken, hasPermission } from '@/services/authService';

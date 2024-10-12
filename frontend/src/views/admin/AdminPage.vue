@@ -7,11 +7,11 @@
 </template>
 
 <script>
-export default {
-  name: "AdminPage",
-};
+  export default {
+    name: 'AdminPage',
+  };
 </script>
 
 <style scoped>
-/* Style personnalisé pour la page Admin */
+  /* Style personnalisé pour la page Admin */
 </style>

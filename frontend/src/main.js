@@ -5,6 +5,8 @@ import router from './router'; // Importer le router
 import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/js/all.js';
 import './assets/tailwind.css'; // Import Tailwind CSS
+import 'leaflet/dist/leaflet.css';
+
 
 const app = createApp(App);
 

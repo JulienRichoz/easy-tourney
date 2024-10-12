@@ -50,62 +50,59 @@
           </select>
         </div>
 
-        <ButtonComponent
-          variant="primary" 
-          type="submit"
-          class="w-full"
-        >
+        <ButtonComponent variant="primary" type="submit" class="w-full">
           S'inscrire
         </ButtonComponent>
       </form>
 
-      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">{{ error }}</p>
+      <p v-if="error" class="text-red-500 mt-4 text-center font-semibold">
+        {{ error }}
+      </p>
     </div>
   </div>
 </template>
 
 <script>
-import apiService from "../../services/apiService";
-import FormInputComponent from "../../components/FormInputComponent.vue";
-import ButtonComponent from "../../components/ButtonComponent.vue";
+  import apiService from '../../services/apiService';
+  import FormInputComponent from '../../components/FormInputComponent.vue';
+  import ButtonComponent from '../../components/ButtonComponent.vue';
 
-export default {
-  name: "RegisterPage",
-  components: {
-    FormInputComponent,
-    ButtonComponent,
-  },
-  data() {
-    return {
-      name: "",
-      email: "",
-      password: "",
-      roleId: 3, // Valeur par défaut pour 'Player'
-      error: "",
-    };
-  },
-  methods: {
-    async handleRegister() {
-      try {
-        await apiService.post('/auth/register', {
-          name: this.name,
-          email: this.email,
-          password: this.password,
-          roleId: this.roleId,
-        });
+  export default {
+    name: 'RegisterPage',
+    components: {
+      FormInputComponent,
+      ButtonComponent,
+    },
+    data() {
+      return {
+        name: '',
+        email: '',
+        password: '',
+        roleId: 3, // Valeur par défaut pour 'Player'
+        error: '',
+      };
+    },
+    methods: {
+      async handleRegister() {
+        try {
+          await apiService.post('/auth/register', {
+            name: this.name,
+            email: this.email,
+            password: this.password,
+            roleId: this.roleId,
+          });
 
-        this.$router.push('/user');
-      } catch (err) {
-        console.error('Erreur lors de l\'inscription:', err);
-        if (err.response && err.response.data && err.response.data.message) {
-          this.error = err.response.data.message; // Utilise le message d'erreur renvoyé par le serveur
-        } else {
-          this.error = 'Erreur lors de l\'inscription. Veuillez vérifier vos informations.';
+          this.$router.push('/user');
+        } catch (err) {
+          console.error("Erreur lors de l'inscription:", err);
+          if (err.response && err.response.data && err.response.data.message) {
+            this.error = err.response.data.message; // Utilise le message d'erreur renvoyé par le serveur
+          } else {
+            this.error =
+              "Erreur lors de l'inscription. Veuillez vérifier vos informations.";
+          }
         }
-      }
-    }
-  }
-};
+      },
+    },
+  };
 </script>
-
-
