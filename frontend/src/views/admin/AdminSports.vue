@@ -62,7 +62,9 @@
     <ModalComponent
       :isVisible="showModal"
       :title="editingSportId ? 'Modifier le Sport' : 'Ajouter un Nouveau Sport'"
+      :isEditing="!!editingSportId"
       @close="closeModal"
+      @submit="handleFormSubmit"
     >
       <template #content>
         <form @submit.prevent="handleFormSubmit">
@@ -81,7 +83,8 @@
               required
             />
             <p v-if="nameError" class="text-red-500 text-sm mt-1">
-              Un sport avec ce nom existe déjà. Veuillez en choisir un autre.
+              Un sport avec ce nom existe déjà ou le champ est vide. Veuillez en
+              choisir un autre.
             </p>
           </div>
           <div class="mb-4">
@@ -90,9 +93,16 @@
             >
             <textarea
               v-model="newSport.rule"
-              class="w-full p-2 border border-gray-300 rounded-md"
+              :class="[
+                'w-full p-2 border rounded-md',
+                ruleError ? 'border-red-500' : 'border-gray-300',
+              ]"
+              @input="validateRule"
               required
             ></textarea>
+            <p v-if="ruleError" class="text-red-500 text-sm mt-1">
+              Les règles du sport sont obligatoires.
+            </p>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 font-semibold mb-2"
@@ -138,52 +148,16 @@
               }}</span>
             </div>
           </div>
-          <div class="flex justify-end space-x-4 mt-6">
-            <ButtonComponent
-              variant="secondary"
-              @click.stop="closeModal"
-              :nativeType="'button'"
-              >Annuler</ButtonComponent
-            >
-            <ButtonComponent
-              variant="primary"
-              :nativeType="'submit'"
-              :disabled="nameError"
-            >
-              {{ editingSportId ? 'Modifier' : 'Ajouter' }}
-            </ButtonComponent>
-          </div>
         </form>
       </template>
     </ModalComponent>
 
     <!-- Confirmation de suppression -->
-    <ModalComponent
+    <DeleteConfirmationModal
       :isVisible="showDeleteConfirmation"
-      title="Confirmation de suppression"
-      @close="closeDeleteConfirmation"
-    >
-      <template #content>
-        <p class="mb-6">
-          Êtes-vous sûr de vouloir supprimer ce sport ? Cette action est
-          irréversible.
-        </p>
-      </template>
-      <template #footer>
-        <ButtonComponent
-          variant="secondary"
-          @click.stop="closeDeleteConfirmation"
-          >Annuler</ButtonComponent
-        >
-        <ButtonComponent
-          variant="danger"
-          @click.stop="deleteSport(confirmedDeleteSportId)"
-          :disabled="isDeleting"
-        >
-          Supprimer
-        </ButtonComponent>
-      </template>
-    </ModalComponent>
+      @cancel="closeDeleteConfirmation"
+      @confirm="deleteSport(confirmedDeleteSportId)"
+    />
   </div>
 </template>
 
@@ -191,12 +165,14 @@
   import apiService from '@/services/apiService';
   import ModalComponent from '@/components/ModalComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import truncateMixin from '@/mixins/truncateMixin';
 
   export default {
     components: {
       ModalComponent,
       ButtonComponent,
+      DeleteConfirmationModal,
     },
     mixins: [truncateMixin],
     data() {
@@ -215,8 +191,9 @@
         editingSportId: null,
         selectedFile: null,
         nameError: false,
-        isDeleting: false, // Ajout d'un verrou pour éviter la suppression en doublon
-        isSubmitting: false, // Ajout d'un verrou pour éviter la soumission en doublon
+        ruleError: false,
+        isDeleting: false,
+        isSubmitting: false,
       };
     },
     methods: {
@@ -242,6 +219,7 @@
         };
         this.selectedFile = null;
         this.nameError = false;
+        this.ruleError = false;
         this.showModal = true;
       },
       editSport(sport) {
@@ -252,6 +230,7 @@
         };
         this.selectedFile = null;
         this.nameError = false;
+        this.ruleError = false;
         this.showModal = true;
       },
       handleFormSubmit() {
@@ -259,7 +238,8 @@
           return;
         }
         this.isSubmitting = true;
-        if (this.nameError) {
+        this.validateFields();
+        if (this.nameError || this.ruleError) {
           this.isSubmitting = false;
           return;
         }
@@ -320,14 +300,28 @@
       },
       closeModal() {
         this.showModal = false;
-        this.isSubmitting = false; // Réinitialise l'état
+        this.isSubmitting = false;
       },
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteSportId = null;
       },
+      validateFields() {
+        this.validateName();
+        this.validateRule();
+      },
       validateName() {
-        this.nameError = !this.isNameUnique(this.newSport.name);
+        // Si on est en mode édition, on ne vérifie pas l'unicité du nom
+        if (this.editingSportId) {
+          this.nameError = !this.newSport.name; // Vérifie seulement si le champ est vide
+        } else {
+          // Vérification de l'unicité du nom seulement si on ajoute un nouveau sport
+          this.nameError =
+            !this.isNameUnique(this.newSport.name) || !this.newSport.name;
+        }
+      },
+      validateRule() {
+        this.ruleError = !this.newSport.rule;
       },
       isNameUnique(name) {
         return !this.sports.some(
@@ -346,7 +340,7 @@
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%; /* Ajustez cette valeur selon la taille souhaitée */
+    max-width: 100%;
   }
 
   button {

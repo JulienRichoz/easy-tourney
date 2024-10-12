@@ -1,3 +1,6 @@
+// server/config/config.js
+// Purpose: Define the configuration for different environments
+
 require('dotenv').config();
 
 module.exports = {

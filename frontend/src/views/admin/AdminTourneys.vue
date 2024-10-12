@@ -1,5 +1,4 @@
 <!-- frontend/src/views/admin/AdminTourneys.vue -->
-
 <template>
   <div class="p-6">
     <div class="flex items-center justify-between mb-8">
@@ -11,7 +10,7 @@
           v-model="filterStatus"
           class="p-2 border border-gray-300 rounded-md"
         >
-          <option value="">All Status</option>
+          <option value="">Tous les statuts</option>
           <option value="draft">Draft</option>
           <option value="ready">Prêt</option>
           <option value="active">Actif</option>
@@ -21,7 +20,7 @@
           v-model="filterDate"
           class="ml-4 p-2 border border-gray-300 rounded-md"
         >
-          <option value="">All Dates</option>
+          <option value="">Toutes les dates</option>
           <option value="upcoming">À venir</option>
           <option value="past">Passés</option>
         </select>
@@ -74,16 +73,16 @@
             {{ tourney.status }}
           </span>
         </div>
-        <div class="flex space-x-4 mt-4 w-full card-footer">
-          <ButtonComponent
-            variant="warning"
-            icon="PencilIcon"
-            @click.stop="editTourney(tourney)"
-          />
+        <div class="flex space-x-4 mt-4 w-full card-footer justify-between">
           <ButtonComponent
             variant="danger"
             icon="TrashIcon"
             @click.stop="confirmDeleteTourney(tourney.id)"
+          />
+          <ButtonComponent
+            variant="warning"
+            icon="PencilIcon"
+            @click.stop="editTourney(tourney)"
           />
         </div>
       </div>
@@ -95,7 +94,9 @@
       :title="
         editingTourneyId ? 'Modifier le Tournoi' : 'Ajouter un Nouveau Tournoi'
       "
+      :isEditing="!!editingTourneyId"
       @close="closeModal"
+      @submit="handleFormSubmit"
     >
       <template #content>
         <form @submit.prevent="handleFormSubmit">
@@ -108,18 +109,14 @@
               v-model="newTourney.name"
               :class="[
                 'w-full p-2 border rounded-md',
-                nameError || nameErrorEmpty
-                  ? 'border-red-500'
-                  : 'border-gray-300',
+                nameError ? 'border-red-500' : 'border-gray-300',
               ]"
               @input="validateNameField"
               required
             />
             <p v-if="nameError" class="text-red-500 text-sm mt-1">
-              Un tournoi avec ce nom existe déjà. Veuillez en choisir un autre.
-            </p>
-            <p v-if="nameErrorEmpty" class="text-red-500 text-sm mt-1">
-              Le nom est obligatoire.
+              Un tournoi avec ce nom existe déjà ou le champ est vide. Veuillez
+              en choisir un autre.
             </p>
           </div>
           <div class="mb-4">
@@ -206,66 +203,36 @@
               <option value="completed">Terminé</option>
             </select>
           </div>
-          <div class="flex justify-end space-x-4 mt-6">
-            <ButtonComponent
-              variant="secondary"
-              @click.stop="closeModal"
-              :nativeType="'button'"
-              >Annuler</ButtonComponent
-            >
-            <ButtonComponent
-              variant="primary"
-              :nativeType="'submit'"
-              :disabled="formHasErrors || isSaving"
-            >
-              {{ editingTourneyId ? 'Modifier' : 'Ajouter' }}
-            </ButtonComponent>
-          </div>
         </form>
       </template>
     </ModalComponent>
 
     <!-- Confirmation de suppression -->
-    <ModalComponent
+    <DeleteConfirmationModal
       :isVisible="showDeleteConfirmation"
-      title="Confirmation de suppression"
-      @close="closeDeleteConfirmation"
-    >
-      <template #content>
-        <p class="mb-6">
-          Êtes-vous sûr de vouloir supprimer ce tournoi ? Cette action est
-          irréversible.
-        </p>
-      </template>
-      <template #footer>
-        <ButtonComponent variant="secondary" @click="closeDeleteConfirmation"
-          >Annuler</ButtonComponent
-        >
-        <ButtonComponent
-          variant="danger"
-          @click="deleteTourney(confirmedDeleteTourneyId)"
-          >Supprimer</ButtonComponent
-        >
-      </template>
-    </ModalComponent>
+      @cancel="closeDeleteConfirmation"
+      @confirm="deleteTourney(confirmedDeleteTourneyId)"
+    />
   </div>
 </template>
 
 <script>
+  import apiService from '@/services/apiService';
+  import ModalComponent from '@/components/ModalComponent.vue';
+  import ButtonComponent from '@/components/ButtonComponent.vue';
+  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import {
     PlusIcon,
     MapPinIcon,
     CalendarDaysIcon,
   } from '@heroicons/vue/24/outline';
-  import apiService from '@/services/apiService';
-  import ModalComponent from '@/components/ModalComponent.vue';
-  import ButtonComponent from '@/components/ButtonComponent.vue';
   import truncateMixin from '@/mixins/truncateMixin';
 
   export default {
     components: {
       ModalComponent,
       ButtonComponent,
+      DeleteConfirmationModal,
       PlusIcon,
       MapPinIcon,
       CalendarDaysIcon,
@@ -288,14 +255,13 @@
         },
         editingTourneyId: null,
         nameError: false,
-        nameErrorEmpty: false,
         locationError: false,
         dateError: false,
         fieldError: false,
         filterStatus: '',
         filterDate: '',
         isSaving: false,
-        isSubmitting: false, // Pour éviter plusieurs clics
+        isSubmitting: false,
       };
     },
     computed: {
@@ -313,15 +279,6 @@
           return statusMatches && dateMatches;
         });
       },
-      formHasErrors() {
-        return (
-          this.nameError ||
-          this.locationError ||
-          this.dateError ||
-          this.fieldError ||
-          this.nameErrorEmpty
-        );
-      },
     },
     methods: {
       async fetchTourneys() {
@@ -332,9 +289,20 @@
           console.error('Erreur lors de la récupération des tournois:', error);
         }
       },
+      handleFileUpload(event) {
+        this.selectedFile = event.target.files[0];
+      },
       openAddTourneyModal() {
         this.editingTourneyId = null;
-        this.clearTourneyData();
+        this.newTourney = {
+          name: '',
+          location: '',
+          dateTourney: '',
+          domain: '',
+          numberOfField: 0,
+          emergencyDetails: '',
+          status: 'draft',
+        };
         this.clearErrors();
         this.showModal = true;
       },
@@ -349,18 +317,23 @@
           return;
         }
         this.isSubmitting = true;
-        // Appelle saveTourney après la validation des champs
         this.validateFields();
-        if (!this.formHasErrors) {
-          this.saveTourney();
+        if (
+          this.nameError ||
+          this.locationError ||
+          this.dateError ||
+          this.fieldError
+        ) {
+          this.isSubmitting = false;
+          return;
         }
-        this.isSubmitting = false; // Réinitialisation après la validation
+        this.saveTourney();
       },
       async saveTourney() {
         if (this.isSaving) {
           return;
         }
-        this.isSaving = true; // Empêche plusieurs enregistrements simultanés
+        this.isSaving = true;
 
         try {
           if (this.editingTourneyId) {
@@ -379,7 +352,8 @@
             "Une erreur s'est produite lors de l'enregistrement du tournoi. Veuillez réessayer."
           );
         } finally {
-          this.isSaving = false; // Réactive le bouton de sauvegarde après la requête
+          this.isSaving = false;
+          this.isSubmitting = false;
         }
       },
       confirmDeleteTourney(id) {
@@ -414,8 +388,7 @@
       },
       validateNameField() {
         this.nameError =
-          !this.isNameUnique(this.newTourney.name) && !this.editingTourneyId;
-        this.nameErrorEmpty = !this.newTourney.name;
+          !this.isNameUnique(this.newTourney.name) || !this.newTourney.name;
       },
       validateLocationField() {
         this.locationError = !this.newTourney.location;
@@ -428,21 +401,9 @@
       },
       clearErrors() {
         this.nameError = false;
-        this.nameErrorEmpty = false;
         this.locationError = false;
         this.dateError = false;
         this.fieldError = false;
-      },
-      clearTourneyData() {
-        this.newTourney = {
-          name: '',
-          location: '',
-          dateTourney: '',
-          domain: '',
-          numberOfField: 0,
-          emergencyDetails: '',
-          status: 'draft',
-        };
       },
       isNameUnique(name) {
         return !this.tourneys.some(
@@ -463,36 +424,25 @@
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%; /* Ajustez cette valeur selon la taille souhaitée */
+    max-width: 100%;
+  }
+
+  button {
+    transition: transform 0.2s ease;
+  }
+  button:hover {
+    transform: scale(1.05);
   }
 
   .card-footer {
     margin-top: auto;
     width: 100%;
     display: flex;
-    justify-content: space-between; /* Ajuste l'espacement pour maintenir les boutons dans la carte */
+    justify-content: space-between;
     gap: 0.5rem;
   }
 
   .card-footer button {
     flex: 1;
-  }
-
-  button {
-    transition: transform 0.2s ease;
-  }
-
-  button:hover {
-    transform: scale(1.05);
-  }
-
-  .modal-content Status {
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  /* Ajouter une hauteur fixe aux cartes */
-  .h-72 {
-    height: 18rem;
   }
 </style>

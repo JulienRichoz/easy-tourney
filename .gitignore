@@ -26,3 +26,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Image upload par l'utilisateur sauf celles du seeder
+server/uploads/*
+
+# But don't ignore these specific files
+!server/uploads/basketball.jpg
+!server/uploads/football.jpg
+!server/uploads/ultimate.jpeg
+!server/uploads/volleyball.jpeg
+!server/uploads/badminton.png
