@@ -59,3 +59,25 @@ exports.updateSportField = async (req, res) => {
         res.status(500).json({ message: "Erreur lors de la mise à jour du sport associé au terrain" });
     }
 };
+
+exports.deleteSportField = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Trouver le sportField par son ID
+        const sportField = await SportField.findByPk(id);
+
+        if (!sportField) {
+            return res.status(404).json({ message: "SportField non trouvé." });
+        }
+
+        // Supprimer l'association du sport avec le terrain
+        await sportField.destroy();
+
+        res.status(200).json({ message: 'SportField supprimé avec succès.' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression du SportField :', error);
+        res.status(500).json({ message: 'Erreur lors de la suppression du SportField' });
+    }
+};
+

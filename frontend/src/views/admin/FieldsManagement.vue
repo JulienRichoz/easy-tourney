@@ -59,18 +59,20 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id,
-        tourney: {},
-        fields: [],
-        sports: [],
-        draggedSport: null,
+        tourneyId: this.$route.params.id, // Identifiant du tournoi en cours
+        tourney: {}, // Détails du tournoi
+        fields: [], // Liste des terrains disponibles
+        sports: [], // Liste des sports disponibles
+        draggedSport: null, // Sport en cours de déplacement
+        draggedEvent: null, // Événement en cours de déplacement
       };
     },
     async mounted() {
-      await this.fetchTourneyDetails();
-      await this.fetchSports();
+      await this.fetchTourneyDetails(); // Récupération des détails du tournoi
+      await this.fetchSports(); // Récupération de la liste des sports disponibles
     },
     methods: {
+      // Récupérer les détails du tournoi actuel
       async fetchTourneyDetails() {
         try {
           const response = await apiService.get(`/tourneys/${this.tourneyId}`);
@@ -83,6 +85,7 @@
           );
         }
       },
+      // Récupérer la liste des sports disponibles
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
@@ -92,9 +95,9 @@
         }
       },
 
+      // Gestion du drop sur un terrain
       handleFieldDrop(field) {
         console.log('Dépôt détecté sur le terrain:', field);
-        console.log('This.draggedSport: ', this.draggedSport);
         if (!this.draggedSport || !this.draggedSport.id) {
           console.error(
             'Erreur : Aucune donnée de sport valide trouvée lors du drag.'
@@ -102,6 +105,7 @@
           return;
         }
 
+        // Création des données pour assigner le sport au terrain
         const data = {
           fieldId: field.id,
           sportId: this.draggedSport.id,
@@ -109,22 +113,35 @@
           endTime: '10:00:00', // Exemple d'heure par défaut
           information: '',
         };
-        console.log('Field id:', field.id);
         console.log('Données pour assigner le sport au terrain:', data);
         this.assignSport(data);
 
         // Réinitialiser draggedSport après le drop
         this.draggedSport = null;
       },
+
+      // Gestion de l'événement de début du drag d'un sport
       handleSportDragStart(sport) {
         this.draggedSport = sport;
+        this.draggedEvent = null; // Assurez-vous que l'événement traîné est null
         console.log('handleSportDragStart:', this.draggedSport);
       },
-      handleDragEnd(evt) {
-        console.log('Fin du drag:', evt);
-        this.draggedSport = null; // Réinitialiser à la fin
+
+      // Gestion de l'événement de début du drag d'un événement
+      handleEventDragStart(event) {
+        this.draggedEvent = event;
+        this.draggedSport = null; // Assurez-vous que le sport traîné est null
+        console.log('handleEventDragStart:', this.draggedEvent);
       },
 
+      // Gestion de l'événement de fin du drag
+      handleDragEnd(evt) {
+        console.log('Fin du drag:', evt);
+        this.draggedSport = null; // Réinitialiser draggedSport à la fin
+        this.draggedEvent = null; // Réinitialiser draggedEvent à la fin
+      },
+
+      // Gestion du déplacement d'un événement dans le calendrier (quand un sport est reçu par un terrain)
       handleEventReceive({ event }) {
         console.log('Sport reçu dans le calendrier:', event);
 
@@ -140,20 +157,7 @@
           return;
         }
 
-        // Vérifiez les propriétés avant de les utiliser
-        console.log(
-          "Propriétés de l'événement:",
-          event.start,
-          event.end,
-          event.extendedProps
-        );
-        if (!event.extendedProps || !event.extendedProps.fieldId) {
-          console.error(
-            "Erreur : Les propriétés étendues de l'événement sont manquantes."
-          );
-          return;
-        }
-
+        // Création des données pour assigner le sport au terrain
         const data = {
           fieldId: event.extendedProps.fieldId,
           sportId: this.draggedSport.id,
@@ -175,9 +179,11 @@
           );
         }
 
-        // Réinitialiser le sport traîné après le drop
+        // Réinitialiser draggedSport après le drop
         this.draggedSport = null;
       },
+
+      // Fonction pour assigner un sport à un terrain
       async assignSport(data) {
         try {
           console.log(
@@ -185,8 +191,7 @@
             data
           );
           await apiService.post('/sport-fields', data);
-
-          await this.fetchTourneyDetails();
+          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après l'assignation
         } catch (error) {
           console.error(
             "Erreur lors de l'assignation du sport au terrain:",
@@ -195,6 +200,7 @@
         }
       },
 
+      // Fonction pour supprimer un événement d'un terrain
       async deleteEvent(eventId) {
         if (!eventId) {
           console.error("Erreur : L'ID de l'événement est manquant.");
@@ -205,11 +211,13 @@
           console.log("Suppression de l'événement avec ID:", eventId);
           await apiService.delete(`/sport-fields/${eventId}`);
           alert('Sport supprimé avec succès.');
-          await this.fetchTourneyDetails();
+          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après la suppression
         } catch (error) {
           console.error('Erreur lors de la suppression du sport:', error);
         }
       },
+
+      // Options de configuration du calendrier FullCalendar pour chaque terrain
       getFieldCalendarOptions(field) {
         return {
           plugins: [timeGridPlugin, interactionPlugin],
@@ -239,51 +247,63 @@
               fieldId: field.id,
             },
           })),
-          eventDrop: this.handleEventDrop,
-          eventResize: this.handleEventResize,
-          eventReceive: this.handleEventReceive,
+          eventContent: function (arg) {
+            const startTime = arg.event.start.toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const endTime = arg.event.end.toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+
+            return {
+              html: `
+                <div class="fc-event-main" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>
+                    <strong>${arg.event.title}</strong><br/>
+                    <small>${startTime} - ${endTime}</small>
+                  </span>
+                  <span class="delete-icon" style="cursor: pointer; color: red;">&#10060;</span>
+                </div>
+              `,
+            };
+          },
+          eventClick: (info) => {
+            const deleteIcon = info.el.querySelector('.delete-icon');
+            if (deleteIcon) {
+              deleteIcon.addEventListener('click', (e) => {
+                e.stopPropagation(); // Empêche la propagation du clic pour éviter l'ouverture du détail de l'événement
+                this.handleDeleteSportField(info.event.id);
+              });
+            }
+          },
+          eventDrop: this.handleEventDrop, // Gestion du déplacement d'un événement
+          eventResize: this.handleEventResize, // Gestion du redimensionnement d'un événement
+          eventReceive: this.handleEventReceive, // Gestion de la réception d'un événement
+          eventDragStart: ({ event }) => this.handleEventDragStart(event), // Gestion du début du drag d'un événement
         };
       },
+
+      // Gestion du déplacement d'un événement dans le calendrier (changement de terrain ou de temps)
       handleEventDrop({ event }) {
         console.log('Événement déplacé:', event);
-
         if (!event) {
           console.error("Erreur : L'événement n'est pas défini.");
           return;
         }
 
-        // Vérifiez les propriétés avant de les utiliser
-        if (!event.extendedProps || !event.extendedProps.fieldId) {
-          console.error(
-            "Erreur : Les propriétés étendues de l'événement sont manquantes."
-          );
-          return;
-        }
-
-        // Le nouvel emplacement du terrain (fieldId) auquel l'événement a été déplacé
-        const newFieldId =
-          event.getResources && event.getResources().length > 0
-            ? event.getResources()[0].id
-            : event.extendedProps.fieldId;
-
+        // Création de l'objet contenant les informations mises à jour de l'événement
         const updatedEvent = {
           id: event.id,
           startTime: event.start
-            ? event.start
-                .toISOString()
-                .split('T')[1]
-                .split('.')[0]
-                .replace('Z', '')
+            ? event.start.toISOString().split('T')[1].split('.')[0]
             : null,
           endTime: event.end
-            ? event.end
-                .toISOString()
-                .split('T')[1]
-                .split('.')[0]
-                .replace('Z', '')
+            ? event.end.toISOString().split('T')[1].split('.')[0]
             : null,
           oldFieldId: event.extendedProps.fieldId, // L'ancien terrain où l'événement était
-          newFieldId: newFieldId, // Le nouveau terrain si différent de l'ancien
+          newFieldId: event.extendedProps.fieldId, // Le nouveau terrain si différent de l'ancien
         };
 
         if (updatedEvent.startTime && updatedEvent.endTime) {
@@ -306,6 +326,7 @@
         }
       },
 
+      // Gestion du redimensionnement d'un événement dans le calendrier
       handleEventResize({ event }) {
         console.log('Événement redimensionné:', event);
         if (!event) {
@@ -335,6 +356,24 @@
           );
         }
       },
+
+      // Suppression d'un sportField
+      async handleDeleteSportField(sportFieldId) {
+        if (!sportFieldId) {
+          console.error('Erreur : ID du sportField manquant.');
+          return;
+        }
+
+        try {
+          await apiService.delete(`/sport-fields/${sportFieldId}`);
+          console.log('Le sportField a été supprimé avec succès.');
+          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après suppression
+        } catch (error) {
+          console.error('Erreur lors de la suppression du sportField:', error);
+        }
+      },
+
+      // Suppression d'un événement de l'ancien terrain (quand il est déplacé)
       async deleteEventFromField(eventId, fieldId) {
         try {
           console.log(
@@ -349,6 +388,8 @@
           );
         }
       },
+
+      // Mise à jour d'un événement dans la base de données
       async updateEventInDatabase(event) {
         console.log(
           "Mise à jour de l'événement dans la base de données:",
@@ -367,7 +408,7 @@
             fieldId: event.newFieldId, // Utilisez le nouveau terrain pour l'update
           });
           console.log('Les horaires ont été mis à jour avec succès.');
-          await this.fetchTourneyDetails();
+          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après la mise à jour
         } catch (error) {
           console.error('Erreur lors de la mise à jour des horaires:', error);
           alert(
