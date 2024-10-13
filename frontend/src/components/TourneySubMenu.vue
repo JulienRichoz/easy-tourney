@@ -7,6 +7,16 @@
     >
       Détails du Tournoi
     </router-link>
+
+    <!-- Ajouter des terrains en deuxième position -->
+    <router-link
+      :to="`/tourneys/${tourneyId}/add-field`"
+      class="tourney-nav-item"
+      :class="{ active: $route.name === 'AddField' }"
+    >
+      Ajouter des Terrains
+    </router-link>
+
     <router-link
       :to="`/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item"
@@ -14,6 +24,7 @@
     >
       Assignation des Terrains
     </router-link>
+
     <div
       class="tourney-nav-item"
       :class="{ active: activeTab === 'groups' }"
@@ -41,7 +52,6 @@
     methods: {
       selectTab(tab) {
         this.activeTab = tab;
-        // Éventuellement, émet un événement ou fait une navigation pour charger le bon contenu
       },
     },
     props: {
