@@ -265,14 +265,14 @@
             },
           })),
           eventContent: function (arg) {
-            const startTime = arg.event.start.toLocaleTimeString('fr-FR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
-            const endTime = arg.event.end.toLocaleTimeString('fr-FR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
+            const startTime = arg.event.start
+              .toISOString()
+              .split('T')[1]
+              .substring(0, 5); // Heure au format HH:MM
+            const endTime = arg.event.end
+              .toISOString()
+              .split('T')[1]
+              .substring(0, 5); // Heure au format HH:MM
 
             return {
               html: `
