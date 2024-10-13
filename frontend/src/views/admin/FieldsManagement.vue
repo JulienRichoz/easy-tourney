@@ -3,98 +3,48 @@
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" :tourneyName="tourney.name" />
     <div class="fields-management-container">
-      <h2 class="page-title">
-        Gestion des Terrains pour le Tournoi : {{ tourney.name }}
-      </h2>
+      <draggable
+        v-if="sports.length > 0"
+        v-model="sports"
+        group="sports"
+        itemKey="id"
+        class="sports-draggable"
+      >
+        <template #item="{ element }">
+          <div
+            :key="element.id"
+            class="sport-item"
+            draggable="true"
+            @dragstart="handleSportDragStart(element)"
+            @dragend="handleDragEnd"
+          >
+            {{ element.name }}
+          </div>
+        </template>
+      </draggable>
 
       <div class="fields-grid">
         <!-- Affichage des terrains avec calendrier -->
-        <div v-for="field in fields" :key="field.id" class="field-card">
+        <div
+          v-for="field in fields"
+          :key="field.id"
+          class="field-card"
+          @drop="handleFieldDrop(field)"
+          @dragover.prevent
+        >
           <h3>{{ field.name }}</h3>
           <p>{{ field.description }}</p>
 
           <!-- Calendrier FullCalendar pour chaque terrain -->
           <FullCalendar :options="getFieldCalendarOptions(field)" />
-
-          <div class="button-group">
-            <ButtonComponent
-              variant="primary"
-              @click="openAssignSportModal(field)"
-            >
-              Ajouter un sport
-            </ButtonComponent>
-            <ButtonComponent variant="warning" @click="editField(field)">
-              Modifier
-            </ButtonComponent>
-            <ButtonComponent
-              variant="danger"
-              @click="confirmDeleteField(field.id)"
-            >
-              Supprimer
-            </ButtonComponent>
-          </div>
         </div>
       </div>
-
-      <!-- Modal pour ajouter un sport au terrain -->
-      <ModalComponent
-        :isVisible="showModal"
-        title="Ajouter un Sport au Terrain"
-        @close="closeModal"
-        @submit="assignSport"
-      >
-        <template #content>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2">Sport</label>
-            <select
-              v-model="selectedSport"
-              class="w-full p-2 border rounded-md"
-            >
-              <option v-for="sport in sports" :key="sport.id" :value="sport.id">
-                {{ sport.name }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Heure de début</label
-            >
-            <input
-              type="time"
-              v-model="startTime"
-              class="w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Heure de fin</label
-            >
-            <input
-              type="time"
-              v-model="endTime"
-              class="w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-        </template>
-      </ModalComponent>
-
-      <!-- Confirmation de suppression -->
-      <DeleteConfirmationModal
-        :isVisible="showDeleteConfirmation"
-        message="Êtes-vous sûr de vouloir supprimer ce terrain ? Cette action est irréversible."
-        @cancel="closeDeleteConfirmation"
-        @confirm="deleteField(confirmedDeleteFieldId)"
-      />
     </div>
   </div>
 </template>
 
 <script>
-  import ModalComponent from '@/components/ModalComponent.vue';
-  import ButtonComponent from '@/components/ButtonComponent.vue';
-  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import draggable from 'vuedraggable';
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
   import interactionPlugin from '@fullcalendar/interaction';
@@ -103,9 +53,7 @@
 
   export default {
     components: {
-      ModalComponent,
-      ButtonComponent,
-      DeleteConfirmationModal,
+      draggable,
       FullCalendar,
       TourneySubMenu,
     },
@@ -114,14 +62,9 @@
         tourneyId: this.$route.params.id,
         tourney: {},
         fields: [],
-        showModal: false,
-        showDeleteConfirmation: false,
-        confirmedDeleteFieldId: null,
-        selectedField: null,
-        selectedSport: null,
-        startTime: '',
-        endTime: '',
         sports: [],
+        draggedSport: null,
+        showDeleteZone: false,
       };
     },
     async mounted() {
@@ -133,7 +76,7 @@
         try {
           const response = await apiService.get(`/tourneys/${this.tourneyId}`);
           this.tourney = response.data;
-          this.fields = response.data.fields; // Mettre à jour les terrains
+          this.fields = response.data.fields;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
@@ -149,34 +92,100 @@
           console.error('Erreur lors de la récupération des sports:', error);
         }
       },
-      openAssignSportModal(field) {
-        this.selectedField = field;
-        this.showModal = true;
-      },
-      closeModal() {
-        this.showModal = false;
-        this.selectedField = null;
-        this.selectedSport = null;
-        this.startTime = '';
-        this.endTime = '';
-      },
-      async assignSport() {
-        if (!this.selectedSport || !this.startTime || !this.endTime) {
-          alert('Tous les champs sont requis.');
+      handleFieldDrop(field) {
+        console.log('Dépôt détecté sur le terrain:', field);
+        console.log('This.draggedSport: ', this.draggedSport);
+        if (!this.draggedSport || !this.draggedSport.id) {
+          console.error(
+            'Erreur : Aucune donnée de sport valide trouvée lors du drag.'
+          );
           return;
         }
 
+        const data = {
+          fieldId: field.id,
+          sportId: this.draggedSport.id,
+          startTime: '09:00:00', // Exemple d'heure par défaut
+          endTime: '10:00:00', // Exemple d'heure par défaut
+          information: '',
+        };
+        console.log('Field id:', field.id);
+        console.log('Données pour assigner le sport au terrain:', data);
+        this.assignSport(data);
+
+        // Réinitialiser draggedSport après le drop
+        this.draggedSport = null;
+      },
+      handleSportDragStart(sport) {
+        this.draggedSport = sport;
+        console.log('handleSportDragStart:', this.draggedSport);
+      },
+      handleDragEnd(evt) {
+        console.log('Fin du drag:', evt);
+        this.draggedSport = null; // Réinitialiser à la fin
+      },
+
+      handleEventReceive({ event }) {
+        console.log('Sport reçu dans le calendrier:', event);
+
+        if (!event) {
+          console.error("Erreur : L'événement n'est pas défini.");
+          return;
+        }
+
+        if (!this.draggedSport) {
+          console.error(
+            "Erreur : Aucune donnée de sport n'a été trouvée lors du drag."
+          );
+          return;
+        }
+
+        // Vérifiez les propriétés avant de les utiliser
+        console.log(
+          "Propriétés de l'événement:",
+          event.start,
+          event.end,
+          event.extendedProps
+        );
+        if (!event.extendedProps || !event.extendedProps.fieldId) {
+          console.error(
+            "Erreur : Les propriétés étendues de l'événement sont manquantes."
+          );
+          return;
+        }
+
+        const data = {
+          fieldId: event.extendedProps.fieldId,
+          sportId: this.draggedSport.id,
+          startTime: event.start
+            ? event.start.toISOString().split('T')[1].split('.')[0]
+            : null,
+          endTime: event.end
+            ? event.end.toISOString().split('T')[1].split('.')[0]
+            : null,
+          information: '',
+        };
+
+        if (data.startTime && data.endTime) {
+          console.log('Données pour assigner le sport:', data);
+          this.assignSport(data);
+        } else {
+          console.error(
+            'Erreur : Les horaires de début ou de fin sont manquants.'
+          );
+        }
+
+        // Réinitialiser le sport traîné après le drop
+        this.draggedSport = null;
+      },
+      async assignSport(data) {
         try {
-          const data = {
-            fieldId: this.selectedField.id,
-            sportId: this.selectedSport,
-            startTime: this.startTime,
-            endTime: this.endTime,
-            information: '',
-          };
+          console.log(
+            "Tentative d'ajout du sport au terrain avec les données:",
+            data
+          );
           await apiService.post('/sport-fields', data);
           alert('Sport ajouté au terrain avec succès.');
-          this.closeModal();
           await this.fetchTourneyDetails();
         } catch (error) {
           console.error(
@@ -185,9 +194,23 @@
           );
         }
       },
+
+      async deleteEvent(eventId) {
+        if (!eventId) {
+          console.error("Erreur : L'ID de l'événement est manquant.");
+          return;
+        }
+
+        try {
+          console.log("Suppression de l'événement avec ID:", eventId);
+          await apiService.delete(`/sport-fields/${eventId}`);
+          alert('Sport supprimé avec succès.');
+          await this.fetchTourneyDetails();
+        } catch (error) {
+          console.error('Erreur lors de la suppression du sport:', error);
+        }
+      },
       getFieldCalendarOptions(field) {
-        // Génère les options du calendrier pour un terrain spécifique
-        console.log(this.startDate);
         return {
           plugins: [timeGridPlugin, interactionPlugin],
           initialView: 'timeGridDay',
@@ -195,16 +218,17 @@
           initialDate: this.tourney.dateTourney,
           locale: 'fr',
           editable: true,
+          droppable: true, // Permet de déposer des éléments dans le calendrier
           slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false, // Format 24h
+            hour12: false,
           },
-          headerToolbar: false, // Supprimer les onglets de navigation et la date
-          allDaySlot: false, // Supprimer le slot "all-day"
-          height: 500, // Agrandir la vue du calendrier dans la card
-          slotMinTime: '06:00:00', // Heure de début minimum
-          slotMaxTime: '20:00:00', // Heure de fin maximum
+          headerToolbar: false,
+          allDaySlot: false,
+          height: 500,
+          slotMinTime: '06:00:00',
+          slotMaxTime: '20:00:00',
           events: field.sportFields.map((sportField) => ({
             id: sportField.id,
             title: sportField.sport.name,
@@ -217,39 +241,96 @@
           })),
           eventDrop: this.handleEventDrop,
           eventResize: this.handleEventResize,
+          eventReceive: this.handleEventReceive,
         };
       },
       handleEventDrop({ event }) {
-        // Mise à jour côté backend lorsque l'événement est déplacé
         console.log('Événement déplacé:', event);
 
-        // Extraire l'heure de début et de fin en supprimant le fuseau horaire
-        const startTime = event.start.toISOString().split('T')[1].split('.')[0]; // Format HH:MM:SS
-        const endTime = event.end.toISOString().split('T')[1].split('.')[0]; // Format HH:MM:SS
+        if (!event) {
+          console.error("Erreur : L'événement n'est pas défini.");
+          return;
+        }
+
+        // Vérifiez les propriétés avant de les utiliser
+        if (!event.extendedProps || !event.extendedProps.fieldId) {
+          console.error(
+            "Erreur : Les propriétés étendues de l'événement sont manquantes."
+          );
+          return;
+        }
 
         const updatedEvent = {
           id: event.id,
-          startTime,
-          endTime,
+          startTime: event.start
+            ? event.start
+                .toISOString()
+                .split('T')[1]
+                .split('.')[0]
+                .replace('Z', '')
+            : null,
+          endTime: event.end
+            ? event.end
+                .toISOString()
+                .split('T')[1]
+                .split('.')[0]
+                .replace('Z', '')
+            : null,
           fieldId: event.extendedProps.fieldId,
         };
 
-        this.updateEventInDatabase(updatedEvent);
+        if (updatedEvent.startTime && updatedEvent.endTime) {
+          console.log(
+            "Données mises à jour après déplacement de l'événement:",
+            updatedEvent
+          );
+          this.updateEventInDatabase(updatedEvent);
+        } else {
+          console.error(
+            'Erreur : Les horaires de début ou de fin sont manquants.'
+          );
+        }
       },
+
       handleEventResize({ event }) {
-        // Mise à jour côté backend lorsque l'événement est redimensionné
         console.log('Événement redimensionné:', event);
+        if (!event) {
+          console.error(
+            "Erreur : L'événement de redimensionnement n'est pas défini."
+          );
+          return;
+        }
+
+        const formatTime = (date) => {
+          return date.toISOString().split('T')[1].split('.')[0];
+        };
+
         const updatedEvent = {
           id: event.id,
-          startTime: event.startStr.split('T')[1],
-          endTime: event.endStr.split('T')[1],
+          startTime: formatTime(event.start).replace('Z', ''), // Enlever le Z
+          endTime: formatTime(event.end).replace('Z', ''), // Enlever le Z
           fieldId: event.extendedProps.fieldId,
         };
 
-        this.updateEventInDatabase(updatedEvent);
+        if (updatedEvent.startTime && updatedEvent.endTime) {
+          console.log("Données mises à jour pour l'événement:", updatedEvent);
+          this.updateEventInDatabase(updatedEvent);
+        } else {
+          console.error(
+            'Erreur : Les horaires de début ou de fin sont manquants.'
+          );
+        }
       },
-
       async updateEventInDatabase(event) {
+        console.log(
+          "Mise à jour de l'événement dans la base de données:",
+          event
+        );
+        if (!event || !event.id) {
+          console.error('Erreur : Données de mise à jour incorrectes.');
+          return;
+        }
+
         try {
           await apiService.put(`/sport-fields/${event.id}`, {
             startTime: event.startTime,
@@ -268,22 +349,36 @@
 
 <style scoped>
   .fields-management-container {
+    display: flex;
     padding: 2rem;
   }
-  .page-title {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
+  .sports-sidebar {
+    width: 200px;
+    margin-right: 2rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 600px;
+  }
+  .sports-draggable {
+    display: flex;
+    flex-direction: column;
+  }
+  .sport-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: grab;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    text-align: center;
   }
   .fields-grid {
+    flex: 1;
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-  }
-  @media (min-width: 768px) {
-    .fields-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
   }
   .field-card {
     background-color: #f7fafc;
@@ -295,8 +390,27 @@
     justify-content: space-between;
     margin-bottom: 2rem;
   }
-  .button-group {
+  .delete-zone {
+    position: fixed;
+    bottom: 0;
+    left: 5%;
+    width: 200px;
+    height: 100px;
+    background-color: #e53e3e;
+    text-align: center;
+    color: white;
+    font-size: 1.5rem;
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+  }
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s;
+  }
+  .fade-enter,
+  .fade-leave-to {
+    opacity: 0;
   }
 </style>
