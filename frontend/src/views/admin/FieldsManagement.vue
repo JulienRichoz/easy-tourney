@@ -168,9 +168,8 @@
         }
 
         if (!this.draggedSport) {
-          console.error(
-            "Erreur : Aucune donnée de sport n'a été trouvée lors du drag."
-          );
+          console.error('Erreur : ce sport est déjà assigné à un terrain.');
+          this.$forceUpdate();
           return;
         }
 
