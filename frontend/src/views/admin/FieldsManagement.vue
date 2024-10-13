@@ -3,26 +3,39 @@
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" :tourneyName="tourney.name" />
     <div class="fields-management-container">
-      <draggable
-        v-if="sports.length > 0"
-        v-model="sports"
-        group="sports"
-        itemKey="id"
-        class="sports-draggable"
+      <div
+        class="sports-menu-container bg-gray-600 p-2 rounded-lg shadow-lg sticky top-20 max-h-screen overflow-y-auto"
       >
-        <template #item="{ element }">
-          <div
-            :key="element.id"
-            class="sport-item"
-            draggable="true"
-            @dragstart="handleSportDragStart(element)"
-            @dragend="handleDragEnd"
+        <!-- Header noir avec message étendu sur toute la largeur -->
+        <div class="text-white py-2 px-4 mb-4 w-full">
+          <span class="text-sm" style="font-weight: bold; font-size: 120%">
+            Assign Sport ><br />Drag
+            <span style="font-weight: bold; color: #0be968">&</span> Drop</span
           >
-            {{ element.name }}
-          </div>
-        </template>
-      </draggable>
-
+        </div>
+        <draggable
+          v-if="sports.length > 0"
+          v-model="sports"
+          group="sports"
+          itemKey="id"
+          class="sports-draggable"
+        >
+          <template #item="{ element }">
+            <div
+              :key="element.id"
+              :style="{
+                backgroundColor: element.color,
+              }"
+              class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300"
+              draggable="true"
+              @dragstart="handleSportDragStart(element)"
+              @dragend="handleDragEnd"
+            >
+              {{ element.name }}
+            </div>
+          </template>
+        </draggable>
+      </div>
       <div class="fields-grid">
         <!-- Affichage des terrains avec calendrier -->
         <div
@@ -32,8 +45,12 @@
           @drop="handleFieldDrop(field)"
           @dragover.prevent
         >
-          <h3>{{ field.name }}</h3>
-          <p>{{ field.description }}</p>
+          <h3 class="text-2xl font-bold dark:text-white text-center">
+            {{ field.name }}
+          </h3>
+          <p class="text-center">
+            {{ field.description }} <br />{{ tourney.dateTourney }}
+          </p>
 
           <!-- Calendrier FullCalendar pour chaque terrain -->
           <FullCalendar :options="getFieldCalendarOptions(field)" />
@@ -259,13 +276,13 @@
 
             return {
               html: `
-                <div class="fc-event-main" style="display: flex; justify-content: space-between; align-items: center;">
-                  <span>
-                    <strong>${arg.event.title}</strong><br/>
-                    <small>${startTime} - ${endTime}</small>
-                  </span>
-                  <span class="delete-icon" style="cursor: pointer; color: red;">&#10060;</span>
-                </div>
+              <div class="fc-event-main" style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: white; font-weight: bold;">
+                  ${arg.event.title}<br/>
+                  <small>${startTime} - ${endTime}</small>
+                </span>
+                <span class="delete-icon" style="color: white; padding: 2px 6px; font-size: 150%;">&#10060;</span>
+              </div>
               `,
             };
           },
@@ -454,7 +471,7 @@
     gap: 1.5rem;
   }
   .field-card {
-    background-color: #f7fafc;
+    background-color: #f6f6f6;
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
