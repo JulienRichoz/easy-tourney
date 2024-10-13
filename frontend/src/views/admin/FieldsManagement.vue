@@ -64,7 +64,6 @@
         fields: [],
         sports: [],
         draggedSport: null,
-        showDeleteZone: false,
       };
     },
     async mounted() {
@@ -92,6 +91,7 @@
           console.error('Erreur lors de la récupération des sports:', error);
         }
       },
+
       handleFieldDrop(field) {
         console.log('Dépôt détecté sur le terrain:', field);
         console.log('This.draggedSport: ', this.draggedSport);
@@ -185,7 +185,7 @@
             data
           );
           await apiService.post('/sport-fields', data);
-          alert('Sport ajouté au terrain avec succès.');
+
           await this.fetchTourneyDetails();
         } catch (error) {
           console.error(
@@ -260,6 +260,12 @@
           return;
         }
 
+        // Le nouvel emplacement du terrain (fieldId) auquel l'événement a été déplacé
+        const newFieldId =
+          event.getResources && event.getResources().length > 0
+            ? event.getResources()[0].id
+            : event.extendedProps.fieldId;
+
         const updatedEvent = {
           id: event.id,
           startTime: event.start
@@ -276,7 +282,8 @@
                 .split('.')[0]
                 .replace('Z', '')
             : null,
-          fieldId: event.extendedProps.fieldId,
+          oldFieldId: event.extendedProps.fieldId, // L'ancien terrain où l'événement était
+          newFieldId: newFieldId, // Le nouveau terrain si différent de l'ancien
         };
 
         if (updatedEvent.startTime && updatedEvent.endTime) {
@@ -284,6 +291,13 @@
             "Données mises à jour après déplacement de l'événement:",
             updatedEvent
           );
+
+          if (updatedEvent.oldFieldId !== updatedEvent.newFieldId) {
+            // Si l'événement a changé de terrain, nous devons le supprimer de l'ancien
+            this.deleteEventFromField(updatedEvent.id, updatedEvent.oldFieldId);
+          }
+
+          // Ajouter l'événement au nouveau terrain ou mettre à jour dans le même terrain
           this.updateEventInDatabase(updatedEvent);
         } else {
           console.error(
@@ -321,11 +335,26 @@
           );
         }
       },
+      async deleteEventFromField(eventId, fieldId) {
+        try {
+          console.log(
+            `Suppression de l'événement ${eventId} de l'ancien terrain ${fieldId}`
+          );
+          await apiService.delete(`/sport-fields/${eventId}`);
+          console.log("Événement supprimé de l'ancien terrain avec succès.");
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression de l'événement de l'ancien terrain:",
+            error
+          );
+        }
+      },
       async updateEventInDatabase(event) {
         console.log(
           "Mise à jour de l'événement dans la base de données:",
           event
         );
+
         if (!event || !event.id) {
           console.error('Erreur : Données de mise à jour incorrectes.');
           return;
@@ -335,12 +364,15 @@
           await apiService.put(`/sport-fields/${event.id}`, {
             startTime: event.startTime,
             endTime: event.endTime,
-            fieldId: event.fieldId,
+            fieldId: event.newFieldId, // Utilisez le nouveau terrain pour l'update
           });
-          alert('Les horaires ont été mis à jour avec succès.');
+          console.log('Les horaires ont été mis à jour avec succès.');
+          await this.fetchTourneyDetails();
         } catch (error) {
           console.error('Erreur lors de la mise à jour des horaires:', error);
-          alert('Une erreur est survenue.');
+          alert(
+            "Une erreur est survenue lors de la mise à jour de l'événement."
+          );
         }
       },
     },
