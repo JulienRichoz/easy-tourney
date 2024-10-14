@@ -2,59 +2,52 @@
   <div>
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
-    <div class="fields-management-container">
-      <div
-        class="sports-menu-container bg-gray-600 p-2 rounded-lg shadow-lg sticky top-20 max-h-screen overflow-y-auto"
-      >
-        <!-- Header noir avec message étendu sur toute la largeur -->
-        <div class="text-white py-2 px-4 mb-4 w-full">
-          <span class="text-sm" style="font-weight: bold; font-size: 120%">
-            Assign Sport ><br />Drag
-            <span style="font-weight: bold; color: #0be968">&</span> Drop</span
-          >
-        </div>
-        <draggable
-          v-if="sports.length > 0"
-          v-model="sports"
-          group="sports"
-          itemKey="id"
-          class="sports-draggable"
-        >
-          <template #item="{ element }">
-            <div
-              :key="element.id"
-              :style="{
-                backgroundColor: element.color,
-              }"
-              class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300"
-              draggable="true"
-              @dragstart="handleSportDragStart(element)"
-              @dragend="handleDragEnd"
-            >
-              {{ element.name }}
-            </div>
-          </template>
-        </draggable>
-      </div>
-      <div class="fields-grid">
-        <!-- Affichage des terrains avec calendrier -->
-        <div
-          v-for="field in fields"
-          :key="field.id"
-          class="field-card"
-          @drop="handleFieldDrop(field)"
-          @dragover.prevent
-        >
-          <h3 class="text-2xl font-bold dark:text-white text-center">
-            {{ field.name }}
-          </h3>
-          <p class="text-center">
-            {{ field.description }} <br />{{ tourney.dateTourney }}
-          </p>
 
-          <!-- Calendrier FullCalendar pour chaque terrain -->
-          <FullCalendar :options="getFieldCalendarOptions(field)" />
-        </div>
+    <!-- Liste des sports en haut, sticky avec overflow horizontal -->
+    <div
+      class="bg-gray-600 p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4"
+    >
+      <draggable
+        v-if="sports.length > 0"
+        v-model="sports"
+        group="sports"
+        itemKey="id"
+        class="flex flex-row space-x-4"
+      >
+        <template #item="{ element }">
+          <div
+            :key="element.id"
+            :style="{ backgroundColor: element.color }"
+            class="sport-item p-2 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300 truncate w-28"
+            draggable="true"
+            @dragstart="handleSportDragStart(element)"
+            @dragend="handleDragEnd"
+          >
+            {{ element.name }}
+          </div>
+        </template>
+      </draggable>
+    </div>
+
+    <!-- Grille des terrains -->
+    <div
+      class="fields-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
+    >
+      <div
+        v-for="field in fields"
+        :key="field.id"
+        class="bg-white shadow-lg rounded-lg p-4"
+        @drop="handleFieldDrop(field)"
+        @dragover.prevent
+      >
+        <h3 class="text-xl font-bold text-center truncate">{{ field.name }}</h3>
+        <p class="text-sm text-center">
+          {{ field.description }} <br />
+          {{ tourney.dateTourney }}
+        </p>
+
+        <!-- Calendrier FullCalendar -->
+        <FullCalendar :options="getFieldCalendarOptions(field)" />
       </div>
     </div>
   </div>
@@ -128,8 +121,8 @@
         const data = {
           fieldId: field.id,
           sportId: this.draggedSport.id,
-          startTime: '09:00:00', // Exemple d'heure par défaut
-          endTime: '10:00:00', // Exemple d'heure par défaut
+          startTime: '08:00:00', // Exemple d'heure par défaut
+          endTime: '12:00:00', // Exemple d'heure par défaut
           information: '',
         };
         console.log('Données pour assigner le sport au terrain:', data);
@@ -446,32 +439,10 @@
     display: flex;
     padding: 2rem;
   }
-  .sports-sidebar {
-    width: 200px;
-    margin-right: 2rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: #f3f4f6;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    max-height: 600px;
-  }
-  .sports-draggable {
-    display: flex;
-    flex-direction: column;
-  }
-  .sport-item {
-    padding: 10px;
-    margin-bottom: 10px;
-    cursor: grab;
-    background-color: #e2e8f0;
-    border-radius: 4px;
-    text-align: center;
-  }
+
   .fields-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
   }
   .field-card {
@@ -506,5 +477,16 @@
   .fade-enter,
   .fade-leave-to {
     opacity: 0;
+  }
+  .sports-menu-container {
+    display: flex;
+    flex-direction: row;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .sport-item {
+    min-width: 100px; /* Limiter la taille des boutons */
+    margin-right: 1rem; /* Espacement entre les sports */
   }
 </style>

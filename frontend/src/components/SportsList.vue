@@ -1,11 +1,13 @@
 <template>
-  <div class="sports-list-container">
+  <div
+    class="sports-list-container w-full md:w-64 p-4 border border-gray-300 rounded-lg bg-gray-100"
+  >
     <h3>Liste des Sports</h3>
     <input
       type="text"
       v-model="searchTerm"
       placeholder="Rechercher un sport..."
-      class="search-bar"
+      class="search-bar w-full p-2 md:p-3 border border-gray-300 rounded-md"
     />
 
     <vuedraggable
@@ -17,14 +19,19 @@
       <div
         v-for="sport in filteredSports"
         :key="sport.id"
-        class="sport-item"
+        class="sport-item p-2 md:p-4 mb-2 rounded-md text-white font-semibold text-center cursor-pointer hover:scale-105 transform transition duration-300"
         :style="{ backgroundColor: sport.color }"
       >
         <span>{{ sport.name }}</span>
       </div>
     </vuedraggable>
 
-    <button @click="resetSportsList" class="reset-button">Réinitialiser</button>
+    <button
+      @click="resetSportsList"
+      class="reset-button w-full p-2 md:p-3 bg-red-500 text-white rounded-md mt-2 hover:bg-red-600 transition duration-200"
+    >
+      Réinitialiser
+    </button>
   </div>
 </template>
 
@@ -68,13 +75,6 @@
 </script>
 
 <style scoped>
-  .sports-list-container {
-    width: 300px;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-  }
   .search-bar {
     width: 100%;
     padding: 0.5rem;
