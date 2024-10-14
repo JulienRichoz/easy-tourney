@@ -3,22 +3,22 @@
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
 
-    <!-- Liste des sports en haut, sticky avec overflow horizontal -->
+    <!-- Liste des sports en haut, sticky sans fond gris -->
     <div
-      class="bg-gray-600 p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4"
+      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4 bg-white"
     >
       <draggable
         v-if="sports.length > 0"
         v-model="sports"
         group="sports"
         itemKey="id"
-        class="flex flex-row space-x-4"
+        class="flex flex-row space-x-4 justify-center"
       >
         <template #item="{ element }">
           <div
             :key="element.id"
             :style="{ backgroundColor: element.color }"
-            class="sport-item p-2 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300 truncate w-28"
+            class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300 w-28 shadow-md flex items-center justify-center"
             draggable="true"
             @dragstart="handleSportDragStart(element)"
             @dragend="handleDragEnd"
@@ -52,7 +52,6 @@
     </div>
   </div>
 </template>
-
 <script>
   import draggable from 'vuedraggable';
   import FullCalendar from '@fullcalendar/vue3';
@@ -486,7 +485,17 @@
   }
 
   .sport-item {
-    min-width: 100px; /* Limiter la taille des boutons */
-    margin-right: 1rem; /* Espacement entre les sports */
+    /* Centrer le texte dans chaque bouton */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Effet ombre léger */
+  }
+
+  /* Effet au survol pour ajouter du dynamisme */
+  .sport-item:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
 </style>
