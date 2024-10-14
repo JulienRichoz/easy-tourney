@@ -37,7 +37,6 @@ export default createStore({
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         commit('SET_AUTH', { isAuthenticated: true, user: response.data.user });
 
-        console.log('Token stocké:', token); // Vérifiez que le token est stocké
       } catch (error) {
         console.error('Erreur de connexion:', error);
         throw error;

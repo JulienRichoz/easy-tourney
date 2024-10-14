@@ -14,7 +14,7 @@ export function hasPermission(userRole, permission) {
 
     // Accéder aux permissions du rôle
     const hasPerm = permissions[roles[roleKey]]?.includes(permission) ?? false;
-    console.log('hasPermission -> Permissions trouvées:', permissions[roles[roleKey]], 'Résultat:', hasPerm);
+    //console.log('hasPermission -> Permissions trouvées:', permissions[roles[roleKey]], 'Résultat:', hasPerm);
 
     return hasPerm;
 }

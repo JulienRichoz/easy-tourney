@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Si vous utilisez Vuex pour gérer les rôles
 import { refreshToken, hasPermission } from '@/services/authService';
 import { jwtDecode } from 'jwt-decode';
+import apiService from '@/services/apiService';
 
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
@@ -83,7 +84,25 @@ const router = createRouter({
 
 // Gestion des gardiens d'authentification pour les rôles
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token'); // Récupérer le token de l'utilisateur
+  const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id; // Vérifiez si la route est pour un tournoi spécifique
+  console.log("BeforeEach router:", isTournamentRoute)
+  if (isTournamentRoute) {
+    try {
+      // Récupérer les infos du tournoi depuis l'API
+      const response = await apiService.get(`/tourneys/${to.params.id}`);
+      const tournamentName = response.data.name;
+
+      // Stocker le nom du tournoi dans Vuex
+      store.dispatch('setTournamentName', tournamentName);
+    } catch (error) {
+      console.error('Erreur lors de la récupération du tournoi:', error);
+      store.dispatch('clearTournamentName'); // Effacer le nom si une erreur survient
+    }
+  } else {
+    // Si ce n'est pas une route de tournoi, on vide le nom
+    store.dispatch('clearTournamentName');
+  }
 
   if (to.meta.requiresAuth) {
     if (!token) {
@@ -104,7 +123,7 @@ router.beforeEach(async (to, from, next) => {
 
         // Vérifiez si l'utilisateur a la permission d'accéder à la page demandée
         const userRole = decoded.roleId;
-        console.log('router.beforeEach -> Vérification des permissions pour userRole:', userRole, 'permission:', to.meta.permission);
+        //console.log('router.beforeEach -> Vérification des permissions pour userRole:', userRole, 'permission:', to.meta.permission);
 
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
           return next('/'); // Rediriger à la page d'accueil si l'utilisateur n'a pas les permissions

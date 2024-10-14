@@ -31,7 +31,7 @@
 
     <!-- Grille des terrains -->
     <div
-      class="fields-grid grid gap-4 mt-4"
+      class="fields-grid grid gap-2 mt-2"
       :class="{
         'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5':
           fields.length > 5,
@@ -45,7 +45,7 @@
       <div
         v-for="(field, index) in fields"
         :key="field.id"
-        class="relative bg-white shadow-lg rounded-lg p-4"
+        class="relative bg-white shadow-lg rounded-lg p-2 me-4 ms-4"
         @drop="handleFieldDrop(field)"
         @dragover.prevent
       >
@@ -264,7 +264,7 @@
           },
           headerToolbar: false,
           allDaySlot: false,
-          height: 500,
+          height: 600,
           slotHeight: 'auto',
           slotMinTime: '00:00:00',
           slotMaxTime: '24:00:00',

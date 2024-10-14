@@ -1,30 +1,22 @@
 // store/modules/tourney.js
-import axios from 'axios';
-
 export default {
-    namespaced: true,
     state: {
-        currentTourney: null, // Holds the details of the current tournament
+        currentTournamentName: '', // Stocker le nom du tournoi
     },
     mutations: {
-        SET_TOURNEY(state, tourney) {
-            state.currentTourney = tourney;
+        SET_TOURNAMENT_NAME(state, name) {
+            state.currentTournamentName = name;
         },
-        CLEAR_TOURNEY(state) {
-            state.currentTourney = null;
+        CLEAR_TOURNAMENT_NAME(state) {
+            state.currentTournamentName = '';
         },
     },
     actions: {
-        async fetchTourney({ commit }, tourneyId) {
-            try {
-                const response = await axios.get(`/api/tourneys/${tourneyId}`);
-                commit('SET_TOURNEY', response.data);
-            } catch (error) {
-                console.error('Error fetching tournament:', error);
-            }
+        setTournamentName({ commit }, name) {
+            commit('SET_TOURNAMENT_NAME', name);
         },
-        clearTourney({ commit }) {
-            commit('CLEAR_TOURNEY');
+        clearTournamentName({ commit }) {
+            commit('CLEAR_TOURNAMENT_NAME');
         },
     },
 };

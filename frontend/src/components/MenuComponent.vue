@@ -13,8 +13,6 @@
           >Accueil</router-link
         >
       </li>
-
-      <!-- Si l'utilisateur est admin, on affiche les liens vers les pages admin -->
       <li v-if="isAdmin" class="mr-6">
         <router-link
           to="/tourneys"
@@ -31,9 +29,16 @@
       </li>
     </ul>
 
+    <!-- Section du nom du tournoi (visible uniquement sur les pages de tournoi) -->
+    <div
+      v-if="showTournamentName"
+      class="tournament-name text-lg font-bold mx-auto text-green-500"
+    >
+      {{ tournamentName }}
+    </div>
+
     <!-- Section de droite -->
     <ul class="right-section flex items-center ml-auto">
-      <!-- Si l'utilisateur est connecté, on affiche son profil et le bouton de déconnexion -->
       <li v-if="isAuthenticated" class="profile-section flex items-center">
         <span class="username text-white font-bold mr-4">{{ userName }}</span>
         <router-link to="/profile" class="profile-link text-green-400 mr-4">
@@ -43,8 +48,6 @@
           <i class="fas fa-power-off"></i>
         </button>
       </li>
-
-      <!-- Si l'utilisateur n'est pas connecté, on affiche le bouton de connexion -->
       <li v-if="!isAuthenticated" class="ml-4">
         <router-link to="/login" class="text-green-400 font-bold text-lg">
           <i class="fas fa-power-on mr-2"></i>Se connecter
@@ -63,7 +66,14 @@
         isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
         isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
         userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
+        tournamentName: (state) => state.tourney.currentTournamentName, // Nom du tournoi depuis Vuex
       }),
+      showTournamentName() {
+        // Afficher le nom du tournoi uniquement sur les pages qui commencent par /tourneys/:id
+        return (
+          this.$route.path.startsWith('/tourneys/') && this.$route.params.id
+        );
+      },
     },
     methods: {
       logout() {
