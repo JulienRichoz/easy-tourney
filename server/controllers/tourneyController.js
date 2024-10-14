@@ -5,7 +5,7 @@ const { Tourney, Field, SportField, Sport, GroupSetup, ScheduleTourney } = requi
 
 exports.createTourney = async (req, res) => {
     try {
-        const { name, location, dateTourney, numberOfField, emergencyDetails } = req.body;
+        const { name, location, dateTourney, emergencyDetails } = req.body;
 
         if (!name || !location || !dateTourney) {
             return res.status(400).json({ message: "Les champs 'name', 'location' et 'dateTourney' sont requis." });
@@ -16,17 +16,9 @@ exports.createTourney = async (req, res) => {
             name,
             location,
             dateTourney,
-            numberOfField,
             emergencyDetails
         });
 
-        // Créer les terrains associés
-        for (let i = 0; i < numberOfField; i++) {
-            await Field.create({
-                name: `Field ${i + 1}`,
-                tourneyId: newTourney.id,
-            });
-        }
 
         res.status(201).json(newTourney);
     } catch (error) {

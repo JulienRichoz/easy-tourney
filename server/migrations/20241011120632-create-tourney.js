@@ -24,10 +24,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      numberOfField: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-      },
       emergencyDetails: {
         type: Sequelize.TEXT,
         allowNull: true,

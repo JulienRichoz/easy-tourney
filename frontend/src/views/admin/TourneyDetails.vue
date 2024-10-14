@@ -18,9 +18,9 @@
         <p class="tourney-info">
           <strong>Date:</strong> {{ formatDate(tourney.dateTourney) }}
         </p>
-        <p class="tourney-info">
+        <!-- <p class="tourney-info">
           <strong>Nombre de Terrains:</strong> {{ tourney.numberOfField }}
-        </p>
+        </p>-->
 
         <h3 class="tourney-step-title">Étape actuelle:</h3>
         <p class="tourney-step">Assigner les terrains</p>

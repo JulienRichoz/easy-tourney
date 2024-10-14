@@ -163,25 +163,7 @@
               class="w-full p-2 border border-gray-300 rounded-md"
             />
           </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Nombre de Terrains</label
-            >
-            <input
-              type="number"
-              v-model="newTourney.numberOfField"
-              :class="[
-                'w-full p-2 border rounded-md',
-                fieldError ? 'border-red-500' : 'border-gray-300',
-              ]"
-              @input="validateFieldNumber"
-              min="0"
-              required
-            />
-            <p v-if="fieldError" class="text-red-500 text-sm mt-1">
-              Le nombre de terrains doit être un nombre positif.
-            </p>
-          </div>
+
           <div class="mb-4">
             <label class="block text-gray-700 font-semibold mb-2"
               >Détails d'urgence</label
@@ -249,7 +231,6 @@
           location: '',
           dateTourney: '',
           domain: '',
-          numberOfField: 0,
           emergencyDetails: '',
           status: 'draft',
         },
@@ -299,7 +280,6 @@
           location: '',
           dateTourney: '',
           domain: '',
-          numberOfField: 0,
           emergencyDetails: '',
           status: 'draft',
         };
@@ -384,7 +364,6 @@
         this.validateNameField();
         this.validateLocationField();
         this.validateDateField();
-        this.validateFieldNumber();
       },
       validateNameField() {
         this.nameError =
@@ -395,9 +374,6 @@
       },
       validateDateField() {
         this.dateError = !this.newTourney.dateTourney;
-      },
-      validateFieldNumber() {
-        this.fieldError = this.newTourney.numberOfField < 0;
       },
       clearErrors() {
         this.nameError = false;
