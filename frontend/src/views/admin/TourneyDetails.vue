@@ -1,11 +1,7 @@
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
-    <TourneySubMenu
-      :tourneyId="tourneyId"
-      :tourneyName="tourney.name"
-      @selectTab="selectTab"
-    />
+    <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
 
     <!-- Contenu principal -->
     <div class="tourney-details-container">
@@ -89,7 +85,7 @@
     data() {
       return {
         tourneyId: this.$route.params.id,
-        tourney: {}, // Détails du tournoi récupérés du serveur
+        tourney: [], // Détails du tournoi récupérés du serveur
         currentStepNumber: 1, // Pour gérer l'étape actuelle en nombre
         mapIsReady: false,
       };

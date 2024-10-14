@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
-    <TourneySubMenu :tourneyId="tourneyId" :tourneyName="tourney.name" />
+    <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
     <div class="fields-management-container">
       <div
         class="sports-menu-container bg-gray-600 p-2 rounded-lg shadow-lg sticky top-20 max-h-screen overflow-y-auto"
@@ -85,14 +85,16 @@
       };
     },
     async mounted() {
-      await this.fetchTourneyDetails(); // Récupération des détails du tournoi
+      await this.fetchTourneySportField(); // Récupération des détails du tournoi
       await this.fetchSports(); // Récupération de la liste des sports disponibles
     },
     methods: {
       // Récupérer les détails du tournoi actuel
-      async fetchTourneyDetails() {
+      async fetchTourneySportField() {
         try {
-          const response = await apiService.get(`/tourneys/${this.tourneyId}`);
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/sport-fields`
+          );
           this.tourney = response.data;
           this.fields = response.data.fields;
         } catch (error) {
@@ -207,7 +209,7 @@
             data
           );
           await apiService.post('/sport-fields', data);
-          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après l'assignation
+          await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après l'assignation
         } catch (error) {
           console.error(
             "Erreur lors de l'assignation du sport au terrain:",
@@ -227,7 +229,7 @@
           console.log("Suppression de l'événement avec ID:", eventId);
           await apiService.delete(`/sport-fields/${eventId}`);
           alert('Sport supprimé avec succès.');
-          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après la suppression
+          await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après la suppression
         } catch (error) {
           console.error('Erreur lors de la suppression du sport:', error);
         }
@@ -383,7 +385,7 @@
         try {
           await apiService.delete(`/sport-fields/${sportFieldId}`);
           console.log('Le sportField a été supprimé avec succès.');
-          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après suppression
+          await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après suppression
         } catch (error) {
           console.error('Erreur lors de la suppression du sportField:', error);
         }
@@ -424,13 +426,16 @@
             fieldId: event.newFieldId, // Utilisez le nouveau terrain pour l'update
           });
           console.log('Les horaires ont été mis à jour avec succès.');
-          await this.fetchTourneyDetails(); // Rafraîchir les détails du tournoi après la mise à jour
+          await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après la mise à jour
         } catch (error) {
           console.error('Erreur lors de la mise à jour des horaires:', error);
           alert(
             "Une erreur est survenue lors de la mise à jour de l'événement."
           );
         }
+      },
+      selectTab(tab) {
+        this.activeTab = tab;
       },
     },
   };

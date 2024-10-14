@@ -10,17 +10,17 @@
 
     <!-- Ajouter des terrains en deuxième position -->
     <router-link
-      :to="`/tourneys/${tourneyId}/add-field`"
+      :to="`/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item"
-      :class="{ active: $route.name === 'AddField' }"
+      :class="{ active: $route.name === 'AdminFields' }"
     >
-      Ajouter des Terrains
+      Gestion des Terrains
     </router-link>
 
     <router-link
-      :to="`/tourneys/${tourneyId}/fields`"
+      :to="`/tourneys/${tourneyId}/sport-fields`"
       class="tourney-nav-item"
-      :class="{ active: $route.name === 'FieldsManagement' }"
+      :class="{ active: $route.name === 'SportFields' }"
     >
       Assignation des Terrains
     </router-link>

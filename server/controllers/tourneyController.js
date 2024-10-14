@@ -96,31 +96,10 @@ exports.getTourneys = async (req, res) => {
     }
 };
 
-// Récupérer un tournoi par son ID, y compris les terrains et les sports associés
+// Récupérer un tournoi par son ID
 exports.getTourneyById = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id, {
-            include: [
-                {
-                    model: Field,
-                    as: 'fields',
-                    include: [
-                        {
-                            model: SportField,
-                            as: 'sportFields',
-                            include: [
-                                {
-                                    model: Sport,
-                                    as: 'sport',
-                                    attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        });
-
+        const tourney = await Tourney.findByPk(req.params.id);
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
@@ -130,7 +109,7 @@ exports.getTourneyById = async (req, res) => {
         console.error('Erreur lors de la récupération du tournoi :', error);
         res.status(500).json({ message: 'Erreur lors de la récupération du tournoi' });
     }
-};
+}
 
 
 // Mettre à jour un tournoi

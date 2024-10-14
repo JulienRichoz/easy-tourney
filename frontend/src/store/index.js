@@ -1,8 +1,12 @@
 import { createStore } from 'vuex';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
+import tourney from './modules/tourney';
 
 export default createStore({
+  modules: {
+    tourney,
+  },
   state: {
     isAuthenticated: !!localStorage.getItem('token'), // On vérifie si un token est déjà présent
     user: null,

@@ -19,11 +19,16 @@
           Annuler
         </ButtonComponent>
         <ButtonComponent
-          variant="primary"
+          :variant="
+            confirmButtonDisabled
+              ? 'disabled'
+              : confirmButtonVariant || 'primary'
+          "
           nativeType="submit"
           @click="onSubmit"
+          :disabled="confirmButtonDisabled"
         >
-          {{ isEditing ? 'Modifier' : 'Ajouter' }}
+          {{ confirmButtonText || (isEditing ? 'Modifier' : 'Ajouter') }}
         </ButtonComponent>
       </div>
     </div>
@@ -49,6 +54,18 @@
       isEditing: {
         type: Boolean,
         default: false,
+      },
+      confirmButtonText: {
+        type: String,
+        default: '', // Par défaut vide pour utiliser 'Ajouter' ou 'Modifier'
+      },
+      confirmButtonVariant: {
+        type: String,
+        default: 'primary', // Variante du bouton par défaut
+      },
+      confirmButtonDisabled: {
+        type: Boolean,
+        default: false, // Permet de désactiver le bouton
       },
     },
     methods: {
