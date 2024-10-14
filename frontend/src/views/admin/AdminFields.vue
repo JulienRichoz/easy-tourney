@@ -5,7 +5,7 @@
 
     <div class="p-6">
       <div class="flex items-center mb-8">
-        <h1 class="text-3xl font-bold ml-4">Gestion des Terrains</h1>
+        <h1 class="text-3xl font-bold ml-4">Gestion Terrains</h1>
         <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary"
           >Ajouter plusieurs terrains</ButtonComponent
         >
@@ -18,7 +18,9 @@
       </div>
 
       <!-- Grille des terrains -->
-      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 h-auto">
+      <div
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-h-[50px]"
+      >
         <!-- Carte pour ajouter un nouveau terrain -->
         <CardAddComponent
           title="Terrain"

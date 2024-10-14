@@ -7,7 +7,7 @@
     <img
       v-if="image"
       :src="image"
-      class="w-full h-32 object-cover mb-4 rounded-lg"
+      class="w-full h-28 object-cover mb-4 rounded-lg"
     />
 
     <!-- Titre et sous-titre -->
