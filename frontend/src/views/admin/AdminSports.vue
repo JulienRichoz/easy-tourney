@@ -6,56 +6,28 @@
     </div>
 
     <!-- Grille des sports -->
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+    >
       <!-- Carte pour ajouter un nouveau sport -->
-      <div
-        @click.stop="openAddSportModal"
-        class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center hover:bg-gray-100 transition-transform transform hover:scale-105"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-          stroke="currentColor"
-          class="w-12 h-12 text-green-500"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <h2 class="text-lg font-semibold mt-4">Ajouter Sport</h2>
-      </div>
+      <CardAddComponent
+        title="Sport"
+        @openAddElementModal="openAddSportModal"
+      />
 
       <!-- Cartes des sports existants -->
-      <div
+      <CardEditComponent
         v-for="sport in sports"
         :key="sport.id"
-        @click.stop="editSport(sport)"
-        class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-center hover:bg-gray-50 transition-transform transform hover:scale-105"
-      >
-        <img
-          :src="`http://localhost:3000${sport.image}`"
-          alt="Sport image"
-          class="w-full h-40 object-cover mb-4 rounded-lg"
-        />
-        <h2
-          class="truncated-title text-2xl font-semibold mb-4"
-          :style="{ color: sport.color, textShadow: '0 0 1px black' }"
-        >
-          {{ truncateText(sport.name) }}
-        </h2>
-        <div class="flex space-x-4 mt-4">
-          <ButtonComponent
-            variant="danger"
-            @click.stop="confirmDeleteSport(sport.id)"
-          >
-            Supprimer
-          </ButtonComponent>
-        </div>
-      </div>
+        :title="sport.name"
+        :image="`http://localhost:3000${sport.image}`"
+        :showDeleteButton="true"
+        :showEditButton="true"
+        :titleColor="sport.color"
+        @click="editSport(sport)"
+        @delete="confirmDeleteSport(sport.id)"
+        @edit="editSport(sport)"
+      />
     </div>
 
     <!-- Modale pour ajouter/modifier un sport -->
@@ -157,24 +129,27 @@
       :isVisible="showDeleteConfirmation"
       @cancel="closeDeleteConfirmation"
       @confirm="deleteSport(confirmedDeleteSportId)"
+      :isHardDelete="true"
+      hardDeleteMessage="Cette action entraine la destruction définitive du sport et de toutes les données associées telles que les sports associés aux terrains aux différents tournois et potentiellement les matchs et statistiques passées. Êtes-vous sûr de vouloir continuer ?"
     />
   </div>
 </template>
 
 <script>
   import apiService from '@/services/apiService';
+  import CardAddComponent from '@/components/CardAddComponent.vue';
+  import CardEditComponent from '@/components/CardEditComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
-  import ButtonComponent from '@/components/ButtonComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
-  import truncateMixin from '@/mixins/truncateMixin';
 
   export default {
     components: {
       ModalComponent,
-      ButtonComponent,
       DeleteConfirmationModal,
+      CardAddComponent,
+      CardEditComponent,
     },
-    mixins: [truncateMixin],
+
     data() {
       return {
         sports: [],

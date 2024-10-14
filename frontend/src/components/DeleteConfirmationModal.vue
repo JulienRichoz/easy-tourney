@@ -1,4 +1,3 @@
-<!-- frontend/src/components/DeleteConfirmationModal.vue -->
 <template>
   <div
     v-if="isVisible"
@@ -7,11 +6,40 @@
     <div class="bg-white p-8 rounded-lg w-full max-w-md">
       <h2 class="text-2xl font-bold mb-4">{{ title }}</h2>
       <p class="mb-6">{{ message }}</p>
+      <!-- Message supplémentaire pour hardDelete -->
+      <p v-if="isHardDelete && hardDeleteMessage" class="mb-4 text-red-600">
+        {{ hardDeleteMessage }}
+      </p>
+
+      <!-- Si hardDelete est activé, afficher le champ de confirmation -->
+      <div v-if="isHardDelete" class="mb-4">
+        <label class="block text-gray-700 font-semibold mb-2">
+          Tapez "CONFIRM" pour confirmer
+        </label>
+        <input
+          type="text"
+          v-model="confirmationText"
+          class="w-full p-2 border border-gray-300 rounded-md"
+          placeholder="CONFIRM"
+        />
+      </div>
+
       <div class="flex justify-end space-x-4">
         <ButtonComponent variant="secondary" @click="onCancel">
           Annuler
         </ButtonComponent>
-        <ButtonComponent variant="danger" @click="onConfirm">
+        <!-- Bouton suppression avec changement de couleur dynamique  -->
+        <ButtonComponent
+          :variant="
+            isHardDelete
+              ? confirmationText === 'CONFIRM'
+                ? 'danger'
+                : 'gray'
+              : 'danger'
+          "
+          @click="onConfirm"
+          :disabled="isHardDelete && confirmationText !== 'CONFIRM'"
+        >
           Supprimer
         </ButtonComponent>
       </div>
@@ -37,9 +65,22 @@
       },
       message: {
         type: String,
-        default:
-          'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.',
+        default: 'Êtes-vous sûr de vouloir supprimer cet élément ?',
       },
+      isHardDelete: {
+        type: Boolean,
+        default: false,
+      },
+      hardDeleteMessage: {
+        type: String,
+        default:
+          'Cette action est irréversible et entraîne des suppressions en cascade. Risque de pertes de données annexes.',
+      },
+    },
+    data() {
+      return {
+        confirmationText: '', // Pour stocker le texte de confirmation
+      };
     },
     methods: {
       onCancel() {
@@ -47,6 +88,13 @@
       },
       onConfirm() {
         this.$emit('confirm');
+      },
+    },
+    watch: {
+      isVisible(newVal) {
+        if (!newVal) {
+          this.confirmationText = ''; // Réinitialiser le texte de confirmation quand la modal est fermée
+        }
       },
     },
   };

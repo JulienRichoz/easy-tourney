@@ -28,66 +28,30 @@
     </div>
 
     <!-- Grille des tournois -->
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-      <!-- Carte pour ajouter un nouveau tournoi -->
-      <div
-        @click="openAddTourneyModal"
-        class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center hover:bg-gray-100 transition-transform transform hover:scale-105 h-72"
-      >
-        <PlusIcon class="w-12 h-12 text-green-500" />
-        <h2 class="text-lg font-semibold mt-4">Ajouter Tournoi</h2>
-      </div>
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+    >
+      <!-- Carte pour ajouter un nouveau sport -->
+      <CardAddComponent
+        title="Tournoi"
+        @openAddElementModal="openAddTourneyModal"
+      />
 
-      <!-- Cartes des tournois existants -->
-      <div
-        v-for="tourney in filteredTourneys"
+      <!-- Cartes des sports existants -->
+      <CardEditComponent
+        v-for="tourney in tourneys"
         :key="tourney.id"
+        :title="tourney.name"
+        :location="tourney.location"
+        :date="tourney.dateTourney"
+        :status="tourney.status"
+        :showDeleteButton="true"
+        :showEditButton="true"
         @click="viewTourneyDetails(tourney.id)"
-        class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-start hover:bg-gray-50 transition-transform transform hover:scale-105 h-72 justify-between"
-      >
-        <div class="flex-grow w-full">
-          <h2 class="truncated-title text-xl font-semibold mb-2">
-            {{ truncateText(tourney.name) }}
-          </h2>
-          <div class="flex items-center text-gray-600 mb-1">
-            <MapPinIcon class="w-5 h-5 mr-1 flex-shrink-0" />
-            <p class="truncate">{{ truncateText(tourney.location, 40) }}</p>
-          </div>
-
-          <div class="flex items-center text-gray-600 mb-3">
-            <CalendarDaysIcon class="w-5 h-5 mr-1 flex-shrink-0" />
-            <p>{{ tourney.dateTourney }}</p>
-          </div>
-          <span
-            :class="[
-              'inline-block px-3 py-1 rounded-full text-white font-semibold text-sm',
-              tourney.status === 'draft'
-                ? 'bg-red-300 text-red-500'
-                : tourney.status === 'ready'
-                ? 'bg-yellow-300 text-yellow-500'
-                : tourney.status === 'active'
-                ? 'bg-blue-300 text-blue-500'
-                : 'bg-gray-300 text-gray-500',
-            ]"
-          >
-            {{ tourney.status }}
-          </span>
-        </div>
-        <div class="flex space-x-4 mt-4 w-full card-footer justify-between">
-          <ButtonComponent
-            variant="danger"
-            icon="TrashIcon"
-            @click.stop="confirmDeleteTourney(tourney.id)"
-          />
-          <ButtonComponent
-            variant="warning"
-            icon="PencilIcon"
-            @click.stop="editTourney(tourney)"
-          />
-        </div>
-      </div>
+        @delete="confirmDeleteTourney(tourney.id)"
+        @edit="editTourney(tourney)"
+      />
     </div>
-
     <!-- Modale pour ajouter/modifier un tournoi -->
     <ModalComponent
       :isVisible="showModal"
@@ -201,23 +165,18 @@
 <script>
   import apiService from '@/services/apiService';
   import ModalComponent from '@/components/ModalComponent.vue';
-  import ButtonComponent from '@/components/ButtonComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
-  import {
-    PlusIcon,
-    MapPinIcon,
-    CalendarDaysIcon,
-  } from '@heroicons/vue/24/outline';
+  import CardAddComponent from '@/components/CardAddComponent.vue';
+  import CardEditComponent from '@/components/CardEditComponent.vue';
+
   import truncateMixin from '@/mixins/truncateMixin';
 
   export default {
     components: {
       ModalComponent,
-      ButtonComponent,
       DeleteConfirmationModal,
-      PlusIcon,
-      MapPinIcon,
-      CalendarDaysIcon,
+      CardAddComponent,
+      CardEditComponent,
     },
     mixins: [truncateMixin],
     data() {

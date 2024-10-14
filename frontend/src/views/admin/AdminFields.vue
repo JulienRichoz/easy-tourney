@@ -6,68 +6,36 @@
     <div class="p-6">
       <div class="flex items-center mb-8">
         <h1 class="text-3xl font-bold ml-4">Gestion des Terrains</h1>
-        <button
-          @click="openAddMultipleFieldsModal"
-          class="ml-4 px-4 py-2 bg-green-600 text-white font-semibold rounded hover:bg-green-600 transition"
+        <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary"
+          >Ajouter plusieurs terrains</ButtonComponent
         >
-          Ajouter plusieurs terrains
-        </button>
-        <!-- Bouton pour supprimer tous les terrains -->
-        <button
+        <ButtonComponent
           v-if="fields.length > 0"
           @click="openDeleteAllFieldsModal"
-          class="ml-4 px-4 py-2 bg-red-500 text-white font-semibold rounded hover:bg-red-600 transition"
+          variant="danger"
+          >Supprimer tous les terrains</ButtonComponent
         >
-          Supprimer tous les terrains
-        </button>
       </div>
 
       <!-- Grille des terrains -->
-      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 h-auto">
         <!-- Carte pour ajouter un nouveau terrain -->
-        <div
-          @click.stop="openAddFieldModal"
-          class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center hover:bg-gray-100 transition-transform transform hover:scale-105"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="2"
-            stroke="currentColor"
-            class="w-12 h-12 text-green-500"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <h2 class="text-lg font-semibold mt-4">Ajouter Terrain</h2>
-        </div>
+        <CardAddComponent
+          title="Terrain"
+          @openAddElementModal="openAddFieldModal"
+        />
 
         <!-- Cartes des terrains existants -->
-        <div
+        <CardEditComponent
           v-for="field in fields"
           :key="field.id"
-          @click.stop="editField(field)"
-          class="cursor-pointer bg-white p-6 rounded-lg shadow-md flex flex-col items-center hover:bg-gray-50 transition-transform transform hover:scale-105"
-        >
-          <h2 class="truncated-title text-2xl font-semibold mb-4">
-            {{ truncateText(field.name) }}
-          </h2>
-          <p class="text-gray-500">
-            {{ field.description || 'Aucune description' }}
-          </p>
-          <div class="flex space-x-4 mt-4">
-            <ButtonComponent
-              variant="danger"
-              @click.stop="confirmDeleteField(field.id)"
-            >
-              Supprimer
-            </ButtonComponent>
-          </div>
-        </div>
+          :title="field.name"
+          :subtitle="field.description"
+          :showDeleteButton="true"
+          :showEditButton="true"
+          @onDelete="confirmDeleteField(field.id)"
+          @onEdit="editField(field)"
+        />
       </div>
 
       <!-- Modale pour ajouter/modifier un terrain -->
@@ -178,6 +146,8 @@
   import apiService from '@/services/apiService';
   import ModalComponent from '@/components/ModalComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import CardAddComponent from '@/components/CardAddComponent.vue';
+  import CardEditComponent from '@/components/CardEditComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import truncateMixin from '@/mixins/truncateMixin';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
@@ -188,6 +158,8 @@
       ButtonComponent,
       DeleteConfirmationModal,
       TourneySubMenu,
+      CardAddComponent,
+      CardEditComponent,
     },
     mixins: [truncateMixin],
     data() {
@@ -380,18 +352,4 @@
   };
 </script>
 
-<style scoped>
-  .truncated-title {
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  button {
-    transition: transform 0.2s ease;
-  }
-  button:hover {
-    transform: scale(1.05);
-  }
-</style>
+<style scoped></style>

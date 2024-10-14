@@ -265,7 +265,6 @@
           headerToolbar: false,
           allDaySlot: false,
           height: 600,
-          slotHeight: 'auto',
           slotMinTime: '00:00:00',
           slotMaxTime: '24:00:00',
           events: field.sportFields.map((sportField) => ({

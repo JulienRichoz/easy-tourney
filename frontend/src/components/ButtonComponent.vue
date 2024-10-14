@@ -32,13 +32,15 @@
       buttonClasses() {
         switch (this.variant) {
           case 'primary':
-            return 'bg-green-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-600 transition-all';
+            return 'ml-4 mr-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition shadow-md';
           case 'secondary':
             return 'bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-all';
           case 'danger':
-            return 'bg-red-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-600 transition-all';
+            return 'px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 transition';
           case 'warning':
             return 'bg-yellow-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-600 transition-all';
+          case 'gray':
+            return 'bg-gray-400 text-white px-4 py-2 rounded-md cursor-not-allowed';
           default:
             return 'bg-gray-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600 transition-all';
         }

@@ -1,5 +1,4 @@
 <!-- frontend/src/components/MenuComponent.vue -->
-
 <template>
   <nav
     class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between"
