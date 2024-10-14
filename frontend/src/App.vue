@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-100">
     <Menu />
-    <div class="p-4">
+    <div class="p-0">
       <router-view></router-view>
     </div>
   </div>

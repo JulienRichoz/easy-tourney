@@ -1,44 +1,50 @@
 <template>
-  <div class="tourney-nav">
+  <div
+    :class="['tourney-nav', isNavVisible ? 'visible' : 'hidden']"
+    class="tourney-nav w-full z-50 bg-white shadow-lg"
+  >
+    <!-- Liens du menu -->
     <router-link
       :to="`/tourneys/${tourneyId}`"
       class="tourney-nav-item"
       :class="{ active: $route.name === 'TourneyDetails' }"
     >
-      Détails du Tournoi
+      <i class="fas fa-info-circle"></i>
+      <!-- Affiche seulement sur les grands écrans -->
+      <span class="hidden sm:inline"> Détails</span>
     </router-link>
-
-    <!-- Ajouter des terrains en deuxième position -->
     <router-link
       :to="`/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item"
       :class="{ active: $route.name === 'AdminFields' }"
     >
-      Gestion des Terrains
+      <i class="fas fa-map"></i>
+      <span class="hidden sm:inline"> Terrains</span>
     </router-link>
-
     <router-link
       :to="`/tourneys/${tourneyId}/sport-fields`"
       class="tourney-nav-item"
       :class="{ active: $route.name === 'SportFields' }"
     >
-      Assignation des Terrains
+      <i class="fas fa-futbol"></i>
+      <span class="hidden sm:inline"> Assignation</span>
     </router-link>
-
-    <div
+    <router-link
+      :to="`/tourneys/${tourneyId}/groups`"
       class="tourney-nav-item"
-      :class="{ active: activeTab === 'groups' }"
-      @click="selectTab('groups')"
+      :class="{ active: $route.name === 'TourneyGroups' }"
     >
-      Groupes
-    </div>
-    <div
+      <i class="fas fa-users"></i>
+      <span class="hidden sm:inline"> Groupes</span>
+    </router-link>
+    <router-link
+      :to="`/tourneys/${tourneyId}/planning`"
       class="tourney-nav-item"
-      :class="{ active: activeTab === 'schedule' }"
-      @click="selectTab('schedule')"
+      :class="{ active: $route.name === 'TourneyPlanning' }"
     >
-      Planning
-    </div>
+      <i class="fas fa-calendar-alt"></i>
+      <span class="hidden sm:inline"> Planning</span>
+    </router-link>
   </div>
 </template>
 

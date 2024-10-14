@@ -31,16 +31,35 @@
 
     <!-- Grille des terrains -->
     <div
-      class="fields-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
+      class="fields-grid grid gap-4 mt-4"
+      :class="{
+        'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5':
+          fields.length > 5,
+      }"
+      :style="
+        fields.length <= 5
+          ? 'grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));'
+          : ''
+      "
     >
       <div
-        v-for="field in fields"
+        v-for="(field, index) in fields"
         :key="field.id"
-        class="bg-white shadow-lg rounded-lg p-4"
+        class="relative bg-white shadow-lg rounded-lg p-4"
         @drop="handleFieldDrop(field)"
         @dragover.prevent
       >
-        <h3 class="text-xl font-bold text-center truncate">{{ field.name }}</h3>
+        <!-- Numéro du terrain en haut à droite -->
+        <span class="absolute top-2 right-2 text-sm text-gray-600">
+          {{ index + 1 }}/{{ fields.length }}
+        </span>
+
+        <!-- Nom du terrain -->
+        <h3 class="text-xl font-bold text-center truncate">
+          {{ field.name }}
+        </h3>
+
+        <!-- Détails du terrain -->
         <p class="text-sm text-center">
           {{ field.description }} <br />
           {{ tourney.dateTourney }}
@@ -241,12 +260,14 @@
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            height: 10,
           },
           headerToolbar: false,
           allDaySlot: false,
           height: 500,
-          slotMinTime: '06:00:00',
-          slotMaxTime: '20:00:00',
+          slotHeight: 'auto',
+          slotMinTime: '00:00:00',
+          slotMaxTime: '24:00:00',
           events: field.sportFields.map((sportField) => ({
             id: sportField.id,
             title: sportField.sport.name,
