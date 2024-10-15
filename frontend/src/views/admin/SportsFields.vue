@@ -304,7 +304,6 @@
 
       // Gestion du déplacement d'un événement dans le calendrier (changement de terrain ou de temps)
       handleEventDrop({ event }) {
-        console.log('Événement déplacé:', event);
         if (!event) {
           console.error("Erreur : L'événement n'est pas défini.");
           return;
@@ -324,11 +323,6 @@
         };
 
         if (updatedEvent.startTime && updatedEvent.endTime) {
-          console.log(
-            "Données mises à jour après déplacement de l'événement:",
-            updatedEvent
-          );
-
           if (updatedEvent.oldFieldId !== updatedEvent.newFieldId) {
             // Si l'événement a changé de terrain, nous devons le supprimer de l'ancien
             this.deleteEventFromField(updatedEvent.id, updatedEvent.oldFieldId);
@@ -345,7 +339,6 @@
 
       // Gestion du redimensionnement d'un événement dans le calendrier
       handleEventResize({ event }) {
-        console.log('Événement redimensionné:', event);
         if (!event) {
           console.error(
             "Erreur : L'événement de redimensionnement n'est pas défini."
@@ -365,7 +358,6 @@
         };
 
         if (updatedEvent.startTime && updatedEvent.endTime) {
-          console.log("Données mises à jour pour l'événement:", updatedEvent);
           this.updateEventInDatabase(updatedEvent);
         } else {
           console.error(
@@ -383,7 +375,6 @@
 
         try {
           await apiService.delete(`/sports-fields/${sportsFieldsId}`);
-          console.log('Le sportsFields a été supprimé avec succès.');
           await this.fetchTourneySportsFields(); // Rafraîchir les détails du tournoi après suppression
         } catch (error) {
           console.error(
@@ -394,13 +385,9 @@
       },
 
       // Suppression d'un événement de l'ancien terrain (quand il est déplacé)
-      async deleteEventFromField(eventId, fieldId) {
+      async deleteEventFromField(eventId) {
         try {
-          console.log(
-            `Suppression de l'événement ${eventId} de l'ancien terrain ${fieldId}`
-          );
           await apiService.delete(`/sports-fields/${eventId}`);
-          console.log("Événement supprimé de l'ancien terrain avec succès.");
         } catch (error) {
           console.error(
             "Erreur lors de la suppression de l'événement de l'ancien terrain:",
@@ -411,11 +398,6 @@
 
       // Mise à jour d'un événement dans la base de données
       async updateEventInDatabase(event) {
-        console.log(
-          "Mise à jour de l'événement dans la base de données:",
-          event
-        );
-
         if (!event || !event.id) {
           console.error('Erreur : Données de mise à jour incorrectes.');
           return;
@@ -427,7 +409,6 @@
             endTime: event.endTime,
             fieldId: event.newFieldId, // Utilisez le nouveau terrain pour l'update
           });
-          console.log('Les horaires ont été mis à jour avec succès.');
           await this.fetchTourneySportsFields(); // Rafraîchir les détails du tournoi après la mise à jour
         } catch (error) {
           console.error('Erreur lors de la mise à jour des horaires:', error);

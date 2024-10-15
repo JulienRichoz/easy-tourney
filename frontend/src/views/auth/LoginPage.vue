@@ -88,7 +88,7 @@
 
           // Redirection selon le rôle de l'utilisateur
           if (decoded.roleId === roles.ADMIN) {
-            this.$router.replace('/admin');
+            this.$router.replace('/tourneys');
           } else {
             this.$router.replace('/user');
           }

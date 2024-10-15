@@ -1,17 +1,9 @@
-<!-- frontend/src/components/MenuComponent.vue -->
 <template>
   <nav
     class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between"
   >
     <!-- Section de gauche -->
     <ul class="left-section flex items-center">
-      <li class="mr-6">
-        <router-link
-          to="/"
-          class="text-white font-semibold hover:text-green-400"
-          >Accueil</router-link
-        >
-      </li>
       <li v-if="isAdmin" class="mr-6">
         <router-link
           to="/tourneys"
@@ -31,13 +23,13 @@
     <!-- Section du nom du tournoi (visible uniquement sur les pages de tournoi) -->
     <div
       v-if="showTournamentName"
-      class="tournament-name text-lg font-bold mx-auto text-green-500"
+      class="tournament-name text-lg font-bold absolute left-1/2 transform -translate-x-1/2 text-green-500 hidden md:block"
     >
       {{ tournamentName }}
     </div>
 
     <!-- Section de droite -->
-    <ul class="right-section flex items-center ml-auto">
+    <ul class="right-section flex items-center">
       <li v-if="isAuthenticated" class="profile-section flex items-center">
         <span class="username text-white font-bold mr-4">{{ userName }}</span>
         <router-link to="/profile" class="profile-link text-green-400 mr-4">
@@ -87,11 +79,5 @@
   /* Style pour la barre de navigation - Tout est géré par Tailwind */
   .navbar {
     margin: 0;
-  }
-
-  .right-section {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
   }
 </style>

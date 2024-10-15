@@ -30,9 +30,9 @@
       <span class="hidden sm:inline"> Assignation</span>
     </router-link>
     <router-link
-      :to="`/tourneys/${tourneyId}/groups`"
+      :to="`/tourneys/${tourneyId}/teams`"
       class="tourney-nav-item"
-      :class="{ active: $route.name === 'TourneyGroups' }"
+      :class="{ active: $route.name === 'TourneyTeams' }"
     >
       <i class="fas fa-users"></i>
       <span class="hidden sm:inline"> Groupes</span>

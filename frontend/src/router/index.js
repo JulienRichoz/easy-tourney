@@ -10,8 +10,8 @@ import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
 import LoginPage from '../views/auth/LoginPage.vue';
 import RegisterPage from '../views/auth/RegisterPage.vue';
-import HomePage from '../views/HomePage.vue';
 import NotFoundPage from '../views/NotFound.vue';
+import AccessDenied from '../views/AccessDenied.vue'; // Import de la nouvelle vue
 import TourneysPage from '../views/admin/AdminTourneys.vue'; // Nouvelle vue pour les tournois
 import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Nouvelle vue pour les détails du tournoi
 import AdminSports from '../views/admin/AdminSports.vue'; // Nouvelle vue pour les sports
@@ -22,14 +22,28 @@ import AdminFields from '../views/admin/AdminFields.vue'; // Nouvelle vue pour l
 const routes = [
   {
     path: '/:pathMatch(.*)*',
-    name: 'NotFound',
+    name: 'NotFounPage',
     component: NotFoundPage,
   },
-  { path: '/', name: 'Home', component: HomePage },
+  {
+    path: '/access-denied',
+    name: 'AccessDenied',
+    component: AccessDenied,
+  },
+  {
+    path: '/',
+    redirect: '/login'
+  },
   {
     path: '/login',
     name: 'Login',
     component: LoginPage,
+  },
+  {
+    path: '/tourneys',
+    name: 'Tourneys',
+    component: TourneysPage,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   { path: '/register', name: 'Register', component: RegisterPage },
   {
@@ -44,12 +58,7 @@ const routes = [
     component: UserPage,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
-  {
-    path: '/tourneys',
-    name: 'Tourneys',
-    component: TourneysPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
+
   {
     path: '/tourneys/:id',
     name: 'TourneyDetails',
@@ -85,6 +94,21 @@ const router = createRouter({
 // Gestion des gardiens d'authentification pour les rôles
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupérer le token de l'utilisateur
+  const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
+  // Si l'utilisateur est authentifié, empêcher l'accès à la page de login et de register
+  if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
+    // Rediriger vers une page spécifique selon son rôle
+    const decoded = jwtDecode(token); // Décode le token pour récupérer les infos de l'utilisateur
+    const userRole = decoded.roleId;
+
+    if (userRole === 'admin') {
+      return next('/tourneys'); // Rediriger vers la page admin
+    } else {
+      return next('/user'); // Rediriger vers la page utilisateur standard
+    }
+  }
+
+  // Enregistrer la vue du tournoi dans Vuex/store pour l'afficher dans le header
   const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id; // Vérifiez si la route est pour un tournoi spécifique
   if (isTournamentRoute) {
     try {
@@ -103,6 +127,7 @@ router.beforeEach(async (to, from, next) => {
     store.dispatch('clearTournamentName');
   }
 
+  // Vérifier si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!token) {
       store.commit('LOGOUT');
@@ -125,7 +150,7 @@ router.beforeEach(async (to, from, next) => {
         //console.log('router.beforeEach -> Vérification des permissions pour userRole:', userRole, 'permission:', to.meta.permission);
 
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
-          return next('/'); // Rediriger à la page d'accueil si l'utilisateur n'a pas les permissions
+          return next('/access-denied'); // Rediriger à la page d'access denied si l'utilisateur n'a pas les permissions
         }
 
         return next(); // Continuer vers la route demandée
