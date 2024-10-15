@@ -1,5 +1,5 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Users', {
@@ -14,7 +14,7 @@ module.exports = {
       },
       email: {
         type: Sequelize.STRING,
-        unique: true // ajout de la contrainte d'unicité
+        unique: true // Contrainte d'unicité
       },
       password: {
         type: Sequelize.STRING
@@ -22,8 +22,18 @@ module.exports = {
       roleId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Roles', // nom de la table cible
-          key: 'id'       // clé primaire de la table cible
+          model: 'Roles', // Table cible
+          key: 'id'       // Clé primaire de la table cible
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
+      },
+      teamId: {
+        type: Sequelize.INTEGER,
+        allowNull: true, // L'utilisateur peut ne pas avoir d'équipe
+        references: {
+          model: 'Teams', // Table cible
+          key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
