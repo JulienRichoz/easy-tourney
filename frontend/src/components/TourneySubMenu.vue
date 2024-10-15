@@ -22,9 +22,9 @@
       <span class="hidden sm:inline"> Terrains</span>
     </router-link>
     <router-link
-      :to="`/tourneys/${tourneyId}/sport-fields`"
+      :to="`/tourneys/${tourneyId}/sports-fields`"
       class="tourney-nav-item"
-      :class="{ active: $route.name === 'SportFields' }"
+      :class="{ active: $route.name === 'sportsFields' }"
     >
       <i class="fas fa-futbol"></i>
       <span class="hidden sm:inline"> Assignation</span>

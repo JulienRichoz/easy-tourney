@@ -1,10 +1,10 @@
-// server/controllers/sportFieldController.js
-// Contrôleur pour la gestion des associations SportField
+// server/controllers/sportsFieldsController.js
+// Contrôleur pour la gestion des associations sportsFields
 
-const { Field, Sport, SportField } = require('../models');
+const { Field, Sport, SportsFields } = require('../models');
 
-// Créer une association SportField
-exports.createSportField = async (req, res) => {
+// Créer une association sportsFields
+exports.createSportsFields = async (req, res) => {
     try {
         const { fieldId, sportId, startTime, endTime, information } = req.body;
 
@@ -24,8 +24,8 @@ exports.createSportField = async (req, res) => {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }
 
-        // Créer le SportField
-        const sportField = await SportField.create({
+        // Créer le sportsFields
+        const sportsFields = await SportsFields.create({
             fieldId,
             sportId,
             startTime,
@@ -33,51 +33,51 @@ exports.createSportField = async (req, res) => {
             information,
         });
 
-        res.status(201).json(sportField);
+        res.status(201).json(sportsFields);
     } catch (error) {
-        console.error('Erreur lors de la création de l\'association SportField :', error);
-        res.status(500).json({ message: 'Erreur lors de la création de l\'association SportField' });
+        console.error('Erreur lors de la création de l\'association sportsFields :', error);
+        res.status(500).json({ message: 'Erreur lors de la création de l\'association sportsFields' });
     }
 };
 
-exports.updateSportField = async (req, res) => {
+exports.updateSportsFields = async (req, res) => {
     try {
         const { id } = req.params;
         const { startTime, endTime, fieldId } = req.body;
 
-        const sportField = await SportField.findByPk(id);
+        const sportsFields = await SportsFields.findByPk(id);
 
-        if (!sportField) {
+        if (!sportsFields) {
             return res.status(404).json({ message: "Sport associé au terrain non trouvé" });
         }
 
-        await sportField.update({ startTime, endTime, fieldId });
+        await sportsFields.update({ startTime, endTime, fieldId });
 
-        res.status(200).json(sportField);
+        res.status(200).json(sportsFields);
     } catch (error) {
         console.error("Erreur lors de la mise à jour du sport associé au terrain :", error);
         res.status(500).json({ message: "Erreur lors de la mise à jour du sport associé au terrain" });
     }
 };
 
-exports.deleteSportField = async (req, res) => {
+exports.deleteSportsFields = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Trouver le sportField par son ID
-        const sportField = await SportField.findByPk(id);
+        // Trouver le sportsFields par son ID
+        const sportsFields = await SportsFields.findByPk(id);
 
-        if (!sportField) {
-            return res.status(404).json({ message: "SportField non trouvé." });
+        if (!sportsFields) {
+            return res.status(404).json({ message: "sportsFields non trouvé." });
         }
 
         // Supprimer l'association du sport avec le terrain
-        await sportField.destroy();
+        await sportsFields.destroy();
 
-        res.status(200).json({ message: 'SportField supprimé avec succès.' });
+        res.status(200).json({ message: 'sportsFields supprimé avec succès.' });
     } catch (error) {
-        console.error('Erreur lors de la suppression du SportField :', error);
-        res.status(500).json({ message: 'Erreur lors de la suppression du SportField' });
+        console.error('Erreur lors de la suppression du sportsFields :', error);
+        res.status(500).json({ message: 'Erreur lors de la suppression du sportsFields' });
     }
 };
 

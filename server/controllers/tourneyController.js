@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 // Contrôleur pour la gestion des tournois
 
-const { Tourney, Field, SportField, Sport, TeamSetup, ScheduleTourney } = require('../models');
+const { Tourney, Field, SportsFields, Sport, TeamSetup, ScheduleTourney } = require('../models');
 
 exports.createTourney = async (req, res) => {
     try {
@@ -150,7 +150,7 @@ exports.getSportsByField = async (req, res) => {
     try {
         const { fieldId } = req.params;
 
-        const sportFields = await SportField.findAll({
+        const sportsFields = await SportsFields.findAll({
             where: { fieldId },
             include: [
                 {
@@ -162,11 +162,11 @@ exports.getSportsByField = async (req, res) => {
         });
 
 
-        if (sportFields.length === 0) {
+        if (sportsFields.length === 0) {
             return res.status(404).json({ message: "Aucun sport n'est associé à ce terrain." });
         }
 
-        res.status(200).json(sportFields);
+        res.status(200).json(sportsFields);
     } catch (error) {
         console.error('Erreur lors de la récupération des sports par terrain :', error);
         res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
@@ -191,7 +191,7 @@ exports.getFieldsByTourneyId = async (req, res) => {
 }
 
 // Récupérer les sports associés aux terrains d'un tournoi
-exports.getSportFieldsByTourney = async (req, res) => {
+exports.getSportsFieldsByTourney = async (req, res) => {
     try {
         const tourneyId = req.params.id;
 
@@ -205,8 +205,8 @@ exports.getSportFieldsByTourney = async (req, res) => {
                     attributes: ['id', 'name', 'description'],
                     include: [
                         {
-                            model: SportField,
-                            as: 'sportFields',
+                            model: SportsFields,
+                            as: 'sportsFields',
                             attributes: ['id', 'startTime', 'endTime', 'information'],
                             include: [
                                 {

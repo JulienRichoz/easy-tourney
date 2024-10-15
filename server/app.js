@@ -9,7 +9,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
 const sportRoutes = require('./routes/sport');
 const tourneyRoutes = require('./routes/tourney');
-const sportFieldRoutes = require('./routes/sportField');
+const sportsFieldsRoutes = require('./routes/sportsFields');
 const fieldRoutes = require('./routes/field');
 const teamRoutes = require('./routes/team');
 
@@ -28,7 +28,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/tourneys', tourneyRoutes);
-app.use('/api/sport-fields', sportFieldRoutes);
+app.use('/api/sports-fields', sportsFieldsRoutes);
 app.use('/api/fields', fieldRoutes);
 app.use('/api/teams', teamRoutes);
 

@@ -15,7 +15,7 @@ import NotFoundPage from '../views/NotFound.vue';
 import TourneysPage from '../views/admin/AdminTourneys.vue'; // Nouvelle vue pour les tournois
 import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Nouvelle vue pour les détails du tournoi
 import AdminSports from '../views/admin/AdminSports.vue'; // Nouvelle vue pour les sports
-import SportFields from '../views/admin/SportFields.vue'; // Nouvelle vue pour la gestion d'assignement de sport à un terrain
+import SportsFields from '../views/admin/SportsFields.vue'; // Nouvelle vue pour la gestion d'assignement de sport à un terrain
 import AdminFields from '../views/admin/AdminFields.vue'; // Nouvelle vue pour les terrains
 
 
@@ -63,9 +63,9 @@ const routes = [
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/tourneys/:id/sport-fields',
-    name: 'SportFields',
-    component: SportFields,
+    path: '/tourneys/:id/sports-fields',
+    name: 'SportsFields',
+    component: SportsFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {

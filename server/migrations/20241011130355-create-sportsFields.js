@@ -1,8 +1,8 @@
-// --- backend/migrations/xxxx-create-sportField.js ---
+// --- backend/migrations/xxxx-create-sportsFields.js ---
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('SportFields', {
+    await queryInterface.createTable('SportsFields', {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -52,6 +52,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('SportFields');
+    await queryInterface.dropTable('SportsFields');
   }
 };

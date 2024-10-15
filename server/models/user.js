@@ -3,8 +3,19 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
+      // Association avec le rôle
       User.belongsTo(models.Role, { foreignKey: 'roleId' });
-      User.belongsTo(models.Team, { foreignKey: 'teamId' }); // Association avec l'équipe
+
+      // Association avec l'équipe
+      User.belongsTo(models.Team, { foreignKey: 'teamId' });
+
+      // Association avec les tournois via UsersTourneys (relation N-N)
+      User.belongsToMany(models.Tourney, {
+        through: 'UsersTourneys', // Table intermédiaire
+        foreignKey: 'userId',
+        otherKey: 'tourneyId',
+        as: 'tourneys'
+      });
     }
   }
 

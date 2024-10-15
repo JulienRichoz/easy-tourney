@@ -10,7 +10,7 @@ module.exports = {
     );
 
     if (fields.length > 0) {
-      await queryInterface.bulkInsert('SportFields', [
+      await queryInterface.bulkInsert('sportsFields', [
         {
           fieldId: fields[0].id,
           sportId: 1, // Basketball
@@ -43,6 +43,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('SportFields', null, {});
+    await queryInterface.bulkDelete('sportsFields', null, {});
   },
 };

@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 const {
     createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney,
-    getSportsByField, getFieldsByTourneyId, getSportFieldsByTourney
+    getSportsByField, getFieldsByTourneyId, getSportsFieldsByTourney
 } = require('../controllers/tourneyController');
 const { createTeamSetup: createTeamSetup, updateTeamSetup, getTeamSetup, generateTeams } = require('../controllers/teamSetupController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
@@ -28,7 +28,7 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un 
  */
 router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
 router.get('/:tourneyId/fields', isAuthenticated, getFieldsByTourneyId); // Récupérer les terrains d'un tournoi
-router.get('/:id/sport-fields', isAuthenticated, getSportFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
+router.get('/:id/sports-fields', isAuthenticated, getSportsFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
 
 /*
 --------------------------------
@@ -43,8 +43,8 @@ router.get('/:tourneyId/team-setup', isAuthenticated, isAdmin, generateTeams); /
 router.post('/:tourneyId/schedule', isAuthenticated, isAdmin, createScheduleTourney); // Ajouter le planning (admin uniquement)
 
 
-// Ajouter la route manquante pour les SportFields
-const { createSportField } = require('../controllers/sportFieldController');
-router.post('/sport-fields', isAuthenticated, isAdmin, createSportField); // Ajouter un sport à un terrain
+// Ajouter la route manquante pour les sportsFields
+const { createSportsFields } = require('../controllers/sportsFieldsController');
+router.post('/sports-fields', isAuthenticated, isAdmin, createSportsFields); // Ajouter un sport à un terrain
 
 module.exports = router;

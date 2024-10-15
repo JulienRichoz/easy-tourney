@@ -1,17 +1,17 @@
-// server/models/sportField.js
-// Purpose: Define the SportField model and its associations
+// server/models/sportsFields.js
+// Purpose: Define the sportsFields model and its associations
 
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-    class SportField extends Model {
+    class SportsFields extends Model {
         static associate(models) {
-            SportField.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
-            SportField.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
+            SportsFields.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
+            SportsFields.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
         }
     }
 
-    SportField.init({
+    SportsFields.init({
         startTime: {
             type: DataTypes.TIME,
             allowNull: false,
@@ -26,8 +26,8 @@ module.exports = (sequelize, DataTypes) => {
         },
     }, {
         sequelize,
-        modelName: 'SportField',
+        modelName: 'SportsFields',
     });
 
-    return SportField;
+    return SportsFields;
 };
