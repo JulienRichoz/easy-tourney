@@ -4,26 +4,36 @@
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-3xl font-bold ml-4">Gestion des Tournois</h1>
       <!-- Filtres des tournois -->
-      <div class="flex items-center">
-        <span class="text-gray-700 font-semibold mr-4">Filtrer par:</span>
-        <select
-          v-model="filterStatus"
-          class="p-2 border border-gray-300 rounded-md"
-        >
-          <option value="">Tous les statuts</option>
-          <option value="draft">Draft</option>
-          <option value="ready">Prêt</option>
-          <option value="active">Actif</option>
-          <option value="completed">Terminé</option>
-        </select>
-        <select
-          v-model="filterDate"
-          class="ml-4 p-2 border border-gray-300 rounded-md"
-        >
-          <option value="">Toutes les dates</option>
-          <option value="upcoming">À venir</option>
-          <option value="past">Passés</option>
-        </select>
+      <!-- Filtres des tournois -->
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="mb-4 md:mb-0 md:mr-4">
+          <span class="text-gray-700 font-semibold mr-2"
+            >Filtrer par statut:</span
+          >
+          <select
+            v-model="filterStatus"
+            class="p-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Tous les statuts</option>
+            <option value="draft">Draft</option>
+            <option value="ready">Prêt</option>
+            <option value="active">Actif</option>
+            <option value="completed">Terminé</option>
+          </select>
+        </div>
+        <div>
+          <span class="text-gray-700 font-semibold mr-2"
+            >Filtrer par date:</span
+          >
+          <select
+            v-model="filterDate"
+            class="p-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Toutes les dates</option>
+            <option value="upcoming">À venir</option>
+            <option value="past">Passés</option>
+          </select>
+        </div>
       </div>
     </div>
 
