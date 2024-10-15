@@ -16,7 +16,7 @@ module.exports = {
         name: 'Football',
         rule: 'Règles de football...',
         scoreSystem: 'ASC',
-        color: '#33FF57',
+        color: '#028d1c',
         image: '/uploads/football.jpg',
         createdAt: new Date(),
         updatedAt: new Date(),

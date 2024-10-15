@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 // Contrôleur pour la gestion des tournois
 
-const { Tourney, Field, SportField, Sport, GroupSetup, ScheduleTourney } = require('../models');
+const { Tourney, Field, SportField, Sport, TeamSetup, ScheduleTourney } = require('../models');
 
 exports.createTourney = async (req, res) => {
     try {
@@ -61,27 +61,27 @@ exports.createScheduleTourney = async (req, res) => {
 };
 
 
-// Ajouter la configuration de groupe au tournoi
-exports.createGroupSetup = async (req, res) => {
+// Ajouter la configuration de team au tournoi
+exports.createTeamSetup = async (req, res) => {
     try {
         const { tourneyId } = req.params;
-        const { maxGroupNumber, playerPerGroup, playerEstimated } = req.body;
+        const { maxTeamNumber, playerPerTeam, playerEstimated } = req.body;
 
-        if (!maxGroupNumber || !playerPerGroup) {
-            return res.status(400).json({ message: "Les champs 'maxGroupNumber' et 'playerPerGroup' sont requis." });
+        if (!maxTeamNumber || !playerPerTeam) {
+            return res.status(400).json({ message: "Les champs 'maxTeamNumber' et 'playerPerTeam' sont requis." });
         }
 
-        const groupSetup = await GroupSetup.create({
+        const teamSetup = await TeamSetup.create({
             tourneyId,
-            maxGroupNumber,
-            playerPerGroup,
+            maxTeamNumber,
+            playerPerTeam,
             playerEstimated,
         });
 
-        res.status(201).json(groupSetup);
+        res.status(201).json(teamSetup);
     } catch (error) {
-        console.error('Erreur lors de la création de la configuration de groupe :', error);
-        res.status(500).json({ message: 'Erreur lors de la création de la configuration de groupe' });
+        console.error('Erreur lors de la création de la configuration de team :', error);
+        res.status(500).json({ message: 'Erreur lors de la création de la configuration de team' });
     }
 };
 

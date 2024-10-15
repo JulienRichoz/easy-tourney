@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('GroupSetups', {
+    await queryInterface.createTable('TeamSetups', {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -17,12 +17,13 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
+        unique: true, // Ajoute l'unicité pour empêcher plusieurs configurations pour un même tournoi
       },
-      maxGroupNumber: {
+      maxTeamNumber: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      playerPerGroup: {
+      playerPerTeam: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
@@ -42,6 +43,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('GroupSetups');
+    await queryInterface.dropTable('TeamSetups');
   }
 };

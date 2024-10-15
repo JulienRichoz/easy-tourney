@@ -48,7 +48,6 @@
     },
     methods: {
       onClick(event) {
-        console.log('From ButtonCOmponenet, button clicked');
         this.$emit('click', event);
       },
     },

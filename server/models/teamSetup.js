@@ -1,21 +1,19 @@
-// server/models/groupSetup.js
-// Purpose: Define the GroupSetup model and its associations
-
+// server/models/teamSetup.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-    class GroupSetup extends Model {
+    class TeamSetup extends Model {
         static associate(models) {
-            GroupSetup.belongsTo(models.Tourney, { foreignKey: 'tourneyId' });
+            TeamSetup.belongsTo(models.Tourney, { foreignKey: 'tourneyId' });
         }
     }
 
-    GroupSetup.init({
-        maxGroupNumber: {
+    TeamSetup.init({
+        maxTeamNumber: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        playerPerGroup: {
+        playerPerTeam: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
@@ -25,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
         },
     }, {
         sequelize,
-        modelName: 'GroupSetup',
+        modelName: 'TeamSetup',
     });
 
-    return GroupSetup;
+    return TeamSetup;
 };

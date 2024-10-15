@@ -10,11 +10,11 @@ module.exports = {
     );
 
     if (tourneys.length > 0) {
-      await queryInterface.bulkInsert('GroupSetups', [
+      await queryInterface.bulkInsert('TeamSetups', [
         {
           tourneyId: tourneys[0].id,
-          maxGroupNumber: 10,
-          playerPerGroup: 5,
+          maxTeamNumber: 10,
+          playerPerTeam: 5,
           playerEstimated: 50,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -24,6 +24,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('GroupSetups', null, {});
+    await queryInterface.bulkDelete('TeamSetups', null, {});
   },
 };

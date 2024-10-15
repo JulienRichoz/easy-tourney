@@ -1,5 +1,5 @@
 // server/middlewares/index.js
-// Middleware regroupées pour l'authentification, la gestion des erreurs, les limites de requêtes et les rôles
+// Middleware reteamées pour l'authentification, la gestion des erreurs, les limites de requêtes et les rôles
 
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
