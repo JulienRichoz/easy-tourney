@@ -1,5 +1,5 @@
 # frontend
-
+## Easy-Tourney
 ## Project setup
 ```
 npm install
