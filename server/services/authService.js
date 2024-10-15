@@ -36,13 +36,11 @@ exports.hasPermission = (roleId, permission) => {
 exports.isAuthenticated = () => {
     const token = localStorage.getItem('token');
     if (!token) {
-        console.log("Token non trouvé dans le localStorage.");
         return false;
     }
 
     try {
         const decoded = jwtDecode(token);
-        console.log("Token décodé:", decoded);
         return decoded && Date.now() <= decoded.exp * 1000;
     } catch (error) {
         console.error("Erreur lors de la vérification du token:", error);
