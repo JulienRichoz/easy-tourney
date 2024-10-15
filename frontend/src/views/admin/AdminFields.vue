@@ -208,7 +208,6 @@
       },
       // Ouvrir la confirmation de suppression pour un terrain spécifique
       confirmDeleteField(id) {
-        console.log('confirmDeleteField', id);
         this.confirmedDeleteFieldId = id;
         this.showDeleteConfirmation = true;
       },
@@ -275,7 +274,6 @@
         this.showModal = true;
       },
       editField(field) {
-        console.log('editField', field);
         this.editingFieldId = field.id;
         this.newField = { ...field };
         this.showModal = true;

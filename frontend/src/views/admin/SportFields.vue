@@ -127,7 +127,6 @@
 
       // Gestion du drop sur un terrain
       handleFieldDrop(field) {
-        console.log('Dépôt détecté sur le terrain:', field);
         if (!this.draggedSport || !this.draggedSport.id) {
           console.error(
             'Erreur : Aucune donnée de sport valide trouvée lors du drag.'
@@ -143,7 +142,6 @@
           endTime: '12:00:00', // Exemple d'heure par défaut
           information: '',
         };
-        console.log('Données pour assigner le sport au terrain:', data);
         this.assignSport(data);
 
         // Réinitialiser draggedSport après le drop
@@ -154,27 +152,22 @@
       handleSportDragStart(sport) {
         this.draggedSport = sport;
         this.draggedEvent = null; // Assurez-vous que l'événement traîné est null
-        console.log('handleSportDragStart:', this.draggedSport);
       },
 
       // Gestion de l'événement de début du drag d'un événement
       handleEventDragStart(event) {
         this.draggedEvent = event;
         this.draggedSport = null; // Assurez-vous que le sport traîné est null
-        console.log('handleEventDragStart:', this.draggedEvent);
       },
 
       // Gestion de l'événement de fin du drag
-      handleDragEnd(evt) {
-        console.log('Fin du drag:', evt);
+      handleDragEnd() {
         this.draggedSport = null; // Réinitialiser draggedSport à la fin
         this.draggedEvent = null; // Réinitialiser draggedEvent à la fin
       },
 
       // Gestion du déplacement d'un événement dans le calendrier (quand un sport est reçu par un terrain)
       handleEventReceive({ event }) {
-        console.log('Sport reçu dans le calendrier:', event);
-
         if (!event) {
           console.error("Erreur : L'événement n'est pas défini.");
           return;
@@ -200,7 +193,6 @@
         };
 
         if (data.startTime && data.endTime) {
-          console.log('Données pour assigner le sport:', data);
           this.assignSport(data);
         } else {
           console.error(
@@ -215,10 +207,6 @@
       // Fonction pour assigner un sport à un terrain
       async assignSport(data) {
         try {
-          console.log(
-            "Tentative d'ajout du sport au terrain avec les données:",
-            data
-          );
           await apiService.post('/sport-fields', data);
           await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après l'assignation
         } catch (error) {
@@ -237,7 +225,6 @@
         }
 
         try {
-          console.log("Suppression de l'événement avec ID:", eventId);
           await apiService.delete(`/sport-fields/${eventId}`);
           alert('Sport supprimé avec succès.');
           await this.fetchTourneySportField(); // Rafraîchir les détails du tournoi après la suppression

@@ -64,12 +64,6 @@
       resetSportsList() {
         this.searchTerm = '';
       },
-      onDragStart(event) {
-        console.log('Début du drag:', event);
-      },
-      onDragEnd(event) {
-        console.log('Fin du drag:', event);
-      },
     },
   };
 </script>
