@@ -20,7 +20,7 @@
         v-for="sport in sports"
         :key="sport.id"
         :title="sport.name"
-        :image="`http://localhost:3000${sport.image}`"
+        :image="getImageUrl(sport.image)"
         :showDeleteButton="true"
         :showEditButton="true"
         :titleColor="sport.color"
@@ -94,7 +94,7 @@
             >
             <div v-if="editingSportId && newSport.image" class="mb-2">
               <img
-                :src="`http://localhost:3000${newSport.image}`"
+                :src="getImageUrl(sport.image)"
                 alt="Current sport image"
                 class="w-full h-40 object-cover rounded-lg"
               />
@@ -172,6 +172,12 @@
       };
     },
     methods: {
+      getImageUrl(imagePath) {
+        const baseUrl =
+          process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000';
+        alert(`${baseUrl}${imagePath}`);
+        return `${baseUrl}${imagePath}`;
+      },
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');

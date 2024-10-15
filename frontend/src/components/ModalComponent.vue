@@ -68,6 +68,18 @@
         default: false, // Permet de désactiver le bouton
       },
     },
+
+    // DECOMMENTER POUR ACTIVER LE BLOCAGE DU SCROLL
+    /*watch: {
+      isVisible(val) {
+        // Bloque le scroll en arrière-plan quand le modal est ouvert
+        if (val) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = 'auto';
+        }
+      },
+    },*/
     methods: {
       onCancel() {
         this.$emit('close');

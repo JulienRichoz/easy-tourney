@@ -19,7 +19,10 @@ const { errorHandler, limiter } = require('./middlewares');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://192.168.1.42:8080'], // Ajouter l'IP locale de ton réseau
+  credentials: true // Si tu gères des cookies d'authentification
+}));
 app.use(express.json());
 app.use(limiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -40,7 +43,7 @@ app.use(errorHandler);
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
   });
 });
