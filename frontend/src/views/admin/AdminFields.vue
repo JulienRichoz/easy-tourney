@@ -6,15 +6,16 @@
     <div class="p-6">
       <div class="flex items-center mb-8">
         <h1 class="text-3xl font-bold ml-4">Gestion Terrains</h1>
-        <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary"
-          >Ajouter plusieurs terrains</ButtonComponent
-        >
+        <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary">
+          Ajouter plusieurs terrains
+        </ButtonComponent>
         <ButtonComponent
           v-if="fields.length > 0"
           @click="openDeleteAllFieldsModal"
           variant="danger"
-          >Supprimer tous les terrains</ButtonComponent
         >
+          Supprimer tous les terrains
+        </ButtonComponent>
       </div>
 
       <!-- Grille des terrains -->
@@ -35,8 +36,9 @@
           :subtitle="field.description"
           :showDeleteButton="true"
           :showEditButton="true"
-          @onDelete="confirmDeleteField(field.id)"
-          @onEdit="editField(field)"
+          @click="editField(field)"
+          @onDelete.stop="confirmDeleteField(field.id)"
+          @onEdit.stop="editField(field)"
         />
       </div>
 
@@ -78,6 +80,7 @@
           </form>
         </template>
       </ModalComponent>
+
       <!-- Modale pour ajouter plusieurs terrains -->
       <ModalComponent
         :isVisible="showMultipleFieldsModal"
@@ -88,9 +91,9 @@
         <template #content>
           <form @submit.prevent="handleMultipleFieldsSubmit">
             <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2">
-                Nombre de terrains
-              </label>
+              <label class="block text-gray-700 font-semibold mb-2"
+                >Nombre de terrains</label
+              >
               <input
                 type="number"
                 v-model="numberOfFields"
@@ -102,39 +105,17 @@
           </form>
         </template>
       </ModalComponent>
-      <!-- Modale pour confirmer la suppression de tous les terrains -->
-      <ModalComponent
-        :isVisible="showDeleteAllFieldsModal"
-        title="Confirmer la suppression de tous les terrains"
-        @close="closeDeleteAllFieldsModal"
-        @submit="handleDeleteAllFieldsSubmit"
-        confirmButtonText="Supprimer"
-        confirmButtonVariant="danger"
-        :confirmButtonDisabled="deleteAllConfirmation.trim() !== 'Oui'"
-      >
-        <template #content>
-          <form @submit.prevent="handleDeleteAllFieldsSubmit">
-            <p class="mb-4 text-red-600">
-              Êtes-vous sûr de vouloir supprimer tous les terrains ? Cette
-              action est irréversible et tous les terrains ainsi que les sports
-              associés seront définitivement supprimés.
-            </p>
-            <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2"
-                >Tapez "Oui" pour confirmer</label
-              >
-              <input
-                type="text"
-                v-model="deleteAllConfirmation"
-                class="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="Oui"
-              />
-            </div>
-          </form>
-        </template>
-      </ModalComponent>
 
-      <!-- Confirmation de suppression -->
+      <!-- Modale pour confirmer la suppression de tous les terrains -->
+      <DeleteConfirmationModal
+        :isVisible="showDeleteAllFieldsModal"
+        @cancel="closeDeleteAllFieldsModal"
+        @confirm="handleDeleteAllFieldsSubmit"
+        :isHardDelete="true"
+        hardDeleteMessage="Cette action supprimera définitivement tous les terrains et les sports associés."
+      />
+
+      <!-- Confirmation de suppression individuelle -->
       <DeleteConfirmationModal
         :isVisible="showDeleteConfirmation"
         @cancel="closeDeleteConfirmation"
@@ -146,12 +127,12 @@
 
 <script>
   import apiService from '@/services/apiService';
-  import ModalComponent from '@/components/ModalComponent.vue';
-  import ButtonComponent from '@/components/ButtonComponent.vue';
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
+  import ModalComponent from '@/components/ModalComponent.vue';
+  import ButtonComponent from '@/components/ButtonComponent.vue';
+
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
-  import truncateMixin from '@/mixins/truncateMixin';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
 
   export default {
@@ -163,17 +144,16 @@
       CardAddComponent,
       CardEditComponent,
     },
-    mixins: [truncateMixin],
     data() {
       return {
         tourneyId: this.$route.params.id, // ID du tournoi récupéré depuis l'URL
         fields: [], // Stocker les terrains récupérés
         showModal: false, // Gérer l'affichage de la modale
         showMultipleFieldsModal: false, // Gérer la modale pour plusieurs terrains
-        showDeleteConfirmation: false, // Gérer la confirmation de suppression
-        confirmedDeleteFieldId: null, // ID du terrain à supprimer
-        showDeleteAllFieldsModal: false, // Gérer l'affichage de la modal de suppression
-        deleteAllConfirmation: '', // Pour stocker la confirmation de suppression
+        showDeleteConfirmation: false, // Gérer la confirmation de suppression individuelle
+        confirmedDeleteFieldId: null, // ID du terrain à supprimer individuellement
+        showDeleteAllFieldsModal: false, // Gérer la confirmation de suppression complète
+        deleteAllConfirmation: '', // Pour stocker la confirmation de suppression de tous les terrains
         newField: {
           name: '',
           description: '',
@@ -192,48 +172,28 @@
           const response = await apiService.get(
             `/fields/tourneys/${this.tourneyId}`
           );
-          if (response.data && response.data.length > 0) {
-            this.fields = response.data; // Si des terrains existent, on les stocke
-          } else {
-            // Si aucun terrain n'est trouvé, afficher un message
-            this.fields = [];
-          }
+          this.fields = response.data || [];
         } catch (error) {
-          if (error.response && error.response.status === 404) {
-            // Gérer le cas où l'API renvoie une erreur 404 (aucun terrain trouvé)
-            this.fields = [];
-          } else {
-            console.error(
-              'Erreur lors de la récupération des détails du terrain:',
-              error
-            );
-          }
+          console.error(
+            'Erreur lors de la récupération des détails du terrain:',
+            error
+          );
         }
       },
       // Ouvrir la modal pour supprimer tous les terrains
       openDeleteAllFieldsModal() {
-        this.deleteAllConfirmation = ''; // Réinitialiser la confirmation
         this.showDeleteAllFieldsModal = true;
       },
-
-      // Fermer la modal pour supprimer tous les terrains
       closeDeleteAllFieldsModal() {
         this.showDeleteAllFieldsModal = false;
       },
 
-      // Gestion de la soumission pour supprimer tous les terrains
+      // Gestion de la suppression de tous les terrains
       async handleDeleteAllFieldsSubmit() {
-        if (this.isSubmitting) return;
-
-        // Vérifie si l'utilisateur a bien tapé "Oui"
-        if (this.deleteAllConfirmation.trim() !== 'Oui') {
-          return;
-        }
-
-        this.isSubmitting = true;
+        if (this.isDeleting) return;
+        this.isDeleting = true;
 
         try {
-          // Suppression de tous les terrains pour ce tournoi
           await apiService.delete(`/fields/tourneys/${this.tourneyId}/all`);
           this.fetchFieldDetails(); // Recharger les terrains après suppression
           this.closeDeleteAllFieldsModal(); // Fermer la modal
@@ -243,7 +203,32 @@
             error
           );
         } finally {
-          this.isSubmitting = false;
+          this.isDeleting = false;
+        }
+      },
+      // Ouvrir la confirmation de suppression pour un terrain spécifique
+      confirmDeleteField(id) {
+        console.log('confirmDeleteField', id);
+        this.confirmedDeleteFieldId = id;
+        this.showDeleteConfirmation = true;
+      },
+      closeDeleteConfirmation() {
+        this.showDeleteConfirmation = false;
+        this.confirmedDeleteFieldId = null;
+      },
+      // Gestion de la suppression individuelle d'un terrain
+      async deleteField(id) {
+        if (this.isDeleting) return;
+        this.isDeleting = true;
+
+        try {
+          await apiService.delete(`/fields/${id}`);
+          this.fetchFieldDetails(); // Recharger les terrains après suppression
+          this.closeDeleteConfirmation(); // Fermer la modal
+        } catch (error) {
+          console.error('Erreur lors de la suppression du terrain:', error);
+        } finally {
+          this.isDeleting = false;
         }
       },
       // Ouvrir la modal pour ajouter plusieurs terrains
@@ -251,13 +236,11 @@
         this.numberOfFields = 1; // Initialiser à 1
         this.showMultipleFieldsModal = true;
       },
-
-      // Fermer la modal pour ajouter plusieurs terrains
       closeMultipleFieldsModal() {
         this.showMultipleFieldsModal = false;
       },
 
-      // Gestion de la soumission pour créer plusieurs terrains
+      // Gestion de la soumission pour ajouter plusieurs terrains
       async handleMultipleFieldsSubmit() {
         if (this.isSubmitting) return;
         this.isSubmitting = true;
@@ -265,10 +248,9 @@
         try {
           // Boucler pour créer le nombre de terrains
           for (let i = 1; i <= this.numberOfFields; i++) {
-            const fieldName = `Terrain ${i}`;
             const newField = {
-              name: fieldName,
-              description: '', // Pas de description par défaut
+              name: `Terrain ${i}`,
+              description: '',
               tourneyId: this.tourneyId,
             };
             await apiService.post(`/fields`, newField);
@@ -281,6 +263,7 @@
           this.isSubmitting = false;
         }
       },
+
       openAddFieldModal() {
         this.editingFieldId = null;
         this.newField = {
@@ -292,6 +275,7 @@
         this.showModal = true;
       },
       editField(field) {
+        console.log('editField', field);
         this.editingFieldId = field.id;
         this.newField = { ...field };
         this.showModal = true;
@@ -322,30 +306,9 @@
           this.isSubmitting = false;
         }
       },
-      confirmDeleteField(id) {
-        this.confirmedDeleteFieldId = id;
-        this.showDeleteConfirmation = true;
-      },
-      async deleteField(id) {
-        if (this.isDeleting) return;
-        this.isDeleting = true;
-        try {
-          await apiService.delete(`/fields/${id}`);
-          this.closeDeleteConfirmation();
-          this.fetchFieldDetails();
-        } catch (error) {
-          console.error('Erreur lors de la suppression du terrain:', error);
-        } finally {
-          this.isDeleting = false;
-        }
-      },
       closeModal() {
         this.showModal = false;
         this.isSubmitting = false;
-      },
-      closeDeleteConfirmation() {
-        this.showDeleteConfirmation = false;
-        this.confirmedDeleteFieldId = null;
       },
     },
     mounted() {

@@ -53,6 +53,7 @@
     data() {
       return {
         activeTab: 'details', // Par défaut, on montre les détails du tournoi
+        isNavVisible: true, // Défini la visibilité par défaut du menu
       };
     },
     methods: {

@@ -32,22 +32,23 @@
       buttonClasses() {
         switch (this.variant) {
           case 'primary':
-            return 'ml-4 mr-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition shadow-md';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition shadow-md';
           case 'secondary':
-            return 'bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-all';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-all';
           case 'danger':
-            return 'px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 transition';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 transition';
           case 'warning':
-            return 'bg-yellow-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-600 transition-all';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-yellow-500 text-white rounded-md shadow-md hover:bg-yellow-600 transition-all';
           case 'gray':
-            return 'bg-gray-400 text-white px-4 py-2 rounded-md cursor-not-allowed';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed';
           default:
-            return 'bg-gray-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600 transition-all';
+            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-500 text-white rounded-md shadow-md hover:bg-gray-600 transition-all';
         }
       },
     },
     methods: {
       onClick(event) {
+        console.log('From ButtonCOmponenet, button clicked');
         this.$emit('click', event);
       },
     },

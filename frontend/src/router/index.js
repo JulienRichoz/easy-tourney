@@ -86,7 +86,6 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupérer le token de l'utilisateur
   const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id; // Vérifiez si la route est pour un tournoi spécifique
-  console.log("BeforeEach router:", isTournamentRoute)
   if (isTournamentRoute) {
     try {
       // Récupérer les infos du tournoi depuis l'API

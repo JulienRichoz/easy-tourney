@@ -1,7 +1,6 @@
 <template>
   <div
     class="cursor-pointer bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition-transform transform hover:scale-105 flex flex-col justify-between h-auto min-h-[200px]"
-    @click="onClick"
   >
     <!-- Si une image est présente, on réduit la hauteur -->
     <img
@@ -133,9 +132,6 @@
       },
       onEdit(event) {
         this.$emit('edit', event);
-      },
-      onClick(event) {
-        this.$emit('click', event); // Assurez-vous que cet événement gère l'ouverture de la modale d'édition
       },
     },
   };
