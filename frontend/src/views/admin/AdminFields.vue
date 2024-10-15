@@ -36,9 +36,9 @@
           :subtitle="field.description"
           :showDeleteButton="true"
           :showEditButton="true"
+          @delete="confirmDeleteField(field.id)"
+          @edit="editField(field)"
           @click="editField(field)"
-          @onDelete.stop="confirmDeleteField(field.id)"
-          @onEdit.stop="editField(field)"
         />
       </div>
 
