@@ -90,6 +90,7 @@
           );
         }
       },
+
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
@@ -101,6 +102,7 @@
           console.error('Erreur lors de la récupération des sports:', error);
         }
       },
+
       initializeExternalEvents() {
         const containerEl = document.querySelector('.p-2');
         new Draggable(containerEl, {
@@ -116,6 +118,7 @@
           },
         });
       },
+
       getFieldCalendarOptions(field) {
         return {
           plugins: [timeGridPlugin, interactionPlugin],
@@ -123,11 +126,40 @@
           timeZone: 'locale',
           initialDate: this.tourney.dateTourney,
           editable: true,
+          eventContent: this.renderEventContent,
           droppable: true,
           headerToolbar: false, // Enlève les boutons de navigation
+          eventReceive: (info) => {
+            // Obtenir l'ID du sport depuis l'événement d'origine
+            const sportId =
+              info.event.extendedProps.sportId ||
+              info.draggedEl.getAttribute('data-sport-id');
+
+            if (sportId) {
+              info.event.setExtendedProp('sportId', sportId);
+            } else {
+              // Si le sportId est toujours null, essayer de le récupérer via event.id
+              const eventId = info.event.id;
+              const retrievedSportId = this.getSportIdFromEventId(eventId);
+              if (retrievedSportId) {
+                info.event.setExtendedProp('sportId', retrievedSportId);
+              }
+            }
+
+            // Maintenant, appelez handleEventReceive
+            this.handleEventReceive(info, field.id);
+          },
           drop: (info) => this.handleDrop(info, field.id), // Passer l'ID du terrain ici
+          eventLeave: (info) => this.handleEventLeave(info, field.id),
           eventDrop: this.handleEventDrop, // Gestion du déplacement des événements
           eventResize: this.handleEventResize, // Gestion du redimensionnement des événements
+          eventDataTransform: (eventData) => {
+            return {
+              ...eventData,
+              // Copier les extendedProps si nécessaire
+              extendedProps: { ...eventData.extendedProps },
+            };
+          },
           events: field.sportsFields.map((sportField) => ({
             id: sportField.id,
             title: sportField.sport.name,
@@ -140,6 +172,66 @@
             },
           })),
         };
+      },
+
+      handleEventLeave(info, oldFieldId) {
+        // Vous pouvez effectuer des actions ici si nécessaire
+        console.log('Événement quitté le terrain ID:', oldFieldId);
+        console.log('Événement ID:', info.event.id);
+      },
+
+      renderEventContent(arg) {
+        // Créer l'icône de suppression
+        const deleteIcon = document.createElement('span');
+        deleteIcon.innerHTML = '&#10060;'; // Icône de croix
+        deleteIcon.classList.add('delete-icon');
+        deleteIcon.style.float = 'right';
+        deleteIcon.style.color = 'white';
+        deleteIcon.style.cursor = 'pointer';
+        deleteIcon.style.padding = '0 5px';
+
+        // Gestionnaire pour le double-clic sur les ordinateurs de bureau
+        deleteIcon.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          console.log(
+            "Double-clic sur l'icône de suppression pour l'événement ID:",
+            arg.event.id
+          );
+          this.deleteEvent(arg.event);
+        });
+
+        // Gestionnaire pour l'appui long sur les appareils mobiles
+        let pressTimer;
+
+        deleteIcon.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          pressTimer = setTimeout(() => {
+            console.log(
+              "Appui long sur l'icône de suppression pour l'événement ID:",
+              arg.event.id
+            );
+            this.deleteEvent(arg.event);
+          }, 800); // Durée de l'appui long en millisecondes (ici 800ms)
+        });
+
+        deleteIcon.addEventListener('touchend', () => {
+          clearTimeout(pressTimer);
+        });
+
+        // Créer l'élément de titre de l'événement
+        const title = document.createElement('span');
+        title.innerText = arg.event.title;
+
+        // Créer le conteneur pour le titre et l'icône
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.justifyContent = 'space-between';
+
+        container.appendChild(title);
+        container.appendChild(deleteIcon);
+
+        // Retourner les nœuds DOM
+        return { domNodes: [container] };
       },
 
       async handleDrop(info, fieldId) {
@@ -180,19 +272,44 @@
         }
       },
 
-      async handleEventDrop({ event }) {
-        // Mise à jour lors du déplacement d'un événement dans le calendrier
-        const updatedEvent = {
-          id: event.id,
-          fieldId: event.extendedProps.fieldId,
-          startTime: this.formatTime(event.start),
-          endTime: this.formatTime(event.end),
-        };
-
-        console.log('Événement déplacé, mise à jour :', updatedEvent);
-        await this.updateEventInDatabase(updatedEvent);
+      getSportIdFromEventId(eventId) {
+        for (const field of this.fields) {
+          for (const sportsField of field.sportsFields) {
+            if (sportsField.id.toString() === eventId.toString()) {
+              return sportsField.sport.id;
+            }
+          }
+        }
+        return null;
       },
 
+      async handleEventDrop(info, fieldId) {
+        const event = info.event;
+        try {
+          const sportId = event.extendedProps.sportId;
+
+          if (!sportId || !fieldId) {
+            console.error("Problème d'ID : Terrain ou Sport mal identifié.");
+            return;
+          }
+
+          // Préparer les données pour mettre à jour l'heure de l'événement
+          const data = {
+            fieldId: fieldId,
+            startTime: this.formatTime(event.start),
+            endTime: this.formatTime(event.end),
+          };
+
+          // Mettre à jour l'événement dans la base de données
+          await apiService.put(`/sports-fields/${event.id}`, data);
+
+          console.log('Événement déplacé avec succès');
+        } catch (error) {
+          console.error("Erreur lors du déplacement de l'événement :", error);
+          // Revenir à l'état précédent en cas d'erreur
+          info.revert();
+        }
+      },
       async handleEventResize({ event }) {
         // Mise à jour lors du redimensionnement d'un événement
         const updatedEvent = {
@@ -206,6 +323,46 @@
         await this.updateEventInDatabase(updatedEvent);
       },
 
+      async handleEventReceive(info, newFieldId) {
+        const event = info.event;
+        try {
+          const sportId = event.extendedProps.sportId;
+
+          if (!sportId) {
+            console.error("Problème d'ID : Sport mal identifié.");
+            info.revert();
+            return;
+          }
+
+          if (!newFieldId) {
+            console.error("Problème d'ID : Terrain mal identifié.");
+            info.revert();
+            return;
+          }
+
+          const data = {
+            fieldId: newFieldId,
+            sportId: sportId,
+            startTime: this.formatTime(event.start),
+            endTime: this.formatTime(event.end),
+          };
+
+          if (event.id) {
+            // Événement existant : mettre à jour le terrain
+            await apiService.put(`/sports-fields/${event.id}`, data);
+            console.log('Événement transféré avec succès');
+          } else {
+            // Nouvel événement : créer dans la base de données
+            await apiService.post('/sports-fields', data);
+            console.log('Nouveau sport ajouté avec succès');
+          }
+
+          await this.fetchTourneySportsFields();
+        } catch (error) {
+          console.error("Erreur lors du traitement de l'événement :", error);
+          info.revert();
+        }
+      },
       formatTime(date) {
         const d = new Date(date);
         const hours = d.getUTCHours().toString().padStart(2, '0');
@@ -238,6 +395,15 @@
           await this.fetchTourneySportsFields(); // Rafraîchir les données après mise à jour
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'événement:", error);
+        }
+      },
+      async deleteEvent(event) {
+        try {
+          await apiService.delete(`/sports-fields/${event.id}`);
+          // Supprimer l'événement du calendrier
+          event.remove();
+        } catch (error) {
+          console.error('Erreur lors de la suppression du sport :', error);
         }
       },
     },
