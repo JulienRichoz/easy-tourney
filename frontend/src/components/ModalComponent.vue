@@ -19,14 +19,10 @@
           Annuler
         </ButtonComponent>
         <ButtonComponent
-          :variant="
-            confirmButtonDisabled
-              ? 'disabled'
-              : confirmButtonVariant || 'primary'
-          "
+          :variant="!isFormValid ? 'gray' : confirmButtonVariant || 'primary'"
           nativeType="submit"
           @click="onSubmit"
-          :disabled="confirmButtonDisabled"
+          :disabled="!isFormValid"
         >
           {{ confirmButtonText || (isEditing ? 'Modifier' : 'Ajouter') }}
         </ButtonComponent>
@@ -63,23 +59,11 @@
         type: String,
         default: 'primary', // Variante du bouton par défaut
       },
-      confirmButtonDisabled: {
+      isFormValid: {
         type: Boolean,
-        default: false, // Permet de désactiver le bouton
+        default: false, // Contrôle l'état du bouton (désactivé si false)
       },
     },
-
-    // DECOMMENTER POUR ACTIVER LE BLOCAGE DU SCROLL
-    /*watch: {
-      isVisible(val) {
-        // Bloque le scroll en arrière-plan quand le modal est ouvert
-        if (val) {
-          document.body.style.overflow = 'hidden';
-        } else {
-          document.body.style.overflow = 'auto';
-        }
-      },
-    },*/
     methods: {
       onCancel() {
         this.$emit('close');
