@@ -132,6 +132,7 @@
             return {
               title: eventEl.innerText.trim(),
               backgroundColor: eventEl.style.backgroundColor,
+              duration: '02:00',
               extendedProps: {
                 sportId: eventEl.getAttribute('data-id'),
               },
@@ -150,6 +151,7 @@
           eventContent: this.renderEventContent,
           droppable: true,
           allDaySlot: false,
+          defaultTimedEventDuration: '02:00',
           height: 600,
           headerToolbar: false,
           slotLabelFormat: {
@@ -181,6 +183,7 @@
       },
 
       renderEventContent(arg) {
+        console.log('arg.event:', arg.event);
         // Créer l'icône de suppression
         const deleteIcon = document.createElement('span');
         deleteIcon.innerHTML = '&#10060;'; // Icône de croix
@@ -232,7 +235,7 @@
 
         const timeRange = document.createElement('div');
         timeRange.innerText = `${startTime} - ${endTime}`;
-        console.log(endTime);
+        console.log('RenderEventContent ', endTime);
         timeRange.classList.add('text-sm', 'text-white');
 
         // Créer le conteneur principal
@@ -247,31 +250,31 @@
 
       async handleDrop(info, fieldId) {
         try {
+          // Récupérer l'ID du sport depuis l'élément draggué
           const sportId = info.draggedEl.getAttribute('data-id');
 
+          console.log('Sport reçu avec ID:', sportId);
+          console.log('Terrain associé ID:', fieldId);
+
+          // Vérifier que les IDs sont valides
           if (!fieldId || !sportId) {
             console.error("Problème d'ID : Terrain ou Sport mal identifié.");
             return;
           }
 
-          // Créer un nouvel objet Date pour l'heure de début
-          const startDate = new Date(info.date);
+          // Formatage des heures pour l'envoi au backend
+          const startDate = new Date(info.date); // Obtenir l'heure de début
+          const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Ajouter 2 heures
+          const startTime = this.formatTime(startDate); // Formatter l'heure de début
+          const endTime = this.formatTime(endDate); // Formatter l'heure de fin
 
-          // Cloner l'heure de début pour l'heure de fin
-          const endDate = new Date(startDate);
-          endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
-
-          // Formater les heures pour l'envoi au backend
-          const startTime = this.formatTime(startDate);
-          const endTime = this.formatTime(endDate);
-
+          // Créer l'objet de données à envoyer pour l'assignation
           const data = {
             fieldId: fieldId,
             sportId: sportId,
             startTime: startTime,
             endTime: endTime,
           };
-
           await this.assignSport(data);
         } catch (error) {
           console.error(
@@ -280,7 +283,6 @@
           );
         }
       },
-
       async handleEventReceive(info, newFieldId) {
         const event = info.event;
         try {
@@ -291,6 +293,15 @@
             console.error("Problème d'ID : Terrain mal identifié.");
             info.revert();
             return;
+          }
+
+          // Vérifier si event.end est défini, sinon le définir
+          console.log('event.end: ', event.end);
+          if (!event.end) {
+            const startDate = new Date(event.start);
+            const endDate = new Date(startDate);
+            endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
+            event.setEnd(endDate); // Mettre à jour l'heure de fin de l'événement
           }
 
           if (eventId) {
@@ -323,7 +334,6 @@
             };
 
             await apiService.put(`/sports-fields/${eventId}`, data);
-            console.log('Événement transféré avec succès');
           } else {
             // Nouvel événement : créer dans la base de données
             if (!sportId) {
@@ -342,7 +352,6 @@
             };
 
             await apiService.post('/sports-fields', data);
-            console.log('Nouveau sport ajouté avec succès');
           }
 
           await this.fetchTourneySportsFields();
@@ -372,8 +381,6 @@
           };
 
           await apiService.put(`/sports-fields/${eventId}`, data);
-
-          console.log('Événement déplacé avec succès');
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
@@ -405,8 +412,6 @@
           };
 
           await apiService.put(`/sports-fields/${eventId}`, data);
-
-          console.log('Événement redimensionné avec succès');
         } catch (error) {
           console.error(
             "Erreur lors du redimensionnement de l'événement :",
@@ -427,7 +432,6 @@
       async assignSport(data) {
         try {
           await apiService.post('/sports-fields', data);
-          console.log('Sport assigné avec succès');
           await this.fetchTourneySportsFields();
         } catch (error) {
           console.error(

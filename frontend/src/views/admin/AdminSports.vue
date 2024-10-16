@@ -175,7 +175,6 @@
       getImageUrl(imagePath) {
         const baseUrl =
           process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000';
-        alert(`${baseUrl}${imagePath}`);
         return `${baseUrl}${imagePath}`;
       },
       async fetchSports() {
