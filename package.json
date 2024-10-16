@@ -1,1 +1,8 @@
-{}
+{
+  "dependencies": {
+    "@fullcalendar/interaction": "^6.1.15",
+    "sortablejs": "^1.15.3",
+    "sortablejs-vue3": "^1.2.11",
+    "vue3-touch-events": "^4.2.0"
+  }
+}

@@ -24,7 +24,7 @@
     <router-link
       :to="`/tourneys/${tourneyId}/sports-fields`"
       class="tourney-nav-item"
-      :class="{ active: $route.name === 'sportsFields' }"
+      :class="{ active: $route.name === 'SportsFields' }"
     >
       <i class="fas fa-futbol"></i>
       <span class="hidden sm:inline"> Assignation</span>
