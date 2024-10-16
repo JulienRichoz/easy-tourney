@@ -68,6 +68,8 @@
     },
     methods: {
       logout() {
+        // Supprimer le token du localStorage
+        localStorage.removeItem('token');
         this.$store.dispatch('logout'); // Déconnexion
         this.$router.push('/login'); // Redirection après la déconnexion
       },

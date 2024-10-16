@@ -2,6 +2,7 @@ import { permissions, roles } from './permissions';
 import apiService from './apiService';
 import store from '../store';
 import { jwtDecode } from 'jwt-decode';
+import router from '../router';
 
 // Vérifie si l'utilisateur a une permission spécifique
 export function hasPermission(userRole, permission) {
@@ -19,7 +20,36 @@ export function hasPermission(userRole, permission) {
     return hasPerm;
 }
 
+export const logout = () => {
+    // Supprimer le token du localStorage
+    localStorage.removeItem('token');
 
+    // Déconnecter l'utilisateur dans le store (ex: Vuex)
+    store.commit('LOGOUT');
+
+    // Rediriger vers la page de login
+    router.push({ name: 'Login' });
+};
+
+export const isTokenExpired = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return true;
+
+    try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000; // Temps actuel en secondes
+        return decoded.exp < currentTime; // true si le token est expiré
+    } catch (error) {
+        return true; // Si une erreur survient, considère le token comme expiré
+    }
+};
+
+// Logout s'il est expiré
+export const handleTokenExpiration = () => {
+    if (isTokenExpired()) {
+        logout();
+    }
+};
 
 // Vérifie si l'utilisateur est authentifié en fonction du token présent
 export function isAuthenticated() {

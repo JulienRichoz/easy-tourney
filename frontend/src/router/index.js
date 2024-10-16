@@ -2,7 +2,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Si vous utilisez Vuex pour gérer les rôles
-import { refreshToken, hasPermission } from '@/services/authService';
+import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
 import { jwtDecode } from 'jwt-decode';
 import apiService from '@/services/apiService';
 
@@ -95,6 +95,13 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupérer le token de l'utilisateur
   const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
+
+  if (isAuthenticated && isTokenExpired()) {
+    // Si le token est expiré, déconnecter l'utilisateur
+    handleTokenExpiration();
+    return next('/login'); // Rediriger vers la page de login
+  }
+
   // Si l'utilisateur est authentifié, empêcher l'accès à la page de login et de register
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
     // Rediriger vers une page spécifique selon son rôle

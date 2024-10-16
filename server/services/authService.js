@@ -7,12 +7,12 @@ const jwt = require('jsonwebtoken');
 const { jwtDecode } = require('jwt-decode');
 
 
-// Fonction pour générer un token JWT
+// Fonction pour générer un token JWT avec une durée d'expiration variable
 exports.generateToken = (user) => {
     return jwt.sign(
         { id: user.id, roleId: user.roleId, name: user.name },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }  // Utilisation de la durée d'expiration de l'environnement
     );
 };
 
@@ -33,15 +33,14 @@ exports.hasPermission = (roleId, permission) => {
 };
 
 // Vérifier si l'utilisateur est authentifié
-exports.isAuthenticated = () => {
-    const token = localStorage.getItem('token');
+exports.isAuthenticated = (token) => {
     if (!token) {
         return false;
     }
 
     try {
         const decoded = jwtDecode(token);
-        return decoded && Date.now() <= decoded.exp * 1000;
+        return decoded && Date.now() <= decoded.exp * 1000; // Vérifie l'expiration
     } catch (error) {
         console.error("Erreur lors de la vérification du token:", error);
         return false;

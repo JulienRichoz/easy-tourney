@@ -232,6 +232,7 @@
 
         const timeRange = document.createElement('div');
         timeRange.innerText = `${startTime} - ${endTime}`;
+        console.log(endTime);
         timeRange.classList.add('text-sm', 'text-white');
 
         // Créer le conteneur principal
@@ -253,10 +254,16 @@
             return;
           }
 
-          const startTime = this.formatTime(info.date);
-          const endTime = this.formatTime(
-            new Date(info.date).setHours(new Date(info.date).getHours() + 2)
-          );
+          // Créer un nouvel objet Date pour l'heure de début
+          const startDate = new Date(info.date);
+
+          // Cloner l'heure de début pour l'heure de fin
+          const endDate = new Date(startDate);
+          endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
+
+          // Formater les heures pour l'envoi au backend
+          const startTime = this.formatTime(startDate);
+          const endTime = this.formatTime(endDate);
 
           const data = {
             fieldId: fieldId,
@@ -301,11 +308,18 @@
               info.revert();
               return;
             }
+            // Créer un nouvel objet Date pour l'heure de début
+            const startDate = new Date(event.start);
+
+            // Cloner l'heure de début pour l'heure de fin
+            const endDate = new Date(startDate);
+            endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
 
             const data = {
               fieldId: newFieldId,
-              startTime: this.formatTime(event.start),
-              endTime: this.formatTime(event.end),
+              sportId: sportId,
+              startTime: this.formatTime(startDate),
+              endTime: this.formatTime(endDate),
             };
 
             await apiService.put(`/sports-fields/${eventId}`, data);

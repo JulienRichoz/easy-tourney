@@ -1,5 +1,4 @@
-//server/controllers/authController.js
-// Contrôleur pour l'authentification des utilisateurs
+// server/controllers/authController.js
 
 const { User } = require('../models');
 const authService = require('../services/authService');
@@ -19,9 +18,11 @@ exports.register = async (req, res) => {
         const newUser = await User.create({ name, email, password: hashedPassword, roleId });
 
         const token = authService.generateToken(newUser);
+        const decodedToken = jwt.decode(token);  // Décoder le token pour récupérer l'expiration
 
         res.status(201).json({
             token,
+            expiresIn: decodedToken.exp, // Temps d'expiration (timestamp UNIX)
             user: {
                 id: newUser.id,
                 name: newUser.name,
@@ -34,7 +35,6 @@ exports.register = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
-
 
 // Connexion
 exports.login = async (req, res) => {
@@ -54,9 +54,11 @@ exports.login = async (req, res) => {
         }
 
         const token = authService.generateToken(user);
+        const decodedToken = jwt.decode(token);  // Décoder le token pour récupérer l'expiration
 
         return res.json({
             token,
+            expiresIn: decodedToken.exp,  // Expiration en timestamp UNIX
             user: {
                 id: user.id,
                 name: user.name,
@@ -70,9 +72,9 @@ exports.login = async (req, res) => {
     }
 };
 
+// Rafraîchir le token
 exports.refreshToken = async (req, res) => {
     try {
-        // Vérifier si l'utilisateur est bien authentifié
         if (!req.user) {
             return res.status(401).json({ message: "Utilisateur non authentifié." });
         }
@@ -80,25 +82,24 @@ exports.refreshToken = async (req, res) => {
         const userId = req.user.id;
         const roleId = req.user.roleId;
 
-        // Générer un nouveau token JWT
-        const newToken = jwt.sign(
-            { id: userId, roleId: roleId, name: req.user.name },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+        const newToken = authService.generateToken({ id: userId, roleId, name: req.user.name });
+        const decodedToken = jwt.decode(newToken);
 
-        return res.json({ token: newToken });
+        return res.json({
+            token: newToken,
+            expiresIn: decodedToken.exp  // Renvoie également le nouveau timestamp d'expiration
+        });
     } catch (error) {
         console.error('Erreur lors de la création du token de rafraîchissement:', error);
         return res.status(500).json({ message: 'Erreur lors de la création du token de rafraîchissement' });
     }
 };
 
-
+// Récupérer le profil de l'utilisateur
 exports.getProfile = async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, {
-            attributes: { exclude: ['password'] } // Exclure le mot de passe des informations retournées
+            attributes: { exclude: ['password'] }  // Exclure le mot de passe des informations retournées
         });
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur non trouvé' });
