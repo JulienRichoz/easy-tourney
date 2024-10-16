@@ -12,24 +12,35 @@
         v-for="sport in sports"
         :key="sport.id"
         :data-id="sport.id"
-        :data-sport-id="sport.id"
         :style="{ backgroundColor: sport.color }"
-        class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer hover:scale-105 transform transition duration-300 w-28 shadow-md flex items-center justify-center external-event"
+        class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer transform transition duration-300 w-28 shadow-md flex items-center justify-center external-event hover:scale-110 hover:shadow-xl active:scale-95"
+        @touchstart="handleSportPress"
+        @mousedown="handleSportPress"
       >
         {{ sport.name }}
       </div>
     </div>
 
     <!-- Grille des terrains avec le calendrier FullCalendar -->
-    <div class="fields-grid grid gap-2 mt-2" :class="gridColumnsClass">
+    <div
+      class="fields-grid grid gap-4 mt-4 justify-center"
+      :class="gridColumnsClass"
+    >
       <div
-        v-for="field in fields"
+        v-for="(field, index) in fields"
         :key="field.id"
         :data-field-id="field.id"
         class="relative bg-white shadow-lg rounded-lg p-2 me-4 ms-4"
       >
-        <!-- Nom du terrain -->
-        <h3 class="text-xl font-bold text-center truncate">{{ field.name }}</h3>
+        <!-- Nom du terrain avec le numéro -->
+        <div class="flex justify-between items-center">
+          <h3 class="text-xl font-bold text-center truncate">
+            {{ field.name }}
+          </h3>
+          <span class="text-sm text-gray-500"
+            >{{ index + 1 }}/{{ fields.length }}</span
+          >
+        </div>
 
         <!-- FullCalendar pour chaque terrain -->
         <FullCalendar :options="getFieldCalendarOptions(field)" />
@@ -67,9 +78,18 @@
     },
     computed: {
       gridColumnsClass() {
-        return this.fields.length > 5
-          ? 'grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5'
-          : 'grid-cols-1 md:grid-cols-3 lg:grid-cols-4';
+        const fieldCount = this.fields.length;
+        if (fieldCount === 1) {
+          return 'grid-cols-1';
+        } else if (fieldCount === 2) {
+          return 'grid-cols-1 md:grid-cols-2';
+        } else if (fieldCount === 3) {
+          return 'grid-cols-1 md:grid-cols-3 lg:grid-cols-3';
+        } else if (fieldCount === 4) {
+          return 'grid-cols-1 md:grid-cols-4 lg:grid-cols-4';
+        } else {
+          return 'grid-cols-1 md:grid-cols-4 lg:grid-cols-5';
+        }
       },
     },
     methods: {
@@ -124,12 +144,19 @@
         return {
           plugins: [timeGridPlugin, interactionPlugin],
           initialView: 'timeGridDay',
-          timeZone: 'locale',
+          timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: true,
           eventContent: this.renderEventContent,
           droppable: true,
+          allDaySlot: false,
+          height: 600,
           headerToolbar: false,
+          slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          },
           eventReceive: (info) => this.handleEventReceive(info, field.id),
           eventDrop: (info) => this.handleEventDrop(info, field.id),
           eventResize: (info) => this.handleEventResize(info, field.id),
@@ -176,7 +203,7 @@
           e.stopPropagation();
           pressTimer = setTimeout(() => {
             this.deleteEvent(arg.event);
-          }, 800);
+          }, 600);
         });
 
         deleteIcon.addEventListener('touchend', () => {
@@ -187,13 +214,32 @@
         const title = document.createElement('span');
         title.innerText = arg.event.title;
 
-        // Créer le conteneur
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
+        title.classList.add('font-semibold', 'text-white');
+        // Créer un conteneur pour le titre et l'icône de suppression
+        const headerContainer = document.createElement('div');
+        headerContainer.classList.add(
+          'flex',
+          'justify-between',
+          'items-center'
+        );
 
-        container.appendChild(title);
-        container.appendChild(deleteIcon);
+        headerContainer.appendChild(title);
+        headerContainer.appendChild(deleteIcon);
+
+        // Formater les heures de début et de fin
+        const startTime = this.formatDisplayTime(arg.event.start);
+        const endTime = this.formatDisplayTime(arg.event.end);
+
+        const timeRange = document.createElement('div');
+        timeRange.innerText = `${startTime} - ${endTime}`;
+        timeRange.classList.add('text-sm', 'text-white');
+
+        // Créer le conteneur principal
+        const container = document.createElement('div');
+        container.classList.add('flex', 'flex-col', 'space-y-1');
+
+        container.appendChild(headerContainer);
+        container.appendChild(timeRange);
 
         return { domNodes: [container] };
       },
@@ -318,6 +364,12 @@
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
+      },
+      formatDisplayTime(date) {
+        const d = new Date(date);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
       },
 
       async handleEventResize(info, fieldId) {
