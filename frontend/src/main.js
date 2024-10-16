@@ -3,6 +3,8 @@ import App from './App.vue';
 import store from './store';    // Importe Vuex (ton store)
 import router from './router'; // Importer le router
 import vue3TouchEvents from "vue3-touch-events";
+import 'vue3-toastify/dist/index.css'; // Importer les styles de vue3-toastify
+import Vue3Toastify from 'vue3-toastify';
 import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/js/all.js';
 import './assets/tailwind.css'; // Import Tailwind CSS
@@ -16,4 +18,7 @@ store.dispatch('initializeAuth');
 app.use(vue3TouchEvents);
 app.use(store);
 app.use(router);
+app.use(Vue3Toastify, {
+    autoClose: 1500,
+});
 app.mount('#app');
