@@ -1,3 +1,5 @@
+<!-- components/ModalComponent.vue -->
+
 <template>
   <div
     v-if="isVisible"
@@ -15,11 +17,10 @@
           variant="secondary"
           nativeType="button"
           @click="onCancel"
+          >Annuler</ButtonComponent
         >
-          Annuler
-        </ButtonComponent>
         <ButtonComponent
-          :variant="!isFormValid ? 'gray' : confirmButtonVariant || 'primary'"
+          :variant="isFormValid ? confirmButtonVariant || 'primary' : 'gray'"
           nativeType="submit"
           @click="onSubmit"
           :disabled="!isFormValid"
@@ -53,15 +54,15 @@
       },
       confirmButtonText: {
         type: String,
-        default: '', // Par défaut vide pour utiliser 'Ajouter' ou 'Modifier'
+        default: '',
       },
       confirmButtonVariant: {
         type: String,
-        default: 'primary', // Variante du bouton par défaut
+        default: 'primary',
       },
       isFormValid: {
         type: Boolean,
-        default: false, // Contrôle l'état du bouton (désactivé si false)
+        default: false,
       },
     },
     methods: {
@@ -74,22 +75,3 @@
     },
   };
 </script>
-
-<style scoped>
-  .modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
-</style>

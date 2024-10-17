@@ -1,3 +1,5 @@
+<!-- components/DeleteConfirmationModal.vue -->
+
 <template>
   <div
     v-if="isVisible"

@@ -1,5 +1,15 @@
+<!-- components/ButtonComponent.vue -->
+
 <template>
-  <button :type="nativeType" :class="buttonClasses" :disabled="disabled">
+  <button
+    :type="nativeType"
+    :class="[
+      'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 font-semibold rounded-md shadow-md transition-all',
+      variantClasses,
+      disabled ? 'opacity-50 cursor-not-allowed' : '',
+    ]"
+    :disabled="disabled"
+  >
     <component
       v-if="icon"
       :is="icons[icon]"
@@ -10,7 +20,7 @@
 </template>
 
 <script>
-  import { TrashIcon, PencilIcon } from '@heroicons/vue/24/outline'; // Ajouter d'autres icônes si nécessaire
+  import { TrashIcon, PencilIcon } from '@heroicons/vue/24/outline';
 
   export default {
     props: {
@@ -32,25 +42,15 @@
       },
     },
     computed: {
-      buttonClasses() {
-        switch (this.variant) {
-          case 'primary':
-            return `ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-green-600 
-                  text-white font-semibold rounded-md hover:bg-green-700 
-                  transition shadow-md ${
-                    this.disabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`;
-          case 'secondary':
-            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-all';
-          case 'danger':
-            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 transition';
-          case 'warning':
-            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-yellow-500 text-white rounded-md shadow-md hover:bg-yellow-600 transition-all';
-          case 'gray':
-            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed';
-          default:
-            return 'ml-1 mr-1 sm:ml-4 sm:mr-2 px-2 sm:px-4 py-2 bg-gray-500 text-white rounded-md shadow-md hover:bg-gray-600 transition-all';
-        }
+      variantClasses() {
+        const variants = {
+          primary: 'bg-green-600 text-white hover:bg-green-700',
+          secondary: 'bg-gray-500 text-white hover:bg-gray-600',
+          danger: 'bg-red-500 text-white hover:bg-red-600',
+          warning: 'bg-yellow-500 text-white hover:bg-yellow-600',
+          gray: 'bg-gray-400 text-white cursor-not-allowed',
+        };
+        return variants[this.variant] || variants.primary;
       },
     },
     data() {
@@ -61,20 +61,5 @@
         },
       };
     },
-    methods: {
-      onClick(event) {
-        this.$emit('click', event);
-      },
-    },
   };
 </script>
-
-<style scoped>
-  button {
-    transition: transform 0.2s ease;
-  }
-
-  button:hover {
-    transform: scale(1.05);
-  }
-</style>

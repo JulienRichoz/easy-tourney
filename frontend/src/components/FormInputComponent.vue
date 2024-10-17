@@ -1,21 +1,37 @@
-<!-- frontend/src/components/FormInputComponent.vue -->
 <template>
-  <div class="form-group">
-    <label :for="id">{{ label }}</label>
+  <div class="mb-4">
+    <label :for="id" class="block text-gray-700 font-semibold mb-2">{{
+      label
+    }}</label>
+    <div v-if="type === 'color'" class="flex items-center">
+      <input
+        :type="type"
+        :id="id"
+        :value="modelValue"
+        @input="updateValue"
+        class="w-16 h-16 p-2 border border-gray-300 rounded-md mr-4"
+      />
+      <span class="text-gray-700 font-semibold">{{ modelValue }}</span>
+      <!-- Affichage de la valeur hexadécimale -->
+    </div>
     <input
+      v-else
       :type="type"
       :id="id"
       :placeholder="placeholder"
-      :required="required"
       :value="modelValue"
       @input="updateValue"
+      :class="[
+        'w-full p-2 border rounded-md',
+        error ? 'border-red-500' : 'border-gray-300',
+      ]"
     />
+    <p v-if="error" class="text-red-500 text-sm mt-1">{{ error }}</p>
   </div>
 </template>
 
 <script>
   export default {
-    name: 'FormInputComponent',
     props: {
       id: {
         type: String,
@@ -37,45 +53,15 @@
         type: String,
         default: '',
       },
-      required: {
-        type: Boolean,
-        default: false,
+      error: {
+        type: String,
+        default: null,
       },
     },
     methods: {
       updateValue(event) {
-        const target = event.target;
-        if (target instanceof HTMLInputElement) {
-          this.$emit('update:modelValue', target.value);
-        }
+        this.$emit('update:modelValue', event.target.value);
       },
     },
   };
 </script>
-
-<style scoped>
-  .form-group {
-    margin-bottom: 15px;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 5px;
-    color: #2c3e50;
-    font-weight: bold;
-  }
-
-  input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 0.375rem;
-    font-size: 1em;
-  }
-
-  input:focus {
-    outline: none;
-    border-color: #42b983;
-    box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.3);
-  }
-</style>

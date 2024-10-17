@@ -1,4 +1,3 @@
-<!-- views/admin/AdminSports.vue -->
 <template>
   <div class="p-6">
     <div class="flex items-center mb-8">
@@ -21,8 +20,7 @@
         :key="sport.id"
         :title="sport.name"
         :image="getImageUrl(sport.image)"
-        :showDeleteButton="true"
-        :showEditButton="true"
+        :hasActions="true"
         :titleColor="sport.color"
         @click="editSport(sport)"
         @delete="confirmDeleteSport(sport.id)"
@@ -40,74 +38,18 @@
       @submit="handleFormSubmit"
     >
       <template #content>
-        <div class="mb-4">
-          <label class="block text-gray-700 font-semibold mb-2"
-            >Nom du sport</label
-          >
-          <input
-            type="text"
-            v-model="newSport.name"
-            :class="[
-              'w-full p-2 border rounded-md',
-              nameError ? 'border-red-500' : 'border-gray-300',
-            ]"
-            @input="validateForm"
-            required
-          />
-          <p v-if="nameError" class="text-red-500 text-sm mt-1">
-            Un sport avec ce nom existe déjà ou le champ est vide.
-          </p>
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 font-semibold mb-2"
-            >Règles du sport</label
-          >
-          <textarea
-            v-model="newSport.rule"
-            :class="[
-              'w-full p-2 border rounded-md',
-              ruleError ? 'border-red-500' : 'border-gray-300',
-            ]"
-            @input="validateForm"
-            required
-          ></textarea>
-          <p v-if="ruleError" class="text-red-500 text-sm mt-1">
-            Les règles du sport sont obligatoires.
-          </p>
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 font-semibold mb-2"
-            >Image du sport</label
-          >
-          <!-- Afficher le nom de l'image s'il existe -->
-          <div v-if="newSport.image" class="mb-2">
-            <p class="text-gray-600">
-              Image actuelle: {{ getFileName(newSport.image) }}
-            </p>
-          </div>
-          <input
-            type="file"
-            @change="handleFileUpload"
-            class="w-full p-2 border rounded-md"
-            accept="image/*"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 font-semibold mb-2"
-            >Couleur (Hexadecimal)</label
-          >
-          <input
-            type="color"
-            v-model="newSport.color"
-            class="w-16 h-16 p-2 border rounded-md"
-          />
-        </div>
+        <FormComponent
+          v-model="newSport"
+          :fields="formFields"
+          @file-selected="handleFileUpload"
+        />
       </template>
     </ModalComponent>
 
     <!-- Confirmation de suppression -->
     <DeleteConfirmationModal
       :isVisible="showDeleteConfirmation"
+      :isHardDelete="true"
       @cancel="closeDeleteConfirmation"
       @confirm="deleteSport(confirmedDeleteSportId)"
     />
@@ -120,6 +62,7 @@
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import FormComponent from '@/components/FormComponent.vue';
   import { toast } from 'vue3-toastify';
   import 'vue3-toastify/dist/index.css';
 
@@ -129,6 +72,7 @@
       DeleteConfirmationModal,
       CardAddComponent,
       CardEditComponent,
+      FormComponent,
     },
 
     data() {
@@ -147,16 +91,55 @@
         editingSportId: null,
         isFormValid: false,
         selectedFile: null,
-        nameError: false,
-        ruleError: false,
-        isSubmitting: false,
       };
+    },
+    computed: {
+      formFields() {
+        return [
+          {
+            name: 'name',
+            label: 'Nom du sport',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'rule',
+            label: 'Règles du sport',
+            type: 'textarea',
+            required: true,
+          },
+          {
+            name: 'scoreSystem',
+            label: 'Système de score',
+            type: 'select',
+            options: [
+              { value: 'ASC', label: 'ASC' },
+              { value: 'DESC', label: 'DESC' },
+            ],
+            required: true,
+          },
+          {
+            name: 'image',
+            label: 'Image du sport',
+            type: 'file',
+          },
+          {
+            name: 'color',
+            label: 'Couleur (Hexadecimal)',
+            type: 'color',
+            required: false,
+          },
+        ];
+      },
     },
 
     methods: {
       validateForm() {
-        this.nameError = !this.newSport.name;
-        this.ruleError = !this.newSport.rule;
+        const { name, rule } = this.newSport;
+        this.nameError = name
+          ? ''
+          : 'Un sport avec ce nom existe déjà ou le champ est vide.';
+        this.ruleError = rule ? '' : 'Les règles du sport sont obligatoires.';
         this.isFormValid = !this.nameError && !this.ruleError;
       },
 
@@ -175,79 +158,27 @@
         try {
           const response = await apiService.get('/sports');
           this.sports = response.data;
-          console.log(response.data);
         } catch (error) {
           console.error('Erreur lors de la récupération des sports:', error);
         }
       },
 
-      handleFileUpload(event) {
-        const files = event.target.files;
+      handleFileUpload(file) {
+        if (file) {
+          const maxSizeInMB = 10;
+          const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
 
-        // Vérifier si un fichier a été sélectionné avant de continuer
-        if (!files || files.length === 0) {
-          console.warn('Aucun fichier sélectionné');
-          this.selectedFile = null;
-          return; // Sortir si aucun fichier n'est sélectionné
-        }
-
-        const file = files[0]; // Le fichier sélectionné
-
-        const maxSizeInMB = 10;
-        const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
-
-        if (file.size > maxSizeInBytes) {
-          alert(
-            `L'image dépasse la taille maximale autorisée de ${maxSizeInMB} Mo.`
-          );
-          this.selectedFile = null;
-        } else if (file.size > 2 * 1024 * 1024) {
-          this.resizeImage(file, 1024, 768);
-        } else {
-          this.selectedFile = file;
-        }
-
-        this.validateForm(); // Revalidation du formulaire après changement d'image
-      },
-      resizeImage(file, maxWidth, maxHeight) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
-
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
-            }
-            if (height > maxHeight) {
-              width = (width * maxHeight) / height;
-              height = maxHeight;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob(
-              (blob) => {
-                this.selectedFile = new File([blob], file.name, {
-                  type: file.type,
-                });
-              },
-              file.type,
-              0.8
+          if (file.size > maxSizeInBytes) {
+            alert(
+              `L'image dépasse la taille maximale autorisée de ${maxSizeInMB} Mo.`
             );
-          };
-        };
+            this.selectedFile = null;
+          } else {
+            this.selectedFile = file; // Met à jour le fichier sélectionné
+          }
 
-        reader.readAsDataURL(file);
+          this.validateForm(); // Si nécessaire
+        }
       },
 
       openAddSportModal() {
@@ -260,25 +191,19 @@
           image: null,
         };
         this.selectedFile = null;
-        this.nameError = false;
-        this.ruleError = false;
-        this.isFormValid = false; // Réinitialiser la validité du formulaire
+        this.nameError = '';
+        this.ruleError = '';
+        this.isFormValid = false;
         this.showModal = true;
       },
 
       editSport(sport) {
         this.editingSportId = sport.id;
-        this.newSport = {
-          name: sport.name || '',
-          rule: sport.rule || '',
-          scoreSystem: sport.scoreSystem || 'ASC',
-          color: sport.color || '#000000',
-          image: sport.image || null,
-        };
+        this.newSport = { ...sport };
         this.selectedFile = null;
-        this.nameError = false;
-        this.ruleError = false;
-        this.isFormValid = false; // Si l'édition est en cours, considérer le formulaire valide
+        this.nameError = '';
+        this.ruleError = '';
+        this.isFormValid = false;
         this.showModal = true;
       },
 
@@ -291,8 +216,12 @@
         formData.append('scoreSystem', this.newSport.scoreSystem);
         formData.append('color', this.newSport.color);
 
+        // Gérer l'image si un fichier a été sélectionné
         if (this.selectedFile) {
-          formData.append('image', this.selectedFile);
+          formData.append('image', this.selectedFile); // Nouvelle image
+        } else if (this.newSport.image) {
+          // Si aucune nouvelle image n'est sélectionnée, garder l'image existante
+          formData.append('image', this.getFileName(this.newSport.image));
         }
 
         try {
@@ -300,25 +229,17 @@
             await apiService.put(`/sports/${this.editingSportId}`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
-            toast.success('Sport modifié avec succès!', {
-              position: 'top-right',
-            });
+            toast.success('Sport modifié avec succès!');
           } else {
             await apiService.post('/sports', formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
-            toast.success('Nouveau sport ajouté avec succès!', {
-              position: 'top-right',
-            });
+            toast.success('Nouveau sport ajouté avec succès!');
           }
           this.closeModal();
           this.fetchSports();
         } catch (error) {
-          toast.error("Erreur lors de l'enregistrement du sport!", {
-            position: 'top-right',
-          });
-        } finally {
-          this.isSubmitting = false;
+          toast.error("Erreur lors de l'enregistrement du sport!");
         }
       },
 
@@ -328,29 +249,19 @@
       },
 
       async deleteSport(id) {
-        if (this.isDeleting) return;
-
-        this.isDeleting = true;
         try {
           await apiService.delete(`/sports/${id}`);
-          toast.error('Sport supprimé avec succès!', {
-            position: 'top-right',
-          });
+          toast.success('Sport supprimé avec succès!');
           this.closeDeleteConfirmation();
           this.fetchSports();
         } catch (error) {
-          toast.error('Erreur lors de la suppression du sport!', {
-            position: 'top-right',
-          });
-        } finally {
-          this.isDeleting = false;
+          toast.error('Erreur lors de la suppression du sport!');
         }
       },
 
       closeModal() {
         this.showModal = false;
-        this.isFormValid = false; // Réinitialiser la validité du formulaire
-        this.isSubmitting = false;
+        this.isFormValid = false;
       },
 
       closeDeleteConfirmation() {
@@ -359,24 +270,17 @@
       },
     },
 
+    watch: {
+      newSport: {
+        handler() {
+          this.validateForm();
+        },
+        deep: true,
+      },
+    },
+
     mounted() {
       this.fetchSports();
     },
   };
 </script>
-
-<style scoped>
-  .truncated-title {
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  button {
-    transition: transform 0.2s ease;
-  }
-  button:hover {
-    transform: scale(1.05);
-  }
-</style>
