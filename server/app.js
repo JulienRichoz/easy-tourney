@@ -21,7 +21,7 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: ['http://localhost:8080', 'http://192.168.1.42:8080'], // Ajouter l'IP locale de ton réseau
-  credentials: true // Si tu gères des cookies d'authentification
+  credentials: true // gestion cookie authentification
 }));
 app.use(express.json());
 app.use(limiter);

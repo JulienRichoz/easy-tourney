@@ -49,6 +49,7 @@
           editingFieldId ? 'Modifier le Terrain' : 'Ajouter un Nouveau Terrain'
         "
         :isEditing="!!editingFieldId"
+        :isFormValid="isFormValid"
         @close="closeModal"
         @submit="handleFormSubmit"
       >
@@ -65,6 +66,7 @@
                   'w-full p-2 border rounded-md',
                   nameError ? 'border-red-500' : 'border-gray-300',
                 ]"
+                @input="validateForm"
                 required
               />
             </div>
@@ -75,6 +77,7 @@
               <textarea
                 v-model="newField.description"
                 class="w-full p-2 border border-gray-300 rounded-md"
+                @input="validateForm"
               ></textarea>
             </div>
           </form>
@@ -162,6 +165,7 @@
         nameError: false,
         isSubmitting: false,
         isDeleting: false,
+        isFormValid: false,
         numberOfFields: 1, // Nombre de terrains à ajouter
       };
     },
@@ -271,17 +275,26 @@
           tourneyId: this.tourneyId,
         };
         this.nameError = false;
+        this.isFormValid = false; // Griser le bouton
         this.showModal = true;
       },
+
       editField(field) {
         this.editingFieldId = field.id;
         this.newField = { ...field };
+        this.nameError = false;
+        this.isFormValid = false; // Griser le bouton
         this.showModal = true;
       },
+      validateForm() {
+        this.nameError = !this.newField.name;
+        this.isFormValid = !this.nameError; // Activer le bouton si le nom est rempli
+      },
       handleFormSubmit() {
-        if (this.isSubmitting) return;
+        if (!this.isFormValid) {
+          return; // Ne pas soumettre si le formulaire n'est pas valide
+        }
         this.isSubmitting = true;
-
         this.saveField();
       },
       async saveField() {

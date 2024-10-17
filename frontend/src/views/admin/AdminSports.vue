@@ -1,3 +1,4 @@
+<!-- views/admin/AdminSports.vue -->
 <template>
   <div class="p-6">
     <div class="flex items-center mb-8">
@@ -78,10 +79,17 @@
           <label class="block text-gray-700 font-semibold mb-2"
             >Image du sport</label
           >
+          <!-- Afficher le nom de l'image s'il existe -->
+          <div v-if="newSport.image" class="mb-2">
+            <p class="text-gray-600">
+              Image actuelle: {{ getFileName(newSport.image) }}
+            </p>
+          </div>
           <input
             type="file"
             @change="handleFileUpload"
             class="w-full p-2 border rounded-md"
+            accept="image/*"
           />
         </div>
         <div class="mb-4">
@@ -157,18 +165,34 @@
           process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000';
         return `${baseUrl}${imagePath}`;
       },
+      getFileName(filePath) {
+        if (!filePath) return '';
+        const parts = filePath.split('/');
+        return parts[parts.length - 1]; // Retourner juste le nom du fichier
+      },
 
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
           this.sports = response.data;
+          console.log(response.data);
         } catch (error) {
           console.error('Erreur lors de la récupération des sports:', error);
         }
       },
 
       handleFileUpload(event) {
-        const file = event.target.files[0];
+        const files = event.target.files;
+
+        // Vérifier si un fichier a été sélectionné avant de continuer
+        if (!files || files.length === 0) {
+          console.warn('Aucun fichier sélectionné');
+          this.selectedFile = null;
+          return; // Sortir si aucun fichier n'est sélectionné
+        }
+
+        const file = files[0]; // Le fichier sélectionné
+
         const maxSizeInMB = 10;
         const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
 
@@ -182,8 +206,9 @@
         } else {
           this.selectedFile = file;
         }
-      },
 
+        this.validateForm(); // Revalidation du formulaire après changement d'image
+      },
       resizeImage(file, maxWidth, maxHeight) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -253,7 +278,7 @@
         this.selectedFile = null;
         this.nameError = false;
         this.ruleError = false;
-        this.isFormValid = true; // Si l'édition est en cours, considérer le formulaire valide
+        this.isFormValid = false; // Si l'édition est en cours, considérer le formulaire valide
         this.showModal = true;
       },
 
@@ -277,7 +302,6 @@
             });
             toast.success('Sport modifié avec succès!', {
               position: 'top-right',
-              autoClose: 3000,
             });
           } else {
             await apiService.post('/sports', formData, {
@@ -285,7 +309,6 @@
             });
             toast.success('Nouveau sport ajouté avec succès!', {
               position: 'top-right',
-              autoClose: 3000,
             });
           }
           this.closeModal();
@@ -293,7 +316,6 @@
         } catch (error) {
           toast.error("Erreur lors de l'enregistrement du sport!", {
             position: 'top-right',
-            autoClose: 3000,
           });
         } finally {
           this.isSubmitting = false;
@@ -313,14 +335,12 @@
           await apiService.delete(`/sports/${id}`);
           toast.error('Sport supprimé avec succès!', {
             position: 'top-right',
-            autoClose: 3000,
           });
           this.closeDeleteConfirmation();
           this.fetchSports();
         } catch (error) {
           toast.error('Erreur lors de la suppression du sport!', {
             position: 'top-right',
-            autoClose: 3000,
           });
         } finally {
           this.isDeleting = false;

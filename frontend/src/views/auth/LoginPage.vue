@@ -66,12 +66,12 @@
     },
     methods: {
       async handleLogin() {
+        console.log('handleLogin');
         try {
           const response = await apiService.post('/auth/login', {
             email: this.email,
             password: this.password,
           });
-
           const token = response.data.token;
 
           // Stocker le token
