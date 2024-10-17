@@ -34,6 +34,7 @@
           :key="field.id"
           :title="field.name"
           :subtitle="field.description"
+          :hasActions="true"
           :showDeleteButton="true"
           :showEditButton="true"
           @delete="confirmDeleteField(field.id)"
@@ -54,33 +55,7 @@
         @submit="handleFormSubmit"
       >
         <template #content>
-          <form @submit.prevent="handleFormSubmit">
-            <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2"
-                >Nom du terrain</label
-              >
-              <input
-                type="text"
-                v-model="newField.name"
-                :class="[
-                  'w-full p-2 border rounded-md',
-                  nameError ? 'border-red-500' : 'border-gray-300',
-                ]"
-                @input="validateForm"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2"
-                >Description du terrain</label
-              >
-              <textarea
-                v-model="newField.description"
-                class="w-full p-2 border border-gray-300 rounded-md"
-                @input="validateForm"
-              ></textarea>
-            </div>
-          </form>
+          <FormComponent v-model="newField" :fields="formFields" />
         </template>
       </ModalComponent>
 
@@ -90,22 +65,13 @@
         title="Ajouter plusieurs terrains"
         @close="closeMultipleFieldsModal"
         @submit="handleMultipleFieldsSubmit"
+        :isFormValid="multipleFieldsData.numberOfFields > 0"
       >
         <template #content>
-          <form @submit.prevent="handleMultipleFieldsSubmit">
-            <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2"
-                >Nombre de terrains</label
-              >
-              <input
-                type="number"
-                v-model="numberOfFields"
-                class="w-full p-2 border rounded-md"
-                required
-                min="1"
-              />
-            </div>
-          </form>
+          <FormComponent
+            v-model="multipleFieldsData"
+            :fields="multipleFieldsFormFields"
+          />
         </template>
       </ModalComponent>
 
@@ -134,7 +100,7 @@
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
-
+  import FormComponent from '@/components/FormComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
 
@@ -146,31 +112,62 @@
       TourneySubMenu,
       CardAddComponent,
       CardEditComponent,
+      FormComponent,
     },
     data() {
       return {
-        tourneyId: this.$route.params.id, // ID du tournoi récupéré depuis l'URL
-        fields: [], // Stocker les terrains récupérés
-        showModal: false, // Gérer l'affichage de la modale
-        showMultipleFieldsModal: false, // Gérer la modale pour plusieurs terrains
-        showDeleteConfirmation: false, // Gérer la confirmation de suppression individuelle
-        confirmedDeleteFieldId: null, // ID du terrain à supprimer individuellement
-        showDeleteAllFieldsModal: false, // Gérer la confirmation de suppression complète
-        deleteAllConfirmation: '', // Pour stocker la confirmation de suppression de tous les terrains
+        tourneyId: this.$route.params.id,
+        fields: [],
+        showModal: false,
+        showMultipleFieldsModal: false,
+        showDeleteConfirmation: false,
+        confirmedDeleteFieldId: null,
+        showDeleteAllFieldsModal: false,
+        deleteAllConfirmation: '',
         newField: {
           name: '',
           description: '',
+          tourneyId: this.tourneyId,
         },
-        editingFieldId: null, // ID du terrain en cours de modification
-        nameError: false,
+        multipleFieldsData: {
+          numberOfFields: 1,
+        },
+        editingFieldId: null,
         isSubmitting: false,
         isDeleting: false,
         isFormValid: false,
-        numberOfFields: 1, // Nombre de terrains à ajouter
       };
     },
+    computed: {
+      formFields() {
+        return [
+          {
+            name: 'name',
+            label: 'Nom du terrain',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'description',
+            label: 'Description du terrain',
+            type: 'textarea',
+            required: false,
+          },
+        ];
+      },
+      multipleFieldsFormFields() {
+        return [
+          {
+            name: 'numberOfFields',
+            label: 'Nombre de terrains',
+            type: 'number',
+            required: true,
+            min: 1,
+          },
+        ];
+      },
+    },
     methods: {
-      // Récupérer les détails des terrains d'un tournoi
       async fetchFieldDetails() {
         try {
           const response = await apiService.get(
@@ -184,23 +181,20 @@
           );
         }
       },
-      // Ouvrir la modal pour supprimer tous les terrains
       openDeleteAllFieldsModal() {
         this.showDeleteAllFieldsModal = true;
       },
       closeDeleteAllFieldsModal() {
         this.showDeleteAllFieldsModal = false;
       },
-
-      // Gestion de la suppression de tous les terrains
       async handleDeleteAllFieldsSubmit() {
         if (this.isDeleting) return;
         this.isDeleting = true;
 
         try {
           await apiService.delete(`/fields/tourneys/${this.tourneyId}/all`);
-          this.fetchFieldDetails(); // Recharger les terrains après suppression
-          this.closeDeleteAllFieldsModal(); // Fermer la modal
+          this.fetchFieldDetails();
+          this.closeDeleteAllFieldsModal();
         } catch (error) {
           console.error(
             'Erreur lors de la suppression de tous les terrains:',
@@ -210,7 +204,6 @@
           this.isDeleting = false;
         }
       },
-      // Ouvrir la confirmation de suppression pour un terrain spécifique
       confirmDeleteField(id) {
         this.confirmedDeleteFieldId = id;
         this.showDeleteConfirmation = true;
@@ -219,38 +212,33 @@
         this.showDeleteConfirmation = false;
         this.confirmedDeleteFieldId = null;
       },
-      // Gestion de la suppression individuelle d'un terrain
       async deleteField(id) {
         if (this.isDeleting) return;
         this.isDeleting = true;
 
         try {
           await apiService.delete(`/fields/${id}`);
-          this.fetchFieldDetails(); // Recharger les terrains après suppression
-          this.closeDeleteConfirmation(); // Fermer la modal
+          this.fetchFieldDetails();
+          this.closeDeleteConfirmation();
         } catch (error) {
           console.error('Erreur lors de la suppression du terrain:', error);
         } finally {
           this.isDeleting = false;
         }
       },
-      // Ouvrir la modal pour ajouter plusieurs terrains
       openAddMultipleFieldsModal() {
-        this.numberOfFields = 1; // Initialiser à 1
+        this.multipleFieldsData.numberOfFields = 1;
         this.showMultipleFieldsModal = true;
       },
       closeMultipleFieldsModal() {
         this.showMultipleFieldsModal = false;
       },
-
-      // Gestion de la soumission pour ajouter plusieurs terrains
       async handleMultipleFieldsSubmit() {
         if (this.isSubmitting) return;
         this.isSubmitting = true;
 
         try {
-          // Boucler pour créer le nombre de terrains
-          for (let i = 1; i <= this.numberOfFields; i++) {
+          for (let i = 1; i <= this.multipleFieldsData.numberOfFields; i++) {
             const newField = {
               name: `Terrain ${i}`,
               description: '',
@@ -258,15 +246,14 @@
             };
             await apiService.post(`/fields`, newField);
           }
-          this.fetchFieldDetails(); // Recharger les terrains
-          this.closeMultipleFieldsModal(); // Fermer la modal
+          this.fetchFieldDetails();
+          this.closeMultipleFieldsModal();
         } catch (error) {
           console.error('Erreur lors de la création des terrains:', error);
         } finally {
           this.isSubmitting = false;
         }
       },
-
       openAddFieldModal() {
         this.editingFieldId = null;
         this.newField = {
@@ -274,25 +261,21 @@
           description: '',
           tourneyId: this.tourneyId,
         };
-        this.nameError = false;
-        this.isFormValid = false; // Griser le bouton
+        this.isFormValid = false;
         this.showModal = true;
       },
-
       editField(field) {
         this.editingFieldId = field.id;
         this.newField = { ...field };
-        this.nameError = false;
-        this.isFormValid = false; // Griser le bouton
+        this.isFormValid = true;
         this.showModal = true;
       },
       validateForm() {
-        this.nameError = !this.newField.name;
-        this.isFormValid = !this.nameError; // Activer le bouton si le nom est rempli
+        this.isFormValid = !!this.newField.name;
       },
       handleFormSubmit() {
         if (!this.isFormValid) {
-          return; // Ne pas soumettre si le formulaire n'est pas valide
+          return;
         }
         this.isSubmitting = true;
         this.saveField();
@@ -300,13 +283,11 @@
       async saveField() {
         try {
           if (this.editingFieldId) {
-            // Mettre à jour le terrain
             await apiService.put(
               `/fields/${this.editingFieldId}`,
               this.newField
             );
           } else {
-            // Créer un nouveau terrain
             await apiService.post(`/fields`, this.newField);
           }
           this.closeModal();
@@ -320,6 +301,14 @@
       closeModal() {
         this.showModal = false;
         this.isSubmitting = false;
+      },
+    },
+    watch: {
+      newField: {
+        handler() {
+          this.validateForm();
+        },
+        deep: true,
       },
     },
     mounted() {
