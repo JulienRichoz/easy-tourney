@@ -15,7 +15,7 @@ module.exports = {
       type: {
         type: Sequelize.ENUM('player', 'assistant', 'guest'),
         allowNull: false,
-        defaultValue: 'player', // Par défaut, c'est une équipe de joueurs
+        defaultValue: 'player',
       },
       tourneyId: {
         type: Sequelize.INTEGER,
