@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         scoreSystem: {
             type: DataTypes.STRING,
+            defaultValue: 'DESC',
         },
         image: {
             type: DataTypes.STRING,

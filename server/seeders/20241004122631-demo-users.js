@@ -7,7 +7,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const hashedPassword = await bcrypt.hash('password', 10);
     await queryInterface.bulkInsert('Users', [
-      { name: 'a', email: 'a@a', password: await bcrypt.hash('a', 10), roleId: 1, teamId: null, createdAt: new Date(), updatedAt: new Date() }, // Pas d'équipe
+      { name: 'a', email: 'a@a.a', password: await bcrypt.hash('a', 10), roleId: 1, teamId: null, createdAt: new Date(), updatedAt: new Date() }, // Pas d'équipe
       { name: 'Admin User', email: 'admin@example.com', password: hashedPassword, roleId: 1, teamId: null, createdAt: new Date(), updatedAt: new Date() }, // Admin sans équipe
       { name: 'Assistant User', email: 'assistant@example.com', password: hashedPassword, roleId: 2, teamId: 3, createdAt: new Date(), updatedAt: new Date() }, // Assistant dans l'équipe 3
       { name: 'Player User', email: 'player@example.com', password: hashedPassword, roleId: 3, teamId: 1, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 1

@@ -6,7 +6,7 @@ module.exports = {
       {
         name: 'Basketball',
         rule: 'Règles de basketball...',
-        scoreSystem: 'ASC',
+        scoreSystem: 'DESC',
         color: '#FF5733',
         image: '/uploads/basketball.jpg',
         createdAt: new Date(),
@@ -15,7 +15,7 @@ module.exports = {
       {
         name: 'Football',
         rule: 'Règles de football...',
-        scoreSystem: 'ASC',
+        scoreSystem: 'DESC',
         color: '#028d1c',
         image: '/uploads/football.jpg',
         createdAt: new Date(),
@@ -24,7 +24,7 @@ module.exports = {
       {
         name: 'Volleyball',
         rule: 'Règles de volleyball...',
-        scoreSystem: 'ASC',
+        scoreSystem: 'DESC',
         color: '#FFC300',
         image: '/uploads/volleyball.jpeg',
         createdAt: new Date(),
@@ -33,7 +33,7 @@ module.exports = {
       {
         name: 'Ultimate',
         rule: 'Règles de ultimate...',
-        scoreSystem: 'ASC',
+        scoreSystem: 'DESC',
         color: '#8E44AD',
         image: '/uploads/ultimate.jpeg',
         createdAt: new Date(),
@@ -42,7 +42,7 @@ module.exports = {
       {
         name: 'Badminton',
         rule: 'Règles de badminton...',
-        scoreSystem: 'ASC',
+        scoreSystem: 'DESC',
         color: '#33A1FF',
         image: '/uploads/badminton.png',
         createdAt: new Date(),

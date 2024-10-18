@@ -1,4 +1,3 @@
-<!-- frontend/src/views/admin/AdminTourneys.vue -->
 <template>
   <div class="p-6">
     <div class="flex items-center justify-between mb-8">
@@ -54,12 +53,19 @@
         :location="tourney.location"
         :date="tourney.dateTourney"
         :status="tourney.status"
+        :hasActions="true"
         :showDeleteButton="true"
         :showEditButton="true"
         @click="viewTourneyDetails(tourney.id)"
         @delete="confirmDeleteTourney(tourney.id)"
         @edit="editTourney(tourney)"
-      />
+      >
+        <template #subtitle>
+          <p>Lieu: {{ tourney.location }}</p>
+          <p>Date: {{ new Date(tourney.dateTourney).toLocaleDateString() }}</p>
+          <p>Statut: {{ tourney.status }}</p>
+        </template>
+      </CardEditComponent>
     </div>
     <!-- Modale pour ajouter/modifier un tournoi -->
     <ModalComponent
@@ -73,97 +79,7 @@
       @submit="handleFormSubmit"
     >
       <template #content>
-        <form @submit.prevent="handleFormSubmit">
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Nom du tournoi</label
-            >
-            <input
-              type="text"
-              v-model="newTourney.name"
-              :class="[
-                'w-full p-2 border rounded-md',
-                nameError ? 'border-red-500' : 'border-gray-300',
-              ]"
-              @input="validateForm"
-              required
-            />
-            <p v-if="nameError" class="text-red-500 text-sm mt-1">
-              Un tournoi avec ce nom existe déjà ou le champ est vide. Veuillez
-              en choisir un autre.
-            </p>
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2">Lieu</label>
-            <input
-              type="text"
-              v-model="newTourney.location"
-              :class="[
-                'w-full p-2 border rounded-md',
-                locationError ? 'border-red-500' : 'border-gray-300',
-              ]"
-              @input="validateForm"
-              required
-            />
-            <p v-if="locationError" class="text-red-500 text-sm mt-1">
-              Le lieu est obligatoire.
-            </p>
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Date du Tournoi</label
-            >
-            <input
-              type="date"
-              v-model="newTourney.dateTourney"
-              :class="[
-                'w-full p-2 border rounded-md',
-                dateError ? 'border-red-500' : 'border-gray-300',
-              ]"
-              @input="validateForm"
-              required
-            />
-            <p v-if="dateError" class="text-red-500 text-sm mt-1">
-              La date du tournoi est obligatoire.
-            </p>
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Domaine</label
-            >
-            <input
-              type="text"
-              v-model="newTourney.domain"
-              class="w-full p-2 border border-gray-300 rounded-md"
-              @input="validateForm"
-            />
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2"
-              >Détails d'urgence</label
-            >
-            <textarea
-              v-model="newTourney.emergencyDetails"
-              class="w-full p-2 border border-gray-300 rounded-md"
-              @input="validateForm"
-            ></textarea>
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700 font-semibold mb-2">Statut</label>
-            <select
-              v-model="newTourney.status"
-              class="w-full p-2 border border-gray-300 rounded-md"
-              @input="validateForm"
-            >
-              <option value="">Tous les statuts</option>
-              <option value="draft">Draft</option>
-              <option value="ready">Prêt</option>
-              <option value="active">Actif</option>
-              <option value="completed">Terminé</option>
-            </select>
-          </div>
-        </form>
+        <FormComponent v-model="newTourney" :fields="formFields" />
       </template>
     </ModalComponent>
 
@@ -182,8 +98,7 @@
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
-
-  import truncateMixin from '@/mixins/truncateMixin';
+  import FormComponent from '@/components/FormComponent.vue';
 
   export default {
     components: {
@@ -191,8 +106,8 @@
       DeleteConfirmationModal,
       CardAddComponent,
       CardEditComponent,
+      FormComponent,
     },
-    mixins: [truncateMixin],
     data() {
       return {
         tourneys: [],
@@ -211,17 +126,14 @@
         nameError: false,
         locationError: false,
         dateError: false,
-        fieldError: false,
         filterStatus: '',
         filterDate: '',
         isSaving: false,
         isFormValid: false,
-        isSubmitting: false,
       };
     },
     computed: {
       filteredTourneys() {
-        console.log('statusMatches', this.filterStatus);
         return this.tourneys.filter((tourney) => {
           const statusMatches = this.filterStatus
             ? tourney.status === this.filterStatus
@@ -236,8 +148,53 @@
           return statusMatches && dateMatches;
         });
       },
+      formFields() {
+        return [
+          {
+            name: 'name',
+            label: 'Nom du tournoi',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'location',
+            label: 'Lieu',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'dateTourney',
+            label: 'Date du Tournoi',
+            type: 'date',
+            required: true,
+          },
+          {
+            name: 'domain',
+            label: 'Domaine',
+            type: 'text',
+            required: false,
+          },
+          {
+            name: 'emergencyDetails',
+            label: "Détails d'urgence",
+            type: 'textarea',
+            required: false,
+          },
+          {
+            name: 'status',
+            label: 'Statut',
+            type: 'select',
+            options: [
+              { value: 'draft', label: 'Draft' },
+              { value: 'ready', label: 'Prêt' },
+              { value: 'active', label: 'Actif' },
+              { value: 'completed', label: 'Terminé' },
+            ],
+            required: true,
+          },
+        ];
+      },
     },
-
     methods: {
       async fetchTourneys() {
         try {
@@ -246,9 +203,6 @@
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
         }
-      },
-      handleFileUpload(event) {
-        this.selectedFile = event.target.files[0];
       },
       openAddTourneyModal() {
         this.editingTourneyId = null;
@@ -260,14 +214,12 @@
           emergencyDetails: '',
           status: 'draft',
         };
-        this.clearErrors();
         this.isFormValid = false;
         this.showModal = true;
       },
       editTourney(tourney) {
         this.editingTourneyId = tourney.id;
         this.newTourney = { ...tourney };
-        this.clearErrors();
         this.isFormValid = false;
         this.showModal = true;
       },
@@ -275,7 +227,7 @@
         if (!this.isFormValid) {
           return;
         }
-        this.isSubmitting = true;
+        this.isSaving = true;
         this.saveTourney();
       },
       validateForm() {
@@ -295,11 +247,6 @@
       validateDateField() {
         this.dateError = !this.newTourney.dateTourney;
       },
-      clearErrors() {
-        this.nameError = false;
-        this.locationError = false;
-        this.dateError = false;
-      },
       isNameUnique(name) {
         return !this.tourneys.some(
           (tourney) =>
@@ -308,11 +255,6 @@
         );
       },
       async saveTourney() {
-        if (this.isSaving) {
-          return;
-        }
-        this.isSaving = true;
-
         try {
           if (this.editingTourneyId) {
             await apiService.put(
@@ -331,7 +273,6 @@
           );
         } finally {
           this.isSaving = false;
-          this.isSubmitting = false;
         }
       },
       confirmDeleteTourney(id) {
@@ -357,6 +298,14 @@
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteTourneyId = null;
+      },
+    },
+    watch: {
+      newTourney: {
+        handler() {
+          this.validateForm();
+        },
+        deep: true,
       },
     },
     mounted() {
