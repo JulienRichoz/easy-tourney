@@ -23,7 +23,7 @@
 
     <!-- Grille des terrains avec le calendrier FullCalendar -->
     <div
-      class="fields-grid grid gap-4 mt-4 justify-center"
+      class="fields-grid grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 justify-center"
       :class="gridColumnsClass"
     >
       <div
