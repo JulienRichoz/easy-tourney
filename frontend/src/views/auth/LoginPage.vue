@@ -10,8 +10,11 @@
           type="email"
           v-model="email"
           placeholder="Entrer votre email"
-          required
+          :required="true"
+          :validate="true"
           class="mb-6"
+          :touched="emailTouched"
+          @blur="emailTouched = true"
         />
 
         <!-- Champ mot de passe avec FormInputComponent -->
@@ -21,8 +24,10 @@
           type="password"
           v-model="password"
           placeholder="Entrer votre mot de passe"
-          required
+          :required="true"
           class="mb-6"
+          :touched="passwordTouched"
+          @blur="passwordTouched = true"
         />
 
         <ButtonComponent variant="primary" type="submit" class="w-full">
@@ -62,16 +67,22 @@
         email: '',
         password: '',
         error: '',
+        emailTouched: false,
+        passwordTouched: false,
       };
     },
     methods: {
       async handleLogin() {
-        console.log('handleLogin');
+        if (!this.email || !this.password) {
+          this.error = 'Tous les champs sont obligatoires.';
+          return;
+        }
         try {
           const response = await apiService.post('/auth/login', {
             email: this.email,
             password: this.password,
           });
+
           const token = response.data.token;
 
           // Stocker le token
@@ -88,7 +99,7 @@
 
           // Redirection selon le rôle de l'utilisateur
           if (decoded.roleId === roles.ADMIN) {
-            this.$router.replace('/tourneys');
+            this.$router.replace('/admin');
           } else {
             this.$router.replace('/user');
           }

@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "@fullcalendar/interaction": "^6.1.15",
     "sortablejs": "^1.15.3",
     "sortablejs-vue3": "^1.2.11",

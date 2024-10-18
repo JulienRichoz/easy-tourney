@@ -32,20 +32,26 @@ const routes = [
   },
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/login',
   },
   {
     path: '/login',
     name: 'Login',
     component: LoginPage,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: RegisterPage,
+    meta: { requiresAuth: false }
   },
   {
     path: '/tourneys',
     name: 'Tourneys',
     component: TourneysPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+    meta: { requiresAuth: true, permission: 'viewAdminPage', },
   },
-  { path: '/register', name: 'Register', component: RegisterPage },
   {
     path: '/admin',
     name: 'Admin',
@@ -95,6 +101,23 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupérer le token de l'utilisateur
   const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
+
+  // Vérifie d'abord si la route ne nécessite pas d'authentification (comme login ou register)
+  if (to.meta.requiresAuth === false) {
+    // Si l'utilisateur est déjà authentifié et essaie d'accéder à Login ou Register, on le redirige
+    if (isAuthenticated) {
+      const decoded = jwtDecode(token); // Décode le token pour récupérer les infos de l'utilisateur
+      const userRole = decoded.roleId;
+
+      // Rediriger en fonction du rôle
+      if (userRole === 'admin') {
+        return next('/tourneys');
+      } else {
+        return next('/user');
+      }
+    }
+    return next(); // Si l'utilisateur n'est pas authentifié, il peut accéder à Login ou Register
+  }
 
   if (isAuthenticated && isTokenExpired()) {
     // Si le token est expiré, déconnecter l'utilisateur

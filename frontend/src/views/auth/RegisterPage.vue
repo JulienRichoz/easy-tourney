@@ -9,8 +9,10 @@
           label="Nom"
           v-model="name"
           placeholder="Entrer votre nom"
-          required
+          :required="true"
           class="mb-6"
+          :touched="nameTouched"
+          @blur="nameTouched = true"
         />
 
         <!-- Champ Email -->
@@ -20,8 +22,11 @@
           type="email"
           v-model="email"
           placeholder="Entrer votre email"
-          required
+          :required="true"
+          :validate="true"
           class="mb-6"
+          :touched="emailTouched"
+          @blur="emailTouched = true"
         />
 
         <!-- Champ Mot de Passe -->
@@ -31,8 +36,10 @@
           type="password"
           v-model="password"
           placeholder="Entrer votre mot de passe"
-          required
+          :required="true"
           class="mb-6"
+          :touched="passwordTouched"
+          @blur="passwordTouched = true"
         />
 
         <div class="form-group">
@@ -80,10 +87,17 @@
         password: '',
         roleId: 3, // Valeur par défaut pour 'Player'
         error: '',
+        nameTouched: false,
+        emailTouched: false,
+        passwordTouched: false,
       };
     },
     methods: {
       async handleRegister() {
+        if (!this.name || !this.email || !this.password) {
+          this.error = 'Tous les champs sont obligatoires.';
+          return;
+        }
         try {
           await apiService.post('/auth/register', {
             name: this.name,

@@ -8,9 +8,9 @@
 </template>
 
 <script>
-  import Menu from './components/MenuComponent'; // Importe le composant Menu
-  import { mapActions } from 'vuex'; // Pour appeler les actions Vuex depuis ton composant
-  import { isTokenExpired } from '@/services/authService'; // Importer la méthode pour vérifier l'expiration du token
+  import Menu from './components/MenuComponent';
+  import { mapActions } from 'vuex';
+  import { isTokenExpired } from '@/services/authService';
 
   export default {
     name: 'App',
@@ -18,63 +18,75 @@
       Menu,
     },
     methods: {
-      ...mapActions(['logout']), // Permet d'utiliser l'action logout de Vuex
+      ...mapActions(['logout']),
 
-      // Démarrer la surveillance de l'expiration du token
       startTokenExpirationWatcher() {
-        // Si un intervalle existe déjà, on l'efface pour éviter des duplications
         if (this.tokenWatcher) {
           clearInterval(this.tokenWatcher);
         }
 
-        this.checkTokenExpiration(); // Initialiser une première vérification
+        this.checkTokenExpiration(); // Première vérification
 
-        // Dynamique : ajuster l'intervalle de vérification en fonction du temps restant
+        // Configurer un intervalle dynamique en fonction du temps restant sur le token
         this.tokenWatcher = setInterval(() => {
           this.checkTokenExpiration();
-        }, this.getCheckInterval()); // Appel dynamique de l'intervalle
+        }, this.getCheckInterval());
       },
 
-      // Vérifier si le token est expiré et effectuer une déconnexion si nécessaire
       checkTokenExpiration() {
         if (isTokenExpired()) {
-          this.logout();
-          this.$router.push('/login');
-          clearInterval(this.tokenWatcher); // Arrêter la surveillance une fois déconnecté
+          // Token expiré, on déconnecte l'utilisateur
+          this.logout(); // Effectuer la déconnexion via Vuex
+
+          // Rediriger vers la page de login uniquement si l'utilisateur n'y est pas déjà
+          if (this.$route.path !== '/login') {
+            this.$router.push('/login');
+          }
+
+          // Arrêter l'intervalle après déconnexion
+          clearInterval(this.tokenWatcher);
         }
       },
 
-      // Fonction pour calculer dynamiquement l'intervalle de vérification
       getCheckInterval() {
         const tokenExpiration = this.$store.state.tokenExpiration;
-        const currentTime = Math.floor(Date.now() / 1000); // Temps actuel en secondes
+        const currentTime = Math.floor(Date.now() / 1000);
 
         if (tokenExpiration) {
           const timeLeft = tokenExpiration - currentTime;
-          return timeLeft > 10 ? (timeLeft / 2) * 1000 : 5000; // Moitié du temps restant ou 5 secondes
+          // Retourner l'intervalle en fonction du temps restant sur le token
+          return timeLeft > 10 ? (timeLeft / 2) * 1000 : 5000;
         }
-        return 5000; // Intervalle par défaut si aucune info d'expiration
+        return 5000; // Valeur par défaut
       },
     },
-    mounted() {
-      this.startTokenExpirationWatcher(); // Lancer la surveillance lors du montage du composant
 
-      // Surveillance des changements d'état d'authentification pour redémarrer la surveillance après reconnexion
+    mounted() {
+      const token = localStorage.getItem('token');
+      const isAuthenticated = !!token;
+
+      if (isAuthenticated && !isTokenExpired()) {
+        // Démarrer la surveillance uniquement si l'utilisateur est authentifié et que le token n'est pas expiré
+        this.startTokenExpirationWatcher();
+      }
+
+      // Réagir aux changements de l'état d'authentification
       this.$watch(
         () => this.$store.state.isAuthenticated,
         (newVal) => {
           if (newVal) {
-            // L'utilisateur est authentifié, on redémarre la surveillance
+            // Redémarrer la surveillance après reconnexion
             this.startTokenExpirationWatcher();
           } else {
-            // L'utilisateur est déconnecté, on arrête la surveillance
+            // Arrêter la surveillance si déconnexion
             clearInterval(this.tokenWatcher);
           }
         }
       );
     },
+
     beforeUnmount() {
-      clearInterval(this.tokenWatcher); // Arrêter la surveillance pour éviter les fuites de mémoire
+      clearInterval(this.tokenWatcher); // Nettoyage lors du démontage du composant
     },
   };
 </script>
