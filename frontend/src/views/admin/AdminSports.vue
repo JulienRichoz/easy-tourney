@@ -84,7 +84,7 @@
         newSport: {
           name: '',
           rule: '',
-          scoreSystem: 'ASC',
+          scoreSystem: 'DESC',
           color: '#000000',
           image: null,
         },
@@ -116,12 +116,15 @@
               { value: 'ASC', label: 'ASC' },
               { value: 'DESC', label: 'DESC' },
             ],
+            tooltip:
+              "'ASC': Un score faible est le meilleur (temps). 'DESC': Un score élevé est le meilleur (points).",
             required: true,
           },
           {
             name: 'image',
             label: 'Image du sport',
             type: 'file',
+            required: false,
           },
           {
             name: 'color',
@@ -186,7 +189,7 @@
         this.newSport = {
           name: '',
           rule: '',
-          scoreSystem: 'ASC',
+          scoreSystem: 'DESC',
           color: '#000000',
           image: null,
         };
@@ -203,8 +206,8 @@
         this.selectedFile = null;
         this.nameError = '';
         this.ruleError = '';
-        this.isFormValid = false;
         this.showModal = true;
+        this.isFormValid = false;
       },
 
       async handleFormSubmit() {
