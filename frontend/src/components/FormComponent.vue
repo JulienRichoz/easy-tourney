@@ -81,7 +81,29 @@
             </option>
           </select>
 
-          <!-- Autres types de champs... -->
+          <!-- Champ fichier -->
+          <input
+            v-if="field.type === 'file'"
+            type="file"
+            :id="field.name"
+            @change="handleFileChange"
+            class="w-full p-2 border rounded-md"
+          />
+          <!-- Sélecteur de couleur -->
+          <div v-if="field.type === 'color'" class="flex items-center">
+            <input
+              type="color"
+              :id="field.name"
+              v-model="formData[field.name]"
+              class="w-16 h-16 p-0 border-none rounded-md"
+              @input="validateField(field)"
+            />
+            <!-- Carré affichant la couleur choisie -->
+            <div
+              class="w-8 h-8 ml-4 border border-gray-300 rounded-md"
+              :style="{ backgroundColor: formData[field.name] }"
+            ></div>
+          </div>
 
           <!-- Afficher l'erreur -->
           <p v-if="errors[field.name]" class="text-red-500 text-sm mt-1">

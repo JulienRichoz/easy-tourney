@@ -117,7 +117,7 @@
               { value: 'DESC', label: 'DESC' },
             ],
             tooltip:
-              "'ASC': Un score faible est le meilleur (temps). 'DESC': Un score élevé est le meilleur (points).",
+              "'ASC': Un score faible est le meilleur (temps). 'DESC': Un score élevé est le meilleur (nombre de points).",
             required: true,
           },
           {
