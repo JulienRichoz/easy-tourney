@@ -1,7 +1,7 @@
 <template>
   <div class="p-6">
     <div class="flex items-center mb-8">
-      <h1 class="text-3xl font-bold ml-4">Gestion des Sports</h1>
+      <TitleComponent title="Gestion des Sports" />
     </div>
 
     <!-- Grille des sports -->
@@ -63,6 +63,7 @@
   import ModalComponent from '@/components/ModalComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import FormComponent from '@/components/FormComponent.vue';
+  import TitleComponent from '@/components/TitleComponent.vue';
   import { toast } from 'vue3-toastify';
   import 'vue3-toastify/dist/index.css';
 
@@ -73,6 +74,7 @@
       CardAddComponent,
       CardEditComponent,
       FormComponent,
+      TitleComponent,
     },
 
     data() {

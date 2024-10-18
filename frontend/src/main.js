@@ -8,14 +8,22 @@ import 'vue3-toastify/dist/index.css'; // Importer les styles de vue3-toastify
 import Vue3Toastify from 'vue3-toastify';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faQuestionCircle, faMapMarkerAlt, faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
-
-import '@fortawesome/fontawesome-free/css/all.css';
-import '@fortawesome/fontawesome-free/js/all.js';
+import {
+    faQuestionCircle,
+    faMapMarkerAlt,
+    faCalendarAlt,
+    faSun,
+    faMoon,
+    faUser,
+    faPowerOff,
+    faSignInAlt
+} from '@fortawesome/free-solid-svg-icons'
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
 
-library.add(faQuestionCircle, faMapMarkerAlt, faCalendarAlt)
+// Ajouter les icônes supplémentaires
+library.add(faQuestionCircle, faMapMarkerAlt, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt)
+
 const app = createApp(App);
 
 // Initialise l'état d'authentification dès le chargement de l'application
@@ -26,5 +34,8 @@ app.use(router);
 app.use(Vue3Toastify, {
     autoClose: 1000,
 });
+
+// Enregistrer le composant FontAwesomeIcon globalement
 app.component('font-awesome-icon', FontAwesomeIcon)
+
 app.mount('#app');

@@ -5,7 +5,7 @@
 
     <div class="p-6">
       <div class="flex items-center mb-8">
-        <h1 class="text-3xl font-bold ml-4">Gestion Terrains</h1>
+        <TitleComponent title="Gestion Terrains" />
         <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary">
           Ajouter plusieurs terrains
         </ButtonComponent>

@@ -1,6 +1,7 @@
+<!-- src/components/MenuComponent.vue -->
 <template>
   <nav
-    class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between"
+    class="navbar bg-gray-800 p-4 shadow-md flex items-center justify-between dark:bg-custom_dark_2"
   >
     <!-- Section de gauche -->
     <ul class="left-section flex items-center">
@@ -30,18 +31,33 @@
 
     <!-- Section de droite -->
     <ul class="right-section flex items-center">
+      <li></li>
+      <li>
+        <button
+          @click="toggleDarkMode"
+          class="mr-2 bg-gray-600 p-2 rounded text-white"
+        >
+          <!-- Utilisez le composant FontAwesomeIcon -->
+          <font-awesome-icon v-if="isDarkMode" :icon="['fas', 'sun']" />
+          <font-awesome-icon v-else :icon="['fas', 'moon']" />
+        </button>
+      </li>
       <li v-if="isAuthenticated" class="profile-section flex items-center">
         <span class="username text-white font-bold mr-4">{{ userName }}</span>
         <router-link to="/profile" class="profile-link text-green-400 mr-4">
-          <i class="fas fa-user"></i>
+          <font-awesome-icon :icon="['fas', 'user']" />
         </router-link>
         <button @click="logout" class="text-red-500 text-xl hover:text-red-700">
-          <i class="fas fa-power-off"></i>
+          <font-awesome-icon :icon="['fas', 'power-off']" />
         </button>
       </li>
       <li v-if="!isAuthenticated" class="ml-4">
-        <router-link to="/login" class="text-green-400 font-bold text-lg">
-          <i class="fas fa-power-on mr-2"></i>Se connecter
+        <router-link
+          to="/login"
+          class="text-green-400 font-bold text-lg flex items-center"
+        >
+          <font-awesome-icon :icon="['fas', 'sign-in-alt']" class="mr-2" />Se
+          connecter
         </router-link>
       </li>
     </ul>
@@ -52,6 +68,11 @@
   import { mapState } from 'vuex';
 
   export default {
+    data() {
+      return {
+        isDarkMode: false,
+      };
+    },
     computed: {
       ...mapState({
         isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
@@ -73,6 +94,31 @@
         this.$store.dispatch('logout'); // Déconnexion
         this.$router.push('/login'); // Redirection après la déconnexion
       },
+      toggleDarkMode() {
+        this.isDarkMode = !this.isDarkMode;
+
+        if (this.isDarkMode) {
+          document.documentElement.classList.add('dark'); // Ajoute la classe 'dark' à <html>
+          localStorage.setItem('theme', 'dark'); // Sauvegarde dans le localStorage
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+      },
+    },
+    mounted() {
+      // Vérifie si le mode sombre est déjà activé (via le localStorage ou la préférence du système)
+      const isDark =
+        localStorage.getItem('theme') === 'dark' ||
+        (!('theme' in localStorage) &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      this.isDarkMode = isDark;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     },
   };
 </script>

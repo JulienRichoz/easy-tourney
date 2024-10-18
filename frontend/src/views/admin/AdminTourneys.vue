@@ -1,38 +1,9 @@
 <template>
   <div class="p-6">
     <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold ml-4">Gestion des Tournois</h1>
+      <TitleComponent title="Gestion des Tournois" />
       <!-- Filtres des tournois -->
-      <div class="flex flex-col md:flex-row items-center">
-        <div class="mb-4 md:mb-0 md:mr-4">
-          <span class="text-gray-700 font-semibold mr-2"
-            >Filtrer par statut:</span
-          >
-          <select
-            v-model="filterStatus"
-            class="p-2 border border-gray-300 rounded-md"
-          >
-            <option value="">Tous les statuts</option>
-            <option value="draft">Draft</option>
-            <option value="ready">Prêt</option>
-            <option value="active">Actif</option>
-            <option value="completed">Terminé</option>
-          </select>
-        </div>
-        <div>
-          <span class="text-gray-700 font-semibold mr-2"
-            >Filtrer par date:</span
-          >
-          <select
-            v-model="filterDate"
-            class="p-2 border border-gray-300 rounded-md"
-          >
-            <option value="">Toutes les dates</option>
-            <option value="upcoming">À venir</option>
-            <option value="past">Passés</option>
-          </select>
-        </div>
-      </div>
+      <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
     </div>
 
     <!-- Grille des tournois -->
@@ -59,13 +30,7 @@
         @click="viewTourneyDetails(tourney.id)"
         @delete="confirmDeleteTourney(tourney.id)"
         @edit="editTourney(tourney)"
-      >
-        <template #subtitle>
-          <p>Lieu: {{ tourney.location }}</p>
-          <p>Date: {{ new Date(tourney.dateTourney).toLocaleDateString() }}</p>
-          <p>Statut: {{ tourney.status }}</p>
-        </template>
-      </CardEditComponent>
+      />
     </div>
     <!-- Modale pour ajouter/modifier un tournoi -->
     <ModalComponent
@@ -99,6 +64,8 @@
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import FormComponent from '@/components/FormComponent.vue';
+  import FilterComponent from '@/components/FilterComponent.vue';
+  import TitleComponent from '@/components/TitleComponent.vue';
 
   export default {
     components: {
@@ -107,6 +74,8 @@
       CardAddComponent,
       CardEditComponent,
       FormComponent,
+      FilterComponent,
+      TitleComponent,
     },
     data() {
       return {
@@ -130,6 +99,29 @@
         filterDate: '',
         isSaving: false,
         isFormValid: false,
+        filters: [
+          {
+            label: 'Filtrer par statut',
+            value: this.filterStatus,
+            placeholder: 'Tous les status',
+            options: [
+              { label: 'Tous les statuts', value: '' },
+              { label: 'Brouillon', value: 'draft' },
+              { label: 'Prêt', value: 'ready' },
+              { label: 'En cours', value: 'active' },
+              { label: 'Terminé', value: 'completed' },
+            ],
+          },
+          {
+            label: 'Filtrer par date',
+            value: this.filterDate,
+            options: [
+              { label: 'Toutes les dates', value: '' },
+              { label: 'À venir', value: 'upcoming' },
+              { label: 'Passés', value: 'past' },
+            ],
+          },
+        ],
       };
     },
     computed: {
@@ -144,7 +136,6 @@
               : this.filterDate === 'past'
               ? new Date(tourney.dateTourney) < new Date()
               : true;
-
           return statusMatches && dateMatches;
         });
       },
@@ -185,9 +176,9 @@
             label: 'Statut',
             type: 'select',
             options: [
-              { value: 'draft', label: 'Draft' },
+              { value: 'draft', label: 'Brouillon' },
               { value: 'ready', label: 'Prêt' },
-              { value: 'active', label: 'Actif' },
+              { value: 'active', label: 'En cours' },
               { value: 'completed', label: 'Terminé' },
             ],
             required: true,
@@ -202,6 +193,14 @@
           this.tourneys = response.data;
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
+        }
+      },
+      handleFilterChange(filter) {
+        // Mettre à jour les filtres sélectionnés
+        if (filter.label === 'Filtrer par statut') {
+          this.filterStatus = filter.value;
+        } else if (filter.label === 'Filtrer par date') {
+          this.filterDate = filter.value;
         }
       },
       openAddTourneyModal() {
@@ -314,30 +313,4 @@
   };
 </script>
 
-<style scoped>
-  .truncated-title {
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  button {
-    transition: transform 0.2s ease;
-  }
-  button:hover {
-    transform: scale(1.05);
-  }
-
-  .card-footer {
-    margin-top: auto;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .card-footer button {
-    flex: 1;
-  }
-</style>
+<style scoped></style>
