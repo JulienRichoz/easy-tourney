@@ -1,3 +1,4 @@
+<!-- src/components/FilterComponent.vue -->
 <template>
   <div class="flex flex-wrap items-center gap-4">
     <div
@@ -5,12 +6,15 @@
       :key="filter.label"
       class="flex items-center"
     >
-      <span class="text-gray-700 font-semibold mr-2">{{ filter.label }}:</span>
+      <span
+        class="text-light-form-text dark:text-dark-form-text font-semibold mr-2"
+        >{{ filter.label }}:</span
+      >
       <div class="relative inline-block">
         <select
           v-model="filter.value"
           @change="onFilterChange(filter)"
-          class="dark:bg-custom_dark_1 p-2 pr-8 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-100 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          class="bg-light-form-background dark:bg-dark-form-background p-2 pr-8 border border-light-form-border-default dark:border-dark-form-border-default rounded-md shadow-sm hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-light-form-text dark:text-dark-form-text"
         >
           <!-- Champ par défaut si spécifié -->
 
@@ -28,7 +32,7 @@
           class="absolute inset-y-0 right-0 flex items-center pointer-events-none"
         >
           <svg
-            class="w-4 h-4 text-gray-400 mr-2"
+            class="w-4 h-4 text-light-form-iconQuestion dark:text-dark-form-iconQuestion mr-2"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

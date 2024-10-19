@@ -1,3 +1,4 @@
+<!-- src/components/FormComponent.vue -->
 <template>
   <form @submit.prevent="handleSubmit">
     <div v-for="field in fields" :key="field.name" class="mb-4">
@@ -6,10 +7,14 @@
         <template v-if="!$slots[field.name]">
           <label
             :for="field.name"
-            class="block text-gray-700 font-semibold mb-2 flex items-center"
+            class="block text-light-form-text dark:text-dark-form-text font-semibold mb-2 flex items-center"
           >
             {{ field.label }}
-            <span v-if="field.required" class="text-red-500">*</span>
+            <span
+              v-if="field.required"
+              class="text-light-form-error dark:text-dark-form-error"
+              >*</span
+            >
             <!-- Icône du tooltip utilisant Font Awesome -->
             <button
               v-if="field.tooltip"
@@ -19,12 +24,12 @@
             >
               <font-awesome-icon
                 icon="question-circle"
-                class="text-gray-400 cursor-pointer"
+                class="text-light-form-iconQuestion dark:text-dark-form-iconQuestion cursor-pointer"
               />
               <!-- Texte du tooltip -->
               <div
                 v-if="visibleTooltip === field.name"
-                class="absolute bottom-full mb-2 w-64 bg-gray-700 text-white text-base rounded py-1 px-2 z-10 text-left"
+                class="absolute bottom-full mb-2 w-64 bg-gray-700 dark:bg-gray-600 text-white text-base rounded py-1 px-2 z-10 text-left"
                 style="left: 50%; transform: translateX(-50%)"
               >
                 {{ field.tooltip }}
@@ -45,8 +50,12 @@
             :id="field.name"
             v-model="formData[field.name]"
             :class="[
-              'w-full p-2 border rounded-md',
-              errors[field.name] ? 'border-red-500' : 'border-gray-300',
+              'w-full p-2 rounded-md border',
+              'bg-light-form-background dark:bg-dark-form-background',
+              'text-light-form-text dark:text-dark-form-text',
+              errors[field.name]
+                ? 'border-light-form-error dark:border-dark-form-error'
+                : 'border-light-form-border-default dark:border-dark-form-border-default',
             ]"
             @input="validateField(field)"
             :placeholder="field.placeholder"
@@ -58,8 +67,12 @@
             :id="field.name"
             v-model="formData[field.name]"
             :class="[
-              'w-full p-2 border rounded-md',
-              errors[field.name] ? 'border-red-500' : 'border-gray-300',
+              'w-full p-2 rounded-md border',
+              'bg-light-form-background dark:bg-dark-form-background',
+              'text-light-form-text dark:text-dark-form-text',
+              errors[field.name]
+                ? 'border-light-form-error dark:border-dark-form-error'
+                : 'border-light-form-border-default dark:border-dark-form-border-default',
             ]"
             @input="validateField(field)"
           ></textarea>
@@ -69,7 +82,7 @@
             v-if="field.type === 'select'"
             :id="field.name"
             v-model="formData[field.name]"
-            class="w-full p-2 border rounded-md"
+            class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
             @change="validateField(field)"
           >
             <option
@@ -87,7 +100,7 @@
             type="file"
             :id="field.name"
             @change="handleFileChange"
-            class="w-full p-2 border rounded-md"
+            class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
           />
           <!-- Sélecteur de couleur -->
           <div v-if="field.type === 'color'" class="flex items-center">
@@ -100,13 +113,16 @@
             />
             <!-- Carré affichant la couleur choisie -->
             <div
-              class="w-8 h-8 ml-4 border border-gray-300 rounded-md"
+              class="w-8 h-8 ml-4 border border-light-form-border-default dark:border-dark-form-border-default rounded-md"
               :style="{ backgroundColor: formData[field.name] }"
             ></div>
           </div>
 
           <!-- Afficher l'erreur -->
-          <p v-if="errors[field.name]" class="text-red-500 text-sm mt-1">
+          <p
+            v-if="errors[field.name]"
+            class="text-light-form-error dark:text-dark-form-error text-sm mt-1"
+          >
             {{ errors[field.name] }}
           </p>
         </template>
@@ -116,7 +132,6 @@
     <slot name="additional-content"></slot>
   </form>
 </template>
-
 <script>
   export default {
     props: {
@@ -178,4 +193,6 @@
   };
 </script>
 
-<style scoped></style>
+<style scoped>
+  /* Styles gérés par Tailwind CSS */
+</style>

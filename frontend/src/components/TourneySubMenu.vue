@@ -1,21 +1,20 @@
 <template>
   <div
     :class="['tourney-nav', isNavVisible ? 'visible' : 'hidden']"
-    class="tourney-nav w-full z-50 bg-white shadow-lg"
+    class="tourney-nav w-full z-50 bg-light-subMenu-background dark:bg-dark-subMenu-background shadow-lg border-b border-light-subMenu-border dark:border-dark-subMenu-border"
   >
     <!-- Liens du menu -->
     <router-link
       :to="`/tourneys/${tourneyId}`"
-      class="tourney-nav-item"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyDetails' }"
     >
       <i class="fas fa-info-circle"></i>
-      <!-- Affiche seulement sur les grands écrans -->
       <span class="hidden sm:inline"> Détails</span>
     </router-link>
     <router-link
       :to="`/tourneys/${tourneyId}/fields`"
-      class="tourney-nav-item"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'AdminFields' }"
     >
       <i class="fas fa-map"></i>
@@ -23,7 +22,7 @@
     </router-link>
     <router-link
       :to="`/tourneys/${tourneyId}/sports-fields`"
-      class="tourney-nav-item"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'SportsFields' }"
     >
       <i class="fas fa-futbol"></i>
@@ -31,7 +30,7 @@
     </router-link>
     <router-link
       :to="`/tourneys/${tourneyId}/teams`"
-      class="tourney-nav-item"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyTeams' }"
     >
       <i class="fas fa-users"></i>
@@ -39,7 +38,7 @@
     </router-link>
     <router-link
       :to="`/tourneys/${tourneyId}/planning`"
-      class="tourney-nav-item"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyPlanning' }"
     >
       <i class="fas fa-calendar-alt"></i>

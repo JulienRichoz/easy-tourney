@@ -1,27 +1,37 @@
-<!-- components/DeleteConfirmationModal.vue -->
-
+<!-- src/components/DeleteConfirmationModal.vue -->
 <template>
   <div
     v-if="isVisible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center"
   >
-    <div class="bg-white p-8 rounded-lg w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-4">{{ title }}</h2>
-      <p class="mb-6">{{ message }}</p>
+    <div
+      class="bg-light-modal-content dark:bg-dark-modal-content p-8 rounded-lg w-full max-w-md"
+    >
+      <h2 class="text-2xl font-bold mb-4 text-light-title dark:text-dark-title">
+        {{ title }}
+      </h2>
+      <p class="mb-6 text-light-form-text dark:text-dark-form-text">
+        {{ message }}
+      </p>
       <!-- Message supplémentaire pour hardDelete -->
-      <p v-if="isHardDelete && hardDeleteMessage" class="mb-4 text-red-600">
+      <p
+        v-if="isHardDelete && hardDeleteMessage"
+        class="mb-4 text-light-form-error dark:text-dark-form-error"
+      >
         {{ hardDeleteMessage }}
       </p>
 
       <!-- Si hardDelete est activé, afficher le champ de confirmation -->
       <div v-if="isHardDelete" class="mb-4">
-        <label class="block text-gray-700 font-semibold mb-2">
+        <label
+          class="block text-light-form-text dark:text-dark-form-text font-semibold mb-2 flex items-center"
+        >
           Tapez "CONFIRM" pour confirmer
         </label>
         <input
           type="text"
           v-model="confirmationText"
-          class="w-full p-2 border border-gray-300 rounded-md"
+          class="w-full p-2 border border-light-form-border-default dark:border-dark-form-border-default rounded-md bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
           placeholder="CONFIRM"
         />
       </div>
@@ -103,17 +113,5 @@
 </script>
 
 <style scoped>
-  .modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-  }
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
+  /* Styles gérés par Tailwind CSS */
 </style>

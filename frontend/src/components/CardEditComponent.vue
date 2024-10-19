@@ -1,6 +1,7 @@
+<!-- src/components/CardEditComponent.vue -->
 <template>
   <div
-    class="cursor-pointer bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 transition-transform transform hover:scale-105 flex flex-col justify-between h-auto min-h-[200px] dark:bg-custom_dark_2"
+    class="cursor-pointer bg-light-card dark:bg-dark-card p-4 rounded-lg shadow-md hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground transition-transform transform hover:scale-105 flex flex-col justify-between h-auto min-h-[200px]"
     @click="$emit('click')"
   >
     <img
@@ -9,8 +10,7 @@
       class="w-full h-28 object-cover mb-4 rounded-lg"
     />
     <h2
-      class="text-2xl font-semibold mb-4 truncate"
-      :style="{ color: titleColor }"
+      class="text-2xl font-semibold mb-4 text-light-title dark:text-dark-title truncate"
     >
       {{ title }}
     </h2>
@@ -18,12 +18,22 @@
     <!-- Afficher les champs supplémentaires si les props sont fournies -->
     <div class="space-y-2">
       <div v-if="location" class="flex items-center">
-        <font-awesome-icon icon="map-marker-alt" class="mr-2 text-gray-500" />
-        <span>{{ location }}</span>
+        <font-awesome-icon
+          icon="map-marker-alt"
+          class="mr-2 text-light-form-text dark:text-dark-form-text"
+        />
+        <span class="text-light-form-text dark:text-dark-form-text">{{
+          location
+        }}</span>
       </div>
       <div v-if="date" class="flex items-center">
-        <font-awesome-icon icon="calendar-alt" class="mr-2 text-gray-500" />
-        <span>{{ formattedDate }}</span>
+        <font-awesome-icon
+          icon="calendar-alt"
+          class="mr-2 text-light-form-text dark:text-dark-form-text"
+        />
+        <span class="text-light-form-text dark:text-dark-form-text">{{
+          formattedDate
+        }}</span>
       </div>
       <div v-if="status" class="flex items-center">
         <span
@@ -64,7 +74,7 @@
       title: String,
       subtitle: String,
       image: String,
-      titleColor: String,
+      // titleColor: String, // Supprimé pour utiliser les classes Tailwind
       showDeleteButton: Boolean,
       showEditButton: Boolean,
       hasActions: Boolean,
@@ -92,15 +102,15 @@
       getStatusClass(status) {
         switch (status) {
           case 'draft':
-            return 'bg-gray-200 text-gray-800';
+            return 'bg-light-form-border-default dark:bg-dark-form-border-default text-light-form-text dark:text-dark-form-text';
           case 'ready':
-            return 'bg-blue-200 text-blue-800';
+            return 'bg-blue-200 dark:bg-blue-600 text-blue-800 dark:text-blue-200';
           case 'active':
-            return 'bg-green-200 text-green-800';
+            return 'bg-light-buttonVariants-primary-default dark:bg-dark-buttonVariants-primary-default text-white';
           case 'completed':
-            return 'bg-yellow-200 text-yellow-800';
+            return 'bg-yellow-200 dark:bg-yellow-600 text-yellow-800 dark:text-yellow-200';
           default:
-            return 'bg-gray-200 text-gray-800';
+            return 'bg-light-form-border-default dark:bg-dark-form-border-default text-light-form-text dark:text-dark-form-text';
         }
       },
       getStatusLabel(status) {

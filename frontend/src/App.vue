@@ -1,5 +1,9 @@
+<!-- src/App.vue -->
 <template>
-  <div id="app" class="min-h-screen bg-gray-100 dark:bg-custom_dark_1">
+  <div
+    id="app"
+    class="min-h-screen bg-light-background dark:bg-dark-background text-light-title dark:text-dark-title font-sans antialiased"
+  >
     <Menu />
     <div class="p-0">
       <router-view></router-view>
@@ -92,10 +96,5 @@
 </script>
 
 <style>
-  #app {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #2c3e50;
-  }
+  /* Styles gérés par Tailwind CSS */
 </style>

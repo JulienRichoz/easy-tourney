@@ -1,15 +1,18 @@
-<!-- components/ModalComponent.vue -->
-
+<!-- src/components/ModalComponent.vue -->
 <template>
   <div
     v-if="isVisible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center"
   >
     <div
-      class="bg-white p-8 rounded-lg w-full max-w-md max-h-screen overflow-y-auto"
+      class="bg-light-modal-content dark:bg-dark-modal-content p-8 rounded-lg w-full max-w-md max-h-screen overflow-y-auto"
     >
       <slot name="header">
-        <h2 class="text-2xl font-bold mb-4">{{ title }}</h2>
+        <h2
+          class="text-2xl font-bold mb-4 text-light-title dark:text-dark-title"
+        >
+          {{ title }}
+        </h2>
       </slot>
       <slot name="content"></slot>
       <div class="flex justify-between mt-4">
@@ -17,10 +20,13 @@
           variant="secondary"
           nativeType="button"
           @click="onCancel"
-          >Annuler</ButtonComponent
         >
+          Annuler
+        </ButtonComponent>
         <ButtonComponent
-          :variant="isFormValid ? confirmButtonVariant || 'primary' : 'gray'"
+          :variant="
+            isFormValid ? confirmButtonVariant || 'primary' : 'disabled'
+          "
           nativeType="submit"
           @click="onSubmit"
           :disabled="!isFormValid"
@@ -75,3 +81,7 @@
     },
   };
 </script>
+
+<style scoped>
+  /* Styles gérés par Tailwind CSS */
+</style>

@@ -5,7 +5,8 @@
 
     <!-- Liste des sports en haut, sticky sans fond gris -->
     <div
-      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4 bg-white"
+      id="external-events"
+      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4 bg-white dark:bg-dark-background"
     >
       <!-- Sports que l'on peut glisser -->
       <div
@@ -30,7 +31,7 @@
         v-for="(field, index) in fields"
         :key="field.id"
         :data-field-id="field.id"
-        class="relative bg-white shadow-lg rounded-lg p-2 me-4 ms-4"
+        class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 me-4 ms-4"
       >
         <!-- Nom du terrain avec le numéro -->
         <div class="flex justify-between items-center">
@@ -41,6 +42,7 @@
             >{{ index + 1 }}/{{ fields.length }}</span
           >
         </div>
+        <p>{{ field.description }}</p>
 
         <!-- FullCalendar pour chaque terrain -->
         <FullCalendar :options="getFieldCalendarOptions(field)" />
@@ -125,7 +127,7 @@
       },
 
       initializeExternalEvents() {
-        const containerEl = document.querySelector('.p-2');
+        const containerEl = document.getElementById('external-events');
         new Draggable(containerEl, {
           itemSelector: '.external-event',
           eventData(eventEl) {
@@ -471,4 +473,6 @@
   .sport-item:hover {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
+
+  @import '@/assets/fullcalendar.css';
 </style>

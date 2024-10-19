@@ -1,44 +1,56 @@
+<!-- src/components/TourneyDetailsPage.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
 
     <!-- Contenu principal -->
-    <div class="tourney-details-container">
-      <div class="tourney-details">
+    <div class="flex flex-col gap-8 p-8 md:flex-row md:items-stretch">
+      <div
+        class="flex-1 bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8"
+      >
         <!-- Rappel des détails du tournoi -->
-        <h2 class="tourney-title">{{ tourney.name }}</h2>
-        <p class="tourney-info">
+        <h2
+          class="text-3xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
+        >
+          {{ tourney.name }}
+        </h2>
+        <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
           <strong>Lieu:</strong> {{ tourney.location }}
         </p>
-        <p class="tourney-info">
+        <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
           <strong>Date:</strong> {{ formatDate(tourney.dateTourney) }}
         </p>
-        <!-- <p class="tourney-info">
-          <strong>Nombre de Terrains:</strong> {{ tourney.numberOfField }}
-        </p>-->
 
-        <h3 class="tourney-step-title">Étape actuelle:</h3>
-        <p class="tourney-step">Assigner les terrains</p>
+        <h3
+          class="mt-6 text-2xl font-bold text-light-form-text dark:text-dark-form-text"
+        >
+          Étape actuelle:
+        </h3>
+        <p class="text-base text-light-form-text dark:text-dark-form-text">
+          Assigner les terrains
+        </p>
 
-        <ol class="tourney-steps">
-          <li :class="{ completed: currentStepNumber >= 1 }">
-            1. Assigner les terrains
-          </li>
-          <li :class="{ completed: currentStepNumber >= 2 }">
-            2. Gérer les groupes
-          </li>
-          <li :class="{ completed: currentStepNumber >= 3 }">
-            3. Lancer les inscriptions
-          </li>
-          <li :class="{ completed: currentStepNumber >= 4 }">
-            4. Inscriptions validées, gérer le planning
+        <ol class="list-none pl-0 my-4">
+          <li
+            v-for="(step, index) in steps"
+            :key="index"
+            :class="{
+              'py-2 font-medium text-light-form-text dark:text-dark-form-text':
+                currentStepNumber < index + 1,
+              'py-2 font-medium text-green-700 dark:text-green-400 line-through':
+                currentStepNumber >= index + 1,
+            }"
+          >
+            {{ step }}
           </li>
         </ol>
       </div>
 
       <!-- Carte OpenStreetMap -->
-      <div class="tourney-map">
+      <div
+        class="flex-1 min-h-[300px] rounded-lg overflow-hidden shadow-lg p-8 sm:h-[50vh] sm:w-full"
+      >
         <l-map
           v-if="mapIsReady"
           ref="map"
@@ -47,7 +59,7 @@
             tourney.locationLat || 46.8065,
             tourney.locationLng || 7.1619,
           ]"
-          style="height: 100%; width: 100%"
+          class="h-full w-full"
         >
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -85,9 +97,15 @@
     data() {
       return {
         tourneyId: this.$route.params.id,
-        tourney: [], // Détails du tournoi récupérés du serveur
+        tourney: {}, // Détails du tournoi récupérés du serveur
         currentStepNumber: 1, // Pour gérer l'étape actuelle en nombre
         mapIsReady: false,
+        steps: [
+          'Assigner les terrains',
+          'Gérer les groupes',
+          'Lancer les inscriptions',
+          'Inscriptions validées, gérer le planning',
+        ],
       };
     },
     async mounted() {
@@ -99,6 +117,8 @@
         try {
           const response = await apiService.get(`/tourneys/${this.tourneyId}`);
           this.tourney = response.data;
+          // Optionnel: Définir l'étape actuelle en fonction des données du tournoi
+          this.currentStepNumber = this.tourney.currentStep || 1;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
@@ -118,88 +138,14 @@
 </script>
 
 <style scoped>
-  body {
-    padding: 0;
-    margin: 0;
-  }
+  /* Minimal CSS, presque tout est géré par Tailwind */
 
-  html,
-  body,
-  #map {
+  .l-map {
     height: 100%;
-    width: 100vw;
+    width: 100%;
   }
 
-  .tourney-details-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    padding: 2rem;
-  }
-
-  @media (min-width: 768px) {
-    .tourney-details-container {
-      flex-direction: row;
-      align-items: stretch; /* S'assure que les enfants prennent la même hauteur */
-    }
-  }
-
-  .tourney-details {
-    flex: 1 1 auto;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-  }
-
-  .tourney-title {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: #2f855a;
-  }
-
-  .tourney-info {
-    font-size: 1rem;
-    color: #4a5568;
-    margin-bottom: 0.5rem;
-  }
-
-  .tourney-step-title {
-    margin-top: 1.5rem;
-    font-size: 1.4rem;
-    font-weight: bold;
-  }
-
-  .tourney-steps {
-    list-style: none;
-    padding-left: 0;
-    margin: 1rem 0;
-  }
-
-  .tourney-steps li {
-    padding: 0.5rem 0;
-    font-weight: 500;
-    color: #4a5568;
-  }
-
-  .tourney-steps li.completed {
-    color: #2f855a;
-    text-decoration: line-through;
-  }
-
-  .tourney-map {
-    flex: 1 1 auto;
-    min-height: 300px; /* Assure une hauteur minimale */
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-
-  @media (max-width: 768px) {
-    .tourney-map {
-      height: 50vh; /* Ajustement de la hauteur pour les mobiles */
-      width: 100%;
-    }
+  .dark .leaflet-container {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
   }
 </style>

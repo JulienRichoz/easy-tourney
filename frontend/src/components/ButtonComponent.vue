@@ -1,5 +1,4 @@
-<!-- components/ButtonComponent.vue -->
-
+<!-- src/components/ButtonComponent.vue -->
 <template>
   <button
     :type="nativeType"
@@ -44,11 +43,15 @@
     computed: {
       variantClasses() {
         const variants = {
-          primary: 'bg-green-600 text-white hover:bg-green-700',
-          secondary: 'bg-gray-500 text-white hover:bg-gray-600',
-          danger: 'bg-red-500 text-white hover:bg-red-600',
-          warning: 'bg-yellow-500 text-white hover:bg-yellow-600',
-          gray: 'bg-gray-400 text-white cursor-not-allowed',
+          primary:
+            'bg-light-buttonVariants-primary-default dark:bg-dark-buttonVariants-primary-default text-white hover:bg-light-buttonVariants-primary-hover dark:hover:bg-dark-buttonVariants-primary-hover',
+          secondary:
+            'bg-light-buttonVariants-secondary-default dark:bg-dark-buttonVariants-secondary-default text-white hover:bg-light-buttonVariants-secondary-hover dark:hover:bg-dark-buttonVariants-secondary-hover',
+          danger:
+            'bg-light-buttonVariants-danger-default dark:bg-dark-buttonVariants-danger-default text-white hover:bg-light-buttonVariants-danger-hover dark:hover:bg-dark-buttonVariants-danger-hover',
+          warning:
+            'bg-light-buttonVariants-warning-default dark:bg-dark-buttonVariants-warning-default text-white hover:bg-light-buttonVariants-warning-hover dark:hover:bg-dark-buttonVariants-warning-hover',
+          gray: 'bg-light-buttonVariants-disabled-default dark:bg-dark-buttonVariants-disabled-default text-white',
         };
         return variants[this.variant] || variants.primary;
       },
