@@ -9,11 +9,28 @@
       :src="image"
       class="w-full h-28 object-cover mb-4 rounded-lg"
     />
-    <h2
-      class="text-2xl font-semibold mb-4 text-light-title dark:text-dark-title truncate"
+
+    <!-- Vignette colorée à côté du titre -->
+    <div class="flex items-center mb-4">
+      <span
+        v-if="titleColor"
+        class="w-4 h-4 rounded-full mr-2"
+        :style="{ backgroundColor: titleColor }"
+      ></span>
+      <h2
+        class="text-2xl font-semibold truncate text-light-title dark:text-dark-title text-ellipsis overflow-hidden ..."
+      >
+        {{ title }}
+      </h2>
+    </div>
+
+    <!-- Afficher la description si fournie -->
+    <div
+      v-if="description"
+      class="text-base text-light-form-text dark:text-dark-form-text mb-2 text-ellipsis overflow-hidden ..."
     >
-      {{ title }}
-    </h2>
+      {{ description }}
+    </div>
 
     <!-- Afficher les champs supplémentaires si les props sont fournies -->
     <div class="space-y-2">
@@ -22,18 +39,18 @@
           icon="map-marker-alt"
           class="mr-2 text-light-form-text dark:text-dark-form-text"
         />
-        <span class="text-light-form-text dark:text-dark-form-text">{{
-          location
-        }}</span>
+        <span class="text-light-form-text dark:text-dark-form-text">
+          {{ location }}
+        </span>
       </div>
       <div v-if="date" class="flex items-center">
         <font-awesome-icon
           icon="calendar-alt"
           class="mr-2 text-light-form-text dark:text-dark-form-text"
         />
-        <span class="text-light-form-text dark:text-dark-form-text">{{
-          formattedDate
-        }}</span>
+        <span class="text-light-form-text dark:text-dark-form-text">
+          {{ formattedDate }}
+        </span>
       </div>
       <div v-if="status" class="flex items-center">
         <span
@@ -43,7 +60,8 @@
           {{ getStatusLabel(status) }}
         </span>
       </div>
-      <!-- Autres champs supplémentaires peuvent être ajoutés ici -->
+      <!-- Slot pour contenu supplémentaire -->
+      <slot name="additional-content"></slot>
     </div>
 
     <div v-if="hasActions" class="flex justify-between mt-4 w-full">
@@ -71,23 +89,51 @@
       ButtonComponent,
     },
     props: {
-      title: String,
-      subtitle: String,
-      image: String,
-      // titleColor: String, // Supprimé pour utiliser les classes Tailwind
-      showDeleteButton: Boolean,
-      showEditButton: Boolean,
-      hasActions: Boolean,
-      location: String,
-      date: [String, Date],
-      status: String,
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+        default: '',
+      },
+      image: {
+        type: String,
+        default: '',
+      },
+      titleColor: {
+        type: String,
+        default: '',
+      },
+      showDeleteButton: {
+        type: Boolean,
+        default: false,
+      },
+      showEditButton: {
+        type: Boolean,
+        default: false,
+      },
+      hasActions: {
+        type: Boolean,
+        default: false,
+      },
+      location: {
+        type: String,
+        default: '',
+      },
+      date: {
+        type: [String, Date],
+        default: '',
+      },
+      status: {
+        type: String,
+        default: '',
+      },
     },
     computed: {
       formattedDate() {
         if (this.date) {
           return new Date(this.date).toLocaleDateString();
-          // Ou utiliser date-fns pour un formatage plus précis
-          // return format(new Date(this.date), 'dd/MM/yyyy');
         }
         return '';
       },
@@ -130,3 +176,7 @@
     },
   };
 </script>
+
+<style scoped>
+  /* Minimal CSS, almost all handled by Tailwind */
+</style>

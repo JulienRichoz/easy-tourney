@@ -33,6 +33,7 @@
           v-for="field in fields"
           :key="field.id"
           :title="field.name"
+          :description="field.description"
           :subtitle="field.description"
           :hasActions="true"
           :showDeleteButton="true"

@@ -48,7 +48,7 @@
         >
         <router-link
           to="/profile"
-          class="profile-link text-light-profileText dark:text-dark-profileText mr-4"
+          class="profile-link text-light-profileText dark:text-dark-profileText mr-4 hover:text-light-profileHoverText dark:hover:text-dark-profileHoverText"
         >
           <font-awesome-icon :icon="['fas', 'user']" />
         </router-link>

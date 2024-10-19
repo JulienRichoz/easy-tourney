@@ -42,7 +42,7 @@
             >{{ index + 1 }}/{{ fields.length }}</span
           >
         </div>
-        <p>{{ field.description }}</p>
+        <p class="truncate">{{ field.description }}</p>
 
         <!-- FullCalendar pour chaque terrain -->
         <FullCalendar :options="getFieldCalendarOptions(field)" />
