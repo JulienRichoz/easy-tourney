@@ -241,10 +241,16 @@
       },
       handleFileChange(event) {
         const file = event.target.files[0];
-        this.$emit('file-selected', file);
-        // Validate the field after file selection
-        this.validateField({ name: 'image', required: false });
+        if (file) {
+          // Vérifier la taille du fichier (par exemple, limiter à 2MB)
+          const maxSize = 4 * 1024 * 1024; // 2MB
+          if (file.size > maxSize) {
+            this.errors.image = "La taille de l'image ne doit pas dépasser 4MB";
+            return;
+          }
+        }
       },
+
       handleSubmit() {
         // Protéger l'accès à customValidation
         if (this.customValidation) {

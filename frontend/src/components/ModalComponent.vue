@@ -1,8 +1,7 @@
 <template>
   <div
     v-if="isVisible"
-    @keydown.esc="close"
-    class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center"
+    class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center z-50"
   >
     <div
       class="bg-light-modal-content dark:bg-dark-modal-content p-8 rounded-lg w-full max-w-md max-h-screen overflow-y-auto"
@@ -21,7 +20,6 @@
 </template>
 
 <script>
-  import { ref, onMounted } from 'vue';
   export default {
     props: {
       isVisible: {
@@ -33,35 +31,27 @@
         default: '',
       },
     },
-    methods: {
-      close() {
-        this.$emit('close');
+    watch: {
+      isVisible(newVal) {
+        if (newVal) {
+          // Modal ouverte
+          window.dispatchEvent(new Event('modal-open'));
+        } else {
+          // Modal fermée
+          window.dispatchEvent(new Event('modal-close'));
+        }
       },
     },
-    setup() {
-      // Utilisation de ref pour accéder à l'input
-      const myInput = ref(null);
-
-      // Fonction qui donne le focus à l'input
-      const focusInput = () => {
-        if (myInput.value) {
-          myInput.value.focus();
-        }
-      };
-
-      // Donne automatiquement le focus lors du montage du composant
-      onMounted(() => {
-        focusInput();
-      });
-
-      return {
-        myInput,
-        focusInput,
-      };
+    methods: {
+      close() {
+        this.$emit('close'); // Émet un événement pour indiquer au parent de cacher la modal
+      },
     },
   };
 </script>
 
 <style scoped>
-  /* Styles gérés par Tailwind CSS */
+  body.modal-open {
+    overflow: hidden;
+  }
 </style>

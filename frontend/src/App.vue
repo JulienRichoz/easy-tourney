@@ -5,8 +5,8 @@
     class="min-h-screen bg-light-background dark:bg-dark-background text-light-title dark:text-dark-title font-sans antialiased"
   >
     <Menu />
-    <div class="p-0">
-      <router-view></router-view>
+    <div :class="{ 'overflow-hidden max-h-screen': isModalOpen }">
+      <router-view />
     </div>
   </div>
 </template>
@@ -20,6 +20,11 @@
     name: 'App',
     components: {
       Menu,
+    },
+    data() {
+      return {
+        isModalOpen: false,
+      };
     },
     methods: {
       ...mapActions(['logout']),
@@ -63,6 +68,12 @@
         }
         return 5000; // Valeur par défaut
       },
+      handleModalOpen() {
+        document.body.classList.add('modal-open');
+      },
+      handleModalClose() {
+        document.body.classList.remove('modal-open');
+      },
     },
 
     mounted() {
@@ -87,14 +98,27 @@
           }
         }
       );
+
+      // Écoute les événements `modal-open` et `modal-close`
+      window.addEventListener('modal-open', this.handleModalOpen);
+      window.addEventListener('modal-close', this.handleModalClose);
     },
 
     beforeUnmount() {
       clearInterval(this.tokenWatcher); // Nettoyage lors du démontage du composant
+      window.removeEventListener('modal-open', this.handleModalOpen);
+      window.removeEventListener('modal-close', this.handleModalClose);
     },
   };
 </script>
 
-<style>
-  /* Styles gérés par Tailwind CSS */
+<style lang="postcss">
+  body.modal-open {
+    overflow: hidden;
+  }
+  html,
+  body {
+    @apply bg-dark-menu;
+    height: 100%;
+  }
 </style>

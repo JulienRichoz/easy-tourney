@@ -5,11 +5,9 @@
     <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
 
     <!-- Contenu principal -->
-    <div class="flex flex-col gap-8 p-8 md:flex-row md:items-stretch">
-      <div
-        class="flex-1 bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8"
-      >
-        <!-- Rappel des détails du tournoi -->
+    <div class="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-start">
+      <!-- Détails du tournoi -->
+      <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8">
         <h2
           class="text-3xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
         >
@@ -49,7 +47,7 @@
 
       <!-- Carte OpenStreetMap -->
       <div
-        class="flex-1 min-h-[300px] rounded-lg overflow-hidden shadow-lg p-8 sm:h-[50vh] sm:w-full"
+        class="rounded-lg overflow-hidden shadow-lg p-4 sm:h-[50vh] h-[300px]"
       >
         <l-map
           v-if="mapIsReady"
