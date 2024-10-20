@@ -18,34 +18,45 @@
       >
         {{ hardDeleteMessage }}
       </p>
-      <div v-if="isHardDelete" class="mb-4">
-        <label
-          class="block text-light-form-text dark:text-dark-form-text font-semibold mb-2 flex items-center"
-        >
-          Tapez "CONFIRM" pour confirmer
-        </label>
-        <input
-          type="text"
-          v-model="confirmationText"
-          class="w-full p-2 border border-light-form-border-default dark:border-dark-form-border-default rounded-md bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
-          placeholder="CONFIRM"
-        />
-      </div>
-      <div class="flex justify-end space-x-4">
+
+      <!-- Utilisation du FormComponent -->
+      <FormComponent
+        v-if="isHardDelete"
+        v-model="formData"
+        :fields="formFields"
+        :isEditing="false"
+        @form-submit="handleConfirm"
+        @cancel="handleCancel"
+      >
+        <!-- Personnalisation des boutons via un slot nommé -->
+        <template #buttons>
+          <div class="flex justify-end space-x-4">
+            <ButtonComponent
+              variant="secondary"
+              nativeType="button"
+              @click="handleCancel"
+            >
+              Annuler
+            </ButtonComponent>
+            <ButtonComponent
+              :variant="
+                formData.confirmationText === 'CONFIRM' ? 'danger' : 'gray'
+              "
+              nativeType="submit"
+              :disabled="formData.confirmationText !== 'CONFIRM'"
+            >
+              Supprimer
+            </ButtonComponent>
+          </div>
+        </template>
+      </FormComponent>
+
+      <!-- Si ce n'est pas une suppression "hard", afficher les boutons directement -->
+      <div v-else class="flex justify-end space-x-4">
         <ButtonComponent variant="secondary" @click="handleCancel">
           Annuler
         </ButtonComponent>
-        <ButtonComponent
-          :variant="
-            isHardDelete
-              ? confirmationText === 'CONFIRM'
-                ? 'danger'
-                : 'gray'
-              : 'danger'
-          "
-          @click="handleConfirm"
-          :disabled="isHardDelete && confirmationText !== 'CONFIRM'"
-        >
+        <ButtonComponent variant="danger" @click="handleConfirm">
           Supprimer
         </ButtonComponent>
       </div>
@@ -55,10 +66,12 @@
 
 <script>
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import FormComponent from '@/components/FormComponent.vue';
 
   export default {
     components: {
       ButtonComponent,
+      FormComponent,
     },
     props: {
       isVisible: {
@@ -85,23 +98,42 @@
     },
     data() {
       return {
-        confirmationText: '',
+        formData: {
+          confirmationText: '',
+        },
       };
+    },
+    computed: {
+      formFields() {
+        return [
+          {
+            name: 'confirmationText',
+            label: 'Tapez "CONFIRM" pour confirmer',
+            type: 'text',
+            required: true,
+          },
+        ];
+      },
     },
     methods: {
       handleCancel() {
         this.$emit('cancel');
       },
       handleConfirm() {
-        if (!this.isHardDelete || this.confirmationText === 'CONFIRM') {
+        if (
+          !this.isHardDelete ||
+          this.formData.confirmationText === 'CONFIRM'
+        ) {
           this.$emit('confirm');
+          // Réinitialiser le champ après confirmation
+          this.formData.confirmationText = '';
         }
       },
     },
     watch: {
       isVisible(newVal) {
         if (!newVal) {
-          this.confirmationText = '';
+          this.formData.confirmationText = '';
         }
       },
     },

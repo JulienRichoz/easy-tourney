@@ -119,22 +119,26 @@
       </component>
     </div>
 
-    <div class="flex justify-between mt-4">
-      <ButtonComponent
-        variant="secondary"
-        nativeType="button"
-        @click="handleCancel"
-      >
-        Annuler
-      </ButtonComponent>
-      <ButtonComponent
-        :variant="isFormValid ? 'primary' : 'disabled'"
-        nativeType="submit"
-        :disabled="!isFormValid"
-      >
-        {{ isEditing ? 'Modifier' : 'Ajouter' }}
-      </ButtonComponent>
-    </div>
+    <!-- Slot pour les boutons -->
+    <slot name="buttons">
+      <!-- Boutons par défaut -->
+      <div class="flex justify-between mt-4">
+        <ButtonComponent
+          variant="secondary"
+          nativeType="button"
+          @click="handleCancel"
+        >
+          Annuler
+        </ButtonComponent>
+        <ButtonComponent
+          :variant="isFormValid ? 'primary' : 'disabled'"
+          nativeType="submit"
+          :disabled="!isFormValid"
+        >
+          {{ isEditing ? 'Modifier' : 'Ajouter' }}
+        </ButtonComponent>
+      </div>
+    </slot>
   </form>
 </template>
 
