@@ -213,7 +213,7 @@
       },
       handleSubmit() {
         if (this.isFormValid) {
-          this.$emit('submit', this.formData);
+          this.$emit('form-submit', this.formData);
         }
       },
       handleCancel() {

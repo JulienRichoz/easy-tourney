@@ -38,13 +38,18 @@
       :title="
         editingTourneyId ? 'Modifier le Tournoi' : 'Ajouter un Nouveau Tournoi'
       "
-      :isEditing="!!editingTourneyId"
-      :isFormValid="isFormValid"
       @close="closeModal"
-      @submit="handleFormSubmit"
     >
       <template #content>
-        <FormComponent v-model="newTourney" :fields="formFields" />
+        <FormComponent
+          v-model="newTourney"
+          :fields="formFields"
+          :isEditing="!!editingTourneyId"
+          :isFormValid="isFormValid"
+          @form-submit="handleFormSubmit"
+          @cancel="closeModal"
+          @update-validation="updateFormValidation"
+        />
       </template>
     </ModalComponent>
 
@@ -66,6 +71,7 @@
   import FormComponent from '@/components/FormComponent.vue';
   import FilterComponent from '@/components/FilterComponent.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
@@ -187,6 +193,10 @@
       },
     },
     methods: {
+      updateFormValidation(isValid) {
+        this.isFormValid = isValid;
+      },
+
       async fetchTourneys() {
         try {
           const response = await apiService.get('/tourneys');
@@ -260,16 +270,16 @@
               `/tourneys/${this.editingTourneyId}`,
               this.newTourney
             );
+            toast.success('Tournoi modifié avec succès!');
           } else {
             await apiService.post('/tourneys', this.newTourney);
+            toast.success('Nouveau tournoi ajouté avec succès!');
           }
           this.closeModal();
           this.fetchTourneys();
         } catch (error) {
           console.error("Erreur lors de l'enregistrement du tournoi:", error);
-          alert(
-            "Une erreur s'est produite lors de l'enregistrement du tournoi. Veuillez réessayer."
-          );
+          toast.error("Erreur lors de l'enregistrement du tournoi!");
         } finally {
           this.isSaving = false;
         }
@@ -281,10 +291,11 @@
       async deleteTourney(id) {
         try {
           await apiService.delete(`/tourneys/${id}`);
+          toast.success('Tournoi supprimé avec succès!');
           this.closeDeleteConfirmation();
           this.fetchTourneys();
         } catch (error) {
-          console.error('Erreur lors de la suppression du tournoi:', error);
+          toast.error('Erreur lors de la suppression du tournoi!');
         }
       },
       viewTourneyDetails(tourneyId) {

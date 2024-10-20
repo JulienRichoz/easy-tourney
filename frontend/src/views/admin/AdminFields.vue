@@ -104,6 +104,7 @@
   import FormComponent from '@/components/FormComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
+  import TitleComponent from '@/components/TitleComponent.vue';
 
   export default {
     components: {
@@ -114,6 +115,7 @@
       CardAddComponent,
       CardEditComponent,
       FormComponent,
+      TitleComponent,
     },
     data() {
       return {
