@@ -46,6 +46,8 @@
           :fields="formFields"
           :isEditing="!!editingTourneyId"
           :isFormValid="isFormValid"
+          :minDate="'1900-01-01'"
+          :maxDate="'2200-01-01'"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
         />
@@ -100,6 +102,8 @@
         nameError: false,
         locationError: false,
         dateError: false,
+        minDate: null,
+        maxDate: null,
         filterStatus: '',
         filterDate: '',
         isSaving: false,
