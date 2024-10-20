@@ -2,7 +2,7 @@
 
 **EasyTourney** est une application de gestion de tournois sportifs, conçue pour les environnements scolaires et universitaires. Elle permet aux administrateurs de créer et de gérer des tournois, de suivre les matchs, d'assigner des sports à différents terrains, et de gérer les inscriptions des participants automatiquement. L'application est construite avec un système de rôles pour permettre une gestion sécurisée des utilisateurs et des permissions.
 
-![EasyTourney](main.png)
+![EasyTourney](images/main.png)
 
 ## Fonctionnalités
 
@@ -20,6 +20,8 @@
       - appuyer longtemps sur un sport de la liste pour le drag and drop
       - appuyer longtemps sur un sport dans un terrain pour le déplacer / modifier horaire
       - appuyer longtemps sur la croix d'un sport sur le terrain pour le supprimer (le sport doit être déselectionné
+   
+  ![EasyTourneyDarkMode](images/darkMode.png)
     
 
 ## Installation
