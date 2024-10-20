@@ -20,7 +20,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://192.168.1.42:8080'], // Ajouter l'IP locale de ton réseau
+  origin: ['http://localhost:8080', 'http://192.168.1.42:8080', '*'],
   credentials: true // gestion cookie authentification
 }));
 app.use(express.json());
@@ -45,5 +45,7 @@ const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
+    console.log('API URL:', process.env.VUE_APP_API_URL);
+
   });
 });

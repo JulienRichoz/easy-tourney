@@ -39,3 +39,4 @@ app.use(Vue3Toastify, {
 app.component('font-awesome-icon', FontAwesomeIcon)
 
 app.mount('#app');
+console.log(process.env.VUE_APP_API_URL);
