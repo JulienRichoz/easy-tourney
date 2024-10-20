@@ -1,9 +1,18 @@
 <template>
   <div class="p-6">
-    <div class="flex items-center justify-between mb-8">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
+    >
+      <!-- Titre -->
       <TitleComponent title="Gestion des Tournois" />
-      <!-- Filtres des tournois -->
-      <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
+
+      <!-- Filtres avec icônes pour mobile -->
+      <div class="flex flex-wrap items-center gap-4 sm:gap-8 mt-4 sm:mt-0">
+        <FilterComponent
+          :filters="filters"
+          @filter-change="handleFilterChange"
+        />
+      </div>
     </div>
 
     <!-- Grille des tournois -->
@@ -32,6 +41,7 @@
         @edit="editTourney(tourney)"
       />
     </div>
+
     <!-- Modale pour ajouter/modifier un tournoi -->
     <ModalComponent
       :isVisible="showModal"

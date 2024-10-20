@@ -12,6 +12,7 @@ import {
     faQuestionCircle,
     faMapMarkerAlt,
     faCalendarAlt,
+    faCalendar,
     faSun,
     faMoon,
     faUser,
@@ -20,12 +21,13 @@ import {
     faInfoCircle,
     faMap,
     faFutbol,
+    faFilter,
 } from '@fortawesome/free-solid-svg-icons'
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
 
 // Ajouter les icônes supplémentaires
-library.add(faQuestionCircle, faMapMarkerAlt, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt, faInfoCircle, faMap, faFutbol,)
+library.add(faQuestionCircle, faMapMarkerAlt, faCalendar, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt, faInfoCircle, faMap, faFutbol, faFilter)
 
 const app = createApp(App);
 

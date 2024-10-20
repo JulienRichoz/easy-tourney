@@ -6,18 +6,31 @@
       :key="filter.label"
       class="flex items-center"
     >
+      <!-- Icônes pour les filtres sur mobile -->
+      <font-awesome-icon
+        v-if="filter.label === 'Filtrer par statut'"
+        :icon="['fas', 'filter']"
+        class="block sm:hidden mr-2"
+      />
+      <font-awesome-icon
+        v-if="filter.label === 'Filtrer par date'"
+        :icon="['fas', 'calendar']"
+        class="block sm:hidden mr-2"
+      />
+
+      <!-- Label pour les filtres sur écran plus grand -->
       <span
-        class="text-light-form-text dark:text-dark-form-text font-semibold mr-2"
-        >{{ filter.label }}:</span
+        class="hidden sm:inline text-light-form-text dark:text-dark-form-text font-semibold mr-2"
       >
+        {{ filter.label }}:
+      </span>
+
       <div class="relative inline-block">
         <select
           v-model="filter.value"
           @change="onFilterChange(filter)"
           class="bg-light-form-background dark:bg-dark-form-background p-2 pr-8 border border-light-form-border-default dark:border-dark-form-border-default rounded-md shadow-sm hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-light-form-text dark:text-dark-form-text"
         >
-          <!-- Champ par défaut si spécifié -->
-
           <option
             v-for="option in filter.options"
             :key="option.value"
@@ -50,6 +63,7 @@
     </div>
   </div>
 </template>
+
 <script>
   export default {
     props: {
