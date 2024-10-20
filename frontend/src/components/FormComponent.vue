@@ -1,3 +1,4 @@
+<!-- FormComponent.vue -->
 <template>
   <form @submit.prevent="handleSubmit">
     <div v-for="field in fields" :key="field.name" class="mb-4">
@@ -162,6 +163,11 @@
         type: Boolean,
         default: false,
       },
+      customValidation: {
+        type: Function,
+        required: false,
+        default: null,
+      },
     },
     data() {
       return {
@@ -199,6 +205,14 @@
       validateField(field) {
         if (field.required && !this.formData[field.name]) {
           this.errors[field.name] = 'Ce champ est obligatoire';
+        } else if (this.customValidation) {
+          // Appelle la fonction customValidation et récupère les erreurs
+          const customErrors = this.customValidation();
+          if (customErrors && customErrors[field.name]) {
+            this.errors[field.name] = customErrors[field.name];
+          } else {
+            delete this.errors[field.name];
+          }
         } else {
           delete this.errors[field.name];
         }
@@ -216,6 +230,18 @@
         this.validateField({ name: 'image', required: false });
       },
       handleSubmit() {
+        // Protéger l'accès à customValidation
+        if (this.customValidation) {
+          const customErrors = this.customValidation() || {};
+
+          // S'assurer que customErrors est bien un objet
+          if (Object.keys(customErrors).length > 0) {
+            this.errors = customErrors;
+            return; // Stopper si des erreurs sont présentes
+          }
+        }
+
+        // Continuer si le formulaire est valide
         if (this.isFormValid) {
           this.$emit('form-submit', this.formData);
         }

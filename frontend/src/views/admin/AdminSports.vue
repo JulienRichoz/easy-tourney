@@ -1,3 +1,4 @@
+<!-- Gestion des Sports -->
 <template>
   <div class="p-6">
     <div class="flex items-center mb-8">
@@ -39,11 +40,10 @@
           v-model="newSport"
           :fields="formFields"
           :isEditing="!!editingSportId"
-          :external-errors="formErrors"
           @file-selected="handleFileUpload"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
-          @update-validation="updateFormValidation"
+          :customValidation="validateForm"
         />
       </template>
     </ModalComponent>
@@ -144,18 +144,19 @@
     methods: {
       validateForm() {
         const { name, rule } = this.newSport;
+        const trimmedName = name.trim(); // Supprime les espaces en début et fin
 
         // Initialiser les erreurs
         const errors = {};
 
         // Vérifier si le nom est vide
-        if (!name) {
+        if (!trimmedName) {
           errors.name = 'Le nom du sport est obligatoire.';
         } else {
-          // Vérifier l'unicité du nom (en excluant le sport en cours d'édition)
+          // Vérifier l'unicité du nom en ignorant les espaces
           const nameExists = this.sports.some(
             (sport) =>
-              sport.name.toLowerCase() === name.toLowerCase() &&
+              sport.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
               sport.id !== this.editingSportId
           );
           if (nameExists) {
@@ -173,10 +174,8 @@
 
         // Mettre à jour la validité du formulaire
         this.isFormValid = Object.keys(errors).length === 0;
-      },
-
-      updateFormValidation(isValid) {
-        this.isFormValid = isValid && Object.keys(this.formErrors).length === 0;
+        // Retourner l'objet errors, même s'il est vide
+        return errors;
       },
 
       getImageUrl(imagePath) {
