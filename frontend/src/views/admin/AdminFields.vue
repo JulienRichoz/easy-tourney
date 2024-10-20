@@ -75,8 +75,8 @@
             :fields="multipleFieldsFormFields"
             :isFormValid="multipleFieldsData.numberOfFields > 0"
             :isEditing="!!editingFieldId"
-            @form-submit="handleFormSubmit"
-            @cancel="closeModal"
+            @form-submit="handleMultipleFieldsSubmit"
+            @cancel="closeMultipleFieldsModal"
           />
         </template>
       </ModalComponent>
@@ -249,6 +249,14 @@
         this.isSubmitting = true;
 
         try {
+          const numberOfFields = this.multipleFieldsData.numberOfFields;
+
+          if (numberOfFields < 1) {
+            toast.error(
+              'Veuillez entrer un nombre valide de terrains à ajouter.'
+            );
+            return;
+          }
           for (let i = 1; i <= this.multipleFieldsData.numberOfFields; i++) {
             const newField = {
               name: `Terrain ${i}`,
