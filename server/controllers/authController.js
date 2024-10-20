@@ -4,6 +4,7 @@ const { User } = require('../models');
 const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
 
+
 // Inscription
 exports.register = async (req, res) => {
     const { name, email, password, roleId } = req.body;

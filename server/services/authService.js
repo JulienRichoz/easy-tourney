@@ -2,7 +2,7 @@
 // Purpose: Implement the authentication service functions. 
 // This file contains functions for generating a JWT token, comparing passwords, hashing passwords, checking permissions based on roles, and checking if a user is authenticated.
 
-const bcrypt = require('bcryptjs');
+const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 const { jwtDecode } = require('jwt-decode');
 
@@ -18,12 +18,17 @@ exports.generateToken = (user) => {
 
 // Fonction pour comparer les mots de passe
 exports.comparePassword = async (plainPassword, hashedPassword) => {
-    return await bcrypt.compare(plainPassword, hashedPassword);
+    try {
+        return await argon2.verify(hashedPassword, plainPassword);
+    } catch (error) {
+        console.error('Erreur lors de la vérification du mot de passe:', error);
+        return false;  // Retourne `false` en cas d'échec
+    }
 };
 
 // Fonction pour hasher un mot de passe
 exports.hashPassword = async (plainPassword) => {
-    return await bcrypt.hash(plainPassword, 10);
+    return await argon2.hash(plainPassword);
 };
 
 // Vérifier les permissions basées sur le rôle
