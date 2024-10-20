@@ -50,13 +50,16 @@
         :title="
           editingFieldId ? 'Modifier le Terrain' : 'Ajouter un Nouveau Terrain'
         "
-        :isEditing="!!editingFieldId"
-        :isFormValid="isFormValid"
         @close="closeModal"
-        @submit="handleFormSubmit"
       >
         <template #content>
-          <FormComponent v-model="newField" :fields="formFields" />
+          <FormComponent
+            v-model="newField"
+            :fields="formFields"
+            :isEditing="!!editingFieldId"
+            @form-submit="handleFormSubmit"
+            @cancel="closeModal"
+          />
         </template>
       </ModalComponent>
 
@@ -65,13 +68,15 @@
         :isVisible="showMultipleFieldsModal"
         title="Ajouter plusieurs terrains"
         @close="closeMultipleFieldsModal"
-        @submit="handleMultipleFieldsSubmit"
-        :isFormValid="multipleFieldsData.numberOfFields > 0"
       >
         <template #content>
           <FormComponent
             v-model="multipleFieldsData"
             :fields="multipleFieldsFormFields"
+            :isFormValid="multipleFieldsData.numberOfFields > 0"
+            :isEditing="!!editingFieldId"
+            @form-submit="handleFormSubmit"
+            @cancel="closeModal"
           />
         </template>
       </ModalComponent>
@@ -105,6 +110,7 @@
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
@@ -196,10 +202,11 @@
 
         try {
           await apiService.delete(`/fields/tourneys/${this.tourneyId}/all`);
+          toast.success('Tous les terrains ont été supprimés avec succès!');
           this.fetchFieldDetails();
           this.closeDeleteAllFieldsModal();
         } catch (error) {
-          console.error(
+          toast.error(
             'Erreur lors de la suppression de tous les terrains:',
             error
           );
@@ -221,10 +228,11 @@
 
         try {
           await apiService.delete(`/fields/${id}`);
+          toast.success('Terrain supprimé avec succès!');
           this.fetchFieldDetails();
           this.closeDeleteConfirmation();
         } catch (error) {
-          console.error('Erreur lors de la suppression du terrain:', error);
+          toast.error('Erreur lors de la suppression du terrain!');
         } finally {
           this.isDeleting = false;
         }
@@ -276,13 +284,14 @@
       validateForm() {
         this.isFormValid = !!this.newField.name;
       },
+
       handleFormSubmit() {
-        if (!this.isFormValid) {
-          return;
-        }
+        this.validateForm();
+        if (!this.isFormValid) return;
         this.isSubmitting = true;
         this.saveField();
       },
+
       async saveField() {
         try {
           if (this.editingFieldId) {
@@ -290,13 +299,15 @@
               `/fields/${this.editingFieldId}`,
               this.newField
             );
+            toast.success('Terrain modifié avec succès!');
           } else {
             await apiService.post(`/fields`, this.newField);
+            toast.success('Nouveau terrain ajouté avec succès!');
           }
           this.closeModal();
           this.fetchFieldDetails();
         } catch (error) {
-          console.error('Erreur lors de la sauvegarde du terrain:', error);
+          toast.error("Erreur lors de l'enregistrement du terrain!");
         } finally {
           this.isSubmitting = false;
         }

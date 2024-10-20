@@ -42,7 +42,6 @@
           @file-selected="handleFileUpload"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
-          @update-validation="updateFormValidation"
         />
       </template>
     </ModalComponent>
@@ -142,10 +141,6 @@
       validateForm() {
         const { name, rule } = this.newSport;
         this.isFormValid = !!name && !!rule;
-      },
-
-      updateFormValidation(isValid) {
-        this.isFormValid = isValid;
       },
 
       getImageUrl(imagePath) {

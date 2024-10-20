@@ -48,7 +48,6 @@
           :isFormValid="isFormValid"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
-          @update-validation="updateFormValidation"
         />
       </template>
     </ModalComponent>
@@ -193,10 +192,6 @@
       },
     },
     methods: {
-      updateFormValidation(isValid) {
-        this.isFormValid = isValid;
-      },
-
       async fetchTourneys() {
         try {
           const response = await apiService.get('/tourneys');
