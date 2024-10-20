@@ -9,7 +9,8 @@
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyDetails' }"
     >
-      <i class="fas fa-info-circle"></i>
+      <font-awesome-icon :icon="['fas', 'info-circle']" />
+
       <span class="hidden sm:inline"> Détails</span>
     </router-link>
     <router-link
@@ -17,7 +18,7 @@
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'AdminFields' }"
     >
-      <i class="fas fa-map"></i>
+      <font-awesome-icon :icon="['fas', 'map']" />
       <span class="hidden sm:inline"> Terrains</span>
     </router-link>
     <router-link
@@ -25,7 +26,7 @@
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'SportsFields' }"
     >
-      <i class="fas fa-futbol"></i>
+      <font-awesome-icon :icon="['fas', 'futbol']" />
       <span class="hidden sm:inline"> Assignation</span>
     </router-link>
     <router-link
@@ -33,7 +34,7 @@
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyTeams' }"
     >
-      <i class="fas fa-users"></i>
+      <font-awesome-icon :icon="['fas', 'user']" />
       <span class="hidden sm:inline"> Groupes</span>
     </router-link>
     <router-link
@@ -41,7 +42,7 @@
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'TourneyPlanning' }"
     >
-      <i class="fas fa-calendar-alt"></i>
+      <font-awesome-icon :icon="['fas', 'calendar-alt']" />
       <span class="hidden sm:inline"> Planning</span>
     </router-link>
   </div>
