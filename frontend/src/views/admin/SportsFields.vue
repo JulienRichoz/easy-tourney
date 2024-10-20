@@ -23,15 +23,12 @@
     </div>
 
     <!-- Grille des terrains avec le calendrier FullCalendar -->
-    <div
-      class="fields-grid grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 justify-center"
-      :class="gridColumnsClass"
-    >
+    <div class="grid gap-4 justify-items-stretch" :class="gridClasses">
       <div
         v-for="(field, index) in fields"
         :key="field.id"
         :data-field-id="field.id"
-        class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 me-4 ms-4"
+        class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 w-full"
       >
         <!-- Nom du terrain avec le numéro -->
         <div class="flex justify-between items-center">
@@ -79,19 +76,25 @@
       this.initializeExternalEvents();
     },
     computed: {
-      gridColumnsClass() {
+      gridClasses() {
         const fieldCount = this.fields.length;
-        if (fieldCount === 1) {
-          return 'grid-cols-1';
-        } else if (fieldCount === 2) {
-          return 'grid-cols-1 md:grid-cols-2';
-        } else if (fieldCount === 3) {
-          return 'grid-cols-1 md:grid-cols-3 lg:grid-cols-3';
-        } else if (fieldCount === 4) {
-          return 'grid-cols-1 md:grid-cols-4 lg:grid-cols-4';
-        } else {
-          return 'grid-cols-1 md:grid-cols-4 lg:grid-cols-5';
-        }
+
+        // Assurez-vous que toutes les classes utilisées sont présentes dans le code pour que Tailwind puisse les générer
+        const baseClasses = 'grid-cols-1';
+        const smClasses = 'sm:grid-cols-1';
+        const mdClasses = fieldCount >= 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';
+        const lgClasses = fieldCount >= 3 ? 'lg:grid-cols-3' : '';
+        const xlClasses = fieldCount >= 4 ? 'xl:grid-cols-4' : '';
+        const xxlClasses = fieldCount >= 5 ? '2xl:grid-cols-5' : '';
+
+        return [
+          baseClasses,
+          smClasses,
+          mdClasses,
+          lgClasses,
+          xlClasses,
+          xxlClasses,
+        ].join(' ');
       },
     },
     methods: {
