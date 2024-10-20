@@ -2,7 +2,6 @@ import { permissions, roles } from './permissions';
 import apiService from './apiService';
 import store from '../store';
 import { jwtDecode } from 'jwt-decode';
-import router from '../router';
 
 // Vérifie si l'utilisateur a une permission spécifique
 export function hasPermission(userRole, permission) {
@@ -28,7 +27,7 @@ export const logout = () => {
     store.commit('LOGOUT');
 
     // Rediriger vers la page de login
-    router.push({ name: 'Login' });
+    //router.push({ name: 'Login' });
 };
 
 export const isTokenExpired = () => {

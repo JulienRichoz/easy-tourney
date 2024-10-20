@@ -160,7 +160,7 @@ router.beforeEach(async (to, from, next) => {
   // Vérifier si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!token) {
-      store.commit('LOGOUT');
+      store.dispatch('logout')
       return next('/login'); // Rediriger vers la page de login si non authentifié
     } else {
       try {
@@ -186,7 +186,7 @@ router.beforeEach(async (to, from, next) => {
         return next(); // Continuer vers la route demandée
       } catch (error) {
         console.error('Erreur lors du rafraîchissement du token :', error);
-        store.commit('LOGOUT');
+        store.dispatch('logout');
         return next('/login');
       }
     }
