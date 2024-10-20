@@ -123,6 +123,14 @@ exports.updateSport = async (req, res) => {
     }
 };
 
+// Liste des images à protéger (à ne pas supprimer)
+const protectedImages = [
+    'badminton.png',
+    'basketball.jpg',
+    'football.jpg',
+    'ultimate.jpeg',
+    'volleyball.jpeg',
+];
 // Supprimer un sport
 exports.deleteSport = async (req, res) => {
     try {
@@ -131,13 +139,20 @@ exports.deleteSport = async (req, res) => {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }
 
-        // Supprimer l'image associée si ce n'est pas l'image par défaut
+        // Supprimer l'image associée si ce n'est pas l'image par défaut et si ce n'est pas une image protégée
         if (sport.image !== '/public/images/default-sport.png') {
-            fs.unlink(path.join(__dirname, '../', sport.image), (err) => {
-                if (err) {
-                    console.error("Erreur lors de la suppression de l'image :", err);
-                }
-            });
+            const imageName = path.basename(sport.image); // Récupérer juste le nom du fichier
+            const isProtected = protectedImages.includes(imageName); // Vérifier si l'image est protégée
+
+            if (!isProtected) {
+                fs.unlink(path.join(__dirname, '../', sport.image), (err) => {
+                    if (err) {
+                        console.error("Erreur lors de la suppression de l'image :", err);
+                    }
+                });
+            } else {
+                console.log(`L'image ${imageName} est protégée et ne sera pas supprimée.`);
+            }
         }
 
         await sport.destroy();
@@ -147,6 +162,5 @@ exports.deleteSport = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la suppression du sport' });
     }
 };
-
 // Exporter multer pour les routes
 exports.upload = upload.single('image');
