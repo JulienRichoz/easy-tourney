@@ -8,7 +8,6 @@
     >
       <slot name="header">
         <h2
-          ref="myInput"
           class="text-2xl font-bold mb-4 text-light-title dark:text-dark-title"
         >
           {{ title }}
