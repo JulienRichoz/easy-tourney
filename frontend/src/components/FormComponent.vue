@@ -163,6 +163,14 @@
         type: Boolean,
         default: false,
       },
+      minDate: {
+        type: String, // Format de date 'YYYY-MM-DD' ou autre
+        required: false,
+      },
+      maxDate: {
+        type: String,
+        required: false,
+      },
       customValidation: {
         type: Function,
         required: false,
@@ -205,11 +213,19 @@
       validateField(field) {
         if (field.required && !this.formData[field.name]) {
           this.errors[field.name] = 'Ce champ est obligatoire';
-        } else if (this.customValidation) {
-          // Appelle la fonction customValidation et récupère les erreurs
-          const customErrors = this.customValidation();
-          if (customErrors && customErrors[field.name]) {
-            this.errors[field.name] = customErrors[field.name];
+        } else if (field.type === 'date') {
+          const dateValue = new Date(this.formData[field.name]);
+          const minDate = this.minDate ? new Date(this.minDate) : null;
+          const maxDate = this.maxDate ? new Date(this.maxDate) : null;
+
+          if (minDate && dateValue < minDate) {
+            this.errors[
+              field.name
+            ] = `La date doit être après le ${this.minDate}`;
+          } else if (maxDate && dateValue > maxDate) {
+            this.errors[
+              field.name
+            ] = `La date doit être avant le ${this.maxDate}`;
           } else {
             delete this.errors[field.name];
           }
