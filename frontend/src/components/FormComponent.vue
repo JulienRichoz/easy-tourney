@@ -93,6 +93,7 @@
             type="file"
             :id="field.name"
             @change="handleFileChange"
+            accept="image/*"
             class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
           />
 
@@ -242,11 +243,15 @@
       handleFileChange(event) {
         const file = event.target.files[0];
         if (file) {
-          // Vérifier la taille du fichier (par exemple, limiter à 2MB)
-          const maxSize = 4 * 1024 * 1024; // 2MB
+          const maxSize = 10 * 1024 * 1024; // 10MB
           if (file.size > maxSize) {
-            this.errors.image = "La taille de l'image ne doit pas dépasser 4MB";
+            this.errors.image =
+              "La taille de l'image ne doit pas dépasser 10MB";
             return;
+          } else {
+            delete this.errors.image;
+            this.formData.image = file; // Mettre à jour le modèle de données
+            this.$emit('file-selected', file); // Émettre l'événement
           }
         }
       },

@@ -17,16 +17,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // Limite à 2 Mo
+    limits: { fileSize: 10 * 1024 * 1024 }, // Limite à 10 Mo
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Format de fichier non supporté. Veuillez télécharger un fichier JPG ou PNG.'), false);
+            cb(new Error('Format de fichier non supporté. Veuillez télécharger une image au format JPG, PNG, GIF ou WEBP.'), false);
         }
     }
 });
+
 
 // Créer un sport
 exports.createSport = async (req, res) => {

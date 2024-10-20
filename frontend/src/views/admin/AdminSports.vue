@@ -248,19 +248,22 @@
         formData.append('scoreSystem', this.newSport.scoreSystem);
         formData.append('color', this.newSport.color);
 
-        if (this.selectedFile) {
-          formData.append('image', this.selectedFile);
+        if (this.newSport.image instanceof File) {
+          formData.append('image', this.newSport.image);
         } else if (this.newSport.image) {
+          // Si l'image est déjà une URL ou un nom de fichier
           formData.append('image', this.getFileName(this.newSport.image));
         }
 
         try {
           if (this.editingSportId) {
+            // Requête PUT pour mettre à jour le sport existant
             await apiService.put(`/sports/${this.editingSportId}`, formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Sport modifié avec succès!');
           } else {
+            // Requête POST pour créer un nouveau sport
             await apiService.post('/sports', formData, {
               headers: { 'Content-Type': 'multipart/form-data' },
             });
@@ -269,6 +272,7 @@
           this.closeModal();
           this.fetchSports();
         } catch (error) {
+          console.error("Erreur lors de l'enregistrement du sport :", error);
           toast.error("Erreur lors de l'enregistrement du sport!");
         }
       },
