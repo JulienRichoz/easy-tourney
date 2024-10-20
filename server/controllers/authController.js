@@ -45,13 +45,13 @@ exports.login = async (req, res) => {
         const user = await User.findOne({ where: { email } });
 
         if (!user) {
-            return res.status(400).json({ message: 'Utilisateur non trouvé' });
+            return res.status(401).json({ message: 'Utilisateur non trouvé' });
         }
 
         const isMatch = await authService.comparePassword(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).json({ message: 'Mot de passe incorrect' });
+            return res.status(401).json({ message: 'Mot de passe incorrect' });
         }
 
         const token = authService.generateToken(user);
