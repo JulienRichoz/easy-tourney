@@ -59,6 +59,7 @@
             :isEditing="!!editingFieldId"
             @form-submit="handleFormSubmit"
             @cancel="closeModal"
+            @update-validation="updateFormValidation"
           />
         </template>
       </ModalComponent>
@@ -73,10 +74,10 @@
           <FormComponent
             v-model="multipleFieldsData"
             :fields="multipleFieldsFormFields"
-            :isFormValid="multipleFieldsData.numberOfFields > 0"
-            :isEditing="!!editingFieldId"
-            @form-submit="handleFormSubmit"
-            @cancel="closeModal"
+            :isEditing="false"
+            @form-submit="handleMultipleFieldsSubmit"
+            @cancel="closeMultipleFieldsModal"
+            @update-validation="updateMultipleFieldsFormValidation"
           />
         </template>
       </ModalComponent>
@@ -145,6 +146,7 @@
         isSubmitting: false,
         isDeleting: false,
         isFormValid: false,
+        isMultipleFieldsFormValid: false,
       };
     },
     computed: {
@@ -239,17 +241,25 @@
       },
       openAddMultipleFieldsModal() {
         this.multipleFieldsData.numberOfFields = 1;
+        this.isMultipleFieldsFormValid = false;
         this.showMultipleFieldsModal = true;
       },
       closeMultipleFieldsModal() {
         this.showMultipleFieldsModal = false;
+        this.isSubmitting = false;
+        this.multipleFieldsData = { numberOfFields: 1 };
       },
       async handleMultipleFieldsSubmit() {
+        if (!this.isMultipleFieldsFormValid) return;
         if (this.isSubmitting) return;
         this.isSubmitting = true;
 
         try {
-          for (let i = 1; i <= this.multipleFieldsData.numberOfFields; i++) {
+          const numberOfFields = parseInt(
+            this.multipleFieldsData.numberOfFields,
+            10
+          );
+          for (let i = 1; i <= numberOfFields; i++) {
             const newField = {
               name: `Terrain ${i}`,
               description: '',
@@ -259,8 +269,10 @@
           }
           this.fetchFieldDetails();
           this.closeMultipleFieldsModal();
+          toast.success(`${numberOfFields} terrains ajoutés avec succès!`);
         } catch (error) {
           console.error('Erreur lors de la création des terrains:', error);
+          toast.error('Erreur lors de la création des terrains');
         } finally {
           this.isSubmitting = false;
         }
@@ -281,17 +293,17 @@
         this.isFormValid = true;
         this.showModal = true;
       },
-      validateForm() {
-        this.isFormValid = !!this.newField.name;
+      updateFormValidation(isValid) {
+        this.isFormValid = isValid;
       },
-
+      updateMultipleFieldsFormValidation(isValid) {
+        this.isMultipleFieldsFormValid = isValid;
+      },
       handleFormSubmit() {
-        this.validateForm();
         if (!this.isFormValid) return;
         this.isSubmitting = true;
         this.saveField();
       },
-
       async saveField() {
         try {
           if (this.editingFieldId) {
@@ -315,14 +327,6 @@
       closeModal() {
         this.showModal = false;
         this.isSubmitting = false;
-      },
-    },
-    watch: {
-      newField: {
-        handler() {
-          this.validateForm();
-        },
-        deep: true,
       },
     },
     mounted() {

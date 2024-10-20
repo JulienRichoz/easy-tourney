@@ -39,9 +39,11 @@
           v-model="newSport"
           :fields="formFields"
           :isEditing="!!editingSportId"
+          :external-errors="formErrors"
           @file-selected="handleFileUpload"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
+          @update-validation="updateFormValidation"
         />
       </template>
     </ModalComponent>
@@ -65,6 +67,7 @@
   import FormComponent from '@/components/FormComponent.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
   import { toast } from 'vue3-toastify';
+  import 'vue3-toastify/dist/index.css';
 
   export default {
     components: {
@@ -92,6 +95,7 @@
         editingSportId: null,
         selectedFile: null,
         isFormValid: false,
+        formErrors: {}, // Ajout de cette propriété pour les erreurs du formulaire
       };
     },
     computed: {
@@ -140,7 +144,39 @@
     methods: {
       validateForm() {
         const { name, rule } = this.newSport;
-        this.isFormValid = !!name && !!rule;
+
+        // Initialiser les erreurs
+        const errors = {};
+
+        // Vérifier si le nom est vide
+        if (!name) {
+          errors.name = 'Le nom du sport est obligatoire.';
+        } else {
+          // Vérifier l'unicité du nom (en excluant le sport en cours d'édition)
+          const nameExists = this.sports.some(
+            (sport) =>
+              sport.name.toLowerCase() === name.toLowerCase() &&
+              sport.id !== this.editingSportId
+          );
+          if (nameExists) {
+            errors.name = 'Un sport avec ce nom existe déjà.';
+          }
+        }
+
+        // Vérifier si les règles sont vides
+        if (!rule) {
+          errors.rule = 'Les règles du sport sont obligatoires.';
+        }
+
+        // Mettre à jour les erreurs du formulaire
+        this.formErrors = errors;
+
+        // Mettre à jour la validité du formulaire
+        this.isFormValid = Object.keys(errors).length === 0;
+      },
+
+      updateFormValidation(isValid) {
+        this.isFormValid = isValid && Object.keys(this.formErrors).length === 0;
       },
 
       getImageUrl(imagePath) {
@@ -191,6 +227,7 @@
         };
         this.selectedFile = null;
         this.isFormValid = false;
+        this.formErrors = {};
         this.showModal = true;
       },
 
@@ -199,6 +236,7 @@
         this.newSport = { ...sport };
         this.selectedFile = null;
         this.isFormValid = true;
+        this.formErrors = {};
         this.showModal = true;
       },
 

@@ -222,10 +222,11 @@
         this.showModal = true;
       },
       editTourney(tourney) {
+        console.log('Click edit tourney');
         this.editingTourneyId = tourney.id;
         this.newTourney = { ...tourney };
-        this.isFormValid = false;
         this.showModal = true;
+        this.isFormValid = false;
       },
       handleFormSubmit() {
         if (!this.isFormValid) {
