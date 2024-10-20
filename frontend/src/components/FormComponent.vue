@@ -174,6 +174,22 @@
           this.$emit('update:modelValue', value);
         },
       },
+      isFormValid() {
+        // Check if there are any errors and all required fields are filled
+        return (
+          Object.keys(this.errors).length === 0 &&
+          this.fields.every(
+            (field) =>
+              !field.required ||
+              (this.formData[field.name] && this.formData[field.name] !== '')
+          )
+        );
+      },
+    },
+    watch: {
+      isFormValid(newVal) {
+        this.$emit('update-validation', newVal);
+      },
     },
     methods: {
       validateField(field) {
@@ -182,20 +198,21 @@
         } else {
           delete this.errors[field.name];
         }
+        // Emit validation update
+        this.$emit('update-validation', this.isFormValid);
       },
       toggleTooltip(fieldName) {
-        if (this.visibleTooltip === fieldName) {
-          this.visibleTooltip = null;
-        } else {
-          this.visibleTooltip = fieldName;
-        }
+        this.visibleTooltip =
+          this.visibleTooltip === fieldName ? null : fieldName;
       },
       handleFileChange(event) {
         const file = event.target.files[0];
         this.$emit('file-selected', file);
+        // Validate the field after file selection
+        this.validateField({ name: 'image', required: false });
       },
       handleSubmit() {
-        if (Object.keys(this.errors).length === 0) {
+        if (this.isFormValid) {
           this.$emit('submit', this.formData);
         }
       },
