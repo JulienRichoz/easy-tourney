@@ -17,6 +17,7 @@ module.exports = {
           card: '#ffffff',
           menu: '#1f2937', // bg-gray-800
           menuText: '#ffffff',
+          menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
           profileText: '#38a169', // green-400
           profileHoverText: '#2f855a', // green-700
@@ -81,6 +82,7 @@ module.exports = {
           card: '#1f2937', // bg-custom_dark_1
           menu: '#1f2937', // bg-gray-800
           menuText: '#ffffff',
+          menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
           profileText: '#38a169', // green-400
           profileHoverText: '#2f855a', // green-700

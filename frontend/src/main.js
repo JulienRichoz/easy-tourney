@@ -25,6 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
+import './registerServiceWorker'
 
 // Ajouter les icônes supplémentaires
 library.add(faQuestionCircle, faMapMarkerAlt, faCalendar, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt, faInfoCircle, faMap, faFutbol, faFilter)

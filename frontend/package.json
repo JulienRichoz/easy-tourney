@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --port 8080 --host localhost",
-    "home": "vue-cli-service serve --mode home --port 8080 --host 0.0.0.0",
-    "dev": "npm run serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "dev": "npm run serve",
+    "home": "vue-cli-service serve --mode home --port 8080 --host 0.0.0.0"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
@@ -25,6 +25,7 @@
     "core-js": "^3.38.1",
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
+    "register-service-worker": "^1.7.2",
     "sortablejs": "^1.15.3",
     "sortablejs-vue3": "^1.2.11",
     "vue": "^3.5.12",
@@ -41,6 +42,7 @@
     "@babel/preset-env": "^7.25.8",
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-plugin-pwa": "~5.0.0",
     "@vue/cli-service": "~5.0.8",
     "autoprefixer": "^10.4.20",
     "eslint": "^7.32.0",
@@ -67,5 +69,6 @@
     "last 2 versions",
     "not dead",
     "not ie 11"
-  ]
+  ],
+  "packageManager": "pnpm@9.12.0+sha512.4abf725084d7bcbafbd728bfc7bee61f2f791f977fd87542b3579dcb23504d170d46337945e4c66485cd12d588a0c0e570ed9c477e7ccdd8507cf05f3f92eaca"
 }
