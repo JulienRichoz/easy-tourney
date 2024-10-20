@@ -188,7 +188,6 @@
       },
 
       renderEventContent(arg) {
-        console.log('arg.event:', arg.event);
         // Créer l'icône de suppression
         const deleteIcon = document.createElement('span');
         deleteIcon.innerHTML = '&#10060;'; // Icône de croix
@@ -240,7 +239,6 @@
 
         const timeRange = document.createElement('div');
         timeRange.innerText = `${startTime} - ${endTime}`;
-        console.log('RenderEventContent ', endTime);
         timeRange.classList.add('text-sm', 'text-white');
 
         // Créer le conteneur principal
@@ -257,9 +255,6 @@
         try {
           // Récupérer l'ID du sport depuis l'élément draggué
           const sportId = info.draggedEl.getAttribute('data-id');
-
-          console.log('Sport reçu avec ID:', sportId);
-          console.log('Terrain associé ID:', fieldId);
 
           // Vérifier que les IDs sont valides
           if (!fieldId || !sportId) {
@@ -301,7 +296,6 @@
           }
 
           // Vérifier si event.end est défini, sinon le définir
-          console.log('event.end: ', event.end);
           if (!event.end) {
             const startDate = new Date(event.start);
             const endDate = new Date(startDate);

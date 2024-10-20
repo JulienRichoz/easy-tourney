@@ -43,7 +43,4 @@ app.use(Vue3Toastify, {
     autoClose: 1000,
 });
 
-
-
 app.mount('#app');
-console.log(process.env.VUE_APP_API_URL);

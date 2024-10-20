@@ -236,7 +236,6 @@
         this.showModal = true;
       },
       editTourney(tourney) {
-        console.log('Click edit tourney');
         this.editingTourneyId = tourney.id;
         this.newTourney = { ...tourney };
         this.showModal = true;

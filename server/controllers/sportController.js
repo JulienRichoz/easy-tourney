@@ -86,7 +86,6 @@ exports.getSportById = async (req, res) => {
 // Mettre à jour un sport
 exports.updateSport = async (req, res) => {
     try {
-        console.log(" Server- try Update sport: ", req.body)
         const sport = await Sport.findByPk(req.params.id);
         if (!sport) {
             return res.status(404).json({ message: 'Sport non trouvé' });
@@ -94,7 +93,6 @@ exports.updateSport = async (req, res) => {
 
         const { name, rule, scoreSystem, color } = req.body;
         let imagePath = sport.image;
-        console.log(name, rule, scoreSystem, color);
         if (req.file) {
             // Supprimer l'ancienne image si ce n'est pas l'image par défaut
             if (sport.image !== '/public/images/default-sport.png') {
@@ -107,7 +105,6 @@ exports.updateSport = async (req, res) => {
             imagePath = `/uploads/${req.file.filename}`;
         }
 
-        console.log(" Server -  await Update sport")
         await sport.update({
             name,
             rule,
