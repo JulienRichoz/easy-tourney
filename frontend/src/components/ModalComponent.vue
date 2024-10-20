@@ -1,4 +1,3 @@
-<!-- src/components/ModalComponent.vue -->
 <template>
   <div
     v-if="isVisible"
@@ -15,36 +14,12 @@
         </h2>
       </slot>
       <slot name="content"></slot>
-      <div class="flex justify-between mt-4">
-        <ButtonComponent
-          variant="secondary"
-          nativeType="button"
-          @click="onCancel"
-        >
-          Annuler
-        </ButtonComponent>
-        <ButtonComponent
-          :variant="
-            isFormValid ? confirmButtonVariant || 'primary' : 'disabled'
-          "
-          nativeType="submit"
-          @click="onSubmit"
-          :disabled="!isFormValid"
-        >
-          {{ confirmButtonText || (isEditing ? 'Modifier' : 'Ajouter') }}
-        </ButtonComponent>
-      </div>
     </div>
   </div>
 </template>
 
 <script>
-  import ButtonComponent from '@/components/ButtonComponent.vue';
-
   export default {
-    components: {
-      ButtonComponent,
-    },
     props: {
       isVisible: {
         type: Boolean,
@@ -54,29 +29,10 @@
         type: String,
         default: '',
       },
-      isEditing: {
-        type: Boolean,
-        default: false,
-      },
-      confirmButtonText: {
-        type: String,
-        default: '',
-      },
-      confirmButtonVariant: {
-        type: String,
-        default: 'primary',
-      },
-      isFormValid: {
-        type: Boolean,
-        default: false,
-      },
     },
     methods: {
-      onCancel() {
+      close() {
         this.$emit('close');
-      },
-      onSubmit() {
-        this.$emit('submit');
       },
     },
   };

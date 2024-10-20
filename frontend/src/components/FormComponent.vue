@@ -1,8 +1,6 @@
-<!-- src/components/FormComponent.vue -->
 <template>
   <form @submit.prevent="handleSubmit">
     <div v-for="field in fields" :key="field.name" class="mb-4">
-      <!-- Vérifier si un slot nommé existe pour ce champ -->
       <component :is="$slots[field.name] ? 'slot' : 'div'" :name="field.name">
         <template v-if="!$slots[field.name]">
           <label
@@ -15,7 +13,6 @@
               class="text-light-form-error dark:text-dark-form-error"
               >*</span
             >
-            <!-- Icône du tooltip utilisant Font Awesome -->
             <button
               v-if="field.tooltip"
               type="button"
@@ -26,7 +23,6 @@
                 icon="question-circle"
                 class="text-light-form-iconQuestion dark:text-dark-form-iconQuestion cursor-pointer"
               />
-              <!-- Texte du tooltip -->
               <div
                 v-if="visibleTooltip === field.name"
                 class="absolute bottom-full mb-2 w-64 bg-gray-700 dark:bg-gray-600 text-white text-base rounded py-1 px-2 z-10 text-left"
@@ -37,7 +33,6 @@
             </button>
           </label>
 
-          <!-- Champ input -->
           <input
             v-if="
               field.type !== 'textarea' &&
@@ -61,7 +56,6 @@
             :placeholder="field.placeholder"
           />
 
-          <!-- Champ textarea -->
           <textarea
             v-if="field.type === 'textarea'"
             :id="field.name"
@@ -77,7 +71,6 @@
             @input="validateField(field)"
           ></textarea>
 
-          <!-- Champ select -->
           <select
             v-if="field.type === 'select'"
             :id="field.name"
@@ -94,7 +87,6 @@
             </option>
           </select>
 
-          <!-- Champ fichier -->
           <input
             v-if="field.type === 'file'"
             type="file"
@@ -102,7 +94,7 @@
             @change="handleFileChange"
             class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
           />
-          <!-- Sélecteur de couleur -->
+
           <div v-if="field.type === 'color'" class="flex items-center">
             <input
               type="color"
@@ -111,14 +103,12 @@
               class="w-16 h-16 p-0 border-none rounded-md"
               @input="validateField(field)"
             />
-            <!-- Carré affichant la couleur choisie -->
             <div
               class="w-8 h-8 ml-4 border border-light-form-border-default dark:border-dark-form-border-default rounded-md"
               :style="{ backgroundColor: formData[field.name] }"
             ></div>
           </div>
 
-          <!-- Afficher l'erreur -->
           <p
             v-if="errors[field.name]"
             class="text-light-form-error dark:text-dark-form-error text-sm mt-1"
@@ -128,12 +118,33 @@
         </template>
       </component>
     </div>
-    <!-- Slot pour contenu additionnel -->
-    <slot name="additional-content"></slot>
+
+    <div class="flex justify-between mt-4">
+      <ButtonComponent
+        variant="secondary"
+        nativeType="button"
+        @click="handleCancel"
+      >
+        Annuler
+      </ButtonComponent>
+      <ButtonComponent
+        :variant="isFormValid ? 'primary' : 'disabled'"
+        nativeType="submit"
+        :disabled="!isFormValid"
+      >
+        {{ isEditing ? 'Modifier' : 'Ajouter' }}
+      </ButtonComponent>
+    </div>
   </form>
 </template>
+
 <script>
+  import ButtonComponent from '@/components/ButtonComponent.vue';
+
   export default {
+    components: {
+      ButtonComponent,
+    },
     props: {
       fields: {
         type: Array,
@@ -142,6 +153,10 @@
       modelValue: {
         type: Object,
         required: true,
+      },
+      isEditing: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -175,20 +190,18 @@
           this.visibleTooltip = fieldName;
         }
       },
-      handleClickOutside(event) {
-        if (!this.$el.contains(event.target)) {
-          this.visibleTooltip = null;
-        }
+      handleFileChange(event) {
+        const file = event.target.files[0];
+        this.$emit('file-selected', file);
       },
       handleSubmit() {
-        this.$emit('submit', this.formData);
+        if (Object.keys(this.errors).length === 0) {
+          this.$emit('submit', this.formData);
+        }
       },
-    },
-    mounted() {
-      document.addEventListener('click', this.handleClickOutside);
-    },
-    beforeUnmount() {
-      document.removeEventListener('click', this.handleClickOutside);
+      handleCancel() {
+        this.$emit('cancel');
+      },
     },
   };
 </script>

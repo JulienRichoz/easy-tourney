@@ -32,16 +32,17 @@
     <ModalComponent
       :isVisible="showModal"
       :title="editingSportId ? 'Modifier le Sport' : 'Ajouter un Nouveau Sport'"
-      :isFormValid="isFormValid"
-      :isEditing="!!editingSportId"
       @close="closeModal"
-      @submit="handleFormSubmit"
     >
       <template #content>
         <FormComponent
           v-model="newSport"
           :fields="formFields"
+          :isEditing="!!editingSportId"
           @file-selected="handleFileUpload"
+          @submit="handleFormSubmit"
+          @cancel="closeModal"
+          @update-validation="updateFormValidation"
         />
       </template>
     </ModalComponent>
@@ -91,8 +92,8 @@
           image: null,
         },
         editingSportId: null,
-        isFormValid: false,
         selectedFile: null,
+        isFormValid: false,
       };
     },
     computed: {
@@ -141,11 +142,11 @@
     methods: {
       validateForm() {
         const { name, rule } = this.newSport;
-        this.nameError = name
-          ? ''
-          : 'Un sport avec ce nom existe déjà ou le champ est vide.';
-        this.ruleError = rule ? '' : 'Les règles du sport sont obligatoires.';
-        this.isFormValid = !this.nameError && !this.ruleError;
+        this.isFormValid = !!name && !!rule;
+      },
+
+      updateFormValidation(isValid) {
+        this.isFormValid = isValid;
       },
 
       getImageUrl(imagePath) {
@@ -156,7 +157,7 @@
       getFileName(filePath) {
         if (!filePath) return '';
         const parts = filePath.split('/');
-        return parts[parts.length - 1]; // Retourner juste le nom du fichier
+        return parts[parts.length - 1];
       },
 
       async fetchSports() {
@@ -179,11 +180,10 @@
             );
             this.selectedFile = null;
           } else {
-            this.selectedFile = file; // Met à jour le fichier sélectionné
+            this.selectedFile = file;
           }
-
-          this.validateForm(); // Si nécessaire
         }
+        this.validateForm();
       },
 
       openAddSportModal() {
@@ -196,8 +196,6 @@
           image: null,
         };
         this.selectedFile = null;
-        this.nameError = '';
-        this.ruleError = '';
         this.isFormValid = false;
         this.showModal = true;
       },
@@ -206,13 +204,12 @@
         this.editingSportId = sport.id;
         this.newSport = { ...sport };
         this.selectedFile = null;
-        this.nameError = '';
-        this.ruleError = '';
+        this.isFormValid = true;
         this.showModal = true;
-        this.isFormValid = false;
       },
 
       async handleFormSubmit() {
+        this.validateForm();
         if (!this.isFormValid) return;
 
         const formData = new FormData();
@@ -221,11 +218,9 @@
         formData.append('scoreSystem', this.newSport.scoreSystem);
         formData.append('color', this.newSport.color);
 
-        // Gérer l'image si un fichier a été sélectionné
         if (this.selectedFile) {
-          formData.append('image', this.selectedFile); // Nouvelle image
+          formData.append('image', this.selectedFile);
         } else if (this.newSport.image) {
-          // Si aucune nouvelle image n'est sélectionnée, garder l'image existante
           formData.append('image', this.getFileName(this.newSport.image));
         }
 
@@ -266,7 +261,6 @@
 
       closeModal() {
         this.showModal = false;
-        this.isFormValid = false;
       },
 
       closeDeleteConfirmation() {
@@ -289,3 +283,7 @@
     },
   };
 </script>
+
+<style scoped>
+  /* Styles gérés par Tailwind CSS */
+</style>

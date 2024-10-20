@@ -1,4 +1,3 @@
-<!-- src/components/DeleteConfirmationModal.vue -->
 <template>
   <div
     v-if="isVisible"
@@ -13,15 +12,12 @@
       <p class="mb-6 text-light-form-text dark:text-dark-form-text">
         {{ message }}
       </p>
-      <!-- Message supplémentaire pour hardDelete -->
       <p
         v-if="isHardDelete && hardDeleteMessage"
         class="mb-4 text-light-form-error dark:text-dark-form-error"
       >
         {{ hardDeleteMessage }}
       </p>
-
-      <!-- Si hardDelete est activé, afficher le champ de confirmation -->
       <div v-if="isHardDelete" class="mb-4">
         <label
           class="block text-light-form-text dark:text-dark-form-text font-semibold mb-2 flex items-center"
@@ -35,12 +31,10 @@
           placeholder="CONFIRM"
         />
       </div>
-
       <div class="flex justify-end space-x-4">
-        <ButtonComponent variant="secondary" @click="onCancel">
+        <ButtonComponent variant="secondary" @click="handleCancel">
           Annuler
         </ButtonComponent>
-        <!-- Bouton suppression avec changement de couleur dynamique  -->
         <ButtonComponent
           :variant="
             isHardDelete
@@ -49,7 +43,7 @@
                 : 'gray'
               : 'danger'
           "
-          @click="onConfirm"
+          @click="handleConfirm"
           :disabled="isHardDelete && confirmationText !== 'CONFIRM'"
         >
           Supprimer
@@ -91,21 +85,23 @@
     },
     data() {
       return {
-        confirmationText: '', // Pour stocker le texte de confirmation
+        confirmationText: '',
       };
     },
     methods: {
-      onCancel() {
+      handleCancel() {
         this.$emit('cancel');
       },
-      onConfirm() {
-        this.$emit('confirm');
+      handleConfirm() {
+        if (!this.isHardDelete || this.confirmationText === 'CONFIRM') {
+          this.$emit('confirm');
+        }
       },
     },
     watch: {
       isVisible(newVal) {
         if (!newVal) {
-          this.confirmationText = ''; // Réinitialiser le texte de confirmation quand la modal est fermée
+          this.confirmationText = '';
         }
       },
     },
