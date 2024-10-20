@@ -58,7 +58,18 @@
           }
         } catch (err) {
           console.error('Erreur lors de la connexion:', err);
-          this.error = 'Identifiant ou mot de passe incorrect.';
+
+          if (err.code === 'ERR_NETWORK' || !err.response) {
+            // Erreur réseau
+            this.error =
+              'Le serveur de connexion est injoignable. Veuillez ressayer plus tard.';
+          } else if (err.response && err.response.status === 401) {
+            // Identifiants incorrects
+            this.error = 'Identifiant ou mot de passe incorrect.';
+          } else {
+            // Autres erreurs
+            this.error = 'Une erreur est survenue. Veuillez réessayer.';
+          }
         } finally {
           this.isSubmitting = false;
         }
