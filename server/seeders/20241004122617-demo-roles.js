@@ -1,3 +1,4 @@
+// seeders/xxx_demo-roles.js
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */

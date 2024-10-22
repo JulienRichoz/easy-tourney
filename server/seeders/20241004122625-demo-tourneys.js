@@ -1,3 +1,4 @@
+// seeders/xxx_demo-tourneys.js
 'use strict';
 
 module.exports = {

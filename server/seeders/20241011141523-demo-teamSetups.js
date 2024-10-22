@@ -1,3 +1,4 @@
+// seeders/xxx_demo-teamSetups.js
 'use strict';
 
 module.exports = {
@@ -13,9 +14,10 @@ module.exports = {
       await queryInterface.bulkInsert('TeamSetups', [
         {
           tourneyId: tourneys[0].id,
-          maxTeamNumber: 10,
-          playerPerTeam: 5,
-          playerEstimated: 50,
+          maxTeamNumber: 5,
+          playerPerTeam: 4,
+          minPlayerPerTeam: 3,
+          playerEstimated: 20,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -25,5 +27,5 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.bulkDelete('TeamSetups', null, {});
-  },
+  }
 };
