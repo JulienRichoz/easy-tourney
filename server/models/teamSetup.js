@@ -9,14 +9,22 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     TeamSetup.init({
+        // Nombre max. d'équipes dans ce tournoi
         maxTeamNumber: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        // Nombre max de joueurs par team
         playerPerTeam: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        // Nombre min de joueurs par team pour en valider une
+        minPlayerPerTeam: {
+            type: DataTypes.INTEGER,
+            allowNull: false, // Doit être rempli
+        },
+        // Estimation des joueurs 
         playerEstimated: {
             type: DataTypes.INTEGER,
             allowNull: true,
