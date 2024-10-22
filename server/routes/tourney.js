@@ -7,7 +7,6 @@ const {
     createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney,
     getSportsByField, getFieldsByTourneyId, getSportsFieldsByTourney
 } = require('../controllers/tourneyController');
-const { createTeamSetup: createTeamSetup, updateTeamSetup, getTeamSetup, generateTeams } = require('../controllers/teamSetupController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 /*
@@ -29,16 +28,6 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un 
 router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
 router.get('/:tourneyId/fields', isAuthenticated, getFieldsByTourneyId); // Récupérer les terrains d'un tournoi
 router.get('/:id/sports-fields', isAuthenticated, getSportsFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
-
-/*
---------------------------------
- Routes pour gérer le teamSetup 
---------------------------------
- */
-router.post('/:tourneyId/team-setup', isAuthenticated, isAdmin, createTeamSetup); // Créer une configuration de team pour un tournoi
-router.put('/:tourneyId/team-setup', isAuthenticated, isAdmin, updateTeamSetup); // Mettre à jour la configuration du team
-router.get('/:tourneyId/team-setup', isAuthenticated, getTeamSetup); // Obtenir la configuration du team pour un tournoi
-router.get('/:tourneyId/team-setup', isAuthenticated, isAdmin, generateTeams); // Générer les teams pour un tournoi
 
 router.post('/:tourneyId/schedule', isAuthenticated, isAdmin, createScheduleTourney); // Ajouter le planning (admin uniquement)
 
