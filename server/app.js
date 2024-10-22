@@ -13,7 +13,7 @@ const sportsFieldsRoutes = require('./routes/sportsFields');
 const fieldRoutes = require('./routes/field');
 const teamRoutes = require('./routes/team');
 const usersTourneysRoutes = require('./routes/usersTourneys');
-const teamSetupRoutes = require('./routes/teamSetupRoutes');
+const teamSetupRoutes = require('./routes/teamSetup');
 
 
 const { errorHandler, limiter } = require('./middlewares');
