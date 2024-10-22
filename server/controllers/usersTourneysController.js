@@ -59,3 +59,27 @@ exports.removeUserFromTourney = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
+exports.getUnassignedUsersByTourney = async (req, res) => {
+    const { tourneyId } = req.params;
+    try {
+      const unassignedUsers = await User.findAll({
+        where: {
+          teamId: null,
+          roleId: 4,
+          '$Tourneys.id$': tourneyId,
+        },
+        include: [
+          {
+            model: Tourney,
+            as: 'tourneys',
+            where: { id: tourneyId },
+          },
+        ],
+      });
+      res.json(unassignedUsers);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs non assignés.' });
+    }
+  };
+  

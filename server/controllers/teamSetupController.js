@@ -1,9 +1,8 @@
-// server/controllers/teamSetupController.js
 const { TeamSetup, Tourney } = require('../models');
 
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated } = req.body;
+    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; // Ajout de minPlayerPerTeam
     const { tourneyId } = req.params;
 
     try {
@@ -16,7 +15,8 @@ exports.createTeamSetup = async (req, res) => {
             tourneyId,
             maxTeamNumber,
             playerPerTeam,
-            playerEstimated
+            playerEstimated,
+            minPlayerPerTeam, // Inclure minPlayerPerTeam dans la création
         });
 
         res.status(201).json(teamSetup);
@@ -28,7 +28,7 @@ exports.createTeamSetup = async (req, res) => {
 
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated } = req.body;
+    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; // Ajout de minPlayerPerTeam
     const { tourneyId } = req.params;
 
     try {
@@ -37,9 +37,11 @@ exports.updateTeamSetup = async (req, res) => {
             return res.status(404).json({ message: 'Configuration de team non trouvée' });
         }
 
+        // Mise à jour des champs
         teamSetup.maxTeamNumber = maxTeamNumber;
         teamSetup.playerPerTeam = playerPerTeam;
         teamSetup.playerEstimated = playerEstimated;
+        teamSetup.minPlayerPerTeam = minPlayerPerTeam; // Mise à jour du minPlayerPerTeam
 
         await teamSetup.save();
 
@@ -50,7 +52,7 @@ exports.updateTeamSetup = async (req, res) => {
     }
 };
 
-// Obtenir la configuration du team
+// Obtenir la configuration de team
 exports.getTeamSetup = async (req, res) => {
     const { tourneyId } = req.params;
 
@@ -67,30 +69,4 @@ exports.getTeamSetup = async (req, res) => {
     }
 };
 
-// Générer des teams
-exports.generateTeams = async (req, res) => {
-    const { tourneyId } = req.params;
 
-    try {
-        const teamSetup = await TeamSetup.findOne({ where: { tourneyId } });
-        if (!teamSetup) {
-            return res.status(404).json({ message: 'Configuration de team non trouvée' });
-        }
-
-        const teams = [];
-        for (let i = 0; i < teamSetup.maxTeamNumber; i++) {
-            teams.push({
-                teamName: `Team ${i + 1}`,
-                tourneyId: teamSetup.tourneyId
-            });
-        }
-
-        // Ajout des teams à la base de données
-        await Team.bulkCreate(teams);
-
-        res.status(201).json({ message: 'Teames générés avec succès' });
-    } catch (error) {
-        console.error('Erreur lors de la génération des teams:', error);
-        res.status(500).json({ message: 'Erreur serveur', error });
-    }
-};
