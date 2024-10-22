@@ -13,6 +13,8 @@ const sportsFieldsRoutes = require('./routes/sportsFields');
 const fieldRoutes = require('./routes/field');
 const teamRoutes = require('./routes/team');
 const usersTourneysRoutes = require('./routes/usersTourneys');
+const teamSetupRoutes = require('./routes/teamSetupRoutes');
+
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -34,8 +36,9 @@ app.use('/api/sports', sportRoutes);
 app.use('/api/tourneys', tourneyRoutes);
 app.use('/api/sports-fields', sportsFieldsRoutes);
 app.use('/api/fields', fieldRoutes);
-app.use('/api/teams', teamRoutes);
+app.use('/api/tourneys/:tourneyId/teams', teamRoutes)
 app.use('/api/users-tourneys', usersTourneysRoutes);
+app.use('/api/tourneys/:tourneyId/team-setup', teamSetupRoutes);
 
 // Gestion des erreurs
 app.use(errorHandler);
