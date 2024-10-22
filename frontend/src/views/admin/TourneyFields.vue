@@ -180,7 +180,7 @@
       async fetchFieldDetails() {
         try {
           const response = await apiService.get(
-            `/fields/tourneys/${this.tourneyId}`
+            `/tourneys/${this.tourneyId}/fields`
           );
           this.fields = response.data || [];
         } catch (error) {
@@ -201,7 +201,7 @@
         this.isDeleting = true;
 
         try {
-          await apiService.delete(`/fields/tourneys/${this.tourneyId}/all`);
+          await apiService.delete(`/tourneys/${this.tourneyId}/fields`);
           toast.success('Tous les terrains ont été supprimés avec succès!');
           this.fetchFieldDetails();
           this.closeDeleteAllFieldsModal();
@@ -227,7 +227,7 @@
         this.isDeleting = true;
 
         try {
-          await apiService.delete(`/fields/${id}`);
+          await apiService.delete(`/tourneys/${this.tourneyId}/fields/${id}`);
           toast.success('Terrain supprimé avec succès!');
           this.fetchFieldDetails();
           this.closeDeleteConfirmation();
@@ -263,7 +263,10 @@
               description: '',
               tourneyId: this.tourneyId,
             };
-            await apiService.post(`/fields`, newField);
+            await apiService.post(
+              `/tourneys/${this.tourneyId}/fields`,
+              newField
+            );
           }
           this.fetchFieldDetails();
           this.closeMultipleFieldsModal();
@@ -299,17 +302,21 @@
         this.isSubmitting = true;
         this.saveField();
       },
-
       async saveField() {
         try {
           if (this.editingFieldId) {
+            // Mettre à jour un terrain existant
             await apiService.put(
-              `/fields/${this.editingFieldId}`,
+              `/tourneys/${this.tourneyId}/fields/${this.editingFieldId}`,
               this.newField
             );
             toast.success('Terrain modifié avec succès!');
           } else {
-            await apiService.post(`/fields`, this.newField);
+            // Créer un nouveau terrain
+            await apiService.post(
+              `/tourneys/${this.tourneyId}/fields`,
+              this.newField
+            );
             toast.success('Nouveau terrain ajouté avec succès!');
           }
           this.closeModal();

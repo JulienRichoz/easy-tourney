@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Vuex pour gérer les rôles
 import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
 import apiService from '@/services/apiService';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
@@ -73,7 +73,12 @@ const routes = [
     component: TourneysPage,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
-
+  {
+    path: '/sports',
+    name: 'SportsPage',
+    component: SportsPage,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
   /*
       ROUTES LIEES A UN TOURNOI
   */
@@ -81,12 +86,6 @@ const routes = [
     path: '/tourneys/:id',
     name: 'TourneyDetails',
     component: TourneyDetails,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/sports',
-    name: 'SportsPage',
-    component: SportsPage,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {

@@ -34,7 +34,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/sports-fields', sportsFieldsRoutes);
-app.use('/api/fields', fieldRoutes);
+
+app.use('/api/tourneys/:tourneyId/fields', fieldRoutes);
 
 // Routes centrées sur le tournoi
 app.use('/api/tourneys', tourneyRoutes);
