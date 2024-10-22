@@ -32,7 +32,7 @@
     <router-link
       :to="`/tourneys/${tourneyId}/teams`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
-      :class="{ active: $route.name === 'TourneyTeams' }"
+      :class="{ active: $route.name === 'AdminTeams' }"
     >
       <font-awesome-icon :icon="['fas', 'user']" />
       <span class="hidden sm:inline"> Groupes</span>

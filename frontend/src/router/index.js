@@ -17,7 +17,9 @@ import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Nouvelle vue 
 import AdminSports from '../views/admin/AdminSports.vue'; // Nouvelle vue pour les sports
 import SportsFields from '../views/admin/SportsFields.vue'; // Nouvelle vue pour la gestion d'assignement de sport à un terrain
 import AdminFields from '../views/admin/AdminFields.vue'; // Nouvelle vue pour les terrains
-
+import AdminTeams from '../views/admin/AdminTeams.vue';
+import TeamDetail from '../views/admin/TeamDetail.vue';
+import UnassignedUsers from '../views/admin/UnassignedUsers.vue';
 
 const routes = [
   {
@@ -89,7 +91,24 @@ const routes = [
     component: AdminFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
-
+  {
+    path: '/tourneys/:id/teams',
+    name: 'AdminTeams',
+    component: AdminTeams,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/teams/:id',
+    name: 'TeamDetail',
+    component: TeamDetail,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/tourneys/:id/unassigned-users',
+    name: 'UnassignedUsers',
+    component: UnassignedUsers,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
 ];
 
 const router = createRouter({

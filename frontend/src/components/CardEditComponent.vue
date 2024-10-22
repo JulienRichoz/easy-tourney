@@ -17,6 +17,13 @@
         class="w-4 h-4 rounded-full mr-2"
         :style="{ backgroundColor: titleColor }"
       ></span>
+      <!-- Status Icon -->
+      <span v-if="statusIcon" class="mr-2">
+        <component
+          :is="statusIconComponent"
+          :class="['w-6 h-6', statusIconColor]"
+        />
+      </span>
       <h2
         class="text-2xl font-semibold truncate text-light-title dark:text-dark-title text-ellipsis overflow-hidden ..."
       >
@@ -83,6 +90,12 @@
 
 <script>
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import {
+    CheckCircleIcon,
+    ExclamationCircleIcon,
+    XCircleIcon,
+    QuestionMarkCircleIcon,
+  } from '@heroicons/vue/24/outline';
 
   export default {
     components: {
@@ -104,6 +117,10 @@
       titleColor: {
         type: String,
         default: '',
+      },
+      statusIcon: {
+        type: String,
+        default: null,
       },
       showDeleteButton: {
         type: Boolean,
@@ -136,6 +153,30 @@
           return new Date(this.date).toLocaleDateString();
         }
         return '';
+      },
+      statusIconComponent() {
+        switch (this.status) {
+          case 'full':
+            return CheckCircleIcon;
+          case 'partial':
+            return ExclamationCircleIcon;
+          case 'empty':
+            return XCircleIcon;
+          default:
+            return QuestionMarkCircleIcon;
+        }
+      },
+      statusIconColor() {
+        switch (this.status) {
+          case 'full':
+            return 'text-green-500';
+          case 'partial':
+            return 'text-yellow-500';
+          case 'empty':
+            return 'text-red-500';
+          default:
+            return 'text-gray-500';
+        }
       },
     },
     methods: {
