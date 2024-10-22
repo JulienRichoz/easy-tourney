@@ -1,3 +1,4 @@
+// migrations/xxx-create-teamSetup.js
 'use strict';
 
 module.exports = {
@@ -17,13 +18,17 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-        unique: true, // Ajoute l'unicité pour empêcher plusieurs configurations pour un même tournoi
+        unique: true, // Empêche plusieurs configurations pour un même tournoi
       },
       maxTeamNumber: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
       playerPerTeam: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      minPlayerPerTeam: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
