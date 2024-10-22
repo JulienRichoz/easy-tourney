@@ -11,7 +11,7 @@ router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe po
 router.get('/', isAuthenticated, getTeamsByTourney); // Obtenir toutes les équipes d'un tournoi
 router.put('/:id', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
 router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
-router.delete('/teams', isAuthenticated, isAdmin, deleteAllTeamsByTourney); // Supprimer toutes les équipes d'un tournoi
+router.delete('/', isAuthenticated, isAdmin, deleteAllTeamsByTourney); // Supprimer toutes les équipes d'un tournoi
 router.post('/generate-teams', isAuthenticated, isAdmin, generateTeams); // Générer des équipes pour un tournoi
 
 module.exports = router;

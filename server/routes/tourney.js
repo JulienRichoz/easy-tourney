@@ -7,6 +7,11 @@ const {
     createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, createScheduleTourney,
     getSportsByField, getFieldsByTourneyId, getSportsFieldsByTourney
 } = require('../controllers/tourneyController');
+
+const {
+    getUsersByTourney, getUserInfoByTourney, removeUserFromTourney, getUnassignedUsersByTourney
+} = require('../controllers/usersTourneysController');
+
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 /*
@@ -22,12 +27,24 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un 
 
 /*
 --------------------------------
- Routes custom pour les tournois
+ Routes custom pour les terrains et sports
 --------------------------------
  */
 router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
 router.get('/:tourneyId/fields', isAuthenticated, getFieldsByTourneyId); // Récupérer les terrains d'un tournoi
 router.get('/:id/sports-fields', isAuthenticated, getSportsFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
+
+/*
+--------------------------------
+ Routes pour gérer les utilisateurs d'un tournoi
+--------------------------------
+ */
+router.get('/:tourneyId/users', isAuthenticated, getUsersByTourney); // Récupérer tous les utilisateurs d'un tournoi
+router.get('/:tourneyId/users/:idUser', isAuthenticated, getUserInfoByTourney); // Récupérer les informations d'un utilisateur dans un tournoi
+router.delete('/:tourneyId/users/:idUser', isAuthenticated, isAdmin, removeUserFromTourney); // Supprimer un utilisateur d'un tournoi
+router.get('/:tourneyId/unassigned-users', isAuthenticated, getUnassignedUsersByTourney); // Récupérer les utilisateurs non assignés d'un tournoi
+
+
 
 router.post('/:tourneyId/schedule', isAuthenticated, isAdmin, createScheduleTourney); // Ajouter le planning (admin uniquement)
 

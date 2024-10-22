@@ -82,4 +82,36 @@ exports.getUnassignedUsersByTourney = async (req, res) => {
       res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs non assignés.' });
     }
   };
+
+  // Récupérer les informations d'un utilisateur dans un tournoi
+exports.getUserInfoByTourney = async (req, res) => {
+    const { tourneyId, idUser } = req.params;
+
+    try {
+        // Vérifier que l'utilisateur participe bien au tournoi via UsersTourneys
+        const userInTourney = await UsersTourneys.findOne({
+            where: { userId: idUser, tourneyId },
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'name', 'email'], // Informations générales de l'utilisateur
+                },
+                {
+                    model: Team,
+                    attributes: ['teamName', 'type'], // Informations sur l'équipe (si applicable)
+                }
+            ]
+        });
+
+        if (!userInTourney) {
+            return res.status(404).json({ message: "L'utilisateur ne participe pas à ce tournoi." });
+        }
+
+        // Renvoyer les informations de l'utilisateur, y compris son rôle et son équipe
+        res.status(200).json(userInTourney);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des informations de l\'utilisateur dans le tournoi:', error);
+        res.status(500).json({ message: 'Erreur serveur', error });
+    }
+};
   
