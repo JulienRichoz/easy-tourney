@@ -3,7 +3,7 @@ const express = require('express');
 const { createTeam, getTeamsByTourney, updateTeam, deleteTeam, deleteAllTeamsByTourney, generateTeams, getTeamById, assignUserToTeam, removeUserFromTeam, resetTeamsAndReassignUsers } = require('../controllers/teamController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
-const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId dans les contrôleurs
+const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId
 
 // Routes pour gérer les équipes d'un tournoi
 // http://localhost:3000/api/tourneys/:tourneyId/teams
