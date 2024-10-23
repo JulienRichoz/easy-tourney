@@ -281,6 +281,7 @@
             );
             toast.success('Tournoi modifié avec succès!');
           } else {
+            console.log('Creaet new tourney', this.newTourney);
             await apiService.post('/tourneys', this.newTourney);
             toast.success('Nouveau tournoi ajouté avec succès!');
           }

@@ -5,7 +5,7 @@ const { Tourney, Field, SportsFields, Sport, TeamSetup, ScheduleTourney } = requ
 
 exports.createTourney = async (req, res) => {
     try {
-        const { name, location, dateTourney, emergencyDetails } = req.body;
+        const { name, location, dateTourney, emergencyDetails, status } = req.body;
 
         if (!name || !location || !dateTourney) {
             return res.status(400).json({ message: "Les champs 'name', 'location' et 'dateTourney' sont requis." });
@@ -16,7 +16,8 @@ exports.createTourney = async (req, res) => {
             name,
             location,
             dateTourney,
-            emergencyDetails
+            emergencyDetails,
+            status
         });
 
 
@@ -172,23 +173,6 @@ exports.getSportsByField = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
     }
 };
-
-exports.getFieldsByTourneyId = async (req, res) => {
-    try {
-        const tourneyId = req.params.tourneyId;
-
-        const fields = await Field.findAll({ where: { tourneyId } });
-
-        if (!fields) {
-            return res.status(404).json({ message: "Aucun terrain n'est associé à ce tournoi." });
-        }
-
-        res.status(200).json(fields);
-    } catch (error) {
-        console.error('Erreur lors de la récupération des terrains pour ce tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des terrains' });
-    }
-}
 
 // Récupérer les sports associés aux terrains d'un tournoi
 exports.getSportsFieldsByTourney = async (req, res) => {
