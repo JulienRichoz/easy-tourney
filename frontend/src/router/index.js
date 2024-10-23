@@ -1,9 +1,11 @@
+// Import des modules nécessaires pour la gestion des routes
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Vuex pour gérer les rôles
 import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
 import apiService from '@/services/apiService';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; // Corrigé l'import pour jwtDecode
 
+// Importation des composants de vues
 import AdminPage from '../views/admin/AdminPage.vue';
 import UserPage from '../views/user/UserPage.vue';
 import LoginPage from '../views/auth/LoginPage.vue';
@@ -16,16 +18,26 @@ import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Détails d'un
 import TourneyFields from '../views/admin/TourneyFields.vue'; // Gestion des terrains d'un tournoi
 import TourneySportsFields from '../views/admin/TourneySportsFields.vue'; // Gestion des sports sur les terrains
 
+// Définition des routes de l'application
 const routes = [
   /*
-      ROUTE D'ERREUR
+    ROUTE D'ERREUR (Page 404)
+    Cette route capte toutes les routes non définies et redirige vers la page NotFound.
   */
   {
-    path: '/:pathMatch(.*)*',
+    path: '/404',
     name: 'NotFoundPage',
     component: NotFoundPage,
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/404',
+  },
 
+  /*
+    ROUTE D'ACCÈS REFUSÉ
+    Utilisée lorsque l'utilisateur n'a pas les permissions requises.
+  */
   {
     path: '/access-denied',
     name: 'AccessDenied',
@@ -33,7 +45,8 @@ const routes = [
   },
 
   /*
-      ROUTES D'AUTHENTIFICATION
+    ROUTES D'AUTHENTIFICATION (Login, Register)
+    Redirection par défaut vers la page de login.
   */
   {
     path: '/',
@@ -49,11 +62,12 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterPage,
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false },
   },
 
   /*
-      ROUTES USER ET ADMIN
+    ROUTES PROTÉGÉES (User et Admin)
+    Ces routes nécessitent une authentification et des permissions spécifiques.
   */
   {
     path: '/admin',
@@ -79,8 +93,10 @@ const routes = [
     component: SportsPage,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
+
   /*
-      ROUTES LIEES A UN TOURNOI
+    ROUTES LIÉES À UN TOURNOI
+    Gestion des détails d'un tournoi, des terrains, et des sports sur les terrains.
   */
   {
     path: '/tourneys/:id',
@@ -100,38 +116,42 @@ const routes = [
     component: TourneySportsFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
-
-
 ];
 
+// Configuration du routeur Vue
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
 });
 
+// Gestion des événements avant chaque navigation
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token');
-  const isAuthenticated = !!token;
+  const token = localStorage.getItem('token'); // Récupération du token JWT
+  const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
 
+  // Si la route ne nécessite pas d'authentification
   if (to.meta.requiresAuth === false) {
     if (isAuthenticated) {
       const decoded = jwtDecode(token);
       const userRole = decoded.roleId;
 
+      // Rediriger en fonction du rôle de l'utilisateur
       if (userRole === 'admin') {
         return next('/tourneys');
       } else {
         return next('/user');
       }
     }
-    return next();
+    return next(); // Poursuivre si l'utilisateur n'est pas authentifié
   }
 
+  // Si le token est présent mais expiré
   if (isAuthenticated && isTokenExpired()) {
-    handleTokenExpiration();
-    return next('/login');
+    handleTokenExpiration(); // Gérer l'expiration du token
+    return next('/login'); // Rediriger vers la page de connexion
   }
 
+  // Si l'utilisateur est déjà connecté et tente d'accéder aux pages login ou register
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
     const decoded = jwtDecode(token);
     const userRole = decoded.roleId;
@@ -143,29 +163,36 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // Vérification si la route concerne un tournoi
   const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id;
   if (isTournamentRoute) {
     try {
+      // Tenter de récupérer le tournoi via l'API
       const response = await apiService.get(`/tourneys/${to.params.id}`);
       const tournamentName = response.data.name;
-
-      store.dispatch('setTournamentName', tournamentName);
+      store.dispatch('setTournamentName', tournamentName); // Stocker le nom du tournoi dans le store
     } catch (error) {
       console.error('Erreur lors de la récupération du tournoi:', error);
-      store.dispatch('clearTournamentName');
+
+      if (error.response && error.response.status === 404) {
+        return next({ name: 'NotFoundPage' }); // Rediriger vers la page 404 si le tournoi n'existe pas
+      } else {
+        store.dispatch('clearTournamentName'); // Nettoyer les données du tournoi si erreur autre que 404
+      }
     }
   } else {
-    store.dispatch('clearTournamentName');
+    store.dispatch('clearTournamentName'); // Nettoyer le nom du tournoi si on quitte une route liée à un tournoi
   }
 
+  // Vérification si la route nécessite une authentification
   if (to.meta.requiresAuth) {
     if (!token) {
-      store.dispatch('logout');
-      return next('/login');
+      store.dispatch('logout'); // Déconnecter si pas de token
+      return next('/login'); // Rediriger vers la page de connexion
     } else {
       try {
-        const newToken = await refreshToken();
-        localStorage.setItem('token', newToken);
+        const newToken = await refreshToken(); // Rafraîchir le token
+        localStorage.setItem('token', newToken); // Mettre à jour le token dans le localStorage
 
         const decoded = jwtDecode(newToken);
         store.commit('SET_AUTH', {
@@ -175,19 +202,20 @@ router.beforeEach(async (to, from, next) => {
 
         const userRole = decoded.roleId;
 
+        // Vérification des permissions pour l'accès à la route
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
-          return next('/access-denied');
+          return next('/access-denied'); // Rediriger vers la page d'accès refusé si l'utilisateur n'a pas les droits
         }
 
-        return next();
+        return next(); // Autoriser l'accès si tout est correct
       } catch (error) {
         console.error('Erreur lors du rafraîchissement du token :', error);
         store.dispatch('logout');
-        return next('/login');
+        return next('/login'); // Rediriger vers la page de connexion en cas d'erreur de rafraîchissement
       }
     }
   } else {
-    next();
+    next(); // Si la route ne nécessite pas d'authentification, continuer
   }
 });
 
