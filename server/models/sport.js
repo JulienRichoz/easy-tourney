@@ -1,41 +1,29 @@
-// server/models/sport.js
-// Purpose: Define the Sport model and its associations
-
+// models/sport.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-    class Sport extends Model {
-        static associate(models) {
-            // Associer des relations si nécessaire
-        }
+  class Sport extends Model {
+    static associate(models) {
+      Sport.hasMany(models.SportsFields, {
+        as: 'sportsFields',
+        foreignKey: 'sportId',
+      });
     }
+  }
 
-    Sport.init({
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true,
-        },
-        rule: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-        },
-        scoreSystem: {
-            type: DataTypes.STRING,
-            defaultValue: 'DESC',
-        },
-        image: {
-            type: DataTypes.STRING,
-            defaultValue: '/path/to/default-image.png',
-        },
-        color: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-    }, {
-        sequelize,
-        modelName: 'Sport',
-    });
+  Sport.init(
+    {
+      name: DataTypes.STRING,
+      rule: DataTypes.TEXT,
+      scoreSystem: DataTypes.STRING,
+      image: DataTypes.STRING,
+      color: DataTypes.STRING,
+    },
+    {
+      sequelize,
+      modelName: 'Sport',
+    }
+  );
 
-    return Sport;
+  return Sport;
 };

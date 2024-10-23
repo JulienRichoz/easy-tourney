@@ -14,7 +14,7 @@
       </li>
       <li v-if="isAdmin" class="mr-6">
         <router-link
-          to="/admin/sports"
+          to="/sports"
           class="text-light-menuText dark:text-dark-menuText font-semibold hover:text-light-menuHoverText dark:hover:text-dark-menuHoverText"
           >Sports</router-link
         >

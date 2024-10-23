@@ -30,9 +30,13 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un 
  Routes custom pour les terrains et sports
 --------------------------------
  */
-router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
+//router.get('/fields/:fieldId/sports', isAuthenticated, getSportsByField); // Récupérer les sports associés à un terrain
 router.get('/:tourneyId/fields', isAuthenticated, getFieldsByTourneyId); // Récupérer les terrains d'un tournoi
-router.get('/:id/sports-fields', isAuthenticated, getSportsFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
+//router.get('/:id/sports-fields', isAuthenticated, getSportsFieldsByTourney); // Récupérer les sports associés aux terrains d'un tournoi
+
+// Sous-route pour gérer les associations sports/terrains d'un tournoi spécifique
+//router.use('/:tourneyId/fields/:fieldId/sports-fields', sportsFieldsRoutes);
+
 
 /*
 --------------------------------

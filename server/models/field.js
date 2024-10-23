@@ -1,29 +1,27 @@
-// server/models/field.js
-// Modèle pour la gestion des terrains
-
+// models/field.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-    class Field extends Model {
-        static associate(models) {
-            Field.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
-            Field.hasMany(models.SportsFields, { foreignKey: 'fieldId', as: 'sportsFields' }); // Un terrain peut avoir plusieurs sports associés
-        }
+  class Field extends Model {
+    static associate(models) {
+      Field.hasMany(models.SportsFields, {
+        as: 'sportsFields',
+        foreignKey: 'fieldId',
+      });
     }
+  }
 
-    Field.init({
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        description: {
-            type: DataTypes.TEXT,
-            allowNull: true,
-        },
-    }, {
-        sequelize,
-        modelName: 'Field',
-    });
+  Field.init(
+    {
+      name: DataTypes.STRING,
+      description: DataTypes.STRING,
+      tourneyId: DataTypes.INTEGER,
+    },
+    {
+      sequelize,
+      modelName: 'Field',
+    }
+  );
 
-    return Field;
+  return Field;
 };

@@ -15,19 +15,20 @@
         :data-id="sport.id"
         :style="{ backgroundColor: sport.color }"
         class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer transform transition duration-300 w-28 shadow-md flex items-center justify-center external-event hover:scale-110 hover:shadow-xl active:scale-95"
-        @touchstart="handleSportPress"
-        @mousedown="handleSportPress"
       >
         {{ sport.name }}
       </div>
     </div>
 
     <!-- Grille des terrains avec le calendrier FullCalendar -->
-    <div class="grid gap-4 justify-items-stretch" :class="gridClasses">
+    <div
+      v-if="tourney.dateTourney && fields.length"
+      class="grid gap-4 justify-items-stretch"
+      :class="gridClasses"
+    >
       <div
         v-for="(field, index) in fields"
         :key="field.id"
-        :data-field-id="field.id"
         class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 w-full"
       >
         <!-- Nom du terrain avec le numéro -->
@@ -35,14 +36,17 @@
           <h3 class="text-xl font-bold text-center truncate">
             {{ field.name }}
           </h3>
-          <span class="text-sm text-gray-500"
-            >{{ index + 1 }}/{{ fields.length }}</span
-          >
+          <span class="text-sm text-gray-500">
+            {{ index + 1 }}/{{ fields.length }}
+          </span>
         </div>
         <p class="truncate">{{ field.description }}</p>
 
         <!-- FullCalendar pour chaque terrain -->
-        <FullCalendar :options="getFieldCalendarOptions(field)" />
+        <FullCalendar
+          :options="getFieldCalendarOptions(field)"
+          :key="tourney.dateTourney + '-' + field.id"
+        />
       </div>
     </div>
   </div>
@@ -51,6 +55,7 @@
 <script>
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
+  import dayGridPlugin from '@fullcalendar/daygrid'; // Import du plugin dayGrid
   import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
@@ -69,8 +74,8 @@
       };
     },
     async mounted() {
-      await this.fetchTourneySportsFields();
-      await this.fetchSports();
+      await this.fetchTourneySportsFields(); // Récupérer les sports associés aux terrains du tournoi
+      await this.fetchSports(); // Récupérer tous les sports pour la sport list drag n drop
 
       // Rendre les éléments de sport externes "draggables"
       this.initializeExternalEvents();
@@ -79,7 +84,7 @@
       gridClasses() {
         const fieldCount = this.fields.length;
 
-        // Assurez-vous que toutes les classes utilisées sont présentes dans le code pour que Tailwind puisse les générer
+        // Classes pour la grille responsive
         const baseClasses = 'grid-cols-1';
         const smClasses = 'sm:grid-cols-1';
         const mdClasses = fieldCount >= 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';
@@ -103,8 +108,13 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/sports-fields`
           );
-          this.tourney = response.data;
-          this.fields = response.data.fields;
+          this.fields = response.data;
+
+          // Récupérer les informations du tournoi
+          const tourneyResponse = await apiService.get(
+            `/tourneys/${this.tourneyId}`
+          );
+          this.tourney = tourneyResponse.data;
 
           if (!this.fields.length) {
             console.warn('Aucun terrain trouvé');
@@ -116,7 +126,6 @@
           );
         }
       },
-
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
@@ -147,9 +156,27 @@
       },
 
       getFieldCalendarOptions(field) {
+        if (!this.tourney.dateTourney) {
+          console.error('La date du tournoi n’est pas disponible');
+          return {};
+        }
+
+        // Construire les événements
+        const events = field.sportsFields.map((sportField) => ({
+          id: sportField.id,
+          title: sportField.sport.name,
+          start: `${this.tourney.dateTourney}T${sportField.startTime}`,
+          end: `${this.tourney.dateTourney}T${sportField.endTime}`,
+          backgroundColor: sportField.sport.color || '#cccccc',
+          extendedProps: {
+            fieldId: field.id,
+            sportId: sportField.sport.id,
+          },
+        }));
+
         return {
-          plugins: [timeGridPlugin, interactionPlugin],
-          initialView: 'timeGridDay',
+          plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
+          initialView: 'timeGridDay', // Vous pouvez changer pour 'dayGridMonth' pour tester
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: true,
@@ -158,7 +185,11 @@
           allDaySlot: false,
           defaultTimedEventDuration: '02:00',
           height: 600,
-          headerToolbar: false,
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          },
           slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
@@ -173,17 +204,7 @@
               id: eventData.id, // Conserver l'ID de l'événement
             };
           },
-          events: field.sportsFields.map((sportField) => ({
-            id: sportField.id,
-            title: sportField.sport.name,
-            start: `${this.tourney.dateTourney}T${sportField.startTime}`,
-            end: `${this.tourney.dateTourney}T${sportField.endTime}`,
-            backgroundColor: sportField.sport.color || '#cccccc',
-            extendedProps: {
-              fieldId: field.id,
-              sportId: sportField.sport.id,
-            },
-          })),
+          events: events,
         };
       },
 
@@ -251,43 +272,10 @@
         return { domNodes: [container] };
       },
 
-      async handleDrop(info, fieldId) {
-        try {
-          // Récupérer l'ID du sport depuis l'élément draggué
-          const sportId = info.draggedEl.getAttribute('data-id');
-
-          // Vérifier que les IDs sont valides
-          if (!fieldId || !sportId) {
-            console.error("Problème d'ID : Terrain ou Sport mal identifié.");
-            return;
-          }
-
-          // Formatage des heures pour l'envoi au backend
-          const startDate = new Date(info.date); // Obtenir l'heure de début
-          const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Ajouter 2 heures
-          const startTime = this.formatTime(startDate); // Formatter l'heure de début
-          const endTime = this.formatTime(endDate); // Formatter l'heure de fin
-
-          // Créer l'objet de données à envoyer pour l'assignation
-          const data = {
-            fieldId: fieldId,
-            sportId: sportId,
-            startTime: startTime,
-            endTime: endTime,
-          };
-          await this.assignSport(data);
-        } catch (error) {
-          console.error(
-            "Erreur lors de l'ajout du sport au calendrier:",
-            error
-          );
-        }
-      },
       async handleEventReceive(info, newFieldId) {
         const event = info.event;
         try {
-          const eventId = event.id;
-          let sportId = event.extendedProps.sportId;
+          const sportId = event.extendedProps.sportId;
 
           if (!newFieldId) {
             console.error("Problème d'ID : Terrain mal identifié.");
@@ -303,46 +291,22 @@
             event.setEnd(endDate); // Mettre à jour l'heure de fin de l'événement
           }
 
-          if (eventId) {
-            // Événement existant : mettre à jour le terrain
-            if (!sportId) {
-              // Récupérer le sportId depuis l'API
-              const response = await apiService.get(
-                `/sports-fields/${eventId}`
-              );
-              sportId = response.data.sportId;
-            }
-
-            if (!sportId) {
-              console.error("Problème d'ID : Sport mal identifié.");
-              info.revert();
-              return;
-            }
-            // Créer un nouvel objet Date pour l'heure de début
-            const startDate = new Date(event.start);
-
-            // Cloner l'heure de début pour l'heure de fin
-            const endDate = new Date(startDate);
-            endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
+          if (event.id) {
+            // L'événement existe déjà, il est déplacé depuis un autre calendrier
+            const eventId = event.id;
 
             const data = {
               fieldId: newFieldId,
-              sportId: sportId,
-              startTime: this.formatTime(startDate),
-              endTime: this.formatTime(endDate),
+              startTime: this.formatTime(event.start),
+              endTime: this.formatTime(event.end),
             };
 
-            await apiService.put(`/sports-fields/${eventId}`, data);
+            await apiService.put(
+              `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
+              data
+            );
           } else {
             // Nouvel événement : créer dans la base de données
-            if (!sportId) {
-              console.error(
-                "Problème d'ID : Sport mal identifié pour le nouvel événement."
-              );
-              info.revert();
-              return;
-            }
-
             const data = {
               fieldId: newFieldId,
               sportId: sportId,
@@ -350,7 +314,13 @@
               endTime: this.formatTime(event.end),
             };
 
-            await apiService.post('/sports-fields', data);
+            const response = await apiService.post(
+              `/tourneys/${this.tourneyId}/sports-fields`,
+              data
+            );
+
+            // Définir l'ID de l'événement depuis la réponse du backend
+            event.setProp('id', response.data.id);
           }
 
           await this.fetchTourneySportsFields();
@@ -379,17 +349,15 @@
             endTime: this.formatTime(event.end),
           };
 
-          await apiService.put(`/sports-fields/${eventId}`, data);
+          await apiService.put(
+            `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
+            data
+          );
+          await this.fetchTourneySportsFields();
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
-      },
-      formatDisplayTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
       },
 
       async handleEventResize(info, fieldId) {
@@ -410,7 +378,11 @@
             endTime: this.formatTime(event.end),
           };
 
-          await apiService.put(`/sports-fields/${eventId}`, data);
+          await apiService.put(
+            `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
+            data
+          );
+          await this.fetchTourneySportsFields();
         } catch (error) {
           console.error(
             "Erreur lors du redimensionnement de l'événement :",
@@ -418,6 +390,13 @@
           );
           info.revert();
         }
+      },
+
+      formatDisplayTime(date) {
+        const d = new Date(date);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
       },
 
       formatTime(date) {
@@ -430,7 +409,10 @@
 
       async assignSport(data) {
         try {
-          await apiService.post('/sports-fields', data);
+          await apiService.post(
+            `/tourneys/${this.tourneyId}/sports-fields`,
+            data
+          );
           await this.fetchTourneySportsFields();
         } catch (error) {
           console.error(
@@ -442,8 +424,11 @@
 
       async deleteEvent(event) {
         try {
-          await apiService.delete(`/sports-fields/${event.id}`);
+          await apiService.delete(
+            `/tourneys/${this.tourneyId}/sports-fields/${event.id}`
+          );
           event.remove();
+          await this.fetchTourneySportsFields();
         } catch (error) {
           console.error('Erreur lors de la suppression du sport :', error);
         }

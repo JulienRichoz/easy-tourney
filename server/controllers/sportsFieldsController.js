@@ -1,7 +1,7 @@
 // server/controllers/sportsFieldsController.js
 // Contrôleur pour la gestion des associations sportsFields
 
-const { Field, Sport, SportsFields } = require('../models');
+const { Tourney, Field, Sport, SportsFields } = require('../models');
 
 // Créer une association sportsFields
 exports.createSportsFields = async (req, res) => {
@@ -24,7 +24,7 @@ exports.createSportsFields = async (req, res) => {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }
 
-        // Créer le sportsFields
+        // Créer l'association sport-terrain
         const sportsFields = await SportsFields.create({
             fieldId,
             sportId,
@@ -40,6 +40,86 @@ exports.createSportsFields = async (req, res) => {
     }
 };
 
+// Récupérer les sports associés à un tournoi, avec la possibilité de filtrer par terrain
+exports.getSportsFieldsByTourney = async (req, res) => {
+    try {
+      const tourneyId = req.params.tourneyId;
+  
+      // Récupérer tous les terrains du tournoi
+      const fields = await Field.findAll({
+        where: { tourneyId },
+        include: [
+          {
+            model: SportsFields,
+            as: 'sportsFields',
+            include: [
+              {
+                model: Sport,
+                as: 'sport',
+                attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
+              },
+            ],
+          },
+        ],
+      });
+  
+      if (!fields || fields.length === 0) {
+        return res.status(404).json({ message: 'Aucun terrain ou sport associé trouvé pour ce tournoi.' });
+      }
+  
+      res.status(200).json(fields);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des sports associés aux terrains du tournoi :', error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des sports.' });
+    }
+  };
+  
+// Récupérer une association sport-terrain par son ID
+exports.getSportFieldById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const sportsFields = await SportsFields.findByPk(id);
+
+        if (!sportsFields) {
+            return res.status(404).json({ message: "Sport associé au terrain non trouvé" });
+        }
+
+        res.status(200).json(sportsFields);
+    } catch (error) {
+        console.error("Erreur lors de la récupération du sport associé au terrain :", error);
+        res.status(500).json({ message: "Erreur lors de la récupération du sport associé au terrain" });
+    }
+};
+
+// Récupérer les sports associés à un terrain spécifique
+exports.getSportsByField = async (req, res) => {
+    try {
+        const { fieldId } = req.params;
+
+        const sportsFields = await SportsFields.findAll({
+            where: { fieldId },
+            include: [
+                {
+                    model: Sport,
+                    as: 'sport',
+                    attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
+                },
+            ],
+        });
+
+        if (sportsFields.length === 0) {
+            return res.status(404).json({ message: "Aucun sport n'est associé à ce terrain." });
+        }
+
+        res.status(200).json(sportsFields);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des sports par terrain :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sports.' });
+    }
+};
+
+// Mettre à jour une association sport-terrain
 exports.updateSportsFields = async (req, res) => {
     try {
         const { id } = req.params;
@@ -60,41 +140,24 @@ exports.updateSportsFields = async (req, res) => {
     }
 };
 
-exports.getSportFieldById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const sportsFields = await SportsFields.findByPk(id);
-
-        if (!sportsFields) {
-            return res.status(404).json({ message: "Sport associé au terrain non trouvé" });
-        }
-
-        res.status(200).json(sportsFields);
-    } catch (error) {
-        console.error("Erreur lors de la récupération du sport associé au terrain :", error);
-        res.status(500).json({ message: "Erreur lors de la récupération du sport associé au terrain" });
-    }
-}
-
+// Supprimer une association sport-terrain
 exports.deleteSportsFields = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Trouver le sportsFields par son ID
+        // Trouver l'association sport-terrain par son ID
         const sportsFields = await SportsFields.findByPk(id);
 
         if (!sportsFields) {
-            return res.status(404).json({ message: "sportsFields non trouvé." });
+            return res.status(404).json({ message: "Sport-terrain non trouvé." });
         }
 
         // Supprimer l'association du sport avec le terrain
         await sportsFields.destroy();
 
-        res.status(200).json({ message: 'sportsFields supprimé avec succès.' });
+        res.status(200).json({ message: 'Sport-terrain supprimé avec succès.' });
     } catch (error) {
-        console.error('Erreur lors de la suppression du sportsFields :', error);
-        res.status(500).json({ message: 'Erreur lors de la suppression du sportsFields' });
+        console.error('Erreur lors de la suppression de l\'association sport-terrain :', error);
+        res.status(500).json({ message: 'Erreur lors de la suppression de l\'association sport-terrain' });
     }
 };
-
