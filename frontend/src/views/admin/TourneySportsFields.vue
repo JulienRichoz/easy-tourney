@@ -67,24 +67,30 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id,
-        tourney: {},
-        fields: [],
-        sports: [],
+        tourneyId: this.$route.params.id, // ID du tournoi courant
+        tourney: {}, // Détails du tournoi
+        fields: [], // Liste des terrains du tournoi
+        sports: [], // Liste des sports disponibles
       };
     },
+
     async mounted() {
+      // Méthode appelée lorsque le composant est monté
       await this.fetchTourneySportsFields(); // Récupérer les sports associés aux terrains du tournoi
       await this.fetchSports(); // Récupérer tous les sports pour la sport list drag n drop
 
       // Rendre les éléments de sport externes "draggables"
       this.initializeExternalEvents();
     },
+
     computed: {
+      /**
+       * Génère dynamiquement les classes de la grille pour l'affichage responsive
+       * en fonction du nombre de terrains.
+       * @returns {string} Classes CSS à appliquer à la grille
+       */
       gridClasses() {
         const fieldCount = this.fields.length;
-
-        // Classes pour la grille responsive
         const baseClasses = 'grid-cols-1';
         const smClasses = 'sm:grid-cols-1';
         const mdClasses = fieldCount >= 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';
@@ -102,7 +108,12 @@
         ].join(' ');
       },
     },
+
     methods: {
+      /**
+       * Récupère les terrains et les sports associés du tournoi depuis l'API.
+       * Met à jour la liste des terrains et les détails du tournoi.
+       */
       async fetchTourneySportsFields() {
         try {
           const response = await apiService.get(
@@ -110,7 +121,6 @@
           );
           this.fields = response.data;
 
-          // Récupérer les informations du tournoi
           const tourneyResponse = await apiService.get(
             `/tourneys/${this.tourneyId}`
           );
@@ -126,6 +136,11 @@
           );
         }
       },
+
+      /**
+       * Récupère la liste de tous les sports disponibles depuis l'API.
+       * Met à jour la liste des sports.
+       */
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
@@ -138,6 +153,10 @@
         }
       },
 
+      /**
+       * Initialise les éléments de sports pour qu'ils soient "draggables".
+       * Permet de glisser les sports vers le calendrier pour les assigner à un terrain.
+       */
       initializeExternalEvents() {
         const containerEl = document.getElementById('external-events');
         new Draggable(containerEl, {
@@ -155,13 +174,17 @@
         });
       },
 
+      /**
+       * Génère les options pour FullCalendar en fonction des sports assignés à chaque terrain.
+       * @param {Object} field - Le terrain pour lequel on génère le calendrier.
+       * @returns {Object} Options configurées pour FullCalendar
+       */
       getFieldCalendarOptions(field) {
         if (!this.tourney.dateTourney) {
           console.error('La date du tournoi n’est pas disponible');
           return {};
         }
 
-        // Construire les événements
         const events = field.sportsFields.map((sportField) => ({
           id: sportField.id,
           title: sportField.sport.name,
@@ -176,20 +199,16 @@
 
         return {
           plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
-          initialView: 'timeGridDay', // Vous pouvez changer pour 'dayGridMonth' pour tester
+          initialView: 'timeGridDay', // Peut être modifié en 'dayGridMonth'
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: true,
           eventContent: this.renderEventContent,
           droppable: true,
           allDaySlot: false,
+          headerToolbar: false,
           defaultTimedEventDuration: '02:00',
           height: 600,
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
-          },
           slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
@@ -198,80 +217,74 @@
           eventReceive: (info) => this.handleEventReceive(info, field.id),
           eventDrop: (info) => this.handleEventDrop(info, field.id),
           eventResize: (info) => this.handleEventResize(info, field.id),
-          eventDataTransform: (eventData) => {
-            return {
-              ...eventData,
-              id: eventData.id, // Conserver l'ID de l'événement
-            };
-          },
           events: events,
         };
       },
 
+      /**
+       * Contenu personnalisé pour chaque événement dans FullCalendar,
+       * avec un bouton de suppression.
+       * @param {Object} arg - Détails de l'événement
+       * @returns {Object} Contenu DOM pour l'événement
+       */
       renderEventContent(arg) {
-        // Créer l'icône de suppression
         const deleteIcon = document.createElement('span');
-        deleteIcon.innerHTML = '&#10060;'; // Icône de croix
+        deleteIcon.innerHTML = '&#10060;';
         deleteIcon.classList.add('delete-icon');
         deleteIcon.style.float = 'right';
         deleteIcon.style.color = 'white';
         deleteIcon.style.cursor = 'pointer';
         deleteIcon.style.padding = '0 5px';
 
-        // Gestionnaire pour le double-clic sur les ordinateurs de bureau
         deleteIcon.addEventListener('dblclick', (e) => {
           e.stopPropagation();
           this.deleteEvent(arg.event);
         });
 
-        // Gestionnaire pour l'appui long sur les appareils mobiles
         let pressTimer;
-
         deleteIcon.addEventListener('touchstart', (e) => {
           e.stopPropagation();
           pressTimer = setTimeout(() => {
             this.deleteEvent(arg.event);
           }, 600);
         });
-
         deleteIcon.addEventListener('touchend', () => {
           clearTimeout(pressTimer);
         });
 
-        // Créer le titre de l'événement
         const title = document.createElement('span');
         title.innerText = arg.event.title;
-
         title.classList.add('font-semibold', 'text-white');
-        // Créer un conteneur pour le titre et l'icône de suppression
+
         const headerContainer = document.createElement('div');
         headerContainer.classList.add(
           'flex',
           'justify-between',
           'items-center'
         );
-
         headerContainer.appendChild(title);
         headerContainer.appendChild(deleteIcon);
 
-        // Formater les heures de début et de fin
         const startTime = this.formatDisplayTime(arg.event.start);
         const endTime = this.formatDisplayTime(arg.event.end);
-
         const timeRange = document.createElement('div');
         timeRange.innerText = `${startTime} - ${endTime}`;
         timeRange.classList.add('text-sm', 'text-white');
 
-        // Créer le conteneur principal
         const container = document.createElement('div');
         container.classList.add('flex', 'flex-col', 'space-y-1');
-
         container.appendChild(headerContainer);
         container.appendChild(timeRange);
 
         return { domNodes: [container] };
       },
 
+      /**
+       * Gestion de l'ajout d'un événement lorsqu'il est glissé depuis les sports externes.
+       * Crée ou met à jour l'événement selon qu'il existe déjà.
+       * @param {Object} info - Informations sur l'événement reçu
+       * @param {Number} newFieldId - ID du terrain où l'événement est assigné
+       */
       async handleEventReceive(info, newFieldId) {
         const event = info.event;
         try {
@@ -283,18 +296,15 @@
             return;
           }
 
-          // Vérifier si event.end est défini, sinon le définir
           if (!event.end) {
             const startDate = new Date(event.start);
             const endDate = new Date(startDate);
-            endDate.setHours(endDate.getHours() + 2); // Ajouter 2 heures
-            event.setEnd(endDate); // Mettre à jour l'heure de fin de l'événement
+            endDate.setHours(endDate.getHours() + 2);
+            event.setEnd(endDate);
           }
 
           if (event.id) {
-            // L'événement existe déjà, il est déplacé depuis un autre calendrier
             const eventId = event.id;
-
             const data = {
               fieldId: newFieldId,
               startTime: this.formatTime(event.start),
@@ -306,7 +316,6 @@
               data
             );
           } else {
-            // Nouvel événement : créer dans la base de données
             const data = {
               fieldId: newFieldId,
               sportId: sportId,
@@ -319,7 +328,6 @@
               data
             );
 
-            // Définir l'ID de l'événement depuis la réponse du backend
             event.setProp('id', response.data.id);
           }
 
@@ -330,6 +338,11 @@
         }
       },
 
+      /**
+       * Gestion du déplacement d'un événement d'un terrain à un autre dans le calendrier.
+       * @param {Object} info - Informations sur l'événement déplacé
+       * @param {Number} fieldId - ID du terrain où l'événement a été déplacé
+       */
       async handleEventDrop(info, fieldId) {
         const event = info.event;
         try {
@@ -360,6 +373,11 @@
         }
       },
 
+      /**
+       * Gestion du redimensionnement d'un événement (changement de durée).
+       * @param {Object} info - Informations sur l'événement redimensionné
+       * @param {Number} fieldId - ID du terrain de l'événement
+       */
       async handleEventResize(info, fieldId) {
         const event = info.event;
         try {
@@ -392,36 +410,10 @@
         }
       },
 
-      formatDisplayTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-      },
-
-      formatTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        const seconds = d.getSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
-      },
-
-      async assignSport(data) {
-        try {
-          await apiService.post(
-            `/tourneys/${this.tourneyId}/sports-fields`,
-            data
-          );
-          await this.fetchTourneySportsFields();
-        } catch (error) {
-          console.error(
-            "Erreur lors de l'assignation du sport au terrain:",
-            error
-          );
-        }
-      },
-
+      /**
+       * Supprime un événement du calendrier et de la base de données.
+       * @param {Object} event - Événement à supprimer
+       */
       async deleteEvent(event) {
         try {
           await apiService.delete(
@@ -432,6 +424,31 @@
         } catch (error) {
           console.error('Erreur lors de la suppression du sport :', error);
         }
+      },
+
+      /**
+       * Formatte l'affichage des heures d'un événement.
+       * @param {Date} date - La date à formater
+       * @returns {string} Heure formatée (HH:MM)
+       */
+      formatDisplayTime(date) {
+        const d = new Date(date);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      },
+
+      /**
+       * Formatte une date en format HH:MM:SS.
+       * @param {Date} date - La date à formater
+       * @returns {string} Heure formatée (HH:MM:SS)
+       */
+      formatTime(date) {
+        const d = new Date(date);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const seconds = d.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
       },
     },
   };
