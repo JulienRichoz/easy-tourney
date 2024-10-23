@@ -212,5 +212,24 @@ exports.generateTeams = async (req, res) => {
     }
 };
 
-
+// Suppression de toutes les équipes et réassignation des utilisateurs en tant que "Guest"
+exports.resetTeamsAndReassignUsers = async (req, res) => {
+    const { tourneyId } = req.params;
+  
+    try {
+      // Supprimer toutes les équipes du tournoi
+      await Team.destroy({ where: { tourneyId } });
+  
+      // Réassigner tous les utilisateurs du tournoi comme "Guest" (sans équipe)
+      await User.update(
+        { teamId: null, roleId: 4 }, // Réinitialiser les équipes et les rôles à "Guest"
+        { where: { tourneyId } }
+      );
+  
+      res.status(200).json({ message: 'Équipes supprimées et utilisateurs réassignés en tant que Guest.' });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation des équipes et des utilisateurs:', error);
+      res.status(500).json({ message: 'Erreur serveur' });
+    }
+  };
 

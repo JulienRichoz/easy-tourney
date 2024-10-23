@@ -1,6 +1,6 @@
 // server/routes/team.js
 const express = require('express');
-const { createTeam, getTeamsByTourney, updateTeam, deleteTeam, deleteAllTeamsByTourney, generateTeams, getTeamById, assignUserToTeam, removeUserFromTeam } = require('../controllers/teamController');
+const { createTeam, getTeamsByTourney, updateTeam, deleteTeam, deleteAllTeamsByTourney, generateTeams, getTeamById, assignUserToTeam, removeUserFromTeam, resetTeamsAndReassignUsers } = require('../controllers/teamController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId dans les contrôleurs
@@ -17,5 +17,6 @@ router.delete('/:id/users/:userId', isAuthenticated, isAdmin, removeUserFromTeam
 router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
 router.delete('/', isAuthenticated, isAdmin, deleteAllTeamsByTourney); // Supprimer toutes les équipes d'un tournoi
 router.post('/generate-teams', isAuthenticated, isAdmin, generateTeams); // Générer des équipes automatiquement pour un tournoi
+router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers);  // Réinitialiser les équipes et les utilisateurs
 
 module.exports = router;
