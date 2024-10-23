@@ -6,15 +6,17 @@ const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
 const { sequelize } = require('./models');
+
+// Import des routes
 const authRoutes = require('./routes/auth');
 const sportRoutes = require('./routes/sport');
 const tourneyRoutes = require('./routes/tourney');
 const sportsFieldsRoutes = require('./routes/sportsFields');
 const fieldRoutes = require('./routes/field');
 const teamRoutes = require('./routes/team');
-const usersTourneysRoutes = require('./routes/usersTourneys');
 const teamSetupRoutes = require('./routes/teamSetup');
-
+const usersTourneysRoutes = require('./routes/usersTourneys');
+//const userRoutes = require('./routes/user');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -33,7 +35,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
-app.use('/api/users-tourneys', usersTourneysRoutes);
+//app.use('/api/users', userRoutes);
 
 // Routes centrées sur le tournoi
 app.use('/api/tourneys', tourneyRoutes);
@@ -41,6 +43,8 @@ app.use('/api/tourneys/:tourneyId/teams', teamRoutes)
 app.use('/api/tourneys/:tourneyId/team-setup', teamSetupRoutes);
 app.use('/api/tourneys/:tourneyId/fields', fieldRoutes);
 app.use('/api/tourneys/:tourneyId/sports-fields', sportsFieldsRoutes);
+app.use('/api/tourneys/:tourneyId/users', usersTourneysRoutes); 
+
 
 // Gestion des erreurs
 app.use(errorHandler);

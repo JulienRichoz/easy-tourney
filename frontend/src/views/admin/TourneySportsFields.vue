@@ -14,12 +14,18 @@
         :key="sport.id"
         :data-id="sport.id"
         :style="{ backgroundColor: sport.color }"
-        class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer transform transition duration-300 w-28 shadow-md flex items-center justify-center external-event hover:scale-110 hover:shadow-xl active:scale-95"
+        class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer transform transition duration-100 w-28 shadow-md flex items-center justify-center external-event hover:scale-110 active:scale-95"
       >
         {{ sport.name }}
       </div>
     </div>
 
+    <!-- Si aucun terrain n'est trouvé, afficher un message d'avertissement -->
+    <div v-if="!fields.length">
+      <ErrorMessageComponent
+        message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des sports."
+      ></ErrorMessageComponent>
+    </div>
     <!-- Grille des terrains avec le calendrier FullCalendar -->
     <div
       v-if="tourney.dateTourney && fields.length"
@@ -59,11 +65,13 @@
   import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
+  import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
 
   export default {
     components: {
       FullCalendar,
       TourneySubMenu,
+      ErrorMessageComponent,
     },
     data() {
       return {
@@ -467,10 +475,6 @@
     text-align: center;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .sport-item:hover {
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
 
   @import '@/assets/fullcalendar.css';

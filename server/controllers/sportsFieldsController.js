@@ -64,8 +64,8 @@ exports.getSportsFieldsByTourney = async (req, res) => {
       });
   
       if (!fields || fields.length === 0) {
-        return res.status(404).json({ message: 'Aucun terrain ou sport associé trouvé pour ce tournoi.' });
-      }
+        return res.status(200).json({ message: 'Aucun terrain trouvé. Veuillez créer des terrains.', fields: [] });
+    }
   
       res.status(200).json(fields);
     } catch (error) {

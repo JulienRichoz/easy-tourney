@@ -16,6 +16,7 @@ module.exports = {
           background: '#f3f4f6', // bg-gray-100
           card: '#ffffff',
           menu: '#1f2937', // bg-gray-800
+          errorMessage: '#ff7200',
           menuText: '#ffffff',
           menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
@@ -82,6 +83,7 @@ module.exports = {
           card: '#1f2937', // bg-custom_dark_1
           menu: '#1f2937', // bg-gray-800
           menuText: '#ffffff',
+          errorMessage: '#ff7200',
           menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
           profileText: '#38a169', // green-400
