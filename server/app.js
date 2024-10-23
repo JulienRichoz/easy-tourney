@@ -45,7 +45,6 @@ app.use('/api/tourneys/:tourneyId/fields', fieldRoutes);
 app.use('/api/tourneys/:tourneyId/sports-fields', sportsFieldsRoutes);
 app.use('/api/tourneys/:tourneyId/users', usersTourneysRoutes); 
 
-
 // Gestion des erreurs
 app.use(errorHandler);
 

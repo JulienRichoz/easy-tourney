@@ -8,6 +8,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams pour accéd
 
 // Routes pour gérer les terrains d'un tournoi
 // http://localhost:3000/api/tourneys/:tourneyId/fields
+
 router.post('/', isAuthenticated, isAdmin, createField); // Créer un terrain (admin uniquement)
 router.get('/', isAuthenticated, getFieldsByTourneyId); // Récupérer tous les terrains d'un tournoi
 router.get('/:id', isAuthenticated, getFieldById); // Récupérer un terrain spécifique par son ID

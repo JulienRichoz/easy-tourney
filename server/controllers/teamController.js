@@ -38,6 +38,33 @@ exports.getTeamsByTourney = async (req, res) => {
     }
 };
 
+// Récupérer les détails d'une équipe, y compris les utilisateurs associés
+exports.getTeamById = async (req, res) => {
+    const { id, tourneyId } = req.params;
+
+    try {
+        const team = await Team.findOne({
+            where: { id, tourneyId },
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'name', 'email'], // Informations des utilisateurs associés
+                },
+            ],
+        });
+
+        if (!team) {
+            return res.status(404).json({ message: 'Équipe non trouvée.' });
+        }
+
+        res.status(200).json(team);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des détails de l\'équipe :', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la récupération des détails de l\'équipe.' });
+    }
+};
+
+
 // Mettre à jour une équipe
 exports.updateTeam = async (req, res) => {
     const { id } = req.params; // ID de l'équipe à mettre à jour
@@ -98,11 +125,68 @@ exports.deleteAllTeamsByTourney = async (req, res) => {
     }
 };
 
+// Assigner un utilisateur à une équipe
+exports.assignUserToTeam = async (req, res) => {
+    const { id } = req.params; // ID de l'équipe
+    const { userId } = req.body; // ID de l'utilisateur à assigner
+
+    try {
+        const team = await Team.findByPk(id);
+        if (!team) {
+            return res.status(404).json({ message: 'Équipe non trouvée.' });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+
+        user.teamId = id; // Assigner l'utilisateur à l'équipe
+        await user.save();
+
+        res.status(200).json({ message: 'Utilisateur assigné à l\'équipe avec succès.' });
+    } catch (error) {
+        console.error('Erreur lors de l\'assignation de l\'utilisateur à l\'équipe :', error);
+        res.status(500).json({ message: 'Erreur serveur lors de l\'assignation de l\'utilisateur à l\'équipe.' });
+    }
+};
+
+// Supprimer un utilisateur d'une équipe
+exports.removeUserFromTeam = async (req, res) => {
+    const { id, userId } = req.params; // ID de l'équipe et de l'utilisateur
+
+    try {
+        const team = await Team.findByPk(id);
+        if (!team) {
+            return res.status(404).json({ message: 'Équipe non trouvée.' });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+
+        user.teamId = null; // Retirer l'utilisateur de l'équipe
+        await user.save();
+
+        res.status(200).json({ message: 'Utilisateur retiré de l\'équipe avec succès.' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur de l\'équipe :', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur de l\'équipe.' });
+    }
+};
+
 // Générer des équipes pour un tournoi
 exports.generateTeams = async (req, res) => {
     const { tourneyId } = req.params;
 
     try {
+        // Vérifier s'il existe déjà des équipes pour le tournoi
+        const existingTeams = await Team.findAll({ where: { tourneyId } });
+        if (existingTeams.length > 0) {
+            return res.status(400).json({ message: 'Des équipes existent déjà pour ce tournoi.' });
+        }
+
         // Récupérer la configuration d'équipe pour le tournoi
         const teamSetup = await TeamSetup.findOne({ where: { tourneyId } });
         if (!teamSetup) {
@@ -127,5 +211,6 @@ exports.generateTeams = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
 
 

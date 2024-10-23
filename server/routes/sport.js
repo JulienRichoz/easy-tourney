@@ -8,6 +8,7 @@ const { isAuthenticated, isAdmin } = require('../middlewares');
 
 // Routes pour gérer les sports
 // http://localhost:3000/api/sports
+
 router.post('/', isAuthenticated, isAdmin, upload, createSport); // Créer un sport (admin uniquement)
 router.get('/', getSports); // Récupérer tous les sports
 router.get('/:id', getSportById); // Récupérer un sport par son ID

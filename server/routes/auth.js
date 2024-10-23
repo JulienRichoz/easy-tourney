@@ -2,12 +2,13 @@
 // Purpose: Define the routes for user authentication
 
 const express = require('express');
+const router = express.Router();
 const { authenticateToken } = require('../middlewares'); // Middleware d'authentification
 const authController = require('../controllers/authController');
 
-const router = express.Router();
-
 // Routes d'authentification
+// http://localhost:3000/api/auth
+
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/profile', authenticateToken, authController.getProfile);
