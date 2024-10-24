@@ -116,6 +116,18 @@ const routes = [
     component: TourneySportsFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
+  {
+    path: '/tourneys/:id/teams',
+    name: 'TourneyTeams',
+    component: () => import('@/views/admin/TourneyTeams.vue'), //
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/tourneys/:id/teams/:teamId',
+    name: 'TeamDetails',
+    component: () => import('@/views/admin/TourneyTeamDetails.vue'), //  Lazy loading du composant, Composant pour la page de gestion d'une équipe individuelle
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
 ];
 
 // Configuration du routeur Vue

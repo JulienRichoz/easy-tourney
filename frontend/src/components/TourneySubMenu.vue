@@ -16,7 +16,7 @@
     <router-link
       :to="`/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
-      :class="{ active: $route.name === 'AdminFields' }"
+      :class="{ active: $route.name === 'TourneyFields' }"
     >
       <font-awesome-icon :icon="['fas', 'map']" />
       <span class="hidden sm:inline"> Terrains</span>
@@ -24,7 +24,7 @@
     <router-link
       :to="`/tourneys/${tourneyId}/sports-fields`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
-      :class="{ active: $route.name === 'SportsFields' }"
+      :class="{ active: $route.name === 'TourneySportsFields' }"
     >
       <font-awesome-icon :icon="['fas', 'futbol']" />
       <span class="hidden sm:inline"> Assignation</span>
