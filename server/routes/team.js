@@ -5,7 +5,6 @@ const {
     getTeamsByTourney,
     updateTeam,
     deleteTeam,
-    deleteAllTeamsByTourney,
     generateTeams,
     getTeamById,
     assignUserToTeam,
@@ -33,6 +32,5 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une é
 // Routes pour les opérations globales sur les équipes
 router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe pour un tournoi (admin uniquement)
 router.get('/', isAuthenticated, getTeamsByTourney); // Obtenir toutes les équipes d'un tournoi
-router.delete('/', isAuthenticated, isAdmin, deleteAllTeamsByTourney); // Supprimer toutes les équipes d'un tournoi
 
 module.exports = router;

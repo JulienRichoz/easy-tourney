@@ -126,26 +126,6 @@ exports.deleteTeam = async (req, res) => {
     }
 };
 
-// Supprimer toutes les équipes d'un tournoi
-exports.deleteAllTeamsByTourney = async (req, res) => {
-    const { tourneyId } = req.params;
-
-    try {
-        const deletedCount = await Team.destroy({
-            where: { tourneyId },
-        });
-
-        if (deletedCount === 0) {
-            return res.status(404).json({ message: 'Aucune équipe trouvée pour ce tournoi.' });
-        }
-
-        res.status(200).json({ message: `${deletedCount} équipes supprimées.` });
-    } catch (error) {
-        console.error('Erreur lors de la suppression des équipes :', error);
-        res.status(500).json({ message: 'Erreur serveur lors de la suppression des équipes.' });
-    }
-};
-
 // Assigner un utilisateur à une équipe
 exports.assignUserToTeam = async (req, res) => {
     const { id, tourneyId } = req.params;
@@ -275,7 +255,7 @@ exports.generateTeams = async (req, res) => {
         res.status(201).json({ message: 'Équipes générées avec succès', teams });
     } catch (error) {
         console.error('Erreur lors de la génération des équipes:', error);
-        res.status(500).json({ message: 'Erreur serveur', error });
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
 

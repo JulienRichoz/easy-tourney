@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams pour accéd
 const {
   addUserToTourney,
   getUsersByTourney,
+  assignTeamToUser,
   removeUserFromTourney,
   getUserInfoByTourney,
   getUnassignedUsersByTourney
@@ -13,6 +14,7 @@ const { isAuthenticated, isAdmin } = require('../middlewares');
 // Base URL: http://localhost:3000/api/tourneys/:tourneyId/users
 
 router.post('/', isAuthenticated, isAdmin, addUserToTourney); // Ajouter un utilisateur à un tournoi
+router.post('/:userId/teams', isAuthenticated, isAdmin, assignTeamToUser); // Assigner une équipe à un utilisateur
 router.get('/', isAuthenticated, getUsersByTourney); // Récupérer tous les utilisateurs du tournoi (hors admin)
 router.get('/unassigned-users', isAuthenticated, getUnassignedUsersByTourney); // Récupérer les utilisateurs sans team pour un tournoi donné
 router.get('/:userId', isAuthenticated, getUserInfoByTourney); // Récupérer les informations d'un utilisateur pour un tournoi donné

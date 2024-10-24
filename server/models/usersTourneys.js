@@ -24,6 +24,12 @@ module.exports = (sequelize, DataTypes) => {
         {
             sequelize,
             modelName: 'UsersTourneys',
+            indexes: [
+                {
+                    unique: true,
+                    fields: ['userId', 'tourneyId'], // Contrainte d'unicité sur la combinaison
+                }
+            ]
         }
     );
 

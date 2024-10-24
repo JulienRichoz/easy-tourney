@@ -39,9 +39,18 @@ module.exports = {
         defaultValue: Sequelize.NOW
       }
     });
+
+     // Ajout de la contrainte d'unicité
+     await queryInterface.addConstraint('UsersTourneys', {
+      fields: ['userId', 'tourneyId'],
+      type: 'unique',
+      name: 'unique_user_tourney'
+    });
   },
 
   down: async (queryInterface, Sequelize) => {
+    // Supprimer d'abord la contrainte avant de supprimer la table
+    await queryInterface.removeConstraint('UsersTourneys', 'unique_user_tourney');
     await queryInterface.dropTable('UsersTourneys');
   }
 };
