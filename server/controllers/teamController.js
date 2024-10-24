@@ -39,7 +39,7 @@ exports.getTeamsByTourney = async (req, res) => {
             include: [
                 {
                     model: User,
-                    attributes: ['id', 'name', 'email', 'roleId', 'teamId'],
+                    attributes: ['id', 'name', 'roleId', 'teamId'],
                 },
             ],
         });
