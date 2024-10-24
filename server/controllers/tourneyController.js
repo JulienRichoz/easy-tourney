@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 // Contrôleur pour la gestion des tournois
 
-const { Tourney, Field, SportsFields, Sport, TeamSetup, ScheduleTourney } = require('../models');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney } = require('../models');
 
 exports.createTourney = async (req, res) => {
     try {
