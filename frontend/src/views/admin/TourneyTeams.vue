@@ -56,6 +56,7 @@
           :key="team.id"
           :title="team.teamName || 'Nom manquant'"
           :description="getTeamStatus(team)"
+          :cornerCount="`${team.Users.length}/${teamSetup.playerPerTeam}`"
           :hasActions="true"
           :showDeleteButton="true"
           :showEditButton="true"
@@ -235,6 +236,7 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/teams`
           );
+          console.log('Teams API Response: ', response.data);
           this.teams = response.data;
         } catch (error) {
           console.error('Erreur lors de la récupération des groupes:', error);
@@ -349,24 +351,29 @@
         this.showModal = false;
       },
       getTeamStatus(team) {
+        console.log('Team Data: ', team); // Ajout du log pour chaque équipe
+
         if (!team || typeof team !== 'object') {
           return 'Erreur de données';
         }
 
-        // Vérifie si 'players' est un tableau
-        if (!Array.isArray(team.players)) {
+        // Vérifie si 'Users' est un tableau
+        if (!Array.isArray(team.Users)) {
           return 'Aucun joueur associé';
         }
 
+        // Vérifie si l'équipe est complète
         if (team.isFull) {
           return 'Complet';
         }
 
-        if (team.players.length === 0) {
+        // Si aucun joueur n'est associé
+        if (team.Users.length === 0) {
           return 'Vide';
         }
 
-        return `Partiel (${team.players.length}/${team.maxPlayers || 0})`;
+        // Si l'équipe est partiellement remplie
+        return `Partiel (${team.Users.length}/${team.maxPlayers || 0})`;
       },
     },
     mounted() {

@@ -4,6 +4,13 @@
     class="cursor-pointer bg-light-card dark:bg-dark-card p-4 rounded-lg shadow-md hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground transition-transform transform hover:scale-105 flex flex-col justify-between h-auto min-h-[200px]"
     @click="$emit('click')"
   >
+    <!-- Affiche le compteur en haut à droite s'il est fourni -->
+    <div
+      v-if="cornerCount"
+      class="absolute top-2 right-2 text-xs font-semibold text-gray-500"
+    >
+      {{ cornerCount }}
+    </div>
     <img
       v-if="image"
       :src="image"
@@ -129,6 +136,7 @@
         type: String,
         default: '',
       },
+      cornerCount: String,
     },
     computed: {
       formattedDate() {
