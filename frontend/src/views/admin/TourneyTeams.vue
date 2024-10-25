@@ -73,7 +73,7 @@
               @click="navigateToUnassignedUsers"
               variant="info"
               class="flex items-left space-x-2"
-              fontAwesomeIcon="users"
+              fontAwesomeIcon="eye"
             >
               <span>Sans groupe ({{ unassignedUsers.length }})</span>
             </ButtonComponent>
