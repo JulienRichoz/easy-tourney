@@ -40,9 +40,44 @@
       <!-- Filtres pour les équipes -->
       <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
 
-      <!-- Affichage des équipes -->
+      <!-- Carte pour les utilisateurs non assignés, uniquement visible s'il y a des utilisateurs non assignés -->
+      <CardEditComponent
+        v-if="unassignedUsers.length > 0"
+        title="Utilisateurs Non Assignés"
+        :description="`${unassignedUsers.length} invités`"
+        :cornerCount="`${unassignedUsers.length}`"
+        :hasActions="false"
+        @click="openUnassignedModal"
+      />
+
+      <p v-else class="text-gray-500 text-sm">
+        Aucun utilisateur non assigné, tous sont dans des équipes.
+      </p>
+
+      <!-- Modale pour les utilisateurs non assignés -->
+      <ModalComponent
+        v-if="showUnassignedModal"
+        title="Utilisateurs Non Assignés"
+        @close="closeUnassignedModal"
+      >
+        <template #content>
+          <ul v-if="unassignedUsers.length > 0">
+            <li
+              v-for="user in unassignedUsers"
+              :key="user.id"
+              class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
+            >
+              <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
+              <span class="truncate">{{ user.name }}</span>
+            </li>
+          </ul>
+          <p v-else>Aucun utilisateur non assigné.</p>
+        </template>
+      </ModalComponent>
+
+      <!-- Grille d'affichage des équipes -->
       <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6"
       >
         <!-- Carte pour ajouter un nouveau groupe -->
         <CardAddComponent
@@ -55,22 +90,39 @@
           v-for="team in filteredTeams"
           :key="team.id"
           :title="team.teamName || 'Nom manquant'"
-          :description="getTeamStatus(team)"
-          :cornerCount="`${team.Users.length}/${teamSetup.playerPerTeam}`"
+          :cornerCount="
+            team.type === 'assistant'
+              ? `${team.Users.length}`
+              : `${team.Users.length}/${teamSetup.playerPerTeam}`
+          "
+          :titleColor="getStatusColor(team)"
           :hasActions="true"
           :showDeleteButton="true"
           :showEditButton="true"
           @delete="confirmDeleteTeam(team.id)"
           @edit="editTeam(team)"
           @click="openTeamDetails(team)"
-        />
+        >
+          <!-- Liste des membres en deux colonnes -->
+          <template #user-list>
+            <ul class="grid grid-cols-2 gap-2 mt-2">
+              <li
+                v-for="user in team.Users"
+                :key="user.id"
+                class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
+              >
+                <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
+                <span class="truncate">{{ user.name }}</span>
+              </li>
+            </ul>
+          </template>
+        </CardEditComponent>
       </div>
 
       <!-- Modale pour modifier teamSetup -->
       <ModalComponent
         :isVisible="showTeamSetupModal"
         title="Configuration des équipes"
-        @close="closeTeamSetupModal"
       >
         <template #content>
           <!-- Formulaire de configuration des équipes -->
@@ -78,6 +130,7 @@
             v-model="teamSetup"
             :fields="teamSetupFields"
             @form-submit="handleTeamSetupSubmit"
+            @close="closeTeamSetupModal"
           />
         </template>
       </ModalComponent>
@@ -144,6 +197,8 @@
       return {
         tourneyId: this.$route.params.id, // Récupération du tourneyId depuis les params
         teams: [], // Liste des équipes
+        unassignedUsers: [], // utilisateurs non assignés
+        showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
         showTeamSetupModal: false,
@@ -205,27 +260,37 @@
     computed: {
       filteredTeams() {
         return this.teams.filter((team) => {
-          if (this.filters[0].value === 'full') return team.isFull;
-          if (this.filters[0].value === 'partial')
-            return !team.isFull && team.players.length > 0;
-          if (this.filters[0].value === 'empty')
-            return team.players.length === 0;
+          const maxPlayers = this.teamSetup.playerPerTeam || team.maxPlayers;
+
+          if (this.filters[0].value === 'full') {
+            return team.Users.length >= maxPlayers; // Équipes pleines
+          }
+          if (this.filters[0].value === 'partial') {
+            return team.Users.length > 0 && team.Users.length < maxPlayers; // Partiellement remplies
+          }
+          if (this.filters[0].value === 'empty') {
+            return team.Users.length === 0; // Équipes vides
+          }
           return true;
         });
       },
       formFields() {
         return [
           {
-            name: 'name',
+            name: 'teamName',
             label: 'Nom du groupe',
             type: 'text',
             required: true,
           },
           {
-            name: 'description',
-            label: 'Description du groupe',
-            type: 'textarea',
-            required: false,
+            name: 'type',
+            label: 'Type du groupe',
+            type: 'select',
+            options: [
+              { label: 'Assistant', value: 'assistant' },
+              { label: 'Player', value: 'player' },
+            ],
+            required: true,
           },
         ];
       },
@@ -236,10 +301,13 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/teams`
           );
-          console.log('Teams API Response: ', response.data);
+          const unassignedResponse = await apiService.get(
+            `/tourneys/${this.tourneyId}/users/unassigned-users`
+          );
+          this.unassignedUsers = unassignedResponse.data;
           this.teams = response.data;
         } catch (error) {
-          console.error('Erreur lors de la récupération des groupes:', error);
+          console.error('Erreur lors de la récupération des données:', error);
         }
       },
       async generateTeams() {
@@ -263,8 +331,27 @@
         }
       },
       handleFilterChange(filter) {
-        // Mettre à jour les filtres sélectionnés
         this.filters[0].value = filter.value;
+      },
+      getStatusColor(team) {
+        const maxPlayers = this.teamSetup.playerPerTeam || team.maxPlayers;
+        const minPlayers = this.teamSetup.minPlayerPerTeam;
+
+        if (team.Users.length > maxPlayers) {
+          return 'red'; // Erreur grave : trop de joueurs dans l'équipe
+        } else if (team.Users.length >= minPlayers) {
+          return 'green'; // Valide : nombre de joueurs suffisant
+        } else if (team.Users.length > 0) {
+          return 'gray'; // Partiel : encore des places disponibles
+        } else {
+          return ''; // Aucun joueur, pas de pastille
+        }
+      },
+      openUnassignedModal() {
+        this.showUnassignedModal = true;
+      },
+      closeUnassignedModal() {
+        this.showUnassignedModal = false;
       },
       async handleTeamSetupSubmit() {
         try {
@@ -282,7 +369,7 @@
         this.editingTeamId = null;
         this.newTeam = {
           name: '',
-          description: '',
+          type: 'player',
           tourneyId: this.tourneyId,
         };
         this.showModal = true;
@@ -292,11 +379,9 @@
         this.newTeam = { ...team };
         this.showModal = true;
       },
-      // Ouvre le modal de configuration du teamSetup
       openTeamSetupModal() {
         this.showTeamSetupModal = true;
       },
-      // Ferme le modal de configuration
       closeTeamSetupModal() {
         this.showTeamSetupModal = false;
       },
@@ -305,25 +390,31 @@
         this.isSubmitting = true;
 
         try {
+          const payload = {
+            teamName: this.newTeam.teamName,
+            type: this.newTeam.type,
+            tourneyId: this.tourneyId,
+          };
+
           if (this.editingTeamId) {
-            await apiService.put(
+            apiService.put(
               `/tourneys/${this.tourneyId}/teams/${this.editingTeamId}`,
-              this.newTeam
+              payload
             );
-            toast.success('Groupe modifié avec succès !');
           } else {
-            await apiService.post(
-              `/tourneys/${this.tourneyId}/teams`,
-              this.newTeam
-            );
-            toast.success('Nouveau groupe ajouté avec succès !');
+            apiService.post(`/tourneys/${this.tourneyId}/teams`, payload);
           }
-          this.closeModal();
+
+          toast.success(
+            `Groupe ${this.editingTeamId ? 'modifié' : 'ajouté'} avec succès !`
+          );
           this.fetchTeams();
         } catch (error) {
           toast.error("Erreur lors de l'enregistrement du groupe.");
         } finally {
           this.isSubmitting = false;
+          this.closeModal();
+          this.fetchTeams();
         }
       },
       confirmDeleteTeam(id) {
@@ -349,31 +440,6 @@
       },
       closeModal() {
         this.showModal = false;
-      },
-      getTeamStatus(team) {
-        console.log('Team Data: ', team); // Ajout du log pour chaque équipe
-
-        if (!team || typeof team !== 'object') {
-          return 'Erreur de données';
-        }
-
-        // Vérifie si 'Users' est un tableau
-        if (!Array.isArray(team.Users)) {
-          return 'Aucun joueur associé';
-        }
-
-        // Vérifie si l'équipe est complète
-        if (team.isFull) {
-          return 'Complet';
-        }
-
-        // Si aucun joueur n'est associé
-        if (team.Users.length === 0) {
-          return 'Vide';
-        }
-
-        // Si l'équipe est partiellement remplie
-        return `Partiel (${team.Users.length}/${team.maxPlayers || 0})`;
       },
     },
     mounted() {

@@ -31,6 +31,11 @@
       </h2>
     </div>
 
+    <!-- Affichage de la liste des utilisateurs si le slot "user-list" est utilisé -->
+    <div v-if="$slots['user-list']">
+      <slot name="user-list"></slot>
+    </div>
+
     <!-- Afficher la description si fournie -->
     <div
       v-if="description"
