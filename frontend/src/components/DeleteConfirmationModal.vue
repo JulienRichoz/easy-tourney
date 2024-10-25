@@ -1,7 +1,10 @@
 <template>
   <div
     v-if="isVisible"
+    ref="modalContainer"
     class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center"
+    tabindex="0"
+    @keydown.enter="handleConfirm"
   >
     <div
       class="bg-light-modal-content dark:bg-dark-modal-content p-8 rounded-lg w-full max-w-md"
@@ -65,6 +68,7 @@
 </template>
 
 <script>
+  import { ref, watch, nextTick } from 'vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import FormComponent from '@/components/FormComponent.vue';
 
@@ -96,46 +100,59 @@
           'Cette action est irréversible et entraîne des suppressions en cascade. Risque de pertes de données annexes.',
       },
     },
-    data() {
-      return {
-        formData: {
-          confirmationText: '',
+    setup(props, { emit }) {
+      const modalContainer = ref(null);
+
+      const formData = ref({
+        confirmationText: '',
+      });
+
+      const formFields = [
+        {
+          name: 'confirmationText',
+          label: 'Tapez "CONFIRM" pour confirmer',
+          type: 'text',
+          required: true,
         },
+      ];
+
+      const handleCancel = () => {
+        emit('cancel');
       };
-    },
-    computed: {
-      formFields() {
-        return [
-          {
-            name: 'confirmationText',
-            label: 'Tapez "CONFIRM" pour confirmer',
-            type: 'text',
-            required: true,
-          },
-        ];
-      },
-    },
-    methods: {
-      handleCancel() {
-        this.$emit('cancel');
-      },
-      handleConfirm() {
+
+      const handleConfirm = () => {
         if (
-          !this.isHardDelete ||
-          this.formData.confirmationText === 'CONFIRM'
+          !props.isHardDelete ||
+          formData.value.confirmationText === 'CONFIRM'
         ) {
-          this.$emit('confirm');
+          emit('confirm');
           // Réinitialiser le champ après confirmation
-          this.formData.confirmationText = '';
+          formData.value.confirmationText = '';
         }
-      },
-    },
-    watch: {
-      isVisible(newVal) {
-        if (!newVal) {
-          this.formData.confirmationText = '';
+      };
+
+      watch(
+        () => props.isVisible,
+        (newVal) => {
+          if (newVal) {
+            nextTick(() => {
+              if (modalContainer.value) {
+                modalContainer.value.focus();
+              }
+            });
+          } else {
+            formData.value.confirmationText = '';
+          }
         }
-      },
+      );
+
+      return {
+        modalContainer,
+        formData,
+        formFields,
+        handleCancel,
+        handleConfirm,
+      };
     },
   };
 </script>
