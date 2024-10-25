@@ -58,10 +58,17 @@ exports.getTeamSetup = async (req, res) => {
 
     try {
         const teamSetup = await TeamSetup.findOne({ where: { tourneyId } });
+        
         if (!teamSetup) {
-            return res.status(404).json({ message: 'Configuration de team non trouvée' });
+            // Si aucune configuration n'est trouvée, renvoyer une structure par défaut
+            return res.json({
+                maxTeamNumber: null,
+                playerPerTeam: null,
+                minPlayerPerTeam: null,
+                playerEstimated: null,
+                message: 'Aucune configuration trouvée. Veuillez configurer les équipes.'
+            });
         }
-
         res.json(teamSetup);
     } catch (error) {
         console.error('Erreur lors de la récupération de la configuration de team:', error);

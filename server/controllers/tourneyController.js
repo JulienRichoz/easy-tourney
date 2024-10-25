@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 // Contrôleur pour la gestion des tournois
-
-const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney } = require('../models');
+const { Op } = require('sequelize');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, Role } = require('../models');
 
 exports.createTourney = async (req, res) => {
     try {
@@ -173,4 +173,82 @@ exports.getSportsByField = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
     }
 };
+exports.getTourneyTeamsDetails = async (req, res) => {
+    const tourneyId = req.params.id; // Correctement assigné
 
+    try {
+        console.log('tourneyId:', tourneyId); // Log pour débogage
+
+        // Vérifier si le tournoi existe
+        const tourney = await Tourney.findByPk(tourneyId);
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé' });
+        }
+
+        // Récupérer la configuration des équipes avec TeamSetup
+        const teamSetup = await TeamSetup.findOne({
+            where: { tourneyId },
+            attributes: ['maxTeamNumber', 'playerPerTeam', 'minPlayerPerTeam', 'playerEstimated']
+        });
+
+        // Récupérer toutes les équipes avec leurs utilisateurs
+        const teams = await Team.findAll({
+            where: { tourneyId },
+            include: [
+                {
+                    model: User,
+                    as: 'Users', // Assurez-vous que l'alias est correct
+                    attributes: ['id', 'name', 'roleId', 'teamId'],
+                    include: [
+                        {
+                            model: Role,
+                            as: 'role', // Assurez-vous que l'alias correspond
+                            attributes: ['name'],
+                            where: { name: { [Op.ne]: 'admin' } } // Exclure les admins
+                        }
+                    ]
+                }
+            ],
+            attributes: ['id', 'teamName', 'type']
+        });
+
+        // Récupérer les utilisateurs non assignés via l'association N-N
+        const unassignedUsers = await User.findAll({
+            include: [{
+                model: Tourney,
+                as: 'tourneys',
+                where: { id: tourneyId },
+                attributes: []
+            }],
+            where: {
+                teamId: null,
+                roleId: 4 // 'guest'
+            },
+            attributes: ['id', 'name', 'roleId', 'teamId']
+        });
+
+        // Récupérer tous les utilisateurs inscrits (hors admin) via l'association N-N
+        const allUsers = await User.findAll({
+            include: [{
+                model: Tourney,
+                as: 'tourneys',
+                where: { id: tourneyId },
+                attributes: []
+            }],
+            where: {
+                roleId: { [Op.ne]: 1 } // 'admin'
+            },
+            attributes: ['id', 'name', 'roleId', 'teamId']
+        });
+
+        res.json({
+            teamSetup,
+            teams,
+            unassignedUsers,
+            allUsers
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des détails du tournoi:', error);
+        res.status(500).json({ message: 'Erreur serveur', error });
+    }
+};
