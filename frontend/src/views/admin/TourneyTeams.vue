@@ -39,12 +39,12 @@
           <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
           <ButtonComponent
             v-if="teams.length > 0"
-            @click="resetTeams"
+            @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
           >
             <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Réinitialiser les équipes</span>
+            <span class="hidden sm:inline">Reset les équipes</span>
           </ButtonComponent>
         </div>
       </div>
@@ -119,7 +119,7 @@
         <template #content>
           <!-- Formulaire de configuration des équipes -->
           <FormComponent
-            v-model="teamSetup"
+            v-model="localTeamSetup"
             :fields="teamSetupFields"
             @form-submit="handleTeamSetupSubmit"
             @cancel="closeTeamSetupModal"
@@ -148,8 +148,18 @@
       <!-- Confirmation de suppression -->
       <DeleteConfirmationModal
         :isVisible="showDeleteConfirmation"
+        :isHardDelete="false"
         @cancel="closeDeleteConfirmation"
         @confirm="deleteTeam(confirmedDeleteTeamId)"
+      />
+
+      <!-- Modale pour confirmer le reset des teams -->
+      <DeleteConfirmationModal
+        :isVisible="showModalResetTeams"
+        @cancel="closeModalResetTeams"
+        @confirm="handleResetAllTeamsSubmit"
+        :isHardDelete="true"
+        hardDeleteMessage="Tous les groupes seront supprimés et les utilisateurs n'auront plus de groupe (reset complet). Il ne sera pas possible de revenir en arrière. Êtes-vous sûr de vouloir continuer ?"
       />
     </div>
   </div>
@@ -188,7 +198,9 @@
         showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
+        localTeamSetup: {}, // Variable temporaire pour le modal
         showTeamSetupModal: false,
+        showModalResetTeams: false,
         confirmedDeleteTeamId: null,
         newTeam: {
           name: '',
@@ -345,7 +357,22 @@
       closeUnassignedModal() {
         this.showUnassignedModal = false;
       },
+      closeModalResetTeams() {
+        this.showModalResetTeams = false;
+      },
+      openModalResetTeams() {
+        this.showModalResetTeams = true;
+      },
+      async handleResetAllTeamsSubmit() {
+        await this.resetTeams();
+        this.closeModalResetTeams();
+      },
+
       async handleTeamSetupSubmit() {
+        // Appliquer les modifications de localTeamSetup à teamSetup
+        this.teamSetup = { ...this.localTeamSetup };
+
+        // Appeler l'API pour sauvegarder les données
         try {
           await apiService.put(
             `/tourneys/${this.tourneyId}/team-setup`,
@@ -372,6 +399,7 @@
         this.showModal = true;
       },
       openTeamSetupModal() {
+        this.localTeamSetup = { ...this.teamSetup };
         this.showTeamSetupModal = true;
       },
       closeTeamSetupModal() {
