@@ -49,8 +49,20 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Supprimer d'abord la contrainte avant de supprimer la table
-    await queryInterface.removeConstraint('UsersTourneys', 'unique_user_tourney');
-    await queryInterface.dropTable('UsersTourneys');
+    const tableName = 'UsersTourneys';
+
+    // Récupérer les contraintes de clé étrangère existantes
+    const foreignKeys = await queryInterface.getForeignKeyReferencesForTable(tableName);
+
+    // Supprimer chaque contrainte de clé étrangère trouvée
+    for (const foreignKey of foreignKeys) {
+      await queryInterface.removeConstraint(tableName, foreignKey.constraintName);
+    }
+
+    // Supprimer la contrainte d'unicité
+    await queryInterface.removeConstraint(tableName, 'unique_user_tourney');
+
+    // Supprimer la table
+    await queryInterface.dropTable(tableName);
   }
 };
