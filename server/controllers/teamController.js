@@ -1,5 +1,5 @@
 // server/controllers/teamController.js
-const { Team, TeamSetup, Tourney, User, UsersTourneys, Role } = require('../models'); // Importation complète
+const { Team, TeamSetup, Tourney, User, UsersTourneys, Role, sequelize } = require('../models'); // Importation complète
 const { Op } = require('sequelize');
 
 // Créer une équipe
@@ -108,19 +108,53 @@ exports.updateTeam = async (req, res) => {
     }
 };
 
-// Supprimer une équipe
+// Supprimer une équipe et réassigner ses utilisateurs
 exports.deleteTeam = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { id, tourneyId } = req.params; //
+
+    // Démarrer une transaction pour assurer l'atomicité
+    const transaction = await sequelize.transaction();
 
     try {
-        const team = await Team.findOne({ where: { id, tourneyId } });
+        // Trouver l'équipe à supprimer
+        const team = await Team.findOne({
+            where: { id, tourneyId },
+            transaction,
+        });
+
         if (!team) {
+            await transaction.rollback();
             return res.status(404).json({ message: 'Équipe non trouvée.' });
         }
 
-        await team.destroy();
+        // Trouver tous les utilisateurs assignés à cette équipe
+        const users = await User.findAll({
+            where: { teamId: id },
+            transaction,
+        });
+
+        if (users.length > 0) {
+            // Réassigner les utilisateurs : teamId à null et roleId à 4 (Guest)
+            await User.update(
+                { teamId: null, roleId: 4 },
+                {
+                    where: { teamId: id },
+                    transaction,
+                }
+            );
+        }
+
+        // Supprimer l'équipe
+        await team.destroy({ transaction });
+
+        // Commit de la transaction
+        await transaction.commit();
+
+        // Envoyer une réponse 204 No Content
         res.status(204).send();
     } catch (error) {
+        // Rollback de la transaction en cas d'erreur
+        await transaction.rollback();
         console.error('Erreur lors de la suppression de l\'équipe :', error);
         res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'équipe.' });
     }
