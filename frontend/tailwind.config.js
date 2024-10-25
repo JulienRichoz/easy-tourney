@@ -89,8 +89,8 @@ module.exports = {
           profileText: '#38a169', // green-400
           profileHoverText: '#2f855a', // green-700
           logoutButton: {
-            default: '#ef4444', // red-500
-            hover: '#dc2626',   // red-700
+            default: '#dc2626', // red-600 (adoucissement de la couleur rouge)
+            hover: '#b91c1c',   // red-700 (rouge plus sombre)
           },
           subMenu: {
             background: '#2d3748',
@@ -103,20 +103,20 @@ module.exports = {
           },
           buttonVariants: {
             primary: {
-              default: '#16a34a', // green-600
-              hover: '#15803d',   // green-700
+              default: '#15803d', // green-700 (plus sombre que le green-600)
+              hover: '#166534',   // green-800 (vert plus sombre pour hover)
             },
             secondary: {
-              default: '#6b7280', // gray-500
-              hover: '#4b5563',   // gray-600
+              default: '#4b5563', // gray-600
+              hover: '#374151',   // gray-700
             },
             danger: {
-              default: '#ef4444', // red-500
-              hover: '#dc2626',   // red-600
+              default: '#b91c1c', // red-700 (adoucissement du rouge)
+              hover: '#991b1b',   // red-800 (rouge plus sombre pour hover)
             },
             warning: {
-              default: '#f59e0b', // yellow-500
-              hover: '#d97706',   // yellow-600
+              default: '#ca8a04', // yellow-600 (jaune plus ocre)
+              hover: '#a16207',   // yellow-700
             },
             disabled: {
               default: '#6b7280', // gray-500
@@ -142,9 +142,6 @@ module.exports = {
           },
           title: '#f3f4f6', // text-gray-100
         },
-
-        // Palette de couleurs personnalisées pour d'autres thèmes (optionnel)
-        // Vous pouvez ajouter ici d'autres palettes pour des thèmes personnalisés
       },
     },
   },
