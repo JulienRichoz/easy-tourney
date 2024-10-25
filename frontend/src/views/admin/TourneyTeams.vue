@@ -12,7 +12,6 @@
           <!-- Bouton Réglages -->
           <ButtonComponent
             fontAwesomeIcon="cog"
-            class="ml-4 bg-gray-300 hover:bg-gray-400 text-gray-800"
             @click="openTeamSetupModal"
             variant="secondary"
           >
@@ -46,7 +45,7 @@
             fontAwesomeIcon="trash"
           >
             <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Réinitialiser les équipes</span>
+            <span class="hidden sm:inline">Reset</span>
           </ButtonComponent>
         </div>
       </div>
@@ -62,30 +61,41 @@
         <div
           class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0"
         >
-          <!-- Filtres pour les équipes -->
-          <FilterComponent
-            :filters="filters"
-            @filter-change="handleFilterChange"
-          />
-
-          <!-- Informations supplémentaires -->
+          <div class="flex items-center space-x-2 w-full md:w-auto">
+            <!-- Filtres pour les équipes -->
+            <FilterComponent
+              :filters="filters"
+              @filter-change="handleFilterChange"
+            />
+            <!-- Bouton pour Utilisateurs Non Assignés -->
+            <ButtonComponent
+              v-if="unassignedUsers.length > 0"
+              @click="navigateToUnassignedUsers"
+              variant="info"
+              class="flex items-left space-x-2"
+              fontAwesomeIcon="users"
+            >
+              <span>Sans groupe ({{ unassignedUsers.length }})</span>
+            </ButtonComponent>
+          </div>
+          <!-- Informations supplémentaires et Bouton pour Utilisateurs Non Assignés -->
           <div
-            class="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-6"
+            class="flex flex-wrap justify-end space-x-6 text-right w-full md:w-auto"
           >
             <div class="text-sm">
-              <strong>Utilisateurs inscrits :</strong> {{ allUsers.length }}
+              <strong>Inscrits :</strong> {{ allUsers.length }}
             </div>
             <div class="text-sm">
               <strong>Groupes affichés :</strong> {{ filteredTeams.length }}
             </div>
             <div class="text-sm">
-              <strong>Joueurs min par groupe :</strong>
+              <strong>Min. joueurs/groupe :</strong>
               {{ teamSetup.minPlayerPerTeam }}
             </div>
           </div>
         </div>
 
-        <!-- Carte pour les utilisateurs non assignés ou message si pas d'utilisateurs -->
+        <!-- Message selon le nombre d'utilisateurs -->
         <div class="mt-4">
           <div v-if="allUsers.length === 0">
             <span class="text-sm text-gray-600">
@@ -93,23 +103,19 @@
             </span>
           </div>
           <div v-else>
-            <CardEditComponent
-              v-if="unassignedUsers.length > 0"
-              title="Utilisateurs Non Assignés"
-              :description="`${unassignedUsers.length} invités`"
-              :cornerCount="`${unassignedUsers.length}`"
-              :hasActions="false"
-              @click="navigateToUnassignedUsers"
-            />
-            <span v-else class="text-sm text-gray-600">
+            <span
+              v-if="unassignedUsers.length === 0"
+              class="text-sm text-gray-600"
+            >
               Tous les utilisateurs inscrits sont dans des groupes.
             </span>
+            <!-- Le bouton "Utilisateurs Non Assignés" est déjà affiché ci-dessus si nécessaire -->
           </div>
         </div>
 
         <!-- Grille d'affichage des équipes -->
         <div
-          class="grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
+          class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
         >
           <!-- Carte pour ajouter un nouveau groupe -->
           <CardAddComponent
@@ -352,11 +358,6 @@
             `/tourneys/${this.tourneyId}/teams-details`
           );
           const { teamSetup, teams, unassignedUsers, allUsers } = response.data;
-
-          console.log('teamSetup:', teamSetup);
-          console.log('teams:', teams);
-          console.log('unassignedUsers:', unassignedUsers);
-          console.log('allUsers:', allUsers);
 
           // Mise à jour de teamSetup et teamSetupConfigured
           if (

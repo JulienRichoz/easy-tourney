@@ -277,7 +277,7 @@ exports.generateTeams = async (req, res) => {
         // Si aucune équipe d'assistant n'existe, la créer
         if (!assistantTeamExists) {
             teams.push({
-                teamName: 'Assistant Team',
+                teamName: 'Assistants',
                 tourneyId: teamSetup.tourneyId,
                 type: 'assistant',
                 createdAt: new Date(),
