@@ -121,7 +121,7 @@
         filters: [
           {
             label: 'Filtrer par statut',
-            value: this.filterStatus,
+            value: this.filterStatus || '',
             placeholder: 'Tous les status',
             options: [
               { label: 'Tous les statuts', value: '' },
@@ -133,7 +133,7 @@
           },
           {
             label: 'Filtrer par date',
-            value: this.filterDate,
+            value: this.filterDate || '',
             options: [
               { label: 'Toutes les dates', value: '' },
               { label: 'À venir', value: 'upcoming' },

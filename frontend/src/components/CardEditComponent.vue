@@ -80,13 +80,13 @@
       <ButtonComponent
         v-if="showDeleteButton || hasActions"
         variant="danger"
-        icon="TrashIcon"
+        fontAwesomeIcon="trash"
         @click.stop="onDelete"
       />
       <ButtonComponent
         v-if="showEditButton || hasActions"
         variant="warning"
-        icon="PencilIcon"
+        fontAwesomeIcon="pen"
         @click.stop="onEdit"
       />
     </div>

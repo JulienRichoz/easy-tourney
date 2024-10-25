@@ -9,32 +9,44 @@
           <!-- Titre -->
           <TitleComponent title="Gestion des Groupes" />
 
-          <!-- Icône de roue dentée pour ouvrir les paramètres du teamSetup -->
-          <button @click="openTeamSetupModal" class="ml-4">
-            <font-awesome-icon
-              :icon="['fas', 'cog']"
-              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            />
-          </button>
+          <!-- Bouton Réglages -->
+          <ButtonComponent
+            fontAwesomeIcon="cog"
+            class="ml-4 bg-gray-300 hover:bg-gray-400 text-gray-800"
+            @click="openTeamSetupModal"
+            variant="secondary"
+          >
+            <!-- Texte réduit sur mobile -->
+            <span class="hidden sm:inline">Réglages</span>
+          </ButtonComponent>
         </div>
 
-        <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe -->
-        <ButtonComponent
-          v-if="teamSetupConfigured"
-          @click="generateTeams"
-          variant="primary"
-        >
-          Générer les équipes
-        </ButtonComponent>
+        <!-- Boutons pour générer et réinitialiser les équipes -->
+        <div class="flex items-center space-x-2">
+          <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
+          <ButtonComponent
+            v-if="
+              teamSetupConfigured && teams.length < teamSetup.maxTeamNumber + 1
+            "
+            @click="generateTeams"
+            variant="primary"
+            fontAwesomeIcon="people-group"
+          >
+            <!-- Texte réduit sur mobile -->
+            <span class="hidden sm:inline">Générer les équipes</span>
+          </ButtonComponent>
 
-        <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
-        <ButtonComponent
-          v-if="teams.length > 0"
-          @click="resetTeams"
-          variant="danger"
-        >
-          Réinitialiser les équipes
-        </ButtonComponent>
+          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
+          <ButtonComponent
+            v-if="teams.length > 0"
+            @click="resetTeams"
+            variant="danger"
+            fontAwesomeIcon="trash"
+          >
+            <!-- Texte réduit sur mobile -->
+            <span class="hidden sm:inline">Réinitialiser les équipes</span>
+          </ButtonComponent>
+        </div>
       </div>
 
       <!-- Filtres pour les équipes -->
@@ -50,38 +62,18 @@
         @click="openUnassignedModal"
       />
 
-      <p v-else class="text-gray-500 text-sm">
-        Aucun utilisateur non assigné, tous sont dans des équipes.
-      </p>
-
-      <!-- Modale pour les utilisateurs non assignés -->
-      <ModalComponent
-        v-if="showUnassignedModal"
-        title="Utilisateurs Non Assignés"
-        @close="closeUnassignedModal"
-      >
-        <template #content>
-          <ul v-if="unassignedUsers.length > 0">
-            <li
-              v-for="user in unassignedUsers"
-              :key="user.id"
-              class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
-            >
-              <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
-              <span class="truncate">{{ user.name }}</span>
-            </li>
-          </ul>
-          <p v-else>Aucun utilisateur non assigné.</p>
-        </template>
-      </ModalComponent>
+      <span v-else class="text-sm">
+        Tous les utilisateurs inscrits sont dans des groupes.
+      </span>
 
       <!-- Grille d'affichage des équipes -->
       <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6"
+        class="grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
       >
         <!-- Carte pour ajouter un nouveau groupe -->
         <CardAddComponent
           title="Groupe"
+          v-if="teams.length < teamSetup.maxTeamNumber"
           @openAddElementModal="openAddTeamModal"
         />
 
@@ -130,7 +122,7 @@
             v-model="teamSetup"
             :fields="teamSetupFields"
             @form-submit="handleTeamSetupSubmit"
-            @close="closeTeamSetupModal"
+            @cancel="closeTeamSetupModal"
           />
         </template>
       </ModalComponent>
@@ -141,7 +133,6 @@
         :title="
           editingTeamId ? 'Modifier le Groupe' : 'Ajouter un Nouveau Groupe'
         "
-        @close="closeModal"
       >
         <template #content>
           <FormComponent
@@ -176,10 +167,6 @@
   import TitleComponent from '@/components/TitleComponent.vue';
   import FilterComponent from '@/components/FilterComponent.vue';
   import { toast } from 'vue3-toastify';
-
-  import { faCog } from '@fortawesome/free-solid-svg-icons';
-  import { library } from '@fortawesome/fontawesome-svg-core';
-  library.add(faCog);
 
   export default {
     components: {
@@ -217,7 +204,7 @@
             value: '',
             options: [
               { label: 'Tous les statuts', value: '' },
-              { label: 'Plein', value: 'full' },
+              { label: 'Équipes valides', value: 'valid' },
               { label: 'Partiel', value: 'partial' },
               { label: 'Vide', value: 'empty' },
             ],
@@ -260,10 +247,11 @@
     computed: {
       filteredTeams() {
         return this.teams.filter((team) => {
+          const minPlayers = this.teamSetup.minPlayerPerTeam;
           const maxPlayers = this.teamSetup.playerPerTeam || team.maxPlayers;
 
-          if (this.filters[0].value === 'full') {
-            return team.Users.length >= maxPlayers; // Équipes pleines
+          if (this.filters[0].value === 'valid') {
+            return team.Users.length >= minPlayers; // Équipes valides
           }
           if (this.filters[0].value === 'partial') {
             return team.Users.length > 0 && team.Users.length < maxPlayers; // Partiellement remplies
@@ -315,7 +303,9 @@
           await apiService.post(
             `/tourneys/${this.tourneyId}/teams/generate-teams`
           );
-          toast.success('Les équipes ont été générées avec succès !');
+          toast.success(
+            'Les équipes manquantes ont été générées avec succès !'
+          );
           this.fetchTeams();
         } catch (error) {
           toast.error('Erreur lors de la génération des équipes.');
@@ -339,12 +329,14 @@
 
         if (team.Users.length > maxPlayers) {
           return 'red'; // Erreur grave : trop de joueurs dans l'équipe
+        } else if (team.type == 'assistant') {
+          return 'purple'; // Assistant : équipe d'encadrement
         } else if (team.Users.length >= minPlayers) {
           return 'green'; // Valide : nombre de joueurs suffisant
         } else if (team.Users.length > 0) {
-          return 'gray'; // Partiel : encore des places disponibles
+          return 'orange'; // Partiel : encore des places disponibles
         } else {
-          return ''; // Aucun joueur, pas de pastille
+          return 'gray'; // Aucun joueur, pas de pastille
         }
       },
       openUnassignedModal() {

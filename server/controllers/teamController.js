@@ -201,47 +201,54 @@ exports.removeUserFromTeam = async (req, res) => {
     }
 };
 
-
 // Générer des équipes pour un tournoi
 exports.generateTeams = async (req, res) => {
     const { tourneyId } = req.params;
 
     try {
-        // Vérifier s'il existe déjà des équipes pour le tournoi
+        // Récupérer les équipes existantes
         const existingTeams = await Team.findAll({ where: { tourneyId } });
-        if (existingTeams.length > 0) {
-            return res.status(400).json({ message: 'Des équipes existent déjà pour ce tournoi.' });
-        }
-
-        // Récupérer la configuration d'équipe pour le tournoi
+        // Récupérer la configuration de l'équipe
         const teamSetup = await TeamSetup.findOne({ where: { tourneyId } });
+
         if (!teamSetup) {
             return res.status(404).json({ message: 'Configuration de team non trouvée' });
         }
 
-        // Définir le nombre d'équipes de joueurs
+        // Définir le nombre maximal d'équipes de joueurs
         const playerTeamCount = teamSetup.maxTeamNumber;
 
-        // Valider que le nombre d'équipes de joueurs est logique
-        if (playerTeamCount < 0) {
-            return res.status(400).json({ message: 'Le nombre total d\'équipes est insuffisant pour inclure une équipe d\'assistants.' });
+        if (existingTeams.length >= playerTeamCount + 1) { // +1 pour l'équipe d'assistants
+            return res.status(400).json({ message: 'Le nombre maximal d\'équipes a déjà été atteint.' });
+        }
+
+        // Nombre d'équipes à générer
+        const teamsToGenerate = playerTeamCount - (existingTeams.length - 1); // -1 car l'équipe assistant existe déjà
+
+        if (teamsToGenerate <= 0) {
+            return res.status(400).json({ message: 'Toutes les équipes sont déjà générées.' });
         }
 
         const teams = [];
 
-        // Créer l'équipe d'assistant
-        teams.push({
-            teamName: 'Assistant Team',
-            tourneyId: teamSetup.tourneyId,
-            type: 'assistant',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-
-        // Créer les équipes de joueurs
-        for (let i = 0; i < playerTeamCount; i++) {
+        // Si aucune équipe d'assistant n'existe, créer l'équipe d'assistant
+        const assistantTeamExists = existingTeams.some(team => team.type === 'assistant');
+        if (!assistantTeamExists) {
             teams.push({
-                teamName: `Team ${i + 1}`,
+                teamName: 'Assistant Team',
+                tourneyId: teamSetup.tourneyId,
+                type: 'assistant',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+        }
+
+        // Créer les équipes de joueurs manquantes
+        const currentPlayerTeams = existingTeams.filter(team => team.type === 'player').length;
+
+        for (let i = 0; i < teamsToGenerate; i++) {
+            teams.push({
+                teamName: `Team ${currentPlayerTeams + i + 1}`,
                 tourneyId: teamSetup.tourneyId,
                 type: 'player',
                 createdAt: new Date(),
@@ -249,7 +256,7 @@ exports.generateTeams = async (req, res) => {
             });
         }
 
-        // Insertion des équipes dans la base de données
+        // Insertion des nouvelles équipes dans la base de données
         await Team.bulkCreate(teams);
 
         res.status(201).json({ message: 'Équipes générées avec succès', teams });
@@ -258,6 +265,7 @@ exports.generateTeams = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur' });
     }
 };
+
 
 // Réinitialiser les équipes et réassigner les utilisateurs (protection des admins)
 exports.resetTeamsAndReassignUsers = async (req, res) => {
