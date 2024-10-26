@@ -1,3 +1,4 @@
+<!-- TourneyTeams.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -5,7 +6,7 @@
 
     <div class="p-6">
       <div class="flex items-center mb-8 justify-between">
-        <div class="flex items-center">
+        <div class="flex items-center space-x-4">
           <!-- Titre -->
           <TitleComponent title="Gestion des Groupes" />
 
@@ -19,35 +20,23 @@
             <span class="hidden sm:inline">Réglages</span>
           </ButtonComponent>
         </div>
+        <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
+        <ButtonComponent
+          v-if="isEditable && teams.length > 0"
+          @click="openModalResetTeams"
+          variant="danger"
+          fontAwesomeIcon="trash"
+        >
+          <!-- Texte réduit sur mobile -->
+          <span class="hidden sm:inline">Reset</span>
+        </ButtonComponent>
 
-        <!-- Boutons pour générer et réinitialiser les équipes -->
-        <div class="flex items-center space-x-2">
-          <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
-          <ButtonComponent
-            v-if="
-              teamSetupConfigured &&
-              teams.length <
-                teamSetup.maxTeamNumber + (teamSetupConfigured ? 1 : 0)
-            "
-            @click="generateTeams"
-            variant="primary"
-            fontAwesomeIcon="people-group"
-          >
-            <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Générer les équipes</span>
-          </ButtonComponent>
-
-          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
-          <ButtonComponent
-            v-if="teams.length > 0"
-            @click="openModalResetTeams"
-            variant="danger"
-            fontAwesomeIcon="trash"
-          >
-            <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Reset</span>
-          </ButtonComponent>
-        </div>
+        <!-- Sélecteur de statut -->
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="registrationStatus"
+          :statusOptions="registrationStatusOptions"
+        />
       </div>
 
       <!-- Message d'erreur si teamSetup n'est pas configuré -->
@@ -78,7 +67,7 @@
               <span>Sans groupe ({{ unassignedUsers.length }})</span>
             </ButtonComponent>
           </div>
-          <!-- Informations supplémentaires et Bouton pour Utilisateurs Non Assignés -->
+          <!-- Informations supplémentaires -->
           <div
             class="flex flex-wrap justify-end space-x-6 text-right w-full md:w-auto"
           >
@@ -109,7 +98,6 @@
             >
               Tous les utilisateurs inscrits sont dans des groupes.
             </span>
-            <!-- Le bouton "Utilisateurs Non Assignés" est déjà affiché ci-dessus si nécessaire -->
           </div>
         </div>
 
@@ -117,10 +105,10 @@
         <div
           class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
         >
-          <!-- Carte pour ajouter un nouveau groupe -->
+          <!-- Carte pour ajouter un nouveau groupe (affichée si isEditable) -->
           <CardAddComponent
+            v-if="isEditable && teams.length < teamSetup.maxTeamNumber"
             title="Groupe"
-            v-if="teams.length < teamSetup.maxTeamNumber"
             @openAddElementModal="openAddTeamModal"
           />
 
@@ -135,9 +123,9 @@
                 : `${team.Users.length}/${teamSetup.playerPerTeam}`
             "
             :titleColor="getStatusColor(team)"
-            :hasActions="true"
-            :showDeleteButton="true"
-            :showEditButton="true"
+            :hasActions="isEditable"
+            :showDeleteButton="isEditable"
+            :showEditButton="isEditable"
             @delete="confirmDeleteTeam(team.id)"
             @edit="editTeam(team)"
             @click="openTeamDetails(team)"
@@ -159,8 +147,9 @@
         </div>
       </div>
 
-      <!-- Modale pour modifier teamSetup (déplacée hors du v-if) -->
+      <!-- Modale pour modifier teamSetup -->
       <ModalComponent
+        v-if="isEditable"
         :isVisible="showTeamSetupModal"
         :title="
           teamSetup
@@ -208,8 +197,9 @@
         @confirm="deleteTeam(confirmedDeleteTeamId)"
       />
 
-      <!-- Modale pour confirmer le reset des teams -->
+      <!-- Modale pour confirmer le reset des teams (affichée si isEditable) -->
       <DeleteConfirmationModal
+        v-if="isEditable"
         :isVisible="showModalResetTeams"
         @cancel="closeModalResetTeams"
         @confirm="handleResetAllTeamsSubmit"
@@ -232,7 +222,9 @@
   import TitleComponent from '@/components/TitleComponent.vue';
   import FilterComponent from '@/components/FilterComponent.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
+  import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
+  import { mapState } from 'vuex';
 
   export default {
     components: {
@@ -246,6 +238,7 @@
       FilterComponent,
       TitleComponent,
       ErrorMessageComponent,
+      StatusSelectorComponent,
     },
     data() {
       return {
@@ -307,9 +300,20 @@
             required: false,
           },
         ],
+        registrationStatusOptions: [
+          { value: 'draft', label: 'Edition' },
+          { value: 'active', label: 'Inscriptions' },
+          { value: 'completed', label: 'Terminé' },
+        ],
       };
     },
     computed: {
+      ...mapState('tourney', {
+        statuses: (state) => state.statuses,
+      }),
+      isEditable() {
+        return this.statuses.registrationStatus !== 'completed';
+      },
       filteredTeams() {
         if (!this.teamSetupConfigured) return [];
 
@@ -461,12 +465,6 @@
         } catch (error) {
           toast.error('Erreur lors de la suppression du groupe.');
         }
-      },
-      openUnassignedModal() {
-        this.navigateToUnassignedUsers();
-      },
-      closeUnassignedModal() {
-        this.showUnassignedModal = false;
       },
       openModalResetTeams() {
         this.showModalResetTeams = true;
