@@ -1,4 +1,5 @@
 const { TeamSetup, Tourney } = require('../models');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
@@ -16,8 +17,9 @@ exports.createTeamSetup = async (req, res) => {
             maxTeamNumber,
             playerPerTeam,
             playerEstimated,
-            minPlayerPerTeam, // Inclure minPlayerPerTeam dans la création
+            minPlayerPerTeam,
         });
+        await checkAndUpdateStatuses(tourneyId);
 
         res.status(201).json(teamSetup);
     } catch (error) {

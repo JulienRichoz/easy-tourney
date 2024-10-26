@@ -1,5 +1,6 @@
 // server/controllers/fieldController.js
 const { Field, Tourney } = require('../models');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
 
 // Créer un terrain pour un tournoi
 exports.createField = async (req, res) => {
@@ -13,6 +14,10 @@ exports.createField = async (req, res) => {
         }
 
         const field = await Field.create({ name, description, tourneyId });
+
+        // Mettre à jour les statuts après la création d'un terrain
+        await checkAndUpdateStatuses(tourneyId);
+
         res.status(201).json(field);
     } catch (error) {
         console.error('Erreur lors de la création du terrain:', error);
@@ -74,7 +79,7 @@ exports.updateField = async (req, res) => {
 
 // Supprimer un terrain
 exports.deleteField = async (req, res) => {
-    const { id } = req.params;
+    const { id, tourneyId } = req.params;
 
     try {
         const field = await Field.findByPk(id);
@@ -83,6 +88,10 @@ exports.deleteField = async (req, res) => {
         }
 
         await field.destroy();
+
+        // Mettre à jour les statuts après la suppression d'un terrain
+        await checkAndUpdateStatuses(tourneyId);
+
         res.status(204).send();
     } catch (error) {
         console.error('Erreur lors de la suppression du terrain:', error);
@@ -96,6 +105,8 @@ exports.deleteAllTourneyFields = async (req, res) => {
 
     try {
         await Field.destroy({ where: { tourneyId } });
+        // Mettre à jour les statuts après la suppression d'un terrain
+        await checkAndUpdateStatuses(tourneyId);
         res.status(204).send();
     } catch (error) {
         console.error('Erreur lors de la suppression des terrains:', error);

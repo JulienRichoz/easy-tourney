@@ -1,6 +1,8 @@
 // server/controllers/teamController.js
 const { Team, TeamSetup, Tourney, User, UsersTourneys, Role, sequelize } = require('../models'); // Importation complète
 const { Op } = require('sequelize');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
+
 
 // Créer une équipe
 exports.createTeam = async (req, res) => {
@@ -22,6 +24,7 @@ exports.createTeam = async (req, res) => {
             type,
             tourneyId,
         });
+
         res.status(201).json(team);
     } catch (error) {
         console.error('Erreur lors de la création de l\'équipe :', error);

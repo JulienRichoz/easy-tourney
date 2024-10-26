@@ -2,10 +2,12 @@
 // Contrôleur pour la gestion des associations sportsFields
 
 const { Tourney, Field, Sport, SportsFields } = require('../models');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
 
 // Créer une association sportsFields
 exports.createSportsFields = async (req, res) => {
     try {
+        const tourneyId = req.params.tourneyId;
         const { fieldId, sportId, startTime, endTime, information } = req.body;
 
         if (!fieldId || !sportId || !startTime || !endTime) {
@@ -32,6 +34,9 @@ exports.createSportsFields = async (req, res) => {
             endTime,
             information,
         });
+
+        // Mettre à jour les statuts après la création d'une association sport-terrain
+        await checkAndUpdateStatuses(tourneyId);
 
         res.status(201).json(sportsFields);
     } catch (error) {
@@ -143,7 +148,7 @@ exports.updateSportsFields = async (req, res) => {
 // Supprimer une association sport-terrain
 exports.deleteSportsFields = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id, tourneyId } = req.params;
 
         // Trouver l'association sport-terrain par son ID
         const sportsFields = await SportsFields.findByPk(id);
@@ -154,6 +159,9 @@ exports.deleteSportsFields = async (req, res) => {
 
         // Supprimer l'association du sport avec le terrain
         await sportsFields.destroy();
+
+        // Mettre à jour les statuts après la suppression d'une association sport-terrain
+        await checkAndUpdateStatuses(tourneyId);
 
         res.status(200).json({ message: 'Sport-terrain supprimé avec succès.' });
     } catch (error) {
