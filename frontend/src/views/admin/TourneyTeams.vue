@@ -8,7 +8,7 @@
       <div class="flex items-center mb-8 justify-between">
         <div class="flex items-center space-x-4">
           <!-- Titre -->
-          <TitleComponent title="Gestion des Groupes" />
+          <TitleComponent title="Gestion des Equipes" />
 
           <!-- Bouton Réglages -->
           <ButtonComponent
@@ -17,23 +17,42 @@
             variant="secondary"
           >
             <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Réglages</span>
+            <span class="hidden sm:md:inline">Réglages</span>
           </ButtonComponent>
         </div>
-        <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
-        <ButtonComponent
-          v-if="isEditable && teams.length > 0"
-          @click="openModalResetTeams"
-          variant="danger"
-          fontAwesomeIcon="trash"
-        >
-          <!-- Texte réduit sur mobile -->
-          <span class="hidden sm:inline">Reset</span>
-        </ButtonComponent>
 
+        <!-- Boutons pour générer et réinitialiser les équipes -->
+        <div class="flex items-center space-x-2 ml-auto">
+          <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
+          <ButtonComponent
+            v-if="
+              teamSetupConfigured &&
+              teams.length <
+                teamSetup.maxTeamNumber + (teamSetupConfigured ? 1 : 0)
+            "
+            @click="generateTeams"
+            variant="primary"
+            fontAwesomeIcon="people-group"
+          >
+            <!-- Texte réduit sur mobile -->
+            <span class="hidden sm:md:inline">Générer équipes</span>
+          </ButtonComponent>
+
+          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
+          <ButtonComponent
+            v-if="isEditable && teams.length > 0"
+            @click="openModalResetTeams"
+            variant="danger"
+            fontAwesomeIcon="trash"
+          >
+            <!-- Texte réduit sur mobile -->
+            <span class="hidden sm:inline">Reset</span>
+          </ButtonComponent>
+        </div>
         <!-- Sélecteur de statut -->
         <StatusSelectorComponent
           :tourneyId="tourneyId"
+          label="Inscriptions:"
           statusKey="registrationStatus"
           :statusOptions="registrationStatusOptions"
         />
@@ -301,9 +320,9 @@
           },
         ],
         registrationStatusOptions: [
-          { value: 'draft', label: 'Edition' },
-          { value: 'active', label: 'Inscriptions' },
-          { value: 'completed', label: 'Terminé' },
+          { value: 'draft', label: 'Fermées' },
+          { value: 'active', label: 'Ouvertes' },
+          { value: 'completed', label: 'Terminées' },
         ],
       };
     },
