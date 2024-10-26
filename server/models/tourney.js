@@ -44,7 +44,29 @@ module.exports = (sequelize, DataTypes) => {
         status: {
             type: DataTypes.ENUM('draft', 'ready', 'active', 'completed'),
             allowNull: false,
-            defaultValue: 'draft', // Par défaut, le tournoi est en état "draft"
+            defaultValue: 'draft',
+        },
+        terrainAssignmentStatus: {
+            type: DataTypes.ENUM('notStarted', 'inProgress', 'completed'),
+            defaultValue: 'notStarted',
+            allowNull: false,
+            defaultValue: 'notStarted',
+        },
+        sportAssignmentStatus: {
+            type: DataTypes.ENUM('notStarted', 'inProgress', 'completed'),
+            defaultValue: 'notStarted',
+            allowNull: false,
+
+        },
+         registrationStatus: {
+            type: DataTypes.ENUM('notStarted', 'inProgress', 'active', 'completed'),
+            defaultValue: 'notStarted',
+            allowNull: true,
+        },
+        planningStatus: {
+            type: DataTypes.ENUM('notStarted', 'inProgress', 'completed'),
+            defaultValue: 'notStarted',
+            allowNull: true,
         },
     }, {
         sequelize,
