@@ -18,6 +18,14 @@
         </ButtonComponent>
       </div>
 
+      <!-- Sélecteur de statut pour l'affectation des terrains -->
+      <StatusSelectorComponent
+        :tourneyId="tourneyId"
+        statusKey="fieldAssignmentStatus"
+        :statusOptions="fieldAssignmentStatusOptions"
+        label="Statut d'affectation des terrains"
+      />
+
       <!-- Grille des terrains -->
       <div
         class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
@@ -101,6 +109,7 @@
 </template>
 
 <script>
+  import { mapState, mapActions } from 'vuex';
   import apiService from '@/services/apiService';
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
@@ -110,6 +119,7 @@
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
+  import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
 
   export default {
@@ -122,6 +132,7 @@
       CardEditComponent,
       FormComponent,
       TitleComponent,
+      StatusSelectorComponent,
     },
     data() {
       return {
@@ -145,6 +156,10 @@
         isSubmitting: false,
         isDeleting: false,
         isFormValid: false,
+        fieldAssignmentStatusOptions: [
+          { value: 'draft', label: 'Brouillon' },
+          { value: 'completed', label: 'Complété' },
+        ],
       };
     },
     computed: {
@@ -175,10 +190,26 @@
           },
         ];
       },
+      // Mapper l'état du module `tourney`
+      ...mapState('tourney', {
+        currentTournamentName: (state) => state.currentTournamentName,
+        statuses: (state) => state.statuses,
+      }),
     },
     methods: {
+      // Mapper les actions du module `tourney`
+      ...mapActions('tourney', [
+        'fetchTourneyStatuses',
+        'setTournamentName',
+        'clearTournamentName',
+      ]),
+
       async fetchFieldDetails() {
         try {
+          // Charger les statuts du tournoi
+          await this.fetchTourneyStatuses(this.tourneyId);
+
+          // Charger les détails des terrains
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/fields`
           );
@@ -206,7 +237,8 @@
           this.fetchFieldDetails();
           this.closeDeleteAllFieldsModal();
         } catch (error) {
-          toast.error(
+          toast.error('Erreur lors de la suppression de tous les terrains.');
+          console.error(
             'Erreur lors de la suppression de tous les terrains:',
             error
           );
@@ -233,6 +265,7 @@
           this.closeDeleteConfirmation();
         } catch (error) {
           toast.error('Erreur lors de la suppression du terrain!');
+          console.error('Erreur lors de la suppression du terrain:', error);
         } finally {
           this.isDeleting = false;
         }
@@ -257,7 +290,8 @@
             );
             return;
           }
-          for (let i = 1; i <= this.multipleFieldsData.numberOfFields; i++) {
+
+          for (let i = 1; i <= numberOfFields; i++) {
             const newField = {
               name: `Terrain ${i}`,
               description: '',
@@ -268,6 +302,7 @@
               newField
             );
           }
+
           this.fetchFieldDetails();
           this.closeMultipleFieldsModal();
         } catch (error) {
@@ -323,6 +358,7 @@
           this.fetchFieldDetails();
         } catch (error) {
           toast.error("Erreur lors de l'enregistrement du terrain!");
+          console.error("Erreur lors de l'enregistrement du terrain:", error);
         } finally {
           this.isSubmitting = false;
         }
@@ -341,6 +377,8 @@
       },
     },
     mounted() {
+      this.fetchTourneyStatuses(this.tourneyId);
+
       this.fetchFieldDetails();
     },
   };

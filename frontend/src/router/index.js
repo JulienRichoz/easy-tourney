@@ -179,21 +179,27 @@ router.beforeEach(async (to, from, next) => {
   const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id;
   if (isTournamentRoute) {
     try {
-      // Tenter de récupérer le tournoi via l'API
-      const response = await apiService.get(`/tourneys/${to.params.id}`);
+      const tourneyId = to.params.id;
+
+      // Récupérer les statuts via fetchTourneyStatuses
+      await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
+
+      // Stocker le nom du tournoi dans le store
+      const response = await apiService.get(`tourneys/${tourneyId}/statuses`);
       const tournamentName = response.data.name;
-      store.dispatch('setTournamentName', tournamentName); // Stocker le nom du tournoi dans le store
+      await store.dispatch('tourney/setTournamentName', tournamentName);
+
     } catch (error) {
       console.error('Erreur lors de la récupération du tournoi:', error);
 
       if (error.response && error.response.status === 404) {
         return next({ name: 'NotFoundPage' }); // Rediriger vers la page 404 si le tournoi n'existe pas
       } else {
-        store.dispatch('clearTournamentName'); // Nettoyer les données du tournoi si erreur autre que 404
+        await store.dispatch('tourney/clearTournamentName'); // Nettoyer les données du tournoi si erreur autre que 404
       }
     }
   } else {
-    store.dispatch('clearTournamentName'); // Nettoyer le nom du tournoi si on quitte une route liée à un tournoi
+    store.dispatch('tourney/clearTournamentName'); // Nettoyer le nom du tournoi si on quitte une route liée à un tournoi
   }
 
   // Vérification si la route nécessite une authentification

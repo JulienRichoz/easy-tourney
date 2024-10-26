@@ -86,7 +86,10 @@
         isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
         isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
         userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
-        tournamentName: (state) => state.tourney.currentTournamentName, // Nom du tournoi depuis Vuex
+        // Utilisez mapState avec namespace pour accéder au module 'tourney'
+        ...mapState('tourney', {
+          tournamentName: (state) => state.currentTournamentName, // Nom du tournoi depuis Vuex
+        }),
       }),
       showTournamentName() {
         // Afficher le nom du tournoi uniquement sur les pages qui commencent par /tourneys/:id

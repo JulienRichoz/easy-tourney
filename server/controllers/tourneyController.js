@@ -114,65 +114,6 @@ exports.getTourneyById = async (req, res) => {
     }
 }
 
-// Mettre à jour un tournoi
-/*exports.updateTourney = async (req, res) => {
-    try {
-        const tourney = await Tourney.findByPk(req.params.id);
-        if (!tourney) {
-            return res.status(404).json({ message: 'Tournoi non trouvé' });
-        }
-
-        const { status, ...otherUpdates } = req.body;
-
-        // Mettre à jour les autres champs
-        await tourney.update(otherUpdates);
-
-        let statusForced = false;
-        let statusMessage = '';
-
-        // Si le statut est fourni dans la requête, gérer la transition manuellement
-        if (status) {
-            // Vérifier si la transition est draft -> ready
-            if (tourney.status === 'draft' && status === 'ready') {
-                // Vérifier si tous les autres statuts sont en 'completed'
-                const canMoveToReady = tourney.fieldAssignmentStatus === 'completed' &&
-                                       tourney.sportAssignmentStatus === 'completed' &&
-                                       tourney.registrationStatus === 'completed' &&
-                                       tourney.planningStatus === 'completed';
-
-                if (canMoveToReady) {
-                    tourney.status = 'ready';
-                    statusMessage = 'Le statut du tournoi a été mis à jour automatiquement en "ready".';
-                } else {
-                    // Permettre à l'admin de forcer le statut
-                    tourney.status = 'ready';
-                    statusForced = true;
-                    statusMessage = 'Le statut du tournoi a été forcé en "ready" malgré des statuts incomplets.';
-                }
-                await tourney.save();
-            } else {
-                // Pour les autres transitions, utiliser la fonction utilitaire
-                tourney.status = status;
-                await tourney.save();
-                statusMessage = `Le statut du tournoi a été mis à jour en "${status}".`;
-            }
-        }
-
-        // Mettre à jour les statuts après la mise à jour du tournoi
-        if (!status) { // Appeler checkAndUpdateStatuses uniquement si le statut n'a pas été fourni manuellement
-            await checkAndUpdateStatuses(tourney.id);
-        }
-
-        res.status(200).json({
-            tourney,
-            statusForced,
-            statusMessage
-        });
-    } catch (error) {
-        console.error('Erreur lors de la mise à jour du tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la mise à jour du tournoi' });
-    }
-};*/
 exports.updateTourney = async (req, res) => {
     try {
         const tourney = await Tourney.findByPk(req.params.id);
@@ -357,5 +298,27 @@ exports.getTourneyTeamsDetails = async (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la récupération des détails du tournoi:', error);
         res.status(500).json({ message: 'Erreur serveur', error });
+    }
+};
+
+exports.getTourneyStatuses = async (req, res) => {
+    try {
+        const tourney = await Tourney.findByPk(req.params.id);
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé' });
+        }
+
+        const { name, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, planningStatus } = tourney;
+        res.status(200).json({
+            name: name,
+            status,
+            fieldAssignmentStatus,
+            sportAssignmentStatus,
+            registrationStatus,
+            planningStatus,
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statuts du tournoi:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des statuts' });
     }
 };
