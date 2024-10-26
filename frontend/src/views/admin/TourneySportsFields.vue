@@ -6,17 +6,48 @@
     <!-- Liste des sports en haut, sticky sans fond gris -->
     <div
       id="external-events"
-      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex space-x-4 bg-white dark:bg-dark-background"
+      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex items-center justify-between bg-white dark:bg-dark-background"
     >
-      <!-- Sports que l'on peut glisser -->
-      <div
-        v-for="sport in sports"
-        :key="sport.id"
-        :data-id="sport.id"
-        :style="{ backgroundColor: sport.color }"
-        class="sport-item p-3 mb-3 rounded-lg text-center text-white font-semibold cursor-pointer transform transition duration-100 w-28 shadow-md flex items-center justify-center external-event hover:scale-110 active:scale-95"
-      >
-        {{ sport.name }}
+      <!-- Conteneur pour les sports -->
+      <div class="flex space-x-4">
+        <!-- Sports que l'on peut glisser -->
+        <div
+          v-for="sport in sports"
+          :key="sport.id"
+          :data-id="sport.id"
+          :style="{ backgroundColor: sport.color }"
+          :class="[
+            'sport-item',
+            'p-3',
+            'mb-3',
+            'rounded-lg',
+            'text-center',
+            'text-white',
+            'font-semibold',
+            'transform',
+            'transition',
+            'duration-100',
+            'w-28',
+            'shadow-md',
+            'flex',
+            'items-center',
+            'justify-center',
+            isEditable
+              ? 'cursor-pointer external-event hover:scale-110 active:scale-95'
+              : 'opacity-50',
+          ]"
+        >
+          {{ sport.name }}
+        </div>
+      </div>
+
+      <!-- Sélecteur de statut aligné à droite -->
+      <div class="flex items-center">
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="sportAssignmentStatus"
+          :statusOptions="sportAssignmentStatusOptions"
+        />
       </div>
     </div>
 
@@ -66,12 +97,15 @@
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
+  import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
+  import { mapState } from 'vuex';
 
   export default {
     components: {
       FullCalendar,
       TourneySubMenu,
       ErrorMessageComponent,
+      StatusSelectorComponent,
     },
     data() {
       return {
@@ -79,6 +113,10 @@
         tourney: {}, // Détails du tournoi
         fields: [], // Liste des terrains du tournoi
         sports: [], // Liste des sports disponibles
+        sportAssignmentStatusOptions: [
+          { value: 'draft', label: 'Edition' },
+          { value: 'completed', label: 'Terminé' },
+        ],
       };
     },
 
@@ -114,6 +152,12 @@
           xlClasses,
           xxlClasses,
         ].join(' ');
+      },
+      ...mapState('tourney', {
+        statuses: (state) => state.statuses,
+      }),
+      isEditable() {
+        return this.statuses.sportAssignmentStatus !== 'completed';
       },
     },
 
@@ -166,6 +210,8 @@
        * Permet de glisser les sports vers le calendrier pour les assigner à un terrain.
        */
       initializeExternalEvents() {
+        if (!this.isEditable) return; // Ne pas initialiser le drag-and-drop si non éditable
+
         const containerEl = document.getElementById('external-events');
         new Draggable(containerEl, {
           itemSelector: '.external-event',
@@ -210,7 +256,7 @@
           initialView: 'timeGridDay', // Peut être modifié en 'dayGridMonth'
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
-          editable: true,
+          editable: this.isEditable,
           eventContent: this.renderEventContent,
           droppable: true,
           allDaySlot: false,
@@ -236,33 +282,8 @@
        * @returns {Object} Contenu DOM pour l'événement
        */
       renderEventContent(arg) {
-        const deleteIcon = document.createElement('span');
-        deleteIcon.innerHTML = '&#10060;';
-        deleteIcon.classList.add('delete-icon');
-        deleteIcon.style.float = 'right';
-        deleteIcon.style.color = 'white';
-        deleteIcon.style.cursor = 'pointer';
-        deleteIcon.style.padding = '0 5px';
-
-        deleteIcon.addEventListener('dblclick', (e) => {
-          e.stopPropagation();
-          this.deleteEvent(arg.event);
-        });
-
-        let pressTimer;
-        deleteIcon.addEventListener('touchstart', (e) => {
-          e.stopPropagation();
-          pressTimer = setTimeout(() => {
-            this.deleteEvent(arg.event);
-          }, 600);
-        });
-        deleteIcon.addEventListener('touchend', () => {
-          clearTimeout(pressTimer);
-        });
-
-        const title = document.createElement('span');
-        title.innerText = arg.event.title;
-        title.classList.add('font-semibold', 'text-white');
+        const container = document.createElement('div');
+        container.classList.add('flex', 'flex-col', 'space-y-1');
 
         const headerContainer = document.createElement('div');
         headerContainer.classList.add(
@@ -270,8 +291,40 @@
           'justify-between',
           'items-center'
         );
+
+        const title = document.createElement('span');
+        title.innerText = arg.event.title;
+        title.classList.add('font-semibold', 'text-white');
+
         headerContainer.appendChild(title);
-        headerContainer.appendChild(deleteIcon);
+
+        if (this.isEditable) {
+          const deleteIcon = document.createElement('span');
+          deleteIcon.innerHTML = '&#10060;';
+          deleteIcon.classList.add('delete-icon');
+          deleteIcon.style.float = 'right';
+          deleteIcon.style.color = 'white';
+          deleteIcon.style.cursor = 'pointer';
+          deleteIcon.style.padding = '0 5px';
+
+          deleteIcon.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            this.deleteEvent(arg.event);
+          });
+
+          let pressTimer;
+          deleteIcon.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            pressTimer = setTimeout(() => {
+              this.deleteEvent(arg.event);
+            }, 600);
+          });
+          deleteIcon.addEventListener('touchend', () => {
+            clearTimeout(pressTimer);
+          });
+
+          headerContainer.appendChild(deleteIcon);
+        }
 
         const startTime = this.formatDisplayTime(arg.event.start);
         const endTime = this.formatDisplayTime(arg.event.end);
@@ -279,8 +332,6 @@
         timeRange.innerText = `${startTime} - ${endTime}`;
         timeRange.classList.add('text-sm', 'text-white');
 
-        const container = document.createElement('div');
-        container.classList.add('flex', 'flex-col', 'space-y-1');
         container.appendChild(headerContainer);
         container.appendChild(timeRange);
 
@@ -294,6 +345,10 @@
        * @param {Number} newFieldId - ID du terrain où l'événement est assigné
        */
       async handleEventReceive(info, newFieldId) {
+        if (!this.isEditable) {
+          info.revert();
+          return;
+        }
         const event = info.event;
         try {
           const sportId = event.extendedProps.sportId;
@@ -352,6 +407,10 @@
        * @param {Number} fieldId - ID du terrain où l'événement a été déplacé
        */
       async handleEventDrop(info, fieldId) {
+        if (!this.isEditable) {
+          info.revert();
+          return;
+        }
         const event = info.event;
         try {
           const eventId = event.id;
@@ -387,6 +446,10 @@
        * @param {Number} fieldId - ID du terrain de l'événement
        */
       async handleEventResize(info, fieldId) {
+        if (!this.isEditable) {
+          info.revert();
+          return;
+        }
         const event = info.event;
         try {
           const eventId = event.id;
@@ -423,6 +486,7 @@
        * @param {Object} event - Événement à supprimer
        */
       async deleteEvent(event) {
+        if (!this.isEditable) return;
         try {
           await apiService.delete(
             `/tourneys/${this.tourneyId}/sports-fields/${event.id}`

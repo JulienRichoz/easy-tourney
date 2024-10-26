@@ -1,7 +1,10 @@
 <!-- StatusSelectorComponent.vue -->
 <template>
   <div v-if="shouldShow" class="flex items-center">
-    <label :for="statusKey" class="mr-2 text-light-title dark:text-dark-title">
+    <label
+      :for="statusKey"
+      class="hidden sm:block mr-2 text-light-title dark:text-dark-title"
+    >
       {{ label }}
     </label>
     <select
