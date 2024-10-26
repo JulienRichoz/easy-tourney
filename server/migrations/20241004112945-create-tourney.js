@@ -33,6 +33,26 @@ module.exports = {
         allowNull: false,
         defaultValue: 'draft',
       },
+      fieldAssignmentStatus: {
+        type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
+        allowNull: false,
+        defaultValue: 'notStarted'
+      },      
+      sportAssignmentStatus: {
+        type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
+        allowNull: false,
+        defaultValue: 'notStarted'
+      },
+      registrationStatus: {
+        type: Sequelize.ENUM('notStarted', 'draft', 'active', 'completed'),
+        allowNull: false,
+        defaultValue: 'notStarted'
+      },
+      planningStatus: {
+        type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
+        allowNull: false,
+        defaultValue: 'notStarted'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
