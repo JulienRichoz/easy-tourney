@@ -40,7 +40,7 @@
 
           <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
           <ButtonComponent
-            v-if="isEditable && teams.length > 0"
+            v-if="isEditable && teams.length > 0 && !isRegistrationActive"
             @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
@@ -332,6 +332,9 @@
       }),
       isEditable() {
         return this.statuses.registrationStatus !== 'completed';
+      },
+      isRegistrationActive() {
+        return this.statuses.registrationStatus === 'active';
       },
       filteredTeams() {
         if (!this.teamSetupConfigured) return [];
