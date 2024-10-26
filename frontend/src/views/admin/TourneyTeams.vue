@@ -266,7 +266,7 @@
             label: 'Filtrer par statut',
             value: '',
             options: [
-              { label: 'Tous les statuts', value: '' },
+              { label: 'Tous les groupes', value: '' },
               { label: 'Équipes valides', value: 'valid' },
               { label: 'Partiel', value: 'partial' },
               { label: 'Vide', value: 'empty' },

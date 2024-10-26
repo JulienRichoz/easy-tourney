@@ -25,7 +25,7 @@ export default {
         },
         UPDATE_STATUS(state, { key, value }) {
             state.statuses[key] = value;
-        }
+        },
     },
     actions: {
         async fetchTourneyStatuses({ commit }, tourneyId) {

@@ -28,13 +28,14 @@ import {
     faPen,
     faUsers,
     faEye,
+    faPlus,
 } from '@fortawesome/free-solid-svg-icons'
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
 import './registerServiceWorker'
 
 // Ajouter les icônes supplémentaires
-library.add(faEye, faUsers, faPen, faTrash, faPeopleGroup, faCog, faQuestionCircle, faMapMarkerAlt, faCalendar, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt, faInfoCircle, faMap, faFutbol, faFilter)
+library.add(faPlus, faEye, faUsers, faPen, faTrash, faPeopleGroup, faCog, faQuestionCircle, faMapMarkerAlt, faCalendar, faCalendarAlt, faSun, faMoon, faUser, faPowerOff, faSignInAlt, faInfoCircle, faMap, faFutbol, faFilter)
 
 const app = createApp(App);
 

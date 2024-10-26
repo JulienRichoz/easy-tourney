@@ -4,31 +4,31 @@
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" />
 
-    <div class="p-6">
-      <!-- Titre et éléments alignés sur la même ligne -->
-      <div class="flex items-center justify-between mb-8">
+    <div class="p-4 sm:p-6">
+      <div class="flex items-center justify-between mb-4 sm:mb-8">
         <TitleComponent title="Gestion Terrains" />
 
-        <!-- Éléments alignés à droite -->
-        <div class="flex items-center space-x-4">
-          <!-- Boutons (affichés uniquement si isEditable) -->
+        <!-- Boutons alignés à droite, utilisation d'icônes sur mobile -->
+        <div class="flex items-center space-x-2 sm:space-x-4 mr-auto">
           <ButtonComponent
             v-if="isEditable"
+            fontAwesomeIcon="plus"
             @click="openAddMultipleFieldsModal"
             variant="primary"
           >
-            Ajouter plusieurs terrains
+            <span class="hidden sm:inline">Plusieurs terrains</span>
           </ButtonComponent>
           <ButtonComponent
             v-if="isEditable && fields.length > 0"
             @click="openDeleteAllFieldsModal"
             variant="danger"
+            fontAwesomeIcon="trash"
           >
-            Supprimer tous les terrains
+            <span class="hidden sm:inline">Tous les terrains</span>
           </ButtonComponent>
         </div>
 
-        <!-- Sélecteur de statut -->
+        <!-- Sélecteur de statut compact sur mobile -->
         <StatusSelectorComponent
           :tourneyId="tourneyId"
           statusKey="fieldAssignmentStatus"

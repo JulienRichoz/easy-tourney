@@ -1,3 +1,5 @@
+<!-- views/admin/TourneySportsFields.vue -->
+
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -22,7 +24,8 @@
             'mb-3',
             'rounded-lg',
             'text-center',
-            'text-white',
+            'text-light-menuText',
+            'dark:text-dark-menuText',
             'font-semibold',
             'transform',
             'transition',
