@@ -1,37 +1,48 @@
+<!-- TourneyFields.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" />
 
     <div class="p-6">
-      <div class="flex items-center mb-8">
+      <!-- Titre et éléments alignés sur la même ligne -->
+      <div class="flex items-center justify-between mb-8">
         <TitleComponent title="Gestion Terrains" />
-        <ButtonComponent @click="openAddMultipleFieldsModal" variant="primary">
-          Ajouter plusieurs terrains
-        </ButtonComponent>
-        <ButtonComponent
-          v-if="fields.length > 0"
-          @click="openDeleteAllFieldsModal"
-          variant="danger"
-        >
-          Supprimer tous les terrains
-        </ButtonComponent>
-      </div>
 
-      <!-- Sélecteur de statut pour l'affectation des terrains -->
-      <StatusSelectorComponent
-        :tourneyId="tourneyId"
-        statusKey="fieldAssignmentStatus"
-        :statusOptions="fieldAssignmentStatusOptions"
-        label="Statut d'affectation des terrains"
-      />
+        <!-- Éléments alignés à droite -->
+        <div class="flex items-center space-x-4">
+          <!-- Boutons (affichés uniquement si isEditable) -->
+          <ButtonComponent
+            v-if="isEditable"
+            @click="openAddMultipleFieldsModal"
+            variant="primary"
+          >
+            Ajouter plusieurs terrains
+          </ButtonComponent>
+          <ButtonComponent
+            v-if="isEditable && fields.length > 0"
+            @click="openDeleteAllFieldsModal"
+            variant="danger"
+          >
+            Supprimer tous les terrains
+          </ButtonComponent>
+        </div>
+
+        <!-- Sélecteur de statut -->
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="fieldAssignmentStatus"
+          :statusOptions="fieldAssignmentStatusOptions"
+        />
+      </div>
 
       <!-- Grille des terrains -->
       <div
         class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
       >
-        <!-- Carte pour ajouter un nouveau terrain -->
+        <!-- Carte pour ajouter un nouveau terrain (affichée uniquement si isEditable) -->
         <CardAddComponent
+          v-if="isEditable"
           title="Terrain"
           @openAddElementModal="openAddFieldModal"
         />
@@ -42,10 +53,10 @@
           :key="field.id"
           :title="field.name"
           :description="field.description"
-          :subtitle="field.description"
           :hasActions="true"
-          :showDeleteButton="true"
+          :showDeleteButton="isEditable"
           :showEditButton="true"
+          :isEditable="isEditable"
           @delete="confirmDeleteField(field.id)"
           @edit="editField(field)"
           @click="editField(field)"
@@ -65,6 +76,7 @@
             v-model="newField"
             :fields="formFields"
             :isEditing="!!editingFieldId"
+            :isEditable="isEditable"
             @form-submit="handleFormSubmit"
             @cancel="closeModal"
           />
@@ -83,14 +95,16 @@
             :fields="multipleFieldsFormFields"
             :isFormValid="multipleFieldsData.numberOfFields > 0"
             :isEditing="!!editingFieldId"
+            :isEditable="isEditable"
             @form-submit="handleMultipleFieldsSubmit"
             @cancel="closeMultipleFieldsModal"
           />
         </template>
       </ModalComponent>
 
-      <!-- Modale pour confirmer la suppression de tous les terrains -->
+      <!-- Modale pour confirmer la suppression de tous les terrains (affichée uniquement si isEditable) -->
       <DeleteConfirmationModal
+        v-if="isEditable"
         :isVisible="showDeleteAllFieldsModal"
         @cancel="closeDeleteAllFieldsModal"
         @confirm="handleDeleteAllFieldsSubmit"
@@ -98,8 +112,9 @@
         hardDeleteMessage="Cette action supprimera définitivement tous les terrains et les sports associés."
       />
 
-      <!-- Confirmation de suppression individuelle -->
+      <!-- Confirmation de suppression individuelle (affichée uniquement si isEditable) -->
       <DeleteConfirmationModal
+        v-if="isEditable"
         :isVisible="showDeleteConfirmation"
         @cancel="closeDeleteConfirmation"
         @confirm="deleteField(confirmedDeleteFieldId)"
@@ -107,7 +122,6 @@
     </div>
   </div>
 </template>
-
 <script>
   import { mapState, mapActions } from 'vuex';
   import apiService from '@/services/apiService';
@@ -157,8 +171,8 @@
         isDeleting: false,
         isFormValid: false,
         fieldAssignmentStatusOptions: [
-          { value: 'draft', label: 'Brouillon' },
-          { value: 'completed', label: 'Complété' },
+          { value: 'draft', label: 'Edition' },
+          { value: 'completed', label: 'Terminé' },
         ],
       };
     },
@@ -195,6 +209,15 @@
         currentTournamentName: (state) => state.currentTournamentName,
         statuses: (state) => state.statuses,
       }),
+      shouldShowStatusSelector() {
+        // Ne pas afficher le sélecteur si le statut est 'notStarted'
+        return this.statuses.fieldAssignmentStatus !== 'notStarted';
+      },
+
+      isEditable() {
+        // Vérifie si le statut est différent de 'completed'
+        return this.statuses.fieldAssignmentStatus !== 'completed';
+      },
     },
     methods: {
       // Mapper les actions du module `tourney`

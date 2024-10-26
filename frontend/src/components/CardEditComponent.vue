@@ -78,7 +78,7 @@
 
     <div v-if="hasActions" class="flex justify-between mt-4 w-full">
       <ButtonComponent
-        v-if="showDeleteButton || hasActions"
+        v-if="(showDeleteButton || hasActions) && isEditable"
         variant="danger"
         fontAwesomeIcon="trash"
         @click.stop="onDelete"
@@ -140,6 +140,10 @@
       status: {
         type: String,
         default: '',
+      },
+      isEditable: {
+        type: Boolean,
+        default: true,
       },
       cornerCount: String,
     },

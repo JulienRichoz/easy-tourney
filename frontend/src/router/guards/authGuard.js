@@ -1,3 +1,5 @@
+// router/guards/authGuard.js
+
 import { permissions } from '../../services/permissions';
 
 export function requireAuth(to, from, next, store) {

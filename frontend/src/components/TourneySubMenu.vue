@@ -1,3 +1,5 @@
+<!-- TourneySubMenu(Component).vue -->
+
 <template>
   <div
     :class="['tourney-nav', isNavVisible ? 'visible' : 'hidden']"

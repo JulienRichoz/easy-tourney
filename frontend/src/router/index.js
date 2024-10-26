@@ -1,3 +1,5 @@
+// router/index.js
+
 // Import des modules nécessaires pour la gestion des routes
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store'; // Vuex pour gérer les rôles

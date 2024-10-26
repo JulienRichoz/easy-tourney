@@ -44,6 +44,7 @@
             "
             :type="field.type"
             :id="field.name"
+            :disabled="!isEditable"
             v-model="formData[field.name]"
             :class="[
               'w-full p-2 rounded-md border',
@@ -60,6 +61,7 @@
           <textarea
             v-if="field.type === 'textarea'"
             :id="field.name"
+            :disabled="!isEditable"
             v-model="formData[field.name]"
             :class="[
               'w-full p-2 rounded-md border',
@@ -75,6 +77,7 @@
           <select
             v-if="field.type === 'select'"
             :id="field.name"
+            :disabled="!isEditable"
             v-model="formData[field.name]"
             class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
             @change="validateField(field)"
@@ -92,6 +95,7 @@
             v-if="field.type === 'file'"
             type="file"
             :id="field.name"
+            :disabled="!isEditable"
             @change="handleFileChange"
             accept="image/*"
             class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
@@ -100,6 +104,7 @@
           <div v-if="field.type === 'color'" class="flex items-center">
             <input
               type="color"
+              :disabled="!isEditable"
               :id="field.name"
               v-model="formData[field.name]"
               class="w-16 h-16 p-0 border-none rounded-md"
@@ -133,6 +138,7 @@
           Annuler
         </ButtonComponent>
         <ButtonComponent
+          v-if="isEditable"
           :variant="isFormValid ? 'primary' : 'disabled'"
           nativeType="submit"
           :disabled="!isFormValid"
@@ -176,6 +182,10 @@
         type: Function,
         required: false,
         default: null,
+      },
+      isEditable: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
@@ -257,6 +267,7 @@
       },
 
       handleSubmit() {
+        if (!this.isEditable) return; // Empêcher la soumission si non éditable
         // Protéger l'accès à customValidation
         if (this.customValidation) {
           const customErrors = this.customValidation() || {};

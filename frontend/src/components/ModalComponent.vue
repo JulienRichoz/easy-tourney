@@ -1,3 +1,5 @@
+<!-- ModalComponent.vue -->
+
 <template>
   <div
     v-if="isVisible"

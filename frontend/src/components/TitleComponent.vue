@@ -1,3 +1,5 @@
+<!-- TitleComponent.vue -->
+
 <template>
   <h1 :class="titleClass">{{ title }}</h1>
 </template>

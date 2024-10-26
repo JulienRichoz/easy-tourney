@@ -1,3 +1,5 @@
+<!-- ErrorMessageComponent.vue -->
+
 <template>
   <div v-if="message" :class="errorClass">
     <span>{{ message }}</span>

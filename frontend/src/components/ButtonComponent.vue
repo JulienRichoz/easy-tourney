@@ -1,3 +1,4 @@
+<!-- ButtonComponent.vue -->
 <template>
   <button
     :type="nativeType"
