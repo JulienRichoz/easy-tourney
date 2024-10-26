@@ -26,6 +26,7 @@
           <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
           <ButtonComponent
             v-if="
+              isEditable &&
               teamSetupConfigured &&
               teams.length <
                 teamSetup.maxTeamNumber + (teamSetupConfigured ? 1 : 0)
