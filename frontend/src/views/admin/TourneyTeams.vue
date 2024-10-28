@@ -1,3 +1,14 @@
+<!--
+CRUD user -> faire en plus les pages détails de groupe, de personnes sans groupe. Peaufiner users avec informations (n° tel par exemple ou commentaires)
+Tester crud user et différentes pages + responsive mobile
+
+Développer le systeme d'inscription automatique
+Développer algorithme pour peupler les groupes avec les users unassigned
+
+DES QUE TOUT BON : Partir sur generation de POOLS et planning des matchs :')
+DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des matchs et des scores (avec arbitrage)
+-->
+
 <!-- TourneyTeams.vue -->
 <template>
   <div>
@@ -231,6 +242,7 @@
 </template>
 
 <script>
+  import { mapState, mapActions } from 'vuex';
   import apiService from '@/services/apiService';
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
@@ -244,7 +256,6 @@
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
-  import { mapState } from 'vuex';
 
   export default {
     components: {
@@ -378,9 +389,16 @@
       },
     },
     methods: {
+      // Mapper les actions du module `tourney`
+      ...mapActions('tourney', [
+        'fetchTourneyStatuses',
+        'setTournamentName',
+        'clearTournamentName',
+      ]),
       // Nouvelle méthode pour récupérer toutes les données nécessaires en une seule requête
       async fetchTourneyDetails() {
         try {
+          this.fetchTourneyStatuses(this.tourneyId);
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/teams-details`
           );

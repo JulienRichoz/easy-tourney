@@ -400,8 +400,6 @@
       },
     },
     mounted() {
-      this.fetchTourneyStatuses(this.tourneyId);
-
       this.fetchFieldDetails();
     },
   };

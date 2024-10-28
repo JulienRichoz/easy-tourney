@@ -45,13 +45,11 @@
       </div>
 
       <!-- Sélecteur de statut aligné à droite -->
-      <div class="flex items-center">
-        <StatusSelectorComponent
-          :tourneyId="tourneyId"
-          statusKey="sportAssignmentStatus"
-          :statusOptions="sportAssignmentStatusOptions"
-        />
-      </div>
+      <StatusSelectorComponent
+        :tourneyId="tourneyId"
+        statusKey="sportAssignmentStatus"
+        :statusOptions="sportAssignmentStatusOptions"
+      />
     </div>
 
     <!-- Si aucun terrain n'est trouvé, afficher un message d'avertissement -->
@@ -93,6 +91,7 @@
 </template>
 
 <script>
+  import { mapState, mapActions } from 'vuex';
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
   import dayGridPlugin from '@fullcalendar/daygrid'; // Import du plugin dayGrid
@@ -101,7 +100,6 @@
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
-  import { mapState } from 'vuex';
 
   export default {
     components: {
@@ -122,16 +120,6 @@
         ],
       };
     },
-
-    async mounted() {
-      // Méthode appelée lorsque le composant est monté
-      await this.fetchTourneySportsFields(); // Récupérer les sports associés aux terrains du tournoi
-      await this.fetchSports(); // Récupérer tous les sports pour la sport list drag n drop
-
-      // Rendre les éléments de sport externes "draggables"
-      this.initializeExternalEvents();
-    },
-
     computed: {
       /**
        * Génère dynamiquement les classes de la grille pour l'affichage responsive
@@ -163,14 +151,33 @@
         return this.statuses.sportAssignmentStatus !== 'completed';
       },
     },
+    watch: {
+      isEditable(newVal) {
+        this.$nextTick(() => {
+          if (newVal) {
+            // Réinitialiser les éléments draggables
+            this.initializeExternalEvents();
+          }
+        });
+      },
+    },
 
     methods: {
+      // Mapper les actions du module `tourney`
+      ...mapActions('tourney', [
+        'fetchTourneyStatuses',
+        'setTournamentName',
+        'clearTournamentName',
+      ]),
       /**
        * Récupère les terrains et les sports associés du tournoi depuis l'API.
        * Met à jour la liste des terrains et les détails du tournoi.
        */
       async fetchTourneySportsFields() {
         try {
+          // Charger les statuts du tournoi
+          await this.fetchTourneyStatuses(this.tourneyId);
+
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/sports-fields`
           );
@@ -525,6 +532,14 @@
         const seconds = d.getSeconds().toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
       },
+    },
+    async mounted() {
+      // Méthode appelée lorsque le composant est monté
+      await this.fetchTourneySportsFields(); // Récupérer les sports associés aux terrains du tournoi
+      await this.fetchSports(); // Récupérer tous les sports pour la sport list drag n drop
+
+      // Rendre les éléments de sport externes "draggables"
+      this.initializeExternalEvents();
     },
   };
 </script>
