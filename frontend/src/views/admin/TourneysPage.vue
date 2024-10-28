@@ -1,3 +1,4 @@
+<!-- TourneysPage.vue -->
 <template>
   <div class="p-6">
     <div
@@ -55,11 +56,11 @@
           v-model="newTourney"
           :fields="formFields"
           :isEditing="!!editingTourneyId"
-          :isFormValid="isFormValid"
           :minDate="'1900-01-01'"
           :maxDate="'2200-01-01'"
           @form-submit="handleFormSubmit"
           @cancel="closeModal"
+          :customValidation="validateForm"
         />
       </template>
     </ModalComponent>
@@ -109,15 +110,10 @@
           status: 'draft',
         },
         editingTourneyId: null,
-        nameError: false,
-        locationError: false,
-        dateError: false,
-        minDate: null,
-        maxDate: null,
+        isFormValid: false,
+        isSaving: false,
         filterStatus: '',
         filterDate: '',
-        isSaving: false,
-        isFormValid: false,
         filters: [
           {
             label: 'Filtrer par statut',
@@ -141,6 +137,7 @@
             ],
           },
         ],
+        formErrors: {}, // Ajouter cette ligne
       };
     },
     computed: {
@@ -233,46 +230,18 @@
           status: 'draft',
         };
         this.isFormValid = false;
+        this.formErrors = {}; // Réinitialiser les erreurs
         this.showModal = true;
       },
       editTourney(tourney) {
         this.editingTourneyId = tourney.id;
         this.newTourney = { ...tourney };
-        this.showModal = true;
         this.isFormValid = false;
+        this.formErrors = {}; // Réinitialiser les erreurs
+        this.showModal = true;
       },
-      handleFormSubmit() {
-        if (!this.isFormValid) {
-          return;
-        }
+      async handleFormSubmit() {
         this.isSaving = true;
-        this.saveTourney();
-      },
-      validateForm() {
-        this.validateNameField();
-        this.validateLocationField();
-        this.validateDateField();
-        this.isFormValid =
-          !this.nameError && !this.locationError && !this.dateError;
-      },
-      validateNameField() {
-        this.nameError =
-          !this.isNameUnique(this.newTourney.name) || !this.newTourney.name;
-      },
-      validateLocationField() {
-        this.locationError = !this.newTourney.location;
-      },
-      validateDateField() {
-        this.dateError = !this.newTourney.dateTourney;
-      },
-      isNameUnique(name) {
-        return !this.tourneys.some(
-          (tourney) =>
-            tourney.name.toLowerCase() === name.toLowerCase() &&
-            tourney.id !== this.editingTourneyId
-        );
-      },
-      async saveTourney() {
         try {
           if (this.editingTourneyId) {
             await apiService.put(
@@ -281,7 +250,6 @@
             );
             toast.success('Tournoi modifié avec succès!');
           } else {
-            console.log('Creaet new tourney', this.newTourney);
             await apiService.post('/tourneys', this.newTourney);
             toast.success('Nouveau tournoi ajouté avec succès!');
           }
@@ -293,6 +261,43 @@
         } finally {
           this.isSaving = false;
         }
+      },
+      validateForm() {
+        const { name, location, dateTourney } = this.newTourney;
+        const trimmedName = name.trim();
+
+        const errors = {};
+
+        // Valider le nom
+        if (!trimmedName) {
+          errors.name = 'Le nom du tournoi est obligatoire.';
+        } else {
+          const nameExists = this.tourneys.some(
+            (tourney) =>
+              tourney.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
+              tourney.id !== this.editingTourneyId
+          );
+          if (nameExists) {
+            errors.name = 'Un tournoi avec ce nom existe déjà.';
+          }
+        }
+
+        // Valider le lieu
+        if (!location) {
+          errors.location = 'Le lieu du tournoi est obligatoire.';
+        }
+
+        // Valider la date
+        if (!dateTourney) {
+          errors.dateTourney = 'La date du tournoi est obligatoire.';
+        }
+
+        // Mettre à jour les erreurs du formulaire
+        this.formErrors = errors;
+
+        // Mettre à jour la validité du formulaire
+        this.isFormValid = Object.keys(errors).length === 0;
+        return errors;
       },
       confirmDeleteTourney(id) {
         this.confirmedDeleteTourneyId = id;
