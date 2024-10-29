@@ -19,6 +19,8 @@ import TourneysPage from '../views/admin/TourneysPage.vue'; // Liste des tournoi
 import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Détails d'un tournoi
 import TourneyFields from '../views/admin/TourneyFields.vue'; // Gestion des terrains d'un tournoi
 import TourneySportsFields from '../views/admin/TourneySportsFields.vue'; // Gestion des sports sur les terrains
+import TourneyUnassignedUsers from '../views/admin/TourneyUnassignedUsers.vue'; // Liste des utilisateurs sans équipe
+import TourneyTeamUsers from '../views/admin/TourneyTeamUsers.vue'; // Liste des utilisateurs d'une équipe
 
 // Définition des routes de l'application
 const routes = [
@@ -123,11 +125,23 @@ const routes = [
     name: 'TourneyTeams',
     component: () => import('@/views/admin/TourneyTeams.vue'), //
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
+  },/*
   {
     path: '/tourneys/:id/teams/:teamId',
     name: 'TeamDetails',
     component: () => import('@/views/admin/TourneyTeamDetails.vue'), //  Lazy loading du composant, Composant pour la page de gestion d'une équipe individuelle
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },*/
+  {
+    path: '/tourneys/:id/unassigned-users',
+    name: 'TourneyUnassignedUsers',
+    component: TourneyUnassignedUsers,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/tourneys/:id/teams/:teamId/users',
+    name: 'TourneyTeamUsers',
+    component: TourneyTeamUsers,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
 ];
