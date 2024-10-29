@@ -28,7 +28,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
             variant="secondary"
           >
             <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:md:inline">Réglages</span>
+            <span class="hidden sm:md:inline">Config Equipes</span>
           </ButtonComponent>
         </div>
 
@@ -43,7 +43,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
                 teamSetup.maxTeamNumber + (teamSetupConfigured ? 1 : 0)
             "
             @click="generateTeams"
-            variant="primary"
+            variant="algo"
             fontAwesomeIcon="people-group"
           >
             <!-- Texte réduit sur mobile -->
@@ -93,7 +93,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
               @click="navigateToUnassignedUsers"
               variant="info"
               class="flex items-left space-x-2"
-              fontAwesomeIcon="eye"
+              fontAwesomeIcon="user"
             >
               <span>Sans groupe ({{ unassignedUsers.length }})</span>
             </ButtonComponent>

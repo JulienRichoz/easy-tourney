@@ -326,11 +326,11 @@
        * Fonctions pour pré-remplir automatiquement les groupes
        */
       autoFillGroups() {
-        // Stocker l'état initial
+        // 1. Stocker l'état initial
         this.initialSelectedTeamIds = { ...this.selectedTeamIds };
         let unassignedUsers = [...this.users];
 
-        // Séparer les équipes 'player' et l'équipe 'assistant'
+        // 2. Séparer les équipes 'player' et l'équipe 'assistant'
         let assistantTeam = null;
         let teams = [];
 
@@ -348,7 +348,7 @@
           }
         });
 
-        // Fonction pour assigner des utilisateurs à une équipe
+        // 3. Fonction pour assigner des utilisateurs à une équipe
         const assignUsersToTeam = (team, numberOfUsersNeeded) => {
           const usersToAssign = unassignedUsers.splice(0, numberOfUsersNeeded);
           team.assignedUsers.push(...usersToAssign);
@@ -357,7 +357,7 @@
           });
         };
 
-        // a) Remplir les groupes partiels pour les rendre valides
+        // a) Remplir les groupes partiels jusqu'au seuil minimal
         teams
           .filter(
             (team) =>
@@ -370,38 +370,38 @@
             assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
           });
 
-        // b) Remplir les groupes vides pour les rendre pleins
-        teams
-          .filter((team) => team.assignedUsers.length === 0)
-          .forEach((team) => {
-            const needed = this.teamSetup.playerPerTeam;
-            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
-          });
+        // b) Calculer combien d'équipes vides peuvent être entièrement remplies
+        const emptyTeams = teams.filter(
+          (team) => team.assignedUsers.length === 0
+        );
+        const maxFillableEmptyTeams = Math.floor(
+          unassignedUsers.length / this.teamSetup.minPlayerPerTeam
+        );
+        const teamsToFill = emptyTeams.slice(0, maxFillableEmptyTeams);
 
-        // c) Remplir les groupes vides pour les rendre valides
-        if (unassignedUsers.length > 0) {
-          teams
-            .filter((team) => team.assignedUsers.length === 0)
-            .forEach((team) => {
-              const needed = this.teamSetup.minPlayerPerTeam;
-              assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
-            });
+        // Remplir les équipes vides identifiées
+        teamsToFill.forEach((team) => {
+          assignUsersToTeam(team, this.teamSetup.minPlayerPerTeam);
+        });
+
+        // c) Distribuer les utilisateurs restants aux équipes jusqu'au maximum autorisé
+        let distributionPossible = true;
+
+        while (unassignedUsers.length > 0 && distributionPossible) {
+          distributionPossible = false;
+          for (const team of teams) {
+            if (
+              team.assignedUsers.length < this.teamSetup.playerPerTeam &&
+              unassignedUsers.length > 0
+            ) {
+              assignUsersToTeam(team, 1);
+              distributionPossible = true;
+              if (unassignedUsers.length === 0) break;
+            }
+          }
         }
 
-        // d) Remplir les groupes valides pour les rendre pleins
-        teams
-          .filter(
-            (team) =>
-              team.assignedUsers.length >= this.teamSetup.minPlayerPerTeam &&
-              team.assignedUsers.length < this.teamSetup.playerPerTeam
-          )
-          .forEach((team) => {
-            const needed =
-              this.teamSetup.playerPerTeam - team.assignedUsers.length;
-            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
-          });
-
-        // e) Assigner les utilisateurs restants à l'équipe 'assistant'
+        // d) Assigner les utilisateurs restants à l'équipe 'assistant' si nécessaire
         if (unassignedUsers.length > 0) {
           if (!assistantTeam) {
             toast.error(
@@ -414,6 +414,7 @@
 
         this.isAutoFilled = true;
       },
+
       validateAssignments() {
         // Collecter les affectations
         const assignments = Object.entries(this.selectedTeamIds).map(
@@ -430,6 +431,7 @@
         this.isAutoFilled = false;
         this.initialSelectedTeamIds = {};
       },
+
       cancelAutoFill() {
         // Restaurer l'état initial
         this.selectedTeamIds = { ...this.initialSelectedTeamIds };

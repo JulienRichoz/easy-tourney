@@ -4,7 +4,7 @@
   <div
     v-if="isVisible"
     ref="modalContainer"
-    class="fixed inset-0 bg-light-modal-background dark:bg-dark-modal-background flex items-center justify-center"
+    class="fixed inset-0 bg-light-modal-background z-50 dark:bg-dark-modal-background flex items-center justify-center"
     tabindex="0"
     @keydown.enter="handleConfirm"
   >
