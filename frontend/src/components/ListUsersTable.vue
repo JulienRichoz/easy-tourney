@@ -16,6 +16,7 @@
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
         <ButtonComponent
+          v-if="hasAvailableTeams"
           variant="primary"
           fontAwesomeIcon="cog"
           @click="autoFillGroups"
@@ -42,7 +43,7 @@
     </p>
 
     <!-- Table pour afficher les utilisateurs -->
-    <div class="overflow-x-auto mt-4">
+    <div class="overflow-x-auto overflow-y-auto max-h-[70vh] mt-4">
       <table
         class="min-w-full bg-light-card dark:bg-dark-card shadow rounded-lg"
       >
