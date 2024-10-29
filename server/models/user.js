@@ -24,8 +24,12 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    roleId: DataTypes.INTEGER,
-    teamId: DataTypes.INTEGER, // Ajout du champ teamId
+    phone: DataTypes.STRING,
+    roleId: {
+      type: DataTypes.INTEGER,
+      defaultValue: 4, // Role Guest par défault si aucun role spécifié
+    },
+    teamId: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'User',

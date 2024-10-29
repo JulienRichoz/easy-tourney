@@ -19,8 +19,13 @@ module.exports = {
       password: {
         type: Sequelize.STRING
       },
+      phone: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       roleId: {
         type: Sequelize.INTEGER,
+        defaultValue: 4, // Role Guest par défaut
         references: {
           model: 'Roles', // Table cible
           key: 'id'       // Clé primaire de la table cible

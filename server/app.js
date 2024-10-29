@@ -16,7 +16,7 @@ const fieldRoutes = require('./routes/field');
 const teamRoutes = require('./routes/team');
 const teamSetupRoutes = require('./routes/teamSetup');
 const usersTourneysRoutes = require('./routes/usersTourneys');
-//const userRoutes = require('./routes/user');
+const userRoutes = require('./routes/user');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -35,7 +35,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
-//app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
 
 // Routes centrées sur le tournoi
 app.use('/api/tourneys', tourneyRoutes);

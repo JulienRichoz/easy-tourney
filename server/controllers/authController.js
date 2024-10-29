@@ -7,16 +7,15 @@ const jwt = require('jsonwebtoken');
 
 // Inscription
 exports.register = async (req, res) => {
-    const { name, email, password, roleId } = req.body;
+    const { name, email, phone, password, roleId } = req.body;
 
     try {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: 'Cet email est déjà utilisé. Veuillez en choisir un autre.' });
         }
-
         const hashedPassword = await authService.hashPassword(password);
-        const newUser = await User.create({ name, email, password: hashedPassword, roleId });
+        const newUser = await User.create({ name, email, phone, password: hashedPassword, roleId });
 
         const token = authService.generateToken(newUser);
         const decodedToken = jwt.decode(token);  // Décoder le token pour récupérer l'expiration
@@ -27,6 +26,7 @@ exports.register = async (req, res) => {
             user: {
                 id: newUser.id,
                 name: newUser.name,
+                phone: newUser.phone,
                 email: newUser.email,
                 role: newUser.roleId,
             },
@@ -64,6 +64,7 @@ exports.login = async (req, res) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
                 role: user.roleId,
             },
         });
