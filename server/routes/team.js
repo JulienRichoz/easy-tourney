@@ -9,7 +9,8 @@ const {
     getTeamById,
     assignUserToTeam,
     removeUserFromTeam,
-    resetTeamsAndReassignUsers
+    resetTeamsAndReassignUsers,
+    autoFillTeams
 } = require('../controllers/teamController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
@@ -32,5 +33,6 @@ router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une é
 // Routes pour les opérations globales sur les équipes
 router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe pour un tournoi (admin uniquement)
 router.get('/', isAuthenticated, getTeamsByTourney); // Obtenir toutes les équipes d'un tournoi
+router.post('/auto-fill', isAuthenticated, isAdmin, autoFillTeams); // Remplir automatiquement les équipes
 
 module.exports = router;

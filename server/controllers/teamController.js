@@ -343,3 +343,45 @@ exports.resetTeamsAndReassignUsers = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur lors de la réinitialisation des équipes et des utilisateurs.' });
     }
 };
+
+exports.autoFillTeams = async (req, res) => {
+    const { tourneyId } = req.params;
+    const { assignments } = req.body;
+  
+    const transaction = await sequelize.transaction();
+  
+    try {
+      for (const assignment of assignments) {
+        const { userId, teamId } = assignment;
+  
+        const team = await Team.findOne({ where: { id: teamId, tourneyId }, transaction });
+        if (!team) {
+          throw new Error(`Équipe avec ID ${teamId} non trouvée.`);
+        }
+  
+        const user = await User.findByPk(userId, { transaction });
+        if (!user) {
+          throw new Error(`Utilisateur avec ID ${userId} non trouvé.`);
+        }
+  
+        const userTourney = await UsersTourneys.findOne({
+          where: { userId, tourneyId },
+          transaction,
+        });
+        if (!userTourney) {
+          throw new Error(`L'utilisateur ${userId} ne participe pas au tournoi ${tourneyId}.`);
+        }
+  
+        user.teamId = teamId;
+        await user.save({ transaction });
+      }
+  
+      await transaction.commit();
+      res.status(200).json({ message: 'Affectations enregistrées avec succès.' });
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Erreur lors des affectations en lot:', error);
+      res.status(500).json({ message: 'Erreur lors des affectations en lot.', error: error.message });
+    }
+  };
+  

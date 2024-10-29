@@ -19,8 +19,7 @@ router.put('/:id', isAuthenticated, isAdmin, updateTourney); // Mettre à jour u
 router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
 router.get('/:id/statuses', isAuthenticated, isAdmin, getTourneyStatuses);
 
-// Aggregate routes
+// Aggregate/custom routes
 router.get('/:id/teams-details', isAuthenticated, getTourneyTeamsDetails); // Team Page -> get all data required in one request
-
 
 module.exports = router;
