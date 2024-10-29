@@ -9,6 +9,7 @@
       @assign-team="handleAssignTeam"
       @delete-user="handleDeleteUser"
       @go-back="goBackToTeams"
+      @auto-fill-groups="handleAutoFillGroups"
     />
   </div>
 </template>
@@ -41,7 +42,6 @@
           ]);
           this.unassignedUsers = usersResponse.data;
           this.teams = teamsResponse.data;
-          console.log('Teams:', this.teams);
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des utilisateurs ou des équipes:',
@@ -104,6 +104,27 @@
           console.log('Teams mis à jour:', this.teams);
         } catch (error) {
           console.error('Erreur lors de la récupération des équipes:', error);
+        }
+      },
+      async handleAutoFillGroups() {
+        try {
+          // const tourneyId = this.$route.params.id;
+          // Appeler une API ou effectuer une action pour remplir automatiquement les groupes
+          // Exemple : await apiService.post(`/tourneys/${tourneyId}/auto-fill-groups`);
+
+          // Pour l'instant, afficher une notification
+          toast.info('Remplissage automatique des groupes initié.');
+
+          // Recharger les données après auto-fill si nécessaire
+          await this.fetchData();
+        } catch (error) {
+          console.error(
+            'Erreur lors du remplissage automatique des groupes:',
+            error
+          );
+          toast.error(
+            'Une erreur est survenue lors du remplissage automatique des groupes.'
+          );
         }
       },
       goBackToTeams() {

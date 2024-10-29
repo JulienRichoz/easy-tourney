@@ -6,6 +6,7 @@
     <!-- En-tête avec les boutons et le titre -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-2">
+        <TitleComponent :title="title" />
         <ButtonComponent
           variant="info"
           fontAwesomeIcon="envelope"
@@ -14,7 +15,6 @@
         >
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
-        <TitleComponent :title="title" />
         <ButtonComponent
           variant="primary"
           fontAwesomeIcon="cog"
@@ -28,7 +28,7 @@
         fontAwesomeIcon="arrow-left"
         @click="goBackToTeams"
       >
-        Retour aux équipes
+        <span class="hidden sm:inline">Retour aux équipes</span>
       </ButtonComponent>
     </div>
 
@@ -48,6 +48,12 @@
       >
         <thead>
           <tr>
+            <!-- Colonne Edit -->
+            <th
+              class="px-2 py-2 text-center text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
+            >
+              Edit
+            </th>
             <th
               class="px-4 py-2 text-left text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
@@ -68,6 +74,9 @@
             >
               Équipe
             </th>
+            <th
+              class="px-2 py-2 text-center text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
+            ></th>
           </tr>
         </thead>
         <tbody>
@@ -76,6 +85,15 @@
             :key="user.id"
             class="hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground"
           >
+            <!-- Colonne Edit -->
+            <td class="px-2 py-2 text-center">
+              <SoftButtonComponent
+                fontAwesomeIcon="pen"
+                iconClass="w-5 h-5 text-light-buttonVariants-warning-default hover:text-light-buttonVariants-warning-hover dark:text-dark-buttonVariants-warning-default hover:dark:text-dark-buttonVariants-warning-hover"
+                aria-label="Éditer l'utilisateur"
+                @click.stop="navigateToEdit(user.id)"
+              />
+            </td>
             <td class="px-4 py-2">{{ user.name || 'N/A' }}</td>
             <td class="px-4 py-2 truncate">
               <a
@@ -88,12 +106,12 @@
             <td class="px-4 py-2 hidden md:table-cell">
               {{ user.phone || '-' }}
             </td>
-            <!-- Actions -->
+            <!-- Equipe -->
             <td class="px-4 py-2 flex items-center justify-center space-x-2">
               <select
                 v-if="availableTeams.length > 0 && teamSetup"
                 v-model="selectedTeamIds[user.id]"
-                class="border border-light-form-border dark:border-dark-form-border rounded-md p-1 w-28 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
+                class="border border-light-form-border dark:border-dark-form-border rounded-md p-1 w-32 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
               >
                 <option :value="null">-- Sélectionnez une équipe --</option>
                 <option
@@ -109,12 +127,12 @@
                 </option>
               </select>
               <ButtonComponent
+                fontAwesomeIcon="add"
                 v-if="availableTeams.length > 0"
-                :fontAwesomeIcon="'plus'"
                 variant="primary"
                 @click="assignTeam(user.id)"
               >
-                <span class="hidden sm:inline">Assigner</span>
+                <span class="hidden md:inline">Assigner</span>
               </ButtonComponent>
               <ButtonComponent
                 v-else
@@ -124,13 +142,15 @@
               >
                 <span class="hidden sm:inline">Aucune équipe</span>
               </ButtonComponent>
-              <ButtonComponent
-                :fontAwesomeIcon="'trash'"
-                variant="danger"
+            </td>
+            <!-- Colonne Supprimer  -->
+            <td class="px-2 py-2 text-center">
+              <SoftButtonComponent
+                fontAwesomeIcon="trash"
+                iconClass="w-5 h-5 text-light-buttonVariants-danger-default hover:text-light-buttonVariants-danger-hover dark:text-dark-buttonVariants-danger-default hover:dark:text-dark-buttonVariants-danger-hover"
+                aria-label="Supprimer l'utilisateur"
                 @click="confirmDelete(user.id)"
-              >
-                <span class="hidden sm:inline">Supprimer</span>
-              </ButtonComponent>
+              />
             </td>
           </tr>
         </tbody>
@@ -153,6 +173,7 @@
   import apiService from '@/services/apiService';
   import TitleComponent from '@/components/TitleComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import SoftButtonComponent from '@/components/SoftButtonComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import { toast } from 'vue3-toastify';
 
@@ -160,6 +181,7 @@
     components: {
       TitleComponent,
       ButtonComponent,
+      SoftButtonComponent,
       DeleteConfirmationModal,
     },
     props: {
@@ -182,7 +204,7 @@
         default: false,
       },
     },
-    emits: ['go-back', 'assign-team', 'delete-user'],
+    emits: ['go-back', 'assign-team', 'delete-user', 'auto-fill-groups'],
     computed: {
       availableTeams() {
         // Vérifie que `teamSetup` est chargé avant de tenter l'accès à `playerPerTeam`
@@ -229,7 +251,7 @@
         const teamId = this.selectedTeamIds[userId];
         if (teamId) {
           this.$emit('assign-team', { userId, teamId });
-          // Optionnel : Réinitialiser la sélection après assignation
+          // Réinitialiser la sélection après assignation
           this.selectedTeamIds[userId] = null;
         } else {
           // Affiche un message si aucune équipe n'est sélectionnée
@@ -262,6 +284,14 @@
         }
         const mailtoLink = `mailto:${emails.join(',')}`;
         window.location.href = mailtoLink;
+      },
+      navigateToEdit(userId) {
+        const tourneyId = this.$route.params.id;
+        this.$router.push(`/tourneys/${tourneyId}/users/${userId}/edit`);
+      },
+      autoFillGroups() {
+        // Émettre un événement pour que le composant parent puisse gérer l'auto-remplissage
+        this.$emit('auto-fill-groups');
       },
     },
     watch: {
