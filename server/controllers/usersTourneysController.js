@@ -37,6 +37,7 @@ exports.assignTeamToUser = async (req, res) => {
             where: { id: userId },
             include: {
                 model: Role,
+                as: 'role',
                 attributes: ['name'],
             },
         });
@@ -45,7 +46,7 @@ exports.assignTeamToUser = async (req, res) => {
         }
 
         // Si l'utilisateur est un Admin, empêcher la modification
-        if (user.Role.name === 'Admin') {
+        if (user.role.name === 'Admin') {
             return res.status(403).json({ message: "Impossible d'assigner un groupe à un Admin du tournoi." });
         }
 
@@ -96,6 +97,7 @@ exports.getUsersByTourney = async (req, res) => {
                 },
                 {
                     model: Role,
+                    as: 'role',
                     where: { name: { [Op.ne]: 'admin' } },
                     attributes: []
                 },
@@ -122,6 +124,7 @@ exports.removeUserFromTourney = async (req, res) => {
             where: { id: userId },
             include: {
                 model: Role,
+                as: 'role',
                 attributes: ['name'],
             },
         });
@@ -131,7 +134,7 @@ exports.removeUserFromTourney = async (req, res) => {
         }
 
         // Vérifier que l'utilisateur n'est pas un Admin
-        if (user.Role.name === 'Admin') {
+        if (user.role.name === 'Admin') {
             return res.status(403).json({ message: "Impossible de supprimer un Admin du tournoi." });
         }
 
@@ -203,6 +206,7 @@ exports.getUserInfoByTourney = async (req, res) => {
                 },
                 {
                     model: Role,
+                    as: 'role',
                     attributes: ['name']
                 },
             ],
