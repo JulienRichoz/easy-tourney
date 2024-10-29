@@ -168,7 +168,7 @@ exports.getUnassignedUsersByTourney = async (req, res) => {
                 teamId: null,
                 roleId: 4, // Assurez-vous que 4 correspond bien à 'guest'
             },
-            attributes: ['id', 'name', 'roleId', 'teamId'],
+            attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId'], // Ajout de 'email' et 'phone'
             include: [
                 {
                     model: Tourney,
