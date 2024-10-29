@@ -17,11 +17,20 @@
         </ButtonComponent>
         <ButtonComponent
           v-if="hasAvailableTeams"
-          variant="primary"
+          :variant="isAutoFilled ? 'algo' : 'algo'"
           fontAwesomeIcon="cog"
-          @click="autoFillGroups"
+          @click="isAutoFilled ? validateAssignments() : autoFillGroups()"
         >
-          <span class="hidden sm:inline">Remplir Groupes</span>
+          <span class="hidden sm:inline">
+            {{ isAutoFilled ? 'Valider' : 'Remplir Groupes' }}
+          </span>
+        </ButtonComponent>
+        <ButtonComponent
+          v-if="isAutoFilled"
+          variant="secondary"
+          @click="cancelAutoFill"
+        >
+          <span class="hidden sm:inline">Annuler</span>
         </ButtonComponent>
       </div>
       <ButtonComponent
@@ -209,13 +218,13 @@
     emits: ['go-back', 'assign-team', 'delete-user', 'auto-fill-groups'],
     computed: {
       availableTeams() {
-        // Vérifie que `teamSetup` est chargé avant de tenter l'accès à `playerPerTeam`
-        if (!this.teamSetup) return []; // Retourne un tableau vide si `teamSetup` n'est pas encore chargé
+        if (!this.teamSetup) return [];
 
         return this.teams.filter(
-          (team) => team.Users.length < this.teamSetup.playerPerTeam // Filtrer les équipes non pleines
+          (team) => team.Users.length < this.getTeamCapacity(team)
         );
       },
+
       teamOptions() {
         return this.availableTeams.map((team) => {
           const capacity =
@@ -239,12 +248,20 @@
         showDeleteModal: false,
         userIdToDelete: null,
         selectedTeamIds: {},
+        isAutoFilled: false,
+        initialSelectedTeamIds: {},
       };
     },
     async created() {
       await this.fetchTeamSetup(); // Charger `teamSetup` au montage du composant
     },
     methods: {
+      getTeamCapacity(team) {
+        if (team.type === 'assistant') {
+          return this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber;
+        }
+        return this.teamSetup.playerPerTeam;
+      },
       async fetchTeamSetup() {
         try {
           const tourneyId = this.$route.params.id;
@@ -304,9 +321,119 @@
         const tourneyId = this.$route.params.id;
         this.$router.push(`/tourneys/${tourneyId}/users/${userId}/edit`);
       },
+
+      /*
+       * Fonctions pour pré-remplir automatiquement les groupes
+       */
       autoFillGroups() {
-        // Émettre un événement pour que le composant parent puisse gérer l'auto-remplissage
-        this.$emit('auto-fill-groups');
+        // Stocker l'état initial
+        this.initialSelectedTeamIds = { ...this.selectedTeamIds };
+        let unassignedUsers = [...this.users];
+
+        // Séparer les équipes 'player' et l'équipe 'assistant'
+        let assistantTeam = null;
+        let teams = [];
+
+        this.teams.forEach((team) => {
+          if (team.type === 'assistant') {
+            assistantTeam = {
+              ...team,
+              assignedUsers: team.Users ? [...team.Users] : [],
+            };
+          } else {
+            teams.push({
+              ...team,
+              assignedUsers: team.Users ? [...team.Users] : [],
+            });
+          }
+        });
+
+        // Fonction pour assigner des utilisateurs à une équipe
+        const assignUsersToTeam = (team, numberOfUsersNeeded) => {
+          const usersToAssign = unassignedUsers.splice(0, numberOfUsersNeeded);
+          team.assignedUsers.push(...usersToAssign);
+          usersToAssign.forEach((user) => {
+            this.selectedTeamIds[user.id] = team.id;
+          });
+        };
+
+        // a) Remplir les groupes partiels pour les rendre valides
+        teams
+          .filter(
+            (team) =>
+              team.assignedUsers.length > 0 &&
+              team.assignedUsers.length < this.teamSetup.minPlayerPerTeam
+          )
+          .forEach((team) => {
+            const needed =
+              this.teamSetup.minPlayerPerTeam - team.assignedUsers.length;
+            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
+          });
+
+        // b) Remplir les groupes vides pour les rendre pleins
+        teams
+          .filter((team) => team.assignedUsers.length === 0)
+          .forEach((team) => {
+            const needed = this.teamSetup.playerPerTeam;
+            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
+          });
+
+        // c) Remplir les groupes vides pour les rendre valides
+        if (unassignedUsers.length > 0) {
+          teams
+            .filter((team) => team.assignedUsers.length === 0)
+            .forEach((team) => {
+              const needed = this.teamSetup.minPlayerPerTeam;
+              assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
+            });
+        }
+
+        // d) Remplir les groupes valides pour les rendre pleins
+        teams
+          .filter(
+            (team) =>
+              team.assignedUsers.length >= this.teamSetup.minPlayerPerTeam &&
+              team.assignedUsers.length < this.teamSetup.playerPerTeam
+          )
+          .forEach((team) => {
+            const needed =
+              this.teamSetup.playerPerTeam - team.assignedUsers.length;
+            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
+          });
+
+        // e) Assigner les utilisateurs restants à l'équipe 'assistant'
+        if (unassignedUsers.length > 0) {
+          if (!assistantTeam) {
+            toast.error(
+              "Aucune équipe 'assistant' disponible pour les utilisateurs restants."
+            );
+            return;
+          }
+          assignUsersToTeam(assistantTeam, unassignedUsers.length);
+        }
+
+        this.isAutoFilled = true;
+      },
+      validateAssignments() {
+        // Collecter les affectations
+        const assignments = Object.entries(this.selectedTeamIds).map(
+          ([userId, teamId]) => ({
+            userId: Number(userId),
+            teamId,
+          })
+        );
+
+        // Émettre un événement pour que le parent puisse gérer l'envoi au backend
+        this.$emit('validate-assignments', assignments);
+
+        // Réinitialiser l'état
+        this.isAutoFilled = false;
+        this.initialSelectedTeamIds = {};
+      },
+      cancelAutoFill() {
+        // Restaurer l'état initial
+        this.selectedTeamIds = { ...this.initialSelectedTeamIds };
+        this.isAutoFilled = false;
       },
     },
     watch: {

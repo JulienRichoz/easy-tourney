@@ -10,6 +10,7 @@
       @delete-user="handleDeleteUser"
       @go-back="goBackToTeams"
       @auto-fill-groups="handleAutoFillGroups"
+      @validate-assignments="handleValidateAssignments"
     />
   </div>
 </template>
@@ -130,6 +131,28 @@
       goBackToTeams() {
         // Naviguer vers la page des équipes
         this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
+      },
+      async handleValidateAssignments(assignments) {
+        const tourneyId = this.$route.params.id;
+        try {
+          // Envoyer les affectations au backend
+          await apiService.post(`/tourneys/${tourneyId}/teams/auto-fill`, {
+            assignments,
+          });
+
+          // Mettre à jour les données locales
+          await this.fetchData();
+
+          toast.success('Affectations validées avec succès.');
+        } catch (error) {
+          console.error(
+            'Erreur lors de la validation des affectations:',
+            error
+          );
+          toast.error(
+            'Une erreur est survenue lors de la validation des affectations.'
+          );
+        }
       },
     },
   };
