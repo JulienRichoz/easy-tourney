@@ -1,0 +1,21 @@
+/*:root {
+  // Mode clair - Variables CSS pour v-select
+  --vs-dropdown-bg: #ffffff; /* Fond du dropdown en mode clair 
+  --vs-dropdown-color: #4a5568; /* Couleur du texte en mode clair
+  --vs-dropdown-option-color: #4a5568;
+  --vs-selected-bg: #f0f0f0;
+  --vs-selected-color: #333;
+  --vs-border-color: #d1d5db;
+}*/
+
+.dark {
+  /* Mode sombre - Variables CSS pour v-select */
+  --vs-dropdown-bg: #1f2937; /* Fond du dropdown en mode sombre */
+  --vs-dropdown-color: #cbd5e1; /* Couleur du texte en mode sombre */
+  --vs-dropdown-option-color: #cbd5e1;
+  --vs-selected-bg: #374151;
+  --vs-selected-color: #ffffff;
+  --vs-border-color: #374151;
+  --vs-dropdown-option--active-bg: #166534; /* Option survolée en mode sombre */
+  --vs-dropdown-option--active-color: #ffffff;
+}

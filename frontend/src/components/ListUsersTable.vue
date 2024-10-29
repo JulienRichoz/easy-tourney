@@ -109,24 +109,25 @@
             </td>
             <!-- Equipe -->
             <td class="px-4 py-2 flex items-center justify-center space-x-2">
-              <select
+              <v-select
                 v-if="availableTeams.length > 0 && teamSetup"
                 v-model="selectedTeamIds[user.id]"
-                class="border border-light-form-border dark:border-dark-form-border rounded-md p-1 w-32 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
-              >
-                <option :value="null">-- Sélectionnez une équipe --</option>
-                <option
-                  v-for="team in availableTeams"
-                  :key="team.id"
-                  :value="team.id"
-                >
-                  {{ team.teamName }} ({{ team.Users.length }}/{{
-                    team.type === 'assistant'
-                      ? teamSetup.playerPerTeam * teamSetup.maxTeamNumber
-                      : teamSetup.playerPerTeam
-                  }})
-                </option>
-              </select>
+                :options="teamOptions"
+                placeholder="Select Team"
+                :reduce="(team) => team.id"
+                label="teamName"
+                :styles="{
+                  dropdown: {
+                    'max-height': '200px',
+                    'overflow-y': 'auto',
+                  },
+                }"
+                :class="[
+                  'border border-light-form-border dark:border-dark-form-border rounded-md p-1 w-48 sm:w-56',
+                  'bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text ring-indigo-500',
+                  'cursor-pointer',
+                ]"
+              />
               <ButtonComponent
                 fontAwesomeIcon="add"
                 v-if="availableTeams.length > 0"
@@ -214,6 +215,19 @@
         return this.teams.filter(
           (team) => team.Users.length < this.teamSetup.playerPerTeam // Filtrer les équipes non pleines
         );
+      },
+      teamOptions() {
+        return this.availableTeams.map((team) => {
+          const capacity =
+            team.type === 'assistant'
+              ? this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber
+              : this.teamSetup.playerPerTeam;
+
+          return {
+            id: team.id,
+            teamName: `${team.teamName} (${team.Users.length}/${capacity})`,
+          };
+        });
       },
       hasAvailableTeams() {
         return this.availableTeams.length > 0;
@@ -312,5 +326,12 @@
   table td {
     padding: 0.5rem;
     white-space: nowrap;
+  }
+
+  .v-list .v-list-item--active {
+    background-color: green !important;
+  }
+  .v-list .v-list-item--active .v-list-item__title {
+    color: #ffd54f !important;
   }
 </style>
