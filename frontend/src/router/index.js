@@ -162,9 +162,8 @@ router.beforeEach(async (to, from, next) => {
     if (isAuthenticated) {
       const decoded = jwtDecode(token);
       const userRole = decoded.roleId;
-
       // Rediriger en fonction du rôle de l'utilisateur
-      if (userRole === 'admin') {
+      if (userRole === 1) {
         return next('/tourneys');
       } else {
         return next('/user');
@@ -183,8 +182,8 @@ router.beforeEach(async (to, from, next) => {
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
     const decoded = jwtDecode(token);
     const userRole = decoded.roleId;
-
-    if (userRole === 'admin') {
+    console.log('userRole', userRole);
+    if (userRole === 1) {
       return next('/tourneys');
     } else {
       return next('/user');
