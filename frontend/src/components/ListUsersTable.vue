@@ -16,7 +16,7 @@
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
         <ButtonComponent
-          v-if="hasAvailableTeams"
+          v-if="hasAvailableTeams && enableAutoFill"
           :variant="isAutoFilled ? 'algo' : 'algo'"
           fontAwesomeIcon="cog"
           @click="isAutoFilled ? validateAssignments() : autoFillGroups()"
@@ -26,7 +26,7 @@
           </span>
         </ButtonComponent>
         <ButtonComponent
-          v-if="isAutoFilled"
+          v-if="isAutoFilled && enableAutoFill"
           variant="secondary"
           @click="cancelAutoFill"
         >
@@ -119,7 +119,9 @@
             <!-- Equipe -->
             <td class="px-4 py-2 flex items-center justify-center space-x-2">
               <v-select
-                v-if="availableTeams.length > 0 && teamSetup"
+                v-if="
+                  availableTeams.length > 0 && teamSetup && enableAssignTeam
+                "
                 v-model="selectedTeamIds[user.id]"
                 :options="teamOptions"
                 placeholder="Select Team"
@@ -139,7 +141,7 @@
               />
               <ButtonComponent
                 fontAwesomeIcon="add"
-                v-if="availableTeams.length > 0"
+                v-if="availableTeams.length > 0 && enableAssignTeam"
                 variant="primary"
                 @click="assignTeam(user.id)"
               >
@@ -181,7 +183,6 @@
 </template>
 
 <script>
-  import apiService from '@/services/apiService';
   import TitleComponent from '@/components/TitleComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import SoftButtonComponent from '@/components/SoftButtonComponent.vue';
@@ -214,8 +215,21 @@
         type: Boolean,
         default: false,
       },
+      teamSetup: {
+        type: Object,
+        required: false,
+        default: null,
+      },
+      enableAutoFill: {
+        type: Boolean,
+        default: true,
+      },
+      enableAssignTeam: {
+        type: Boolean,
+        default: true,
+      },
     },
-    emits: ['go-back', 'assign-team', 'delete-user', 'auto-fill-groups'],
+    emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],
     computed: {
       availableTeams() {
         if (!this.teamSetup) return [];
@@ -224,14 +238,9 @@
           (team) => team.Users.length < this.getTeamCapacity(team)
         );
       },
-
       teamOptions() {
         return this.availableTeams.map((team) => {
-          const capacity =
-            team.type === 'assistant'
-              ? this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber
-              : this.teamSetup.playerPerTeam;
-
+          const capacity = this.getTeamCapacity(team);
           return {
             id: team.id,
             teamName: `${team.teamName} (${team.Users.length}/${capacity})`,
@@ -244,16 +253,12 @@
     },
     data() {
       return {
-        teamSetup: null,
         showDeleteModal: false,
         userIdToDelete: null,
         selectedTeamIds: {},
         isAutoFilled: false,
         initialSelectedTeamIds: {},
       };
-    },
-    async created() {
-      await this.fetchTeamSetup(); // Charger `teamSetup` au montage du composant
     },
     methods: {
       getTeamCapacity(team) {
@@ -262,20 +267,6 @@
         }
         return this.teamSetup.playerPerTeam;
       },
-      async fetchTeamSetup() {
-        try {
-          const tourneyId = this.$route.params.id;
-          const response = await apiService.get(
-            `/tourneys/${tourneyId}/team-setup`
-          );
-          this.teamSetup = response.data;
-        } catch (error) {
-          console.error(
-            'Erreur lors de la récupération de la configuration des équipes:',
-            error
-          );
-        }
-      },
       goBackToTeams() {
         this.$emit('go-back');
       },
@@ -283,10 +274,8 @@
         const teamId = this.selectedTeamIds[userId];
         if (teamId) {
           this.$emit('assign-team', { userId, teamId });
-          // Réinitialiser la sélection après assignation
           this.selectedTeamIds[userId] = null;
         } else {
-          // Affiche un message si aucune équipe n'est sélectionnée
           toast.info('Veuillez sélectionner une équipe pour cet utilisateur.');
         }
       },
@@ -416,34 +405,20 @@
       },
 
       validateAssignments() {
-        // Collecter les affectations
         const assignments = Object.entries(this.selectedTeamIds).map(
           ([userId, teamId]) => ({
             userId: Number(userId),
             teamId,
           })
         );
-
-        // Émettre un événement pour que le parent puisse gérer l'envoi au backend
         this.$emit('validate-assignments', assignments);
-
-        // Réinitialiser l'état
         this.isAutoFilled = false;
         this.initialSelectedTeamIds = {};
       },
 
       cancelAutoFill() {
-        // Restaurer l'état initial
         this.selectedTeamIds = { ...this.initialSelectedTeamIds };
         this.isAutoFilled = false;
-      },
-    },
-    watch: {
-      teams: {
-        handler() {
-          // Vous pouvez ajouter des actions supplémentaires ici si nécessaire lorsque les équipes changent
-        },
-        deep: true,
       },
     },
   };
@@ -455,12 +430,5 @@
   table td {
     padding: 0.5rem;
     white-space: nowrap;
-  }
-
-  .v-list .v-list-item--active {
-    background-color: green !important;
-  }
-  .v-list .v-list-item--active .v-list-item__title {
-    color: #ffd54f !important;
   }
 </style>

@@ -93,7 +93,7 @@
               class="flex items-left space-x-2"
               fontAwesomeIcon="user"
             >
-              <span>Sans groupe ({{ unassignedUsers.length }})</span>
+              <span>Assigner user-team ({{ unassignedUsers.length }})</span>
             </ButtonComponent>
           </div>
           <!-- Informations supplémentaires -->

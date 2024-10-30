@@ -1,13 +1,17 @@
-<!-- src/views/admin/TourneyTeamUsers.vue -->
+<!-- src/views/admin/TourneyUnassignedUsers.vue -->
 <template>
-  <div class="container mx-auto p-4">
+  <div class="mx-auto p-4">
     <ListUsersTable
-      :title="`Utilisateurs de l'équipe ${team.teamName}`"
-      :users="teamUsers"
+      title="Utilisateurs sans groupe"
+      :users="unassignedUsers"
       :teams="teams"
-      :isAssigned="true"
-      @change-team="handleChangeTeam"
-      @delete-user="handleRemoveUserFromTeam"
+      :team-setup="teamSetup"
+      :isAssigned="false"
+      :enable-auto-fill="true"
+      @assign-team="handleAssignTeam"
+      @delete-user="handleDeleteUser"
+      @go-back="goBackToTeams"
+      @validate-assignments="handleValidateAssignments"
     />
   </div>
 </template>
@@ -15,6 +19,7 @@
 <script>
   import ListUsersTable from '@/components/ListUsersTable.vue';
   import apiService from '@/services/apiService';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
@@ -22,51 +27,104 @@
     },
     data() {
       return {
-        teamUsers: [],
+        unassignedUsers: [],
         teams: [],
-        team: {},
+        teamSetup: null,
       };
     },
     async created() {
-      const { id, teamId } = this.$route.params;
-      try {
-        const teamResponse = await apiService.get(
-          `/tourneys/${id}/teams/${teamId}`
-        );
-        this.team = teamResponse.data;
-        this.teamUsers = teamResponse.data.Users;
-
-        const teamsResponse = await apiService.get(`/tourneys/${id}/teams`);
-        this.teams = teamsResponse.data;
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération des données de l'équipe:",
-          error
-        );
-      }
+      await this.fetchData();
     },
     methods: {
-      async handleChangeTeam({ userId, teamId }) {
+      async fetchData() {
+        const tourneyId = this.$route.params.id;
         try {
-          await apiService.post(
-            `/tourneys/${this.$route.params.id}/users/${userId}/teams`,
-            { teamId }
+          const response = await apiService.get(
+            `/tourneys/${tourneyId}/teams-details`
           );
-          this.teamUsers = this.teamUsers.filter((user) => user.id !== userId);
-        } catch (error) {
-          console.error("Erreur lors de la réassignation de l'équipe:", error);
-        }
-      },
-      async handleRemoveUserFromTeam(userId) {
-        try {
-          await apiService.delete(
-            `/tourneys/${this.$route.params.id}/users/${userId}`
-          );
-          this.teamUsers = this.teamUsers.filter((user) => user.id !== userId);
+          const data = response.data;
+          this.unassignedUsers = data.unassignedUsers;
+          this.teams = data.teams;
+          this.teamSetup = data.teamSetup;
         } catch (error) {
           console.error(
-            "Erreur lors de la suppression de l'utilisateur de l'équipe:",
+            'Erreur lors de la récupération des détails du tournoi:',
             error
+          );
+        }
+      },
+      async handleAssignTeam({ userId, teamId }) {
+        const tourneyId = this.$route.params.id;
+        try {
+          await apiService.post(
+            `/tourneys/${tourneyId}/users/${userId}/teams`,
+            { teamId }
+          );
+
+          // Retirer l'utilisateur de la liste des utilisateurs sans groupe
+          const user = this.unassignedUsers.find((u) => u.id === userId);
+          this.unassignedUsers = this.unassignedUsers.filter(
+            (user) => user.id !== userId
+          );
+
+          // Ajouter l'utilisateur à l'équipe correspondante
+          const team = this.teams.find((t) => t.id === teamId);
+          if (team) {
+            if (!team.Users) {
+              team.Users = [];
+            }
+            team.Users.push(user);
+          }
+
+          toast.success("Utilisateur assigné avec succès à l'équipe.");
+        } catch (error) {
+          console.error("Erreur lors de l'assignation de l'équipe:", error);
+          toast.error(
+            "Une erreur est survenue lors de l'assignation de l'équipe."
+          );
+        }
+      },
+      async handleDeleteUser(userId) {
+        const tourneyId = this.$route.params.id;
+        try {
+          await apiService.delete(`/tourneys/${tourneyId}/users/${userId}`);
+          this.unassignedUsers = this.unassignedUsers.filter(
+            (user) => user.id !== userId
+          );
+
+          toast.success('Utilisateur supprimé avec succès.');
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression de l'utilisateur:",
+            error
+          );
+          toast.error(
+            "Une erreur est survenue lors de la suppression de l'utilisateur."
+          );
+        }
+      },
+      goBackToTeams() {
+        this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
+      },
+      async handleValidateAssignments(assignments) {
+        const tourneyId = this.$route.params.id;
+        try {
+          // Envoyer les affectations au backend
+          await apiService.post(`/tourneys/${tourneyId}/teams/auto-fill`, {
+            assignments,
+          });
+
+          // Mettre à jour les données locales
+          await this.fetchData();
+
+          toast.success('Affectations validées avec succès.');
+        } catch (error) {
+          console.error(
+            'Erreur lors de la validation des affectations:',
+            error
+          );
+          toast.error(
+            'Une erreur est survenue lors de la validation des affectations.'
           );
         }
       },
@@ -74,8 +132,4 @@
   };
 </script>
 
-<style scoped>
-  .container {
-    max-width: 800px;
-  }
-</style>
+<style scoped></style>
