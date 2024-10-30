@@ -3,7 +3,7 @@ const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; // Ajout de minPlayerPerTeam
+    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -11,6 +11,12 @@ exports.createTeamSetup = async (req, res) => {
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
+        // Verifier que le champ joueur par equipe est supérieur au nb de joueurs minimum
+        if (playerPerTeam < minPlayerPerTeam) {
+            return res.status(400).json({
+                message: 'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe.'
+            });
+        }       
 
         const teamSetup = await TeamSetup.create({
             tourneyId,
@@ -19,6 +25,7 @@ exports.createTeamSetup = async (req, res) => {
             playerEstimated,
             minPlayerPerTeam,
         });
+    
         await checkAndUpdateStatuses(tourneyId);
 
         res.status(201).json(teamSetup);
@@ -30,7 +37,7 @@ exports.createTeamSetup = async (req, res) => {
 
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; // Ajout de minPlayerPerTeam
+    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -38,12 +45,18 @@ exports.updateTeamSetup = async (req, res) => {
         if (!teamSetup) {
             return res.status(404).json({ message: 'Configuration de team non trouvée' });
         }
+        // Verifier que le champ joueur par equipe est supérieur au nb de joueurs minimum
+        if (playerPerTeam < minPlayerPerTeam) {
+            return res.status(400).json({
+                message: 'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe.'
+            });
+        }   
 
         // Mise à jour des champs
         teamSetup.maxTeamNumber = maxTeamNumber;
         teamSetup.playerPerTeam = playerPerTeam;
         teamSetup.playerEstimated = playerEstimated;
-        teamSetup.minPlayerPerTeam = minPlayerPerTeam; // Mise à jour du minPlayerPerTeam
+        teamSetup.minPlayerPerTeam = minPlayerPerTeam;
 
         await teamSetup.save();
 
