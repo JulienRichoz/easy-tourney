@@ -7,22 +7,16 @@
     <div class="p-6">
       <div class="flex items-center mb-8 justify-between">
         <div class="flex items-center">
-          <!-- Titre -->
-          <TitleComponent title="Gestion des Equipes" />
-
+          <TitleComponent title="Gestion des équipes"></TitleComponent>
           <!-- Bouton Réglages -->
           <ButtonComponent
             fontAwesomeIcon="cog"
             @click="openTeamSetupModal"
             variant="secondary"
           >
-            <!-- Texte réduit sur mobile -->
             <span class="hidden sm:md:inline">Config Equipes</span>
           </ButtonComponent>
-        </div>
 
-        <!-- Boutons pour générer et réinitialiser les équipes -->
-        <div class="flex items-center ml-auto">
           <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
           <ButtonComponent
             v-if="
@@ -33,30 +27,28 @@
             @click="openGenerateConfirmationModal"
             variant="algo"
             fontAwesomeIcon="people-group"
+            class="ml-2"
           >
-            <!-- Texte réduit sur mobile -->
             <span class="hidden sm:md:inline">Générer équipes</span>
           </ButtonComponent>
+        </div>
 
-          <!-- Sélecteur de statut -->
-          <StatusSelectorComponent
-            :tourneyId="tourneyId"
-            label="Inscriptions:"
-            statusKey="registrationStatus"
-            :statusOptions="registrationStatusOptions"
-            class="mr-3"
-          />
-          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes "player" existent -->
+        <!-- Sélecteur de statut et bouton Reset -->
+        <div class="flex items-center ml-auto">
           <ButtonComponent
             v-if="isEditable && playerTeams.length > 0 && !isRegistrationActive"
             @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
-            class="ml-auto md:ml-0"
           >
-            <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline mr-auto">Reset</span>
+            <span class="hidden sm:inline mr-auto">Tous les groupes</span>
           </ButtonComponent>
+          <StatusSelectorComponent
+            :tourneyId="tourneyId"
+            label="Inscriptions:"
+            statusKey="registrationStatus"
+            :statusOptions="registrationStatusOptions"
+          />
         </div>
       </div>
 
@@ -93,7 +85,7 @@
               class="flex items-left space-x-2"
               fontAwesomeIcon="user"
             >
-              <span>Assigner user-team ({{ unassignedUsers.length }})</span>
+              <span>Assigner Joueurs ({{ unassignedUsers.length }})</span>
             </ButtonComponent>
           </div>
           <!-- Informations supplémentaires -->
@@ -107,7 +99,7 @@
               <strong>Groupes affichés :</strong> {{ allDisplayedTeams.length }}
             </div>
             <div class="text-sm">
-              <strong>Min. joueurs/groupe :</strong>
+              <strong>Min joueur/equipe:</strong>
               {{ teamSetup.minPlayerPerTeam }}
             </div>
           </div>
@@ -304,12 +296,12 @@
         teamSetupConfigured: false,
         filters: [
           {
-            label: 'Filtrer par statut',
+            label: 'Equipes',
             value: '',
             options: [
               { label: 'Tous les groupes', value: '' },
-              { label: 'Équipes valides', value: 'valid' },
-              { label: 'Partiel', value: 'partial' },
+              { label: 'Valides', value: 'valid' },
+              { label: 'Invalides', value: 'partial' },
               { label: 'Vide', value: 'empty' },
             ],
           },
@@ -367,7 +359,6 @@
 
         return this.playerTeams.filter((team) => {
           const minPlayers = this.teamSetup.minPlayerPerTeam;
-          // TO DELETE const maxPlayers = this.teamSetup.playerPerTeam;
 
           if (this.filters[0].value === 'valid') {
             return team.Users.length >= minPlayers; // Équipes valides

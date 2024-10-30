@@ -24,7 +24,7 @@
           @click="isAutoFilled ? validateAssignments() : autoFillGroups()"
         >
           <span class="hidden sm:inline">
-            {{ isAutoFilled ? 'Valider' : 'Remplir Groupes' }}
+            {{ isAutoFilled ? 'Valider' : 'Assigner tous les joueurs' }}
           </span>
         </ButtonComponent>
         <ButtonComponent
@@ -136,6 +136,7 @@
                 v-model="selectedTeamIds[user.id]"
                 :options="teamOptions"
                 placeholder="Select Team"
+                appendToBody
                 :reduce="(team) => team.id"
                 label="teamName"
                 :styles="{
@@ -156,6 +157,7 @@
                 v-if="availableTeams.length > 0 && allowAssignToOtherTeams"
                 variant="primary"
                 @click="assignTeam(user.id)"
+                :disabled="selectedTeamIds[user.id] === user.teamId"
               >
                 <span class="hidden md:inline">Assigner</span>
               </ButtonComponent>

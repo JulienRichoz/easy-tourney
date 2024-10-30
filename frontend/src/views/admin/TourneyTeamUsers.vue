@@ -1,8 +1,11 @@
 <!-- src/views/admin/TourneyTeamUsers.vue -->
 <template>
   <div class="mx-auto p-4" v-if="team">
+    <!-- Composant ListUsersTable -->
     <ListUsersTable
-      :title="`Utilisateurs de l'équipe ${team.teamName}`"
+      :title="`${team.teamName} - ${teamUsers.length}/${getTeamCapacity(team)}${
+        team.type !== 'assistant' ? ` (min: ${teamSetup.minPlayerPerTeam})` : ''
+      }`"
       :users="teamUsers"
       :teams="teams"
       :team-setup="teamSetup"
@@ -18,36 +21,47 @@
       @delete-user="handleRemoveUser"
       @go-back="goBackToTeams"
     />
-    <!-- Section pour ajouter des utilisateurs non assignés si l'équipe n'est pas pleine -->
-    <div v-if="teamNotFull && unassignedUsers.length > 0" class="mt-6">
-      <h2 class="text-xl font-bold mb-4">
-        Ajouter un utilisateur non assigné à l'équipe
-      </h2>
-      <v-select
-        v-model="selectedUnassignedUserId"
-        :options="unassignedUsers"
-        :reduce="(user) => user.id"
-        label="name"
-        placeholder="Sélectionner un utilisateur"
-      />
-      <ButtonComponent
-        variant="primary"
-        @click="assignUnassignedUserToTeam"
-        :disabled="!selectedUnassignedUserId"
-      >
-        Ajouter à l'équipe
-      </ButtonComponent>
+
+    <!-- Section pour ajouter des utilisateurs non assignés -->
+    <div v-if="teamNotFull && unassignedUsers.length > 0" class="mt-4">
+      <div class="flex items-center space-x-2">
+        <v-select
+          v-model="selectedUnassignedUserId"
+          :options="unassignedUsers"
+          :reduce="(user) => user.id"
+          label="name"
+          placeholder="Ajouter un utilisateur"
+          class="w-64"
+          appendToBody
+        />
+        <ButtonComponent
+          variant="primary"
+          size="sm"
+          @click="assignUnassignedUserToTeam"
+          :disabled="!selectedUnassignedUserId"
+        >
+          <span class="hidden sm:inline">Ajouter</span>
+        </ButtonComponent>
+      </div>
     </div>
-  </div>
-  <!-- Affichage d'un message de chargement ou d'erreur si nécessaire -->
-  <div v-else class="mx-auto p-4">
-    <p>Chargement des données de l'équipe...</p>
+    <!-- Affichage des messages d'information -->
+    <ErrorMessageComponent
+      v-if="!isTeamValid && !hasUnassignedUsers && team.type !== 'assistant'"
+      message="L'équipe n'est pas valide et il n'y a pas d'utilisateurs à assigner. Veuillez créer de nouveaux utilisateurs ou réassigner des utilisateurs d'autres équipes."
+    />
+    <ErrorMessageComponent
+      v-else-if="
+        !isTeamValid && hasUnassignedUsers && team.type !== 'assistant'
+      "
+      message="L'équipe n'est pas valide. Veuillez ajouter des utilisateurs à l'équipe."
+    />
   </div>
 </template>
 
 <script>
   import ListUsersTable from '@/components/ListUsersTable.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue'; // Importé
   import apiService from '@/services/apiService';
   import { toast } from 'vue3-toastify';
 
@@ -55,6 +69,7 @@
     components: {
       ListUsersTable,
       ButtonComponent,
+      ErrorMessageComponent, // Ajouté
     },
     data() {
       return {
@@ -70,6 +85,14 @@
       teamNotFull() {
         if (!this.team) return false;
         return this.teamUsers.length < this.getTeamCapacity(this.team);
+      },
+      isTeamValid() {
+        if (!this.teamSetup || !this.team) return false;
+        const minPlayers = this.teamSetup.minPlayerPerTeam;
+        return this.teamUsers.length >= minPlayers;
+      },
+      hasUnassignedUsers() {
+        return this.unassignedUsers.length > 0;
       },
     },
     async created() {
