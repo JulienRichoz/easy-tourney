@@ -6,7 +6,7 @@
 
     <div class="p-6">
       <div class="flex items-center mb-8 justify-between">
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center">
           <!-- Titre -->
           <TitleComponent title="Gestion des Equipes" />
 
@@ -22,7 +22,7 @@
         </div>
 
         <!-- Boutons pour générer et réinitialiser les équipes -->
-        <div class="flex items-center space-x-2 ml-auto">
+        <div class="flex items-center ml-auto">
           <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
           <ButtonComponent
             v-if="
@@ -38,24 +38,26 @@
             <span class="hidden sm:md:inline">Générer équipes</span>
           </ButtonComponent>
 
+          <!-- Sélecteur de statut -->
+          <StatusSelectorComponent
+            :tourneyId="tourneyId"
+            label="Inscriptions:"
+            statusKey="registrationStatus"
+            :statusOptions="registrationStatusOptions"
+            class="mr-3"
+          />
           <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes "player" existent -->
           <ButtonComponent
             v-if="isEditable && playerTeams.length > 0 && !isRegistrationActive"
             @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
+            class="ml-auto md:ml-0"
           >
             <!-- Texte réduit sur mobile -->
-            <span class="hidden sm:inline">Reset</span>
+            <span class="hidden sm:inline mr-auto">Reset</span>
           </ButtonComponent>
         </div>
-        <!-- Sélecteur de statut -->
-        <StatusSelectorComponent
-          :tourneyId="tourneyId"
-          label="Inscriptions:"
-          statusKey="registrationStatus"
-          :statusOptions="registrationStatusOptions"
-        />
       </div>
 
       <!-- Message d'erreur si teamSetup n'est pas configuré -->
