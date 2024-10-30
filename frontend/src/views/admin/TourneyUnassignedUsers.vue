@@ -7,7 +7,7 @@
       :teams="teams"
       :team-setup="teamSetup"
       :isAssigned="false"
-      :enable-auto-fill="true"
+      :enable-auto-fill="unassignedUsers.length > 0"
       @assign-team="handleAssignTeam"
       @delete-user="handleDeleteUser"
       @go-back="goBackToTeams"
