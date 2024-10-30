@@ -24,11 +24,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false, // Doit être rempli
         },
-        // Estimation des joueurs 
-        playerEstimated: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
     }, {
         sequelize,
         modelName: 'TeamSetup',

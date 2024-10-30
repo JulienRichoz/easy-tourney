@@ -3,7 +3,7 @@ const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; 
+    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -22,7 +22,6 @@ exports.createTeamSetup = async (req, res) => {
             tourneyId,
             maxTeamNumber,
             playerPerTeam,
-            playerEstimated,
             minPlayerPerTeam,
         });
     
@@ -37,7 +36,7 @@ exports.createTeamSetup = async (req, res) => {
 
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, playerEstimated, minPlayerPerTeam } = req.body; 
+    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -55,7 +54,6 @@ exports.updateTeamSetup = async (req, res) => {
         // Mise à jour des champs
         teamSetup.maxTeamNumber = maxTeamNumber;
         teamSetup.playerPerTeam = playerPerTeam;
-        teamSetup.playerEstimated = playerEstimated;
         teamSetup.minPlayerPerTeam = minPlayerPerTeam;
 
         await teamSetup.save();
@@ -80,7 +78,6 @@ exports.getTeamSetup = async (req, res) => {
                 maxTeamNumber: null,
                 playerPerTeam: null,
                 minPlayerPerTeam: null,
-                playerEstimated: null,
                 message: 'Aucune configuration trouvée. Veuillez configurer les équipes.'
             });
         }

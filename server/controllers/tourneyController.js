@@ -68,7 +68,7 @@ exports.createScheduleTourney = async (req, res) => {
 exports.createTeamSetup = async (req, res) => {
     try {
         const { tourneyId } = req.params;
-        const { maxTeamNumber, playerPerTeam, playerEstimated } = req.body;
+        const { maxTeamNumber, playerPerTeam } = req.body;
 
         if (!maxTeamNumber || !playerPerTeam) {
             return res.status(400).json({ message: "Les champs 'maxTeamNumber' et 'playerPerTeam' sont requis." });
@@ -78,7 +78,6 @@ exports.createTeamSetup = async (req, res) => {
             tourneyId,
             maxTeamNumber,
             playerPerTeam,
-            playerEstimated,
         });
 
         res.status(201).json(teamSetup);
@@ -235,7 +234,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
         // Récupérer la configuration des équipes avec TeamSetup
         const teamSetup = await TeamSetup.findOne({
             where: { tourneyId },
-            attributes: ['maxTeamNumber', 'playerPerTeam', 'minPlayerPerTeam', 'playerEstimated']
+            attributes: ['maxTeamNumber', 'playerPerTeam', 'minPlayerPerTeam']
         });
 
         // Récupérer toutes les équipes avec leurs utilisateurs

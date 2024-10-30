@@ -17,7 +17,6 @@ module.exports = {
           maxTeamNumber: 5,
           playerPerTeam: 4,
           minPlayerPerTeam: 3,
-          playerEstimated: 20,
           createdAt: new Date(),
           updatedAt: new Date(),
         },

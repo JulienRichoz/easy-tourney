@@ -243,6 +243,7 @@
         } else {
           delete this.errors[field.name];
         }
+
         // Emit validation update
         this.$emit('update-validation', this.isFormValid);
       },

@@ -193,6 +193,7 @@
             v-model="localTeamSetup"
             :fields="teamSetupFields"
             :isEditing="!!teamSetup"
+            :errors="formErrors"
             @form-submit="handleTeamSetupSubmit"
             @cancel="closeTeamSetupModal"
           />
@@ -332,12 +333,6 @@
             label: 'Nombre minimum de joueurs par équipe',
             type: 'number',
             required: true,
-          },
-          {
-            name: 'playerEstimated',
-            label: 'Estimation des joueurs',
-            type: 'number',
-            required: false,
           },
         ],
         registrationStatusOptions: [
@@ -498,6 +493,7 @@
       navigateToUnassignedUsers() {
         this.$router.push(`/tourneys/${this.tourneyId}/unassigned-users`);
       },
+
       openAddTeamModal() {
         this.editingTeamId = null;
         this.newTeam = {
@@ -539,27 +535,40 @@
         await this.resetTeams();
         this.closeModalResetTeams();
       },
+      customTeamSetupValidation() {
+        const errors = {};
+
+        if (
+          this.localTeamSetup.playerPerTeam &&
+          this.localTeamSetup.minPlayerPerTeam &&
+          this.localTeamSetup.playerPerTeam <
+            this.localTeamSetup.minPlayerPerTeam
+        ) {
+          errors.playerPerTeam =
+            'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe';
+        }
+
+        return errors;
+      },
       async handleTeamSetupSubmit() {
+        // Vérifier que playerPerTeam >= minPlayerPerTeam
+        if (
+          this.localTeamSetup.playerPerTeam <
+          this.localTeamSetup.minPlayerPerTeam
+        ) {
+          this.errors = {
+            ...this.errors,
+            playerPerTeam:
+              'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe',
+          };
+          return; // Arrête la soumission si la condition n'est pas respectée
+        }
+
         // Déterminer si c'est une mise à jour ou une création
         const isUpdate = this.teamSetupConfigured;
 
         // Préparer le payload en copiant les données locales
         const payload = { ...this.localTeamSetup };
-
-        // Convertir les chaînes vides en null pour les champs optionnels
-        if (
-          payload.playerEstimated === '' ||
-          payload.playerEstimated === undefined
-        ) {
-          payload.playerEstimated = null;
-        } else {
-          // S'assurer que c'est un nombre valide
-          payload.playerEstimated = Number(payload.playerEstimated);
-          if (isNaN(payload.playerEstimated)) {
-            payload.playerEstimated = null;
-          }
-        }
-
         try {
           if (isUpdate) {
             // Mise à jour de la configuration existante
@@ -576,12 +585,8 @@
           }
 
           // Mise à jour des données locales après succès
-          if (isUpdate) {
-            this.teamSetup = { ...payload };
-          } else {
-            this.teamSetup = { ...payload };
-            this.teamSetupConfigured = true;
-          }
+          this.teamSetup = { ...payload };
+          this.teamSetupConfigured = true;
 
           toast.success('Configuration des équipes enregistrée avec succès !');
           this.closeTeamSetupModal();
@@ -609,7 +614,6 @@
             maxTeamNumber: 1,
             playerPerTeam: 1,
             minPlayerPerTeam: 1,
-            playerEstimated: 1,
           };
         }
         this.showTeamSetupModal = true;
