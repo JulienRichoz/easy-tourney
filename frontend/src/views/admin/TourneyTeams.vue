@@ -193,9 +193,9 @@
             v-model="localTeamSetup"
             :fields="teamSetupFields"
             :isEditing="!!teamSetup"
-            :errors="formErrors"
             @form-submit="handleTeamSetupSubmit"
             @cancel="closeTeamSetupModal"
+            :customValidation="customTeamSetupValidation"
           />
         </template>
       </ModalComponent>
@@ -315,6 +315,7 @@
           },
         ],
         teamSetup: null,
+        localTeamSetup: null,
         teamSetupFields: [
           {
             name: 'maxTeamNumber',
@@ -366,13 +367,13 @@
 
         return this.playerTeams.filter((team) => {
           const minPlayers = this.teamSetup.minPlayerPerTeam;
-          const maxPlayers = this.teamSetup.playerPerTeam;
+          // TO DELETE const maxPlayers = this.teamSetup.playerPerTeam;
 
           if (this.filters[0].value === 'valid') {
             return team.Users.length >= minPlayers; // Équipes valides
           }
           if (this.filters[0].value === 'partial') {
-            return team.Users.length > 0 && team.Users.length < maxPlayers; // Partiellement remplies
+            return team.Users.length > 0 && team.Users.length < minPlayers; // Partiellement remplies
           }
           if (this.filters[0].value === 'empty') {
             return team.Users.length === 0; // Équipes vides
@@ -478,7 +479,7 @@
         const maxPlayers = this.teamSetup.playerPerTeam || team.maxPlayers;
         const minPlayers = this.teamSetup.minPlayerPerTeam;
 
-        if (team.Users.length > maxPlayers) {
+        if (team.Users.length > maxPlayers && team.type !== 'assistant') {
           return 'red'; // Erreur grave : trop de joueurs dans l'équipe
         } else if (team.type === 'assistant') {
           return 'purple'; // Assistant : équipe d'encadrement
@@ -535,40 +536,46 @@
         await this.resetTeams();
         this.closeModalResetTeams();
       },
+      /**
+       * Fonction de validation personnalisée pour le formulaire de configuration des équipes.
+       * Vérifie que minPlayerPerTeam <= playerPerTeam.
+       * @returns {Object} Un objet contenant les messages d'erreur.
+       */
       customTeamSetupValidation() {
         const errors = {};
 
+        const { minPlayerPerTeam, playerPerTeam } = this.localTeamSetup;
+
+        // Vérifie si les champs sont présents et sont des nombres
         if (
-          this.localTeamSetup.playerPerTeam &&
-          this.localTeamSetup.minPlayerPerTeam &&
-          this.localTeamSetup.playerPerTeam <
-            this.localTeamSetup.minPlayerPerTeam
+          typeof minPlayerPerTeam === 'number' &&
+          typeof playerPerTeam === 'number'
         ) {
-          errors.playerPerTeam =
-            'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe';
+          if (minPlayerPerTeam > playerPerTeam) {
+            errors.minPlayerPerTeam =
+              'Le nombre minimum de joueurs par équipe doit être inférieur ou égal au nombre de joueurs par équipe.';
+          }
+        } else {
+          // Gestion des cas où les champs ne sont pas des nombres
+          if (minPlayerPerTeam > playerPerTeam) {
+            errors.minPlayerPerTeam =
+              'Veuillez entrer des nombres valides pour les joueurs par équipe.';
+          }
         }
 
         return errors;
       },
+      /**
+       * Méthode appelée lors de la soumission du formulaire de configuration des équipes.
+       * Supposée être appelée uniquement si le formulaire est valide.
+       */
       async handleTeamSetupSubmit() {
-        // Vérifier que playerPerTeam >= minPlayerPerTeam
-        if (
-          this.localTeamSetup.playerPerTeam <
-          this.localTeamSetup.minPlayerPerTeam
-        ) {
-          this.errors = {
-            ...this.errors,
-            playerPerTeam:
-              'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe',
-          };
-          return; // Arrête la soumission si la condition n'est pas respectée
-        }
-
         // Déterminer si c'est une mise à jour ou une création
         const isUpdate = this.teamSetupConfigured;
 
         // Préparer le payload en copiant les données locales
         const payload = { ...this.localTeamSetup };
+
         try {
           if (isUpdate) {
             // Mise à jour de la configuration existante
@@ -596,6 +603,7 @@
           toast.error('Erreur lors de la configuration des équipes.');
         }
       },
+
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteTeamId = null;

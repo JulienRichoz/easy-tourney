@@ -1,4 +1,11 @@
-<!-- FormComponent.vue -->
+<!-- FormComponent.vue 
+Event emis:
+update:modelValue: Pour la liaison bidirectionnelle des données (v-model)
+update-validation: Pour informer le parent de la validité du formulaire.
+form-submit: Lorsque le formulaire est soumis avec succès.
+file-selected: Lorsqu'un fichier est sélectionné.
+-->
+
 <template>
   <form @submit.prevent="handleSubmit">
     <div v-for="field in fields" :key="field.name" class="mb-4">
@@ -158,10 +165,12 @@
       ButtonComponent,
     },
     props: {
+      // Tableau décrivant les champs du formulaire (nom, type, label, etc.)
       fields: {
         type: Array,
         required: true,
       },
+      // Objet contenant les données du formulaire
       modelValue: {
         type: Object,
         required: true,
@@ -178,6 +187,8 @@
         type: String,
         required: false,
       },
+      // Permet au parent de fournir une fonction de validation supplémentaire.
+      // fonction est appelée dans handleSubmit avant de soumettre le formulaire
       customValidation: {
         type: Function,
         required: false,
