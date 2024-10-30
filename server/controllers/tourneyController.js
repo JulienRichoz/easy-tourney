@@ -245,7 +245,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
                 {
                     model: User,
                     as: 'Users', // Assurez-vous que l'alias est correct
-                    attributes: ['id', 'name', 'roleId', 'teamId'],
+                    attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId'],
                     include: [
                         {
                             model: Role,
@@ -271,7 +271,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
                 teamId: null,
                 roleId: 4 // 'guest'
             },
-            attributes: ['id', 'name', 'roleId', 'teamId']
+            attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId']
         });
 
         // Récupérer tous les utilisateurs inscrits (hors admin) via l'association N-N

@@ -5,11 +5,12 @@
       title="Utilisateurs sans groupe"
       :users="unassignedUsers"
       :teams="teams"
+      :team-setup="teamSetup"
       :isAssigned="false"
+      :enable-auto-fill="true"
       @assign-team="handleAssignTeam"
       @delete-user="handleDeleteUser"
       @go-back="goBackToTeams"
-      @auto-fill-groups="handleAutoFillGroups"
       @validate-assignments="handleValidateAssignments"
     />
   </div>
@@ -28,6 +29,7 @@
       return {
         unassignedUsers: [],
         teams: [],
+        teamSetup: null,
       };
     },
     async created() {
@@ -37,15 +39,16 @@
       async fetchData() {
         const tourneyId = this.$route.params.id;
         try {
-          const [usersResponse, teamsResponse] = await Promise.all([
-            apiService.get(`/tourneys/${tourneyId}/users/unassigned-users`),
-            apiService.get(`/tourneys/${tourneyId}/teams`),
-          ]);
-          this.unassignedUsers = usersResponse.data;
-          this.teams = teamsResponse.data;
+          const response = await apiService.get(
+            `/tourneys/${tourneyId}/teams-details`
+          );
+          const data = response.data;
+          this.unassignedUsers = data.unassignedUsers;
+          this.teams = data.teams;
+          this.teamSetup = data.teamSetup;
         } catch (error) {
           console.error(
-            'Erreur lors de la récupération des utilisateurs ou des équipes:',
+            'Erreur lors de la récupération des détails du tournoi:',
             error
           );
         }
@@ -53,21 +56,26 @@
       async handleAssignTeam({ userId, teamId }) {
         const tourneyId = this.$route.params.id;
         try {
-          // Assignation de l'utilisateur à l'équipe via l'API
           await apiService.post(
             `/tourneys/${tourneyId}/users/${userId}/teams`,
             { teamId }
           );
 
           // Retirer l'utilisateur de la liste des utilisateurs sans groupe
+          const user = this.unassignedUsers.find((u) => u.id === userId);
           this.unassignedUsers = this.unassignedUsers.filter(
             (user) => user.id !== userId
           );
 
-          // Recharger la liste des équipes pour mettre à jour les compteurs
-          await this.fetchTeams();
+          // Ajouter l'utilisateur à l'équipe correspondante
+          const team = this.teams.find((t) => t.id === teamId);
+          if (team) {
+            if (!team.Users) {
+              team.Users = [];
+            }
+            team.Users.push(user);
+          }
 
-          // Optionnel : Afficher une notification de succès
           toast.success("Utilisateur assigné avec succès à l'équipe.");
         } catch (error) {
           console.error("Erreur lors de l'assignation de l'équipe:", error);
@@ -95,41 +103,7 @@
           );
         }
       },
-      async fetchTeams() {
-        const tourneyId = this.$route.params.id;
-        try {
-          const teamsResponse = await apiService.get(
-            `/tourneys/${tourneyId}/teams`
-          );
-          this.teams = teamsResponse.data;
-          console.log('Teams mis à jour:', this.teams);
-        } catch (error) {
-          console.error('Erreur lors de la récupération des équipes:', error);
-        }
-      },
-      async handleAutoFillGroups() {
-        try {
-          // const tourneyId = this.$route.params.id;
-          // Appeler une API ou effectuer une action pour remplir automatiquement les groupes
-          // Exemple : await apiService.post(`/tourneys/${tourneyId}/auto-fill-groups`);
-
-          // Pour l'instant, afficher une notification
-          toast.info('Remplissage automatique des groupes initié.');
-
-          // Recharger les données après auto-fill si nécessaire
-          await this.fetchData();
-        } catch (error) {
-          console.error(
-            'Erreur lors du remplissage automatique des groupes:',
-            error
-          );
-          toast.error(
-            'Une erreur est survenue lors du remplissage automatique des groupes.'
-          );
-        }
-      },
       goBackToTeams() {
-        // Naviguer vers la page des équipes
         this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
       },
       async handleValidateAssignments(assignments) {
