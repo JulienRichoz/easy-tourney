@@ -7,6 +7,7 @@
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-2">
         <TitleComponent :title="title" />
+        <!-- Bouton Envoyer Email -->
         <ButtonComponent
           variant="info"
           fontAwesomeIcon="envelope"
@@ -15,6 +16,7 @@
         >
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
+        <!-- Bouton Remplir Groupes (affiché uniquement si enableAutoFill est true) -->
         <ButtonComponent
           v-if="hasAvailableTeams && enableAutoFill"
           :variant="isAutoFilled ? 'algo' : 'algo'"
@@ -36,15 +38,15 @@
       <ButtonComponent
         variant="secondary"
         fontAwesomeIcon="arrow-left"
-        @click="goBackToTeams"
+        @click="goBack"
       >
-        <span class="hidden sm:inline">Retour aux équipes</span>
+        <span class="hidden sm:inline">{{ backButtonText }}</span>
       </ButtonComponent>
     </div>
 
     <!-- Message d'information si tous les groupes sont complets -->
     <p
-      v-if="!hasAvailableTeams"
+      v-if="!hasAvailableTeams && enableAssignTeam"
       class="text-light-errorMessage dark:text-dark-errorMessage mb-4 font-bold"
     >
       Pas d'équipe disponible. Veuillez en créer de nouvelles ou réassigner des
@@ -79,11 +81,14 @@
             >
               Téléphone
             </th>
+            <!-- Colonne Équipe (affichée uniquement si enableAssignTeam est true) -->
             <th
+              v-if="enableAssignTeam"
               class="px-4 py-2 text-center text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Équipe
             </th>
+            <!-- Colonne Actions -->
             <th
               class="px-2 py-2 text-center text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             ></th>
@@ -116,11 +121,17 @@
             <td class="px-4 py-2 hidden md:table-cell">
               {{ user.phone || '-' }}
             </td>
-            <!-- Equipe -->
-            <td class="px-4 py-2 flex items-center justify-center space-x-2">
+            <!-- Colonne Équipe -->
+            <td
+              v-if="enableAssignTeam"
+              class="px-4 py-2 flex items-center justify-center space-x-2"
+            >
+              <!-- Sélecteur d'équipe -->
               <v-select
                 v-if="
-                  availableTeams.length > 0 && teamSetup && enableAssignTeam
+                  availableTeams.length > 0 &&
+                  teamSetup &&
+                  allowAssignToOtherTeams
                 "
                 v-model="selectedTeamIds[user.id]"
                 :options="teamOptions"
@@ -139,14 +150,16 @@
                   'cursor-pointer',
                 ]"
               />
+              <!-- Bouton Assigner -->
               <ButtonComponent
                 fontAwesomeIcon="add"
-                v-if="availableTeams.length > 0 && enableAssignTeam"
+                v-if="availableTeams.length > 0 && allowAssignToOtherTeams"
                 variant="primary"
                 @click="assignTeam(user.id)"
               >
                 <span class="hidden md:inline">Assigner</span>
               </ButtonComponent>
+              <!-- Bouton Désactivé si aucune équipe disponible -->
               <ButtonComponent
                 v-else
                 :fontAwesomeIcon="'ban'"
@@ -156,9 +169,10 @@
                 <span class="hidden sm:inline">Aucune équipe</span>
               </ButtonComponent>
             </td>
-            <!-- Colonne Supprimer  -->
+            <!-- Colonne Supprimer -->
             <td class="px-2 py-2 text-center">
               <SoftButtonComponent
+                v-if="enableRemoveUser"
                 fontAwesomeIcon="trash"
                 iconClass="w-5 h-5 text-light-buttonVariants-danger-default hover:text-light-buttonVariants-danger-hover dark:text-dark-buttonVariants-danger-default hover:dark:text-dark-buttonVariants-danger-hover"
                 aria-label="Supprimer l'utilisateur"
@@ -174,8 +188,8 @@
     <DeleteConfirmationModal
       v-if="showDeleteModal"
       :isVisible="showDeleteModal"
-      title="Confirmer la suppression"
-      message="Êtes-vous sûr de vouloir supprimer cet utilisateur du tournoi?"
+      :title="deleteModalTitle"
+      :message="deleteModalMessage"
       @confirm="deleteUser"
       @cancel="closeDeleteModal"
     />
@@ -228,15 +242,50 @@
         type: Boolean,
         default: true,
       },
+      allowAssignToOtherTeams: {
+        type: Boolean,
+        default: true,
+      },
+      enableRemoveUser: {
+        type: Boolean,
+        default: true,
+      },
+      backButtonText: {
+        type: String,
+        default: 'Retour',
+      },
+      deleteModalTitle: {
+        type: String,
+        default: 'Confirmer la suppression',
+      },
+      deleteModalMessage: {
+        type: String,
+        default: 'Êtes-vous sûr de vouloir supprimer cet utilisateur?',
+      },
     },
     emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],
+    data() {
+      return {
+        showDeleteModal: false,
+        userIdToDelete: null,
+        selectedTeamIds: {},
+        isAutoFilled: false,
+        initialSelectedTeamIds: {},
+      };
+    },
     computed: {
       availableTeams() {
         if (!this.teamSetup) return [];
 
-        return this.teams.filter(
-          (team) => team.Users.length < this.getTeamCapacity(team)
-        );
+        const currentTeamIds = this.users
+          .map((user) => user.teamId)
+          .filter((teamId) => teamId != null);
+
+        return this.teams.filter((team) => {
+          const isCurrentTeam = currentTeamIds.includes(team.id);
+          const hasSpace = team.Users.length < this.getTeamCapacity(team);
+          return isCurrentTeam || hasSpace;
+        });
       },
       teamOptions() {
         return this.availableTeams.map((team) => {
@@ -251,15 +300,6 @@
         return this.availableTeams.length > 0;
       },
     },
-    data() {
-      return {
-        showDeleteModal: false,
-        userIdToDelete: null,
-        selectedTeamIds: {},
-        isAutoFilled: false,
-        initialSelectedTeamIds: {},
-      };
-    },
     methods: {
       getTeamCapacity(team) {
         if (team.type === 'assistant') {
@@ -267,7 +307,7 @@
         }
         return this.teamSetup.playerPerTeam;
       },
-      goBackToTeams() {
+      goBack() {
         this.$emit('go-back');
       },
       assignTeam(userId) {
@@ -299,9 +339,7 @@
           .map((user) => user.email)
           .filter((email) => email);
         if (emails.length === 0) {
-          toast.error(
-            "Il n'y a aucun utilisateur sans groupe pour envoyer un email."
-          );
+          toast.error("Il n'y a aucun utilisateur pour envoyer un email.");
           return;
         }
         const mailtoLink = `mailto:${emails.join(',')}`;
@@ -420,6 +458,18 @@
       cancelAutoFill() {
         this.selectedTeamIds = { ...this.initialSelectedTeamIds };
         this.isAutoFilled = false;
+      },
+    },
+    watch: {
+      users: {
+        handler(newUsers) {
+          newUsers.forEach((user) => {
+            if (user.teamId) {
+              this.selectedTeamIds[user.id] = user.teamId;
+            }
+          });
+        },
+        immediate: true,
       },
     },
   };

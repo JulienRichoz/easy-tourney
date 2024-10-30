@@ -513,7 +513,7 @@
         this.showModal = true;
       },
       openTeamDetails(team) {
-        this.$router.push(`/tourneys/${this.tourneyId}/teams/${team.id}`);
+        this.$router.push(`/tourneys/${this.tourneyId}/teams/${team.id}/users`);
       },
       confirmDeleteTeam(id) {
         this.confirmedDeleteTeamId = id;
