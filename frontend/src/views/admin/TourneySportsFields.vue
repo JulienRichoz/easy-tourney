@@ -118,6 +118,7 @@
           { value: 'draft', label: 'Edition' },
           { value: 'completed', label: 'Terminé' },
         ],
+        externalDraggableInstance: null,
       };
     },
     computed: {
@@ -151,17 +152,12 @@
         return this.statuses.sportAssignmentStatus !== 'completed';
       },
     },
-    watch: {
-      isEditable(newVal) {
-        this.$nextTick(() => {
-          if (newVal) {
-            // Réinitialiser les éléments draggables
-            this.initializeExternalEvents();
-          }
-        });
-      },
-    },
 
+    beforeUnmount() {
+      if (this.externalDraggableInstance) {
+        this.externalDraggableInstance.destroy();
+      }
+    },
     methods: {
       // Mapper les actions du module `tourney`
       ...mapActions('tourney', [
@@ -221,6 +217,12 @@
        */
       initializeExternalEvents() {
         if (!this.isEditable) return; // Ne pas initialiser le drag-and-drop si non éditable
+
+        // Détruire l'instance précédente si elle existe
+        if (this.externalDraggableInstance) {
+          this.externalDraggableInstance.destroy();
+          this.externalDraggableInstance = null;
+        }
 
         const containerEl = document.getElementById('external-events');
         new Draggable(containerEl, {
