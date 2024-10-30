@@ -274,7 +274,8 @@
         const teamId = this.selectedTeamIds[userId];
         if (teamId) {
           this.$emit('assign-team', { userId, teamId });
-          this.selectedTeamIds[userId] = null;
+          // Supprimer l'entrée après l'assignation
+          delete this.selectedTeamIds[userId];
         } else {
           toast.info('Veuillez sélectionner une équipe pour cet utilisateur.');
         }
@@ -405,12 +406,12 @@
       },
 
       validateAssignments() {
-        const assignments = Object.entries(this.selectedTeamIds).map(
-          ([userId, teamId]) => ({
+        const assignments = Object.entries(this.selectedTeamIds)
+          .filter(([teamId]) => teamId !== null && teamId !== undefined)
+          .map(([userId, teamId]) => ({
             userId: Number(userId),
             teamId,
-          })
-        );
+          }));
         this.$emit('validate-assignments', assignments);
         this.isAutoFilled = false;
         this.initialSelectedTeamIds = {};
