@@ -1,14 +1,3 @@
-<!--
-CRUD user -> faire en plus les pages détails de groupe, de personnes sans groupe. Peaufiner users avec informations (n° tel par exemple ou commentaires)
-Tester crud user et différentes pages + responsive mobile
-
-Développer le systeme d'inscription automatique
-Développer algorithme pour peupler les groupes avec les users unassigned
-
-DES QUE TOUT BON : Partir sur generation de POOLS et planning des matchs :')
-DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des matchs et des scores (avec arbitrage)
--->
-
 <!-- TourneyTeams.vue -->
 <template>
   <div>
@@ -39,10 +28,9 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
             v-if="
               isEditable &&
               teamSetupConfigured &&
-              teams.length <
-                teamSetup.maxTeamNumber + (teamSetupConfigured ? 1 : 0)
+              playerTeams.length < teamSetup.maxTeamNumber
             "
-            @click="generateTeams"
+            @click="openGenerateConfirmationModal"
             variant="algo"
             fontAwesomeIcon="people-group"
           >
@@ -50,9 +38,9 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
             <span class="hidden sm:md:inline">Générer équipes</span>
           </ButtonComponent>
 
-          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes existent -->
+          <!-- Bouton pour réinitialiser les équipes, visible uniquement si des équipes "player" existent -->
           <ButtonComponent
-            v-if="isEditable && teams.length > 0 && !isRegistrationActive"
+            v-if="isEditable && playerTeams.length > 0 && !isRegistrationActive"
             @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
@@ -75,6 +63,14 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
         v-if="!teamSetupConfigured"
         message="Aucune configuration d'équipe n'est définie. Veuillez cliquer sur 'Réglages' pour configurer les équipes."
       ></ErrorMessageComponent>
+
+      <!-- Message informant de la nécessité de créer des équipes "player" si aucune n'existe -->
+      <div v-if="teamSetupConfigured && playerTeams.length === 0" class="mt-4">
+        <ErrorMessageComponent
+          class="text-sm"
+          message="Aucune équipe n'a été créée. Veuillez créer des équipes pour assigner les utilisateurs."
+        ></ErrorMessageComponent>
+      </div>
 
       <div v-if="teamSetupConfigured">
         <!-- Filtres et Informations -->
@@ -106,7 +102,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
               <strong>Inscrits :</strong> {{ allUsers.length }}
             </div>
             <div class="text-sm">
-              <strong>Groupes affichés :</strong> {{ filteredTeams.length }}
+              <strong>Groupes affichés :</strong> {{ allDisplayedTeams.length }}
             </div>
             <div class="text-sm">
               <strong>Min. joueurs/groupe :</strong>
@@ -138,14 +134,14 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
         >
           <!-- Carte pour ajouter un nouveau groupe (affichée si isEditable) -->
           <CardAddComponent
-            v-if="isEditable && teams.length < teamSetup.maxTeamNumber"
+            v-if="isEditable && playerTeams.length < teamSetup.maxTeamNumber"
             title="Groupe"
             @openAddElementModal="openAddTeamModal"
           />
 
           <!-- Cartes des équipes existantes -->
           <CardEditComponent
-            v-for="team in filteredTeams"
+            v-for="team in allDisplayedTeams"
             :key="team.id"
             :title="team.teamName || 'Nom manquant'"
             :cornerCount="
@@ -220,6 +216,15 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
         </template>
       </ModalComponent>
 
+      <!-- Modale de confirmation pour générer les équipes -->
+      <ConfirmationModal
+        :isVisible="showGenerateConfirmationModal"
+        title="Confirmer la Génération des Équipes"
+        message="Êtes-vous sûr de vouloir générer les équipes automatiquement ?"
+        @cancel="closeGenerateConfirmationModal"
+        @confirm="confirmGenerateTeams"
+      />
+
       <!-- Confirmation de suppression -->
       <DeleteConfirmationModal
         :isVisible="showDeleteConfirmation"
@@ -250,6 +255,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import FormComponent from '@/components/FormComponent.vue';
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import ConfirmationModal from '@/components/ConfirmationModal.vue';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
   import FilterComponent from '@/components/FilterComponent.vue';
@@ -262,6 +268,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
       ModalComponent,
       ButtonComponent,
       DeleteConfirmationModal,
+      ConfirmationModal,
       TourneySubMenu,
       CardAddComponent,
       CardEditComponent,
@@ -280,7 +287,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
         showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
-        localTeamSetup: {}, // Variable temporaire pour le modal
+        showGenerateConfirmationModal: false, // Ajouté
         showTeamSetupModal: false,
         showModalResetTeams: false,
         confirmedDeleteTeamId: null,
@@ -291,7 +298,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
         },
         editingTeamId: null,
         isSubmitting: false,
-        teamSetupConfigured: false, // Vérifie si le teamSetup est configuré
+        teamSetupConfigured: false,
         filters: [
           {
             label: 'Filtrer par statut',
@@ -304,7 +311,7 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
             ],
           },
         ],
-        teamSetup: null, // Initialisation à null
+        teamSetup: null,
         teamSetupFields: [
           {
             name: 'maxTeamNumber',
@@ -348,10 +355,19 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
       isRegistrationActive() {
         return this.statuses.registrationStatus === 'active';
       },
-      filteredTeams() {
+      // Sépare les équipes "player"
+      playerTeams() {
+        return this.teams.filter((team) => team.type === 'player');
+      },
+      // Sépare les équipes "assistant"
+      assistantTeams() {
+        return this.teams.filter((team) => team.type === 'assistant');
+      },
+      // Filtre les équipes "player" selon les critères
+      filteredPlayerTeams() {
         if (!this.teamSetupConfigured) return [];
 
-        return this.teams.filter((team) => {
+        return this.playerTeams.filter((team) => {
           const minPlayers = this.teamSetup.minPlayerPerTeam;
           const maxPlayers = this.teamSetup.playerPerTeam;
 
@@ -366,6 +382,10 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
           }
           return true;
         });
+      },
+      // Combine les équipes "player" filtrées et les équipes "assistant"
+      allDisplayedTeams() {
+        return [...this.assistantTeams, ...this.filteredPlayerTeams];
       },
       formFields() {
         return [
@@ -626,6 +646,16 @@ DES QUE TOUT BON SERA BON: Vue utilisateurs/arbitre. Page pour gestion des match
           this.isSubmitting = false;
           this.closeModal();
         }
+      },
+      openGenerateConfirmationModal() {
+        this.showGenerateConfirmationModal = true;
+      },
+      closeGenerateConfirmationModal() {
+        this.showGenerateConfirmationModal = false;
+      },
+      async confirmGenerateTeams() {
+        this.showGenerateConfirmationModal = false;
+        await this.generateTeams();
       },
     },
     mounted() {

@@ -16,7 +16,7 @@
       errorClass: {
         type: String,
         default:
-          'p-8 text-center text-xl rounded-lg font-semibold text-light-errorMessage dark:text-errorMessage', // Classe CSS par défaut
+          'p-2 text-center text-xl rounded-lg font-semibold text-light-errorMessage dark:text-errorMessage', // Classe CSS par défaut
       },
     },
   };

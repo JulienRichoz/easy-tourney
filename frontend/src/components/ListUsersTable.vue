@@ -45,10 +45,10 @@
     <!-- Message d'information si tous les groupes sont complets -->
     <p
       v-if="!hasAvailableTeams"
-      class="text-light-errorMessage dark:text-dark-errorMessage mb-4"
+      class="text-light-errorMessage dark:text-dark-errorMessage mb-4 font-bold"
     >
-      Tous les groupes sont complets. Veuillez en créer de nouveaux ou
-      réassigner des utilisateurs.
+      Pas d'équipe disponible. Veuillez en créer de nouvelles ou réassigner des
+      utilisateurs.
     </p>
 
     <!-- Table pour afficher les utilisateurs -->

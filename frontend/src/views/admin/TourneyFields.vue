@@ -12,11 +12,11 @@
         <div class="flex items-center space-x-2 sm:space-x-4 mr-auto">
           <ButtonComponent
             v-if="isEditable"
-            fontAwesomeIcon="plus"
+            fontAwesomeIcon="cog"
             @click="openAddMultipleFieldsModal"
-            variant="primary"
+            variant="algo"
           >
-            <span class="hidden sm:inline">Plusieurs terrains</span>
+            <span class="hidden sm:inline">Générer terrains</span>
           </ButtonComponent>
           <ButtonComponent
             v-if="isEditable && fields.length > 0"
