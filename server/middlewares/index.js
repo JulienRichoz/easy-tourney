@@ -35,7 +35,7 @@ const errorHandler = (err, req, res, next) => {
 // Limiteur de requêtes pour limiter le nombre de requêtes d'une même IP
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 15 minutes
-    max: 2000, // Limite chaque IP à 200 requêtes par fenêtre de 15 minutes
+    max: 10000, // Limite chaque IP à 10000 requêtes par fenêtre de 15 minutes
     message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
 });
 

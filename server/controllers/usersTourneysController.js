@@ -24,6 +24,7 @@ exports.addUserToTourney = async (req, res) => {
         // Vérifier si l'utilisateur est déjà dans le tournoi
         const existingUserTourney = await UsersTourneys.findOne({
             where: { userId, tourneyId }
+            
         });
 
         if (existingUserTourney) {
@@ -118,7 +119,10 @@ exports.getUsersByTourney = async (req, res) => {
 
     try {
         const usersTourneys = await UsersTourneys.findAll({
-            where: { tourneyId },
+            where: { 
+                tourneyId,
+                '$user.roleId$': { [Op.ne]: 1 } // Exclure les admins
+            },
             include: [
                 {
                     model: User,
@@ -156,7 +160,8 @@ exports.getUnassignedUsersByTourney = async (req, res) => {
         const unassignedUsers = await UsersTourneys.findAll({
             where: {
                 tourneyId,
-                teamId: null
+                teamId: null,
+                '$user.roleId$': { [Op.ne]: 1 } // Exclure les admins
             },
             include: [
                 {
