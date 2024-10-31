@@ -1,3 +1,4 @@
+// migrations/20241030120000-create-usersTourneys.js
 'use strict';
 
 module.exports = {
@@ -28,20 +29,30 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
+      teamId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'Teams',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 
-     // Ajout de la contrainte d'unicité
-     await queryInterface.addConstraint('UsersTourneys', {
+    // Ajout de la contrainte d'unicité
+    await queryInterface.addConstraint('UsersTourneys', {
       fields: ['userId', 'tourneyId'],
       type: 'unique',
       name: 'unique_user_tourney'
@@ -51,10 +62,8 @@ module.exports = {
   down: async (queryInterface, Sequelize) => {
     const tableName = 'UsersTourneys';
 
-    // Récupérer les contraintes de clé étrangère existantes
+    // Supprimer les contraintes de clé étrangère
     const foreignKeys = await queryInterface.getForeignKeyReferencesForTable(tableName);
-
-    // Supprimer chaque contrainte de clé étrangère trouvée
     for (const foreignKey of foreignKeys) {
       await queryInterface.removeConstraint(tableName, foreignKey.constraintName);
     }

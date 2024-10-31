@@ -4,19 +4,19 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // Association avec le rôle
+      // Association avec le rôle global
       User.belongsTo(models.Role, { foreignKey: 'roleId', as: 'role' });
-
-      // Association avec l'équipe
-      User.belongsTo(models.Team, { foreignKey: 'teamId' });
 
       // Association avec les tournois via UsersTourneys (relation N-N)
       User.belongsToMany(models.Tourney, {
-        through: 'UsersTourneys', // Table intermédiaire
+        through: models.UsersTourneys, // Table intermédiaire
         foreignKey: 'userId',
         otherKey: 'tourneyId',
         as: 'tourneys'
       });
+
+      // Association inverse pour accéder aux UsersTourneys
+      User.hasMany(models.UsersTourneys, { foreignKey: 'userId', as: 'usersTourneys' });
     }
   }
 
@@ -27,9 +27,8 @@ module.exports = (sequelize, DataTypes) => {
     phone: DataTypes.STRING,
     roleId: {
       type: DataTypes.INTEGER,
-      defaultValue: 4, // Role Guest par défault si aucun role spécifié
+      defaultValue: 2, // Role USER par défaut si aucun role spécifié
     },
-    teamId: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'User',

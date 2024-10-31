@@ -11,11 +11,14 @@ module.exports = (sequelize, DataTypes) => {
 
             // Association avec les utilisateurs via UsersTourneys (relation N-N)
             Tourney.belongsToMany(models.User, {
-                through: 'UsersTourneys', // Table intermédiaire
+                through: models.UsersTourneys, // Table intermédiaire
                 foreignKey: 'tourneyId',
                 otherKey: 'userId',
                 as: 'users'
             });
+
+            // Association inverse pour accéder aux UsersTourneys
+            Tourney.hasMany(models.UsersTourneys, { foreignKey: 'tourneyId', as: 'usersTourneys' });
         }
     }
 
@@ -50,15 +53,13 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('notStarted', 'draft', 'completed'),
             defaultValue: 'notStarted',
             allowNull: false,
-            defaultValue: 'notStarted',
         },
         sportAssignmentStatus: {
             type: DataTypes.ENUM('notStarted', 'draft', 'completed'),
             defaultValue: 'notStarted',
             allowNull: false,
-
         },
-         registrationStatus: {
+        registrationStatus: {
             type: DataTypes.ENUM('notStarted', 'draft', 'active', 'completed'),
             defaultValue: 'notStarted',
             allowNull: true,

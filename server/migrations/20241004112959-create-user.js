@@ -25,20 +25,10 @@ module.exports = {
       },
       roleId: {
         type: Sequelize.INTEGER,
-        defaultValue: 4, // Role Guest par défaut
+        defaultValue: 2, // Role user par défaut
         references: {
           model: 'Roles', // Table cible
           key: 'id'       // Clé primaire de la table cible
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      teamId: {
-        type: Sequelize.INTEGER,
-        allowNull: true, // L'utilisateur peut ne pas avoir d'équipe
-        references: {
-          model: 'Teams', // Table cible
-          key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'

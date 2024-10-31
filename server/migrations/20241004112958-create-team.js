@@ -13,7 +13,7 @@ module.exports = {
         allowNull: false,
       },
       type: {
-        type: Sequelize.ENUM('player', 'assistant', 'guest'),
+        type: Sequelize.ENUM('player', 'assistant'),
         allowNull: false,
         defaultValue: 'player',
       },
