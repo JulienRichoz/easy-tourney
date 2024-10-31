@@ -14,11 +14,19 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'Cet email est déjà utilisé. Veuillez en choisir un autre.' });
         }
         const hashedPassword = await authService.hashPassword(password);
+
+        // Assigner le rôle 'User' par défaut
+        const userRole = await Role.findOne({ where: { name: 'User' } });
+        if (!userRole) {
+            return res.status(500).json({ message: 'Le rôle "User" n\'existe pas dans la base de données.' });
+        }
+
         const newUser = await User.create({
             name,
             email,
             phone,
             password: hashedPassword,
+            roleId: userRole.id, // Attribuer le rôle 'User'
         });
 
         const token = authService.generateToken(newUser);
@@ -32,6 +40,7 @@ exports.register = async (req, res) => {
                 name: newUser.name,
                 phone: newUser.phone,
                 email: newUser.email,
+                role: newUser.roleId,
             },
         });
     } catch (error) {

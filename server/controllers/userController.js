@@ -78,13 +78,6 @@ exports.getAllUsers = async (req, res) => {
 
         const users = await User.findAll({
             attributes: ['id', 'name', 'email', 'phone', 'roleId'],
-            include: [
-                {
-                    model: Role,
-                    as: 'role',
-                    attributes: ['id', 'name']
-                }
-            ]
         });
         res.json(users);
     } catch (error) {
