@@ -235,6 +235,34 @@ exports.assignUserToTeam = async (req, res) => {
     }
 };
 
+// Supprimer un utilisateur d'une équipe
+exports.removeUserFromTeam = async (req, res) => {
+    const { id, userId, tourneyId } = req.params;
+
+    try {
+        // Trouver l'association UsersTourneys
+        const userTourney = await UsersTourneys.findOne({
+            where: { userId, teamId: id, tourneyId },
+            include: [{ model: User, as: 'user' }]
+        });
+
+        if (!userTourney) {
+            return res.status(404).json({ message: 'Association utilisateur-équipes introuvable.' });
+        }
+
+        // Réassigner l'utilisateur à "guest"
+        userTourney.teamId = null;
+        userTourney.tourneyRole = 'guest';
+        await userTourney.save();
+
+        res.status(200).json({ message: 'Utilisateur supprimé de l\'équipe avec succès.', userTourney });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur de l\'équipe :', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur de l\'équipe.' });
+    }
+};
+
+
 // Générer des équipes pour un tournoi
 exports.generateTeams = async (req, res) => {
     const { tourneyId } = req.params;

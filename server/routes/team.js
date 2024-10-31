@@ -8,7 +8,7 @@ const {
     generateTeams,
     getTeamById,
     assignUserToTeam,
-    //removeUserFromTeam,
+    removeUserFromTeam,
     resetTeamsAndReassignUsers,
     autoFillTeams
 } = require('../controllers/teamController');
@@ -25,7 +25,7 @@ router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers);  
 
 // Routes pour les opérations sur des équipes spécifiques
 router.post('/:id/users', isAuthenticated, isAdmin, assignUserToTeam); // Assigner un utilisateur à une équipe
-//router.delete('/:id/users/:userId', isAuthenticated, isAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
+router.delete('/:id/users/:userId', isAuthenticated, isAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
 router.get('/:id', isAuthenticated, isAdmin, getTeamById); // Récupérer les détails d'une équipe (admin uniquement)
 router.put('/:id', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
 router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
