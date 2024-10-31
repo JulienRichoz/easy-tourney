@@ -7,7 +7,11 @@ module.exports = (sequelize, DataTypes) => {
             // Un tournoi a un planning, une configuration de teams et des terrains
             Tourney.hasOne(models.ScheduleTourney, { foreignKey: 'tourneyId', as: 'schedule' });
             Tourney.hasOne(models.TeamSetup, { foreignKey: 'tourneyId', as: 'teamSetup' });
-            Tourney.hasMany(models.Field, { foreignKey: 'tourneyId', as: 'fields' });
+            Tourney.hasMany(models.Field, {
+                foreignKey: 'tourneyId',
+                as: 'fields',
+                onDelete: 'CASCADE', // Supprimer les terrains si le tournoi est supprimé
+            });
             // Association avec Team
              Tourney.hasMany(models.Team, { as: 'teams', foreignKey: 'tourneyId' });
             // Association avec les utilisateurs via UsersTourneys (relation N-N)

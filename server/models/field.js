@@ -8,6 +8,12 @@ module.exports = (sequelize, DataTypes) => {
         as: 'sportsFields',
         foreignKey: 'fieldId',
       });
+
+      Field.belongsTo(models.Tourney, {
+        as: 'tourney',
+        foreignKey: 'tourneyId',
+        onDelete: 'CASCADE', // Supprimer le terrain si le tournoi est supprimé
+      });
     }
   }
 
@@ -15,7 +21,14 @@ module.exports = (sequelize, DataTypes) => {
     {
       name: DataTypes.STRING,
       description: DataTypes.STRING,
-      tourneyId: DataTypes.INTEGER,
+      tourneyId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Tourneys',
+          key: 'id',
+        },
+      },
     },
     {
       sequelize,
