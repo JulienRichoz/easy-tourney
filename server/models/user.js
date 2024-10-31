@@ -2,37 +2,59 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
-    static associate(models) {
-      // Association avec le rôle global
-      User.belongsTo(models.Role, { foreignKey: 'roleId', as: 'role' });
+    class User extends Model {
+        static associate(models) {
+            // Un utilisateur appartient à un rôle
+            User.belongsTo(models.Role, { foreignKey: 'roleId', as: 'role' });
 
-      // Association avec les tournois via UsersTourneys (relation N-N)
-      User.belongsToMany(models.Tourney, {
-        through: models.UsersTourneys, // Table intermédiaire
-        foreignKey: 'userId',
-        otherKey: 'tourneyId',
-        as: 'tourneys'
-      });
+            // Un utilisateur peut avoir plusieurs UsersTourneys
+            User.hasMany(models.UsersTourneys, { foreignKey: 'userId', as: 'usersTourneys' });
 
-      // Association inverse pour accéder aux UsersTourneys
-      User.hasMany(models.UsersTourneys, { foreignKey: 'userId', as: 'usersTourneys' });
+              // Association avec les tournois via UsersTourneys (relation N-N)
+            User.belongsToMany(models.Tourney, {
+              through: 'UsersTourneys', // Table intermédiaire
+              foreignKey: 'userId',
+              otherKey: 'tourneyId',
+              as: 'tourneys'
+            });
+          }
     }
-  }
 
-  User.init({
-    name: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    phone: DataTypes.STRING,
-    roleId: {
-      type: DataTypes.INTEGER,
-      defaultValue: 2, // Role USER par défaut si aucun role spécifié
-    },
-  }, {
-    sequelize,
-    modelName: 'User',
-  });
+    User.init({
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        email: {
+            type: DataTypes.STRING,
+            unique: true,
+            allowNull: false,
+            validate: {
+                isEmail: true,
+            },
+        },
+        password: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        phone: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        roleId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 2,
+            references: {
+                model: 'Roles',
+                key: 'id',
+            },
+        },
+    }, {
+        sequelize,
+        modelName: 'User',
+        tableName: 'Users',
+    });
 
-  return User;
+    return User;
 };

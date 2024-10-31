@@ -1,21 +1,25 @@
-// server/models/role.js
-// Purpose: Define the Role model and its associations
-
+// models/role.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Role extends Model {
-    static associate(models) {
-      Role.hasMany(models.User, { foreignKey: 'roleId' });
+    class Role extends Model {
+        static associate(models) {
+            // Une role a plusieurs utilisateurs
+            Role.hasMany(models.User, { foreignKey: 'roleId', as: 'users' });
+        }
     }
-  }
 
-  Role.init({
-    name: DataTypes.STRING,
-  }, {
-    sequelize,
-    modelName: 'Role',
-  });
+    Role.init({
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+        },
+    }, {
+        sequelize,
+        modelName: 'Role',
+        tableName: 'Roles',
+    });
 
-  return Role;
+    return Role;
 };

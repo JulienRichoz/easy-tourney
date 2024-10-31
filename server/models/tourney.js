@@ -8,7 +8,8 @@ module.exports = (sequelize, DataTypes) => {
             Tourney.hasOne(models.ScheduleTourney, { foreignKey: 'tourneyId', as: 'schedule' });
             Tourney.hasOne(models.TeamSetup, { foreignKey: 'tourneyId', as: 'teamSetup' });
             Tourney.hasMany(models.Field, { foreignKey: 'tourneyId', as: 'fields' });
-
+            // Association avec Team
+             Tourney.hasMany(models.Team, { as: 'teams', foreignKey: 'tourneyId' });
             // Association avec les utilisateurs via UsersTourneys (relation N-N)
             Tourney.belongsToMany(models.User, {
                 through: models.UsersTourneys, // Table intermédiaire

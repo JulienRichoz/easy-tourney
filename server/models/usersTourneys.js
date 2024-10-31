@@ -1,45 +1,39 @@
-// models/usersTourneys.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class UsersTourneys extends Model {
         static associate(models) {
-            // Un utilisateur appartient à un tournoi via UsersTourneys
+            // UsersTourneys appartient à User
             UsersTourneys.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+            // UsersTourneys appartient à Tourney
             UsersTourneys.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
+            // UsersTourneys appartient à Team
             UsersTourneys.belongsTo(models.Team, { foreignKey: 'teamId', as: 'team' });
         }
     }
 
-    UsersTourneys.init(
-        {
-            userId: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                references: { model: 'Users', key: 'id' },
-            },
-            tourneyId: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                references: { model: 'Tourneys', key: 'id' },
-            },
-            teamId: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                references: { model: 'Teams', key: 'id' },
-            },
+    UsersTourneys.init({
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
         },
-        {
-            sequelize,
-            modelName: 'UsersTourneys',
-            indexes: [
-                {
-                    unique: true,
-                    fields: ['userId', 'tourneyId'],
-                }
-            ]
+        tourneyId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        teamId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        tourneyRole: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'guest',
         }
-    );
+    }, {
+        sequelize,
+        modelName: 'UsersTourneys',
+    });
 
     return UsersTourneys;
 };

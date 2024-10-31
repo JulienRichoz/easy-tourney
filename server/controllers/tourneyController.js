@@ -1,10 +1,23 @@
 // server/controllers/tourneyController.js
-// Contrôleur pour la gestion des tournois
+
 const { Op } = require('sequelize');
-const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, Role } = require('../models');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
+/**
+ * Helper function to determine role based on team type.
+ * @param {string} type - Type of the team ('player', 'assistant').
+ * @returns {string} - Corresponding role name.
+ */
+const getRoleByTeamType = (type) => {
+    if (type === 'player') return 'player';
+    if (type === 'assistant') return 'assistant';
+    return 'guest'; // Default
+};
 
+/**
+ * Créer un nouveau tournoi
+ */
 exports.createTourney = async (req, res) => {
     try {
         const { name, location, dateTourney, emergencyDetails, status } = req.body;
@@ -22,15 +35,16 @@ exports.createTourney = async (req, res) => {
             status
         });
 
-
         res.status(201).json(newTourney);
     } catch (error) {
         console.error('Erreur lors de la création du tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la création du tournoi' });
+        res.status(500).json({ message: 'Erreur lors de la création du tournoi', error });
     }
 };
 
-// Ajouter le planning au tournoi
+/**
+ * Ajouter le planning au tournoi
+ */
 exports.createScheduleTourney = async (req, res) => {
     try {
         const { tourneyId } = req.params;
@@ -59,49 +73,108 @@ exports.createScheduleTourney = async (req, res) => {
         res.status(201).json(schedule);
     } catch (error) {
         console.error('Erreur lors de la création du planning :', error);
-        res.status(500).json({ message: error.message || 'Erreur lors de la création du planning' });
+        res.status(500).json({ message: error.message || 'Erreur lors de la création du planning', error });
     }
 };
 
-
-// Ajouter la configuration de team au tournoi
+/**
+ * Ajouter la configuration de team au tournoi
+ */
 exports.createTeamSetup = async (req, res) => {
     try {
         const { tourneyId } = req.params;
-        const { maxTeamNumber, playerPerTeam } = req.body;
+        const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body;
 
-        if (!maxTeamNumber || !playerPerTeam) {
-            return res.status(400).json({ message: "Les champs 'maxTeamNumber' et 'playerPerTeam' sont requis." });
+        if (!maxTeamNumber || !playerPerTeam || !minPlayerPerTeam) {
+            return res.status(400).json({ message: "Les champs 'maxTeamNumber', 'playerPerTeam' et 'minPlayerPerTeam' sont requis." });
         }
 
         const teamSetup = await TeamSetup.create({
             tourneyId,
             maxTeamNumber,
             playerPerTeam,
+            minPlayerPerTeam,
         });
 
         res.status(201).json(teamSetup);
     } catch (error) {
         console.error('Erreur lors de la création de la configuration de team :', error);
-        res.status(500).json({ message: 'Erreur lors de la création de la configuration de team' });
+        res.status(500).json({ message: 'Erreur lors de la création de la configuration de team', error });
     }
 };
 
-// Récupérer tous les tournois
+/**
+ * Récupérer tous les tournois
+ */
 exports.getTourneys = async (req, res) => {
     try {
         const tourneys = await Tourney.findAll();
         res.status(200).json(tourneys);
     } catch (error) {
         console.error('Erreur lors de la récupération des tournois :', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des tournois' });
+        res.status(500).json({ message: 'Erreur lors de la récupération des tournois', error });
     }
 };
 
-// Récupérer un tournoi par son ID
+/**
+ * Récupérer un tournoi par son ID avec les détails des équipes et des utilisateurs
+ */
 exports.getTourneyById = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id);
+        const { id } = req.params;
+
+        const tourney = await Tourney.findByPk(id, {
+            include: [
+                {
+                    model: Team,
+                    as: 'teams',
+                    include: [
+                        {
+                            model: UsersTourneys,
+                            as: 'usersTourneys',
+                            include: [
+                                {
+                                    model: User,
+                                    as: 'user',
+                                    attributes: ['id', 'name', 'email', 'phone'],
+                                    include: [
+                                        {
+                                            model: Role,
+                                            as: 'role',
+                                            attributes: ['id', 'name']
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: UsersTourneys,
+                    as: 'usersTourneys',
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['id', 'name', 'email', 'phone'],
+                            include: [
+                                {
+                                    model: Role,
+                                    as: 'role',
+                                    attributes: ['id', 'name']
+                                }
+                            ]
+                        },
+                        {
+                            model: Team,
+                            as: 'team',
+                            attributes: ['id', 'teamName', 'type'],
+                        }
+                    ]
+                }
+            ]
+        });
+
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
@@ -109,18 +182,23 @@ exports.getTourneyById = async (req, res) => {
         res.status(200).json(tourney);
     } catch (error) {
         console.error('Erreur lors de la récupération du tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération du tournoi' });
+        res.status(500).json({ message: 'Erreur lors de la récupération du tournoi', error });
     }
-}
+};
 
+/**
+ * Mettre à jour un tournoi existant
+ */
 exports.updateTourney = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id);
-        if (!tourney) {
-            return res.status(404).json({ message: 'Tournoi non trouvé' });
-        }
-
+        const { id } = req.params;
         const { status, ...otherUpdates } = req.body;
+
+        const tourney = await Tourney.findByPk(id);
+
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé.' });
+        }
 
         // Mettre à jour les autres champs
         await tourney.update(otherUpdates);
@@ -157,12 +235,7 @@ exports.updateTourney = async (req, res) => {
         }
 
         // Mettre à jour les statuts après la mise à jour du tournoi
-        if (!status) { // Appeler checkAndUpdateStatuses uniquement si le statut n'a pas été fourni manuellement
-            await checkAndUpdateStatuses(tourney.id);
-        } else {
-            // Si le statut a été mis à jour manuellement, il peut être nécessaire de réévaluer les statuts des composants
-            await checkAndUpdateStatuses(tourney.id);
-        }
+        await checkAndUpdateStatuses(tourney.id);
 
         res.status(200).json({
             tourney,
@@ -171,27 +244,108 @@ exports.updateTourney = async (req, res) => {
         });
     } catch (error) {
         console.error('Erreur lors de la mise à jour du tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la mise à jour du tournoi' });
+        res.status(500).json({ message: 'Erreur lors de la mise à jour du tournoi', error });
     }
 };
 
-// Supprimer un tournoi
+/**
+ * Supprimer un tournoi et réinitialiser les associations utilisateurs-équipes
+ */
 exports.deleteTourney = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id);
-        if (!tourney) {
-            return res.status(404).json({ message: 'Tournoi non trouvé' });
-        }
+        const { id } = req.params;
 
-        await tourney.destroy();
-        res.status(200).json({ message: 'Tournoi supprimé avec succès' });
+        // Démarrer une transaction pour assurer l'atomicité
+        const transaction = await Tourney.sequelize.transaction();
+
+        try {
+            const tourney = await Tourney.findOne({
+                where: { id },
+                include: [
+                    {
+                        model: Team,
+                        as: 'teams',
+                        include: [
+                            {
+                                model: UsersTourneys,
+                                as: 'usersTourneys',
+                                include: [
+                                    {
+                                        model: User,
+                                        as: 'user'
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        model: UsersTourneys,
+                        as: 'usersTourneys',
+                        include: [
+                            {
+                                model: User,
+                                as: 'user'
+                            },
+                            {
+                                model: Team,
+                                as: 'team'
+                            }
+                        ]
+                    }
+                ],
+                transaction,
+            });
+
+            if (!tourney) {
+                await transaction.rollback();
+                return res.status(404).json({ message: 'Tournoi non trouvé.' });
+            }
+
+            // Réinitialiser les utilisateurs assignés aux équipes
+            if (tourney.teams.length > 0) {
+                for (const team of tourney.teams) {
+                    for (const userTourney of team.usersTourneys) {
+                        userTourney.teamId = null;
+                        userTourney.tourneyRole = 'guest';
+                        await userTourney.save({ transaction });
+                    }
+                }
+            }
+
+            // Supprimer toutes les associations UsersTourneys non liées aux équipes
+            await UsersTourneys.destroy({
+                where: { tourneyId: id, teamId: null },
+                transaction,
+            });
+
+            // Supprimer les équipes
+            await Team.destroy({
+                where: { tourneyId: id },
+                transaction,
+            });
+
+            // Supprimer le tournoi
+            await tourney.destroy({ transaction });
+
+            // Commit de la transaction
+            await transaction.commit();
+
+            res.status(204).send();
+        } catch (error) {
+            // Rollback de la transaction en cas d'erreur
+            await transaction.rollback();
+            console.error('Erreur lors de la suppression du tournoi :', error);
+            res.status(500).json({ message: 'Erreur lors de la suppression du tournoi', error });
+        }
     } catch (error) {
         console.error('Erreur lors de la suppression du tournoi :', error);
-        res.status(500).json({ message: 'Erreur lors de la suppression du tournoi' });
+        res.status(500).json({ message: 'Erreur lors de la suppression du tournoi', error });
     }
 };
 
-// Récupérer les sports associés à un terrain
+/**
+ * Récupérer les sports associés à un terrain
+ */
 exports.getSportsByField = async (req, res) => {
     try {
         const { fieldId } = req.params;
@@ -207,7 +361,6 @@ exports.getSportsByField = async (req, res) => {
             ],
         });
 
-
         if (sportsFields.length === 0) {
             return res.status(404).json({ message: "Aucun sport n'est associé à ce terrain." });
         }
@@ -215,15 +368,18 @@ exports.getSportsByField = async (req, res) => {
         res.status(200).json(sportsFields);
     } catch (error) {
         console.error('Erreur lors de la récupération des sports par terrain :', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des sports' });
+        res.status(500).json({ message: 'Erreur lors de la récupération des sports', error });
     }
 };
 
+/**
+ * Récupérer les détails d'un tournoi, y compris les équipes et les utilisateurs associés
+ */
 exports.getTourneyTeamsDetails = async (req, res) => {
-    const tourneyId = req.params.id; // Correctement assigné
+    const tourneyId = req.params.id;
 
     try {
-        console.log('tourneyId:', tourneyId); // Log pour débogage
+        console.log('tourneyId:', tourneyId);
 
         // Vérifier si le tournoi existe
         const tourney = await Tourney.findByPk(tourneyId);
@@ -237,62 +393,86 @@ exports.getTourneyTeamsDetails = async (req, res) => {
             attributes: ['maxTeamNumber', 'playerPerTeam', 'minPlayerPerTeam']
         });
 
-        // Récupérer toutes les équipes avec leurs utilisateurs
+        // Récupérer toutes les équipes avec leurs utilisateurs via UsersTourneys
         const teams = await Team.findAll({
             where: { tourneyId },
+            attributes: ['id', 'teamName', 'type'],
             include: [
                 {
-                    model: User,
-                    as: 'Users', // Assurez-vous que l'alias est correct
-                    attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId'],
+                    model: UsersTourneys,
+                    as: 'usersTourneys',
                     include: [
                         {
-                            model: Role,
-                            as: 'role', // Assurez-vous que l'alias correspond
-                            attributes: ['name'],
-                            where: { name: { [Op.ne]: 'admin' } } // Exclure les admins
+                            model: User,
+                            as: 'user',
+                            attributes: ['id', 'name', 'email', 'phone'],
+                            include: [
+                                {
+                                    model: Role,
+                                    as: 'role',
+                                    attributes: ['id', 'name']
+                                }
+                            ]
                         }
                     ]
                 }
             ],
-            attributes: ['id', 'teamName', 'type']
         });
 
-        // Récupérer les utilisateurs non assignés via l'association N-N
-        const unassignedUsers = await User.findAll({
-            include: [{
-                model: Tourney,
-                as: 'tourneys',
-                where: { id: tourneyId },
-                attributes: []
-            }],
+        // Récupérer les utilisateurs non assignés à une équipe
+        const unassignedUsers = await UsersTourneys.findAll({
             where: {
-                teamId: null,
-                roleId: 4 // 'guest'
+                tourneyId,
+                teamId: null
             },
-            attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId']
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email', 'phone'],
+                    include: [
+                        {
+                            model: Role,
+                            as: 'role',
+                            attributes: ['id', 'name']
+                        }
+                    ]
+                }
+            ]
         });
 
-        // Récupérer tous les utilisateurs inscrits (hors admin) via l'association N-N
-        const allUsers = await User.findAll({
-            include: [{
-                model: Tourney,
-                as: 'tourneys',
-                where: { id: tourneyId },
-                attributes: []
-            }],
-            where: {
-                roleId: { [Op.ne]: 1 } // 'admin'
-            },
-            attributes: ['id', 'name', 'roleId', 'teamId']
+        // Récupérer tous les utilisateurs inscrits au tournoi
+        const allUsers = await UsersTourneys.findAll({
+            where: { tourneyId },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email', 'phone'],
+                    include: [
+                        {
+                            model: Role,
+                            as: 'role',
+                            attributes: ['id', 'name']
+                        }
+                    ]
+                },
+                {
+                    model: Team,
+                    as: 'team',
+                    attributes: ['id', 'teamName', 'type'],
+                }
+            ]
         });
 
+        // Mettre à jour les statuts après la récupération des détails du tournoi
         await checkAndUpdateStatuses(tourneyId);
+
         res.json({
             teamSetup,
             teams,
             unassignedUsers,
-            allUsers
+            allUsers,
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des détails du tournoi:', error);
@@ -300,9 +480,13 @@ exports.getTourneyTeamsDetails = async (req, res) => {
     }
 };
 
+/**
+ * Récupérer les statuts d'un tournoi
+ */
 exports.getTourneyStatuses = async (req, res) => {
     try {
-        const tourney = await Tourney.findByPk(req.params.id);
+        const { id } = req.params;
+        const tourney = await Tourney.findByPk(id);
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
@@ -318,6 +502,6 @@ exports.getTourneyStatuses = async (req, res) => {
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des statuts du tournoi:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des statuts' });
+        res.status(500).json({ message: 'Erreur lors de la récupération des statuts', error });
     }
 };

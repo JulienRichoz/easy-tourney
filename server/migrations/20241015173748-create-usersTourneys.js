@@ -39,6 +39,11 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
       },
+      tourneyRole: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: 'guest'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

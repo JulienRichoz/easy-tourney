@@ -1,12 +1,12 @@
 // server/controllers/authController.js
 
-const { User } = require('../models');
+const { User, Role } = require('../models');
 const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
 
 // Inscription
 exports.register = async (req, res) => {
-    const { name, email, phone, password, roleId } = req.body;
+    const { name, email, phone, password } = req.body;
 
     try {
         const existingUser = await User.findOne({ where: { email } });
@@ -14,7 +14,12 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'Cet email est déjà utilisé. Veuillez en choisir un autre.' });
         }
         const hashedPassword = await authService.hashPassword(password);
-        const newUser = await User.create({ name, email, phone, password: hashedPassword, roleId });
+        const newUser = await User.create({
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+        });
 
         const token = authService.generateToken(newUser);
         const decodedToken = jwt.decode(token);  // Décoder le token pour récupérer l'expiration
@@ -27,7 +32,6 @@ exports.register = async (req, res) => {
                 name: newUser.name,
                 phone: newUser.phone,
                 email: newUser.email,
-                role: newUser.roleId,
             },
         });
     } catch (error) {
