@@ -1,8 +1,19 @@
 // server/controllers/teamController.js
-const { Team, TeamSetup, Tourney, User, UsersTourneys, Role, sequelize } = require('../models'); // Importation complète
+const { Team, TeamSetup, Tourney, User, UsersTourneys, Role, sequelize } = require('../models');
 const { Op } = require('sequelize');
-const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
+const { roles } = require('../config/roles'); // Importer les rôles
+const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
+/**
+ * Helper function to determine roleId based on team type.
+ * @param {string} type - Type of the team ('player' or 'assistant').
+ * @returns {number} - Corresponding roleId.
+ */
+const getRoleIdByTeamType = (type) => {
+    if (type === 'player') return roles.PLAYER;
+    if (type === 'assistant') return roles.ASSISTANT;
+    return roles.GUEST; // Default
+};
 
 // Créer une équipe
 exports.createTeam = async (req, res) => {
@@ -100,9 +111,19 @@ exports.updateTeam = async (req, res) => {
             return res.status(400).json({ message: 'Type d\'équipe invalide.' });
         }
 
+        const oldType = team.type;
         team.teamName = teamName || team.teamName;
         team.type = type || team.type;
         await team.save();
+
+        // Si le type de l'équipe a changé, mettre à jour les rôles des utilisateurs dans cette équipe
+        if (type && type !== oldType) {
+            const newRoleId = getRoleIdByTeamType(type);
+            await User.update(
+                { roleId: newRoleId },
+                { where: { teamId: team.id } }
+            );
+        }
 
         res.status(200).json(team);
     } catch (error) {
@@ -113,7 +134,7 @@ exports.updateTeam = async (req, res) => {
 
 // Supprimer une équipe et réassigner ses utilisateurs
 exports.deleteTeam = async (req, res) => {
-    const { id, tourneyId } = req.params; //
+    const { id, tourneyId } = req.params;
 
     // Démarrer une transaction pour assurer l'atomicité
     const transaction = await sequelize.transaction();
@@ -137,9 +158,17 @@ exports.deleteTeam = async (req, res) => {
         });
 
         if (users.length > 0) {
-            // Réassigner les utilisateurs : teamId à null et roleId à 4 (Guest)
+            // Déterminer le roleId à attribuer en fonction du type de l'équipe supprimée
+            let newRoleId = roles.GUEST;
+            if (team.type === 'player') {
+                newRoleId = roles.GUEST; // Pas d'équipe
+            } else if (team.type === 'assistant') {
+                newRoleId = roles.GUEST; // Pas d'équipe
+            }
+
+            // Réassigner les utilisateurs : teamId à null et roleId à Guest
             await User.update(
-                { teamId: null, roleId: 4 },
+                { teamId: null, roleId: newRoleId },
                 {
                     where: { teamId: id },
                     transaction,
@@ -190,10 +219,21 @@ exports.assignUserToTeam = async (req, res) => {
             return res.status(400).json({ message: 'L\'utilisateur est déjà assigné à une autre équipe.' });
         }
 
+        // Assigner l'utilisateur à l'équipe
         user.teamId = id;
+
+        // Mettre à jour le roleId en fonction du type de l'équipe
+        if (team.type === 'player') {
+            user.roleId = roles.PLAYER;
+        } else if (team.type === 'assistant') {
+            user.roleId = roles.ASSISTANT;
+        } else {
+            user.roleId = roles.GUEST;
+        }
+
         await user.save();
 
-        res.status(200).json({ message: 'Utilisateur assigné à l\'équipe avec succès.'});
+        res.status(200).json({ message: 'Utilisateur assigné à l\'équipe avec succès.' });
     } catch (error) {
         console.error('Erreur lors de l\'assignation de l\'utilisateur à l\'équipe :', error);
         res.status(500).json({ message: 'Erreur serveur lors de l\'assignation de l\'utilisateur à l\'équipe.' });
@@ -222,12 +262,11 @@ exports.removeUserFromTeam = async (req, res) => {
             return res.status(400).json({ message: 'L\'utilisateur n\'est pas assigné à cette équipe.' });
         }
 
+        // Retirer l'utilisateur de l'équipe
         user.teamId = null;
 
-        const guestRole = await Role.findOne({ where: { name: 'guest' } });
-        if (guestRole) {
-            user.roleId = guestRole.id;
-        }
+        // Mettre à jour le roleId à Guest
+        user.roleId = roles.GUEST;
 
         await user.save();
 
@@ -325,7 +364,7 @@ exports.resetTeamsAndReassignUsers = async (req, res) => {
         const nonAdminUsers = await User.findAll({
             where: {
                 id: { [Op.in]: userIds },
-                roleId: { [Op.ne]: 1 } // Exclure les admins (roleId 1)
+                roleId: { [Op.ne]: roles.ADMIN } // Exclure les admins
             }
         });
 
@@ -333,7 +372,7 @@ exports.resetTeamsAndReassignUsers = async (req, res) => {
 
         // Réinitialiser les équipes et les rôles à "Guest" pour tous les non-admins
         await User.update(
-            { teamId: null, roleId: 4 }, // Réinitialiser les équipes et les rôles à "Guest"
+            { teamId: null, roleId: roles.GUEST },
             { where: { id: { [Op.in]: nonAdminUserIds } } }
         );
 
@@ -344,6 +383,7 @@ exports.resetTeamsAndReassignUsers = async (req, res) => {
     }
 };
 
+// Assigner plusieurs utilisateurs à des équipes avec mise à jour des rôles
 exports.autoFillTeams = async (req, res) => {
     const { tourneyId } = req.params;
     const { assignments } = req.body;
@@ -372,7 +412,18 @@ exports.autoFillTeams = async (req, res) => {
           throw new Error(`L'utilisateur ${userId} ne participe pas au tournoi ${tourneyId}.`);
         }
   
+        // Assigner l'utilisateur à l'équipe
         user.teamId = teamId;
+
+        // Mettre à jour le roleId en fonction du type de l'équipe
+        if (team.type === 'player') {
+            user.roleId = roles.PLAYER;
+        } else if (team.type === 'assistant') {
+            user.roleId = roles.ASSISTANT;
+        } else {
+            user.roleId = roles.GUEST;
+        }
+
         await user.save({ transaction });
       }
   
@@ -383,5 +434,4 @@ exports.autoFillTeams = async (req, res) => {
       console.error('Erreur lors des affectations en lot:', error);
       res.status(500).json({ message: 'Erreur lors des affectations en lot.', error: error.message });
     }
-  };
-  
+};

@@ -1,6 +1,18 @@
 // server/controllers/usersTourneysController.js
 const { UsersTourneys, User, Tourney, Team, Role } = require('../models');
 const { Op } = require('sequelize');
+const { roles } = require('../config/roles'); // Importer les rôles
+
+/**
+ * Helper function to determine roleId based on team type.
+ * @param {string} type - Type of the team ('player', 'assistant', or other).
+ * @returns {number} - Corresponding roleId.
+ */
+const getRoleIdByTeamType = (type) => {
+    if (type === 'player') return roles.PLAYER;
+    if (type === 'assistant') return roles.ASSISTANT;
+    return roles.GUEST; // Default
+};
 
 // Ajouter un utilisateur à un tournoi
 exports.addUserToTourney = async (req, res) => {
@@ -17,8 +29,20 @@ exports.addUserToTourney = async (req, res) => {
             return res.status(400).json({ message: "L'utilisateur participe déjà à ce tournoi." });
         }
 
+        // Vérifier si l'utilisateur existe
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé." });
+        }
+
         // Si l'utilisateur n'est pas encore inscrit, l'ajouter
         const userTourney = await UsersTourneys.create({ userId, tourneyId });
+
+        // Optionnel : Initialiser le roleId à GUEST et teamId à null
+        user.roleId = roles.GUEST;
+        user.teamId = null;
+        await user.save();
+
         res.status(201).json(userTourney);
     } catch (error) {
         console.error('Erreur lors de l’ajout de l’utilisateur au tournoi:', error);
@@ -33,8 +57,7 @@ exports.assignTeamToUser = async (req, res) => {
 
     try {
         // Vérifier si l'utilisateur existe
-        const user = await User.findOne({ 
-            where: { id: userId },
+        const user = await User.findByPk(userId, {
             include: {
                 model: Role,
                 as: 'role',
@@ -46,7 +69,7 @@ exports.assignTeamToUser = async (req, res) => {
         }
 
         // Si l'utilisateur est un Admin, empêcher la modification
-        if (user.role.name === 'Admin') {
+        if (user.role.name.toLowerCase() === 'admin') {
             return res.status(403).json({ message: "Impossible d'assigner un groupe à un Admin du tournoi." });
         }
 
@@ -62,15 +85,12 @@ exports.assignTeamToUser = async (req, res) => {
             return res.status(400).json({ message: 'L\'utilisateur ne participe pas à ce tournoi.' });
         }
 
-        // Si l'utilisateur est déjà dans une autre équipe, effectuer un update
-        if (user.teamId && user.teamId !== teamId) {
-            user.teamId = teamId;
-            await user.save();
-            return res.status(200).json({ message: 'Utilisateur réassigné à la nouvelle équipe avec succès.' });
-        }
-
-        // Si l'utilisateur n'a pas encore d'équipe, assigne l'équipe
+        // Mettre à jour l'assignation de l'utilisateur à l'équipe
         user.teamId = teamId;
+
+        // Mettre à jour le roleId en fonction du type de l'équipe
+        user.roleId = getRoleIdByTeamType(team.type);
+
         await user.save();
 
         res.status(200).json({ message: 'Équipe assignée à l\'utilisateur avec succès.' });
@@ -79,7 +99,6 @@ exports.assignTeamToUser = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur lors de l\'assignation de l\'équipe à l\'utilisateur.' });
     }
 };
-
 
 // Récupérer tous les utilisateurs d'un tournoi (hors admin)
 exports.getUsersByTourney = async (req, res) => {
@@ -134,7 +153,7 @@ exports.removeUserFromTourney = async (req, res) => {
         }
 
         // Vérifier que l'utilisateur n'est pas un Admin
-        if (user.role.name === 'Admin') {
+        if (user.role.name.toLowerCase() === 'admin') {
             return res.status(403).json({ message: "Impossible de supprimer un Admin du tournoi." });
         }
 
@@ -145,10 +164,7 @@ exports.removeUserFromTourney = async (req, res) => {
 
         // Réinitialiser les champs liés dans la table Users (par exemple, réinitialiser son équipe et son rôle)
         user.teamId = null;  // Retirer l'utilisateur de son équipe
-        const guestRole = await Role.findOne({ where: { name: 'guest' } }); // Chercher le rôle 'guest'
-        if (guestRole) {
-            user.roleId = guestRole.id; // Réassigner l'utilisateur au rôle 'guest'
-        }
+        user.roleId = roles.GUEST; // Réassigner l'utilisateur au rôle 'guest'
         await user.save();
 
         res.status(204).send();
@@ -158,7 +174,6 @@ exports.removeUserFromTourney = async (req, res) => {
     }
 };
 
-
 // Récupérer les utilisateurs non assignés à une équipe pour un tournoi spécifique (Guest users)
 exports.getUnassignedUsersByTourney = async (req, res) => {
     const { tourneyId } = req.params;
@@ -166,7 +181,7 @@ exports.getUnassignedUsersByTourney = async (req, res) => {
         const unassignedUsers = await User.findAll({
             where: {
                 teamId: null,
-                roleId: 4, // Assurez-vous que 4 correspond bien à 'guest'
+                roleId: roles.GUEST, // Utiliser la constante définie
             },
             attributes: ['id', 'name', 'email', 'phone', 'roleId', 'teamId'], // Ajout de 'email' et 'phone'
             include: [
@@ -220,5 +235,47 @@ exports.getUserInfoByTourney = async (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la récupération des informations de l\'utilisateur dans le tournoi:', error);
         res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
+// Supprimer un utilisateur d'une équipe (si nécessaire)
+exports.removeUserFromTeam = async (req, res) => {
+    const { tourneyId, userId } = req.params;
+
+    try {
+        const user = await User.findOne({
+            where: { id: userId },
+            include: [
+                {
+                    model: Tourney,
+                    as: 'tourneys',
+                    where: { id: tourneyId },
+                    attributes: []
+                },
+                {
+                    model: Role,
+                    as: 'role',
+                    attributes: ['name']
+                }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé." });
+        }
+
+        if (!user.teamId) {
+            return res.status(400).json({ message: "L'utilisateur n'est pas assigné à une équipe." });
+        }
+
+        // Réinitialiser l'assignation de l'utilisateur à l'équipe et mettre à jour son rôle
+        user.teamId = null;
+        user.roleId = roles.GUEST;
+        await user.save();
+
+        res.status(200).json({ message: 'Utilisateur retiré de l\'équipe avec succès.' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur de l\'équipe :', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur de l\'équipe.' });
     }
 };
