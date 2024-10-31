@@ -9,7 +9,7 @@ const permissions = {
     [roles.ADMIN]: ['viewAdminPage', 'manageUsers', 'viewUserPage', 'viewDashboard'],
     [roles.ASSISTANT]: ['viewAssistantPage', 'viewUserPage', 'viewDashboard'],
     [roles.PLAYER]: ['viewUserPage', 'viewDashboard'],
-    [roles.GUEST]: ['viewHomePage'],
+    [roles.GUEST]: ['viewUserPage', 'viewDashboard'],
 };
 
 export { roles, permissions };

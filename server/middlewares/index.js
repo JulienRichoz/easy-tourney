@@ -3,6 +3,7 @@
 
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const { roles } = require('../config/roles');
 
 // Middleware pour authentifier le token
 const authenticateToken = (req, res, next) => {
@@ -41,7 +42,7 @@ const limiter = rateLimit({
 // Middleware pour vérifier si l'utilisateur est admin
 const isAdmin = (req, res, next) => {
     const user = req.user; // Utilisateur doit être défini après la vérification du token
-    if (user && user.roleId === 1) { // '1' correspond à l'admin
+    if (user && user.roleId === roles.ADMIN) {
         return next();
     }
     return res.status(403).json({ message: 'Accès interdit. Réservé aux administrateurs.' });
@@ -57,6 +58,22 @@ const authorizeRoles = (...roles) => {
     };
 };
 
+/**
+ * Middleware pour vérifier si l'utilisateur est soit l'utilisateur lui-même, soit un admin.
+ */
+const authorizeUserOrAdmin = (req, res, next) => {
+    const userId = parseInt(req.params.userId, 10);
+    const requesterId = req.user.id;
+    const requesterRole = req.user.roleId;
+
+    if (requesterRole === roles.ADMIN || requesterId === userId) {
+        return next();
+    }
+
+    return res.status(403).json({ message: 'Accès interdit. Vous ne pouvez accéder qu\'à votre propre profil.' });
+};
+
+
 module.exports = {
     isAuthenticated: authenticateToken, // Alias pour authenticateToken
     authenticateToken,
@@ -64,4 +81,5 @@ module.exports = {
     limiter,
     isAdmin,
     authorizeRoles,
+    authorizeUserOrAdmin
 };

@@ -1,7 +1,7 @@
 // server/controllers/sportsFieldsController.js
 // Contrôleur pour la gestion des associations sportsFields
 
-const { Tourney, Field, Sport, SportsFields } = require('../models');
+const { Field, Sport, SportsFields } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
 
 // Créer une association sportsFields

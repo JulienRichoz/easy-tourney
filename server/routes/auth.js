@@ -3,15 +3,16 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middlewares'); // Middleware d'authentification
-const authController = require('../controllers/authController');
+const { authenticateToken, authorizeUserOrAdmin } = require('../middlewares'); // Middleware d'authentification
+const { register, login, refreshToken } = require('../controllers/authController');
+const { getOwnProfile } = require('../controllers/userController');
 
 // Routes d'authentification
 // http://localhost:3000/api/auth
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.get('/profile', authenticateToken, authController.getProfile);
-router.post('/refresh-token', authenticateToken, authController.refreshToken);
+router.post('/register', register);
+router.post('/login', login);
+router.get('/profile', authenticateToken, authorizeUserOrAdmin, getOwnProfile);
+router.post('/refresh-token', authenticateToken, refreshToken);
 
 module.exports = router;
