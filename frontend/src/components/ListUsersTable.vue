@@ -9,6 +9,7 @@
         <TitleComponent :title="title" />
         <!-- Bouton Envoyer Email -->
         <ButtonComponent
+          v-if="showEmailButton"
           variant="info"
           fontAwesomeIcon="envelope"
           @click="sendEmailToAll"
@@ -36,6 +37,7 @@
         </ButtonComponent>
       </div>
       <ButtonComponent
+        v-if="showBackButton"
         variant="secondary"
         fontAwesomeIcon="arrow-left"
         @click="goBack"
@@ -77,6 +79,7 @@
               Email
             </th>
             <th
+              v-if="showPhone"
               class="px-4 py-2 text-left text-light-title dark:text-dark-title hidden md:table-cell border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Téléphone
@@ -118,7 +121,7 @@
                 {{ user.email || '-' }}
               </a>
             </td>
-            <td class="px-4 py-2 hidden md:table-cell">
+            <td v-if="showPhone" class="px-4 py-2 hidden md:table-cell">
               {{ user.phone || '-' }}
             </td>
             <!-- Colonne Équipe -->
@@ -259,6 +262,18 @@
       deleteModalMessage: {
         type: String,
         default: 'Êtes-vous sûr de vouloir supprimer cet utilisateur?',
+      },
+      showEmailButton: {
+        type: Boolean,
+        default: true,
+      },
+      showBackButton: {
+        type: Boolean,
+        default: true,
+      },
+      showPhone: {
+        type: Boolean,
+        default: true,
       },
     },
     emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],

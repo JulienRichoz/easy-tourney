@@ -6,18 +6,19 @@
     <!-- Section de gauche -->
     <ul class="left-section flex items-center">
       <li v-if="isAdmin" class="mr-6">
-        <router-link
-          to="/tourneys"
-          class="text-light-menuText dark:text-dark-menuText font-semibold hover:text-light-menuHoverText dark:hover:text-dark-menuHoverText"
-          >Tournois</router-link
-        >
+        <router-link to="/tourneys" :class="getLinkClass('/tourneys')">
+          Tournois
+        </router-link>
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link
-          to="/sports"
-          class="text-light-menuText dark:text-dark-menuText font-semibold hover:text-light-menuHoverText dark:hover:text-dark-menuHoverText"
-          >Sports</router-link
-        >
+        <router-link to="/sports" :class="getLinkClass('/sports')">
+          Sports
+        </router-link>
+      </li>
+      <li v-if="isAdmin" class="mr-6">
+        <router-link to="/users" :class="getLinkClass('/users')">
+          Utilisateurs
+        </router-link>
       </li>
     </ul>
 
@@ -82,16 +83,14 @@
     },
     computed: {
       ...mapState({
-        isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
-        isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
-        userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
-        // mapState avec namespace pour accéder au module 'tourney'
+        isAuthenticated: (state) => state.isAuthenticated,
+        isAdmin: (state) => state.user?.roleId === 1,
+        userName: (state) => state.user?.name,
         ...mapState('tourney', {
-          tournamentName: (state) => state.currentTournamentName, // Nom du tournoi depuis Vuex
+          tournamentName: (state) => state.currentTournamentName,
         }),
       }),
       showTournamentName() {
-        // Afficher le nom du tournoi uniquement sur les pages qui commencent par /tourneys/:id
         return (
           this.$route.path.startsWith('/tourneys/') && this.$route.params.id
         );
@@ -99,25 +98,34 @@
     },
     methods: {
       logout() {
-        // Supprimer le token du localStorage
         localStorage.removeItem('token');
-        this.$store.dispatch('logout'); // Déconnexion
-        this.$router.push('/login'); // Redirection après la déconnexion
+        this.$store.dispatch('logout');
+        this.$router.push('/login');
       },
       toggleDarkMode() {
         this.isDarkMode = !this.isDarkMode;
 
         if (this.isDarkMode) {
-          document.documentElement.classList.add('dark'); // Ajoute la classe 'dark' à <html>
-          localStorage.setItem('theme', 'dark'); // Sauvegarde dans le localStorage
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
         } else {
           document.documentElement.classList.remove('dark');
           localStorage.setItem('theme', 'light');
         }
       },
+      getLinkClass(path) {
+        const isActive = this.$route.path === path;
+        return [
+          'font-semibold',
+          'hover:text-light-menuHoverText',
+          'dark:hover:text-dark-menuHoverText',
+          isActive
+            ? 'text-light-menuActive dark:text-dark-menuActive'
+            : 'text-light-menuText dark:text-dark-menuText',
+        ];
+      },
     },
     mounted() {
-      // Vérifie si le mode sombre est déjà activé (via le localStorage ou la préférence du système)
       const isDark =
         localStorage.getItem('theme') === 'dark' ||
         (!('theme' in localStorage) &&
