@@ -164,10 +164,8 @@ router.beforeEach(async (to, from, next) => {
       const userRole = decoded.roleId;
       // Rediriger en fonction du rôle de l'utilisateur
       if (userRole === 1) {
-        console.log('userRole', userRole);
         return next('/tourneys');
       } else {
-        console.log('userRole', userRole);
         return next('/user');
       }
     }
@@ -184,7 +182,6 @@ router.beforeEach(async (to, from, next) => {
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
     const decoded = jwtDecode(token);
     const userRole = decoded.roleId;
-    console.log('userRole', userRole);
     if (userRole === 1) {
       return next('/tourneys');
     } else {
@@ -236,7 +233,6 @@ router.beforeEach(async (to, from, next) => {
         });
 
         const userRole = decoded.roleId;
-        console.log('userRole', userRole);
         // Vérification des permissions pour l'accès à la route
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
           return next('/access-denied'); // Rediriger vers la page d'accès refusé si l'utilisateur n'a pas les droits

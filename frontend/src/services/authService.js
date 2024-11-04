@@ -7,14 +7,12 @@ import { jwtDecode } from 'jwt-decode';
 export function hasPermission(userRole, permission) {
     // Trouver la clé du rôle directement
     const roleKey = Object.entries(roles).find(([, value]) => value === userRole)?.[0];
-    console.log('hasPermission -> Rôle trouvé:', roleKey);
     if (!roleKey) {
         return false;
     }
 
     // Accéder aux permissions du rôle
     const hasPerm = permissions[roles[roleKey]]?.includes(permission) ?? false;
-    console.log('hasPermission -> Permissions trouvées:', permissions[roles[roleKey]], 'Résultat:', hasPerm);
 
     return hasPerm;
 }

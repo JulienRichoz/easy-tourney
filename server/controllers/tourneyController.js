@@ -379,8 +379,6 @@ exports.getTourneyTeamsDetails = async (req, res) => {
   const tourneyId = req.params.id;
 
   try {
-    console.log('tourneyId:', tourneyId);
-
     // Vérifier si le tournoi existe
     const tourney = await Tourney.findByPk(tourneyId);
     if (!tourney) {
