@@ -44,6 +44,7 @@
         </ButtonComponent>
       </div>
     </div>
+
     <!-- Affichage des messages d'information -->
     <ErrorMessageComponent
       v-if="!isTeamValid && !hasUnassignedUsers && team.type !== 'assistant'"
@@ -61,7 +62,7 @@
 <script>
   import ListUsersTable from '@/components/ListUsersTable.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
-  import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue'; // Importé
+  import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import apiService from '@/services/apiService';
   import { toast } from 'vue3-toastify';
 
@@ -69,7 +70,7 @@
     components: {
       ListUsersTable,
       ButtonComponent,
-      ErrorMessageComponent, // Ajouté
+      ErrorMessageComponent,
     },
     data() {
       return {
@@ -109,7 +110,12 @@
           const data = response.data;
           this.teamSetup = data.teamSetup;
           this.teams = data.teams;
-          this.unassignedUsers = data.unassignedUsers;
+
+          // Exclure les admins de unassignedUsers
+          this.unassignedUsers = data.unassignedUsers.filter(
+            (userTourney) => userTourney.user.role.id !== 1
+          );
+
           // Trouver l'équipe
           this.team = this.teams.find((t) => t.id === parseInt(teamId));
           if (!this.team) {
@@ -117,7 +123,18 @@
             this.goBackToTeams();
             return;
           }
-          this.teamUsers = this.team.Users || [];
+
+          // Extraire les utilisateurs de usersTourneys en filtrant les utilisateurs indéfinis
+          if (
+            this.team.usersTourneys &&
+            Array.isArray(this.team.usersTourneys)
+          ) {
+            this.teamUsers = this.team.usersTourneys
+              .map((ut) => ut.user)
+              .filter((user) => user != null);
+          } else {
+            this.teamUsers = [];
+          }
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
@@ -136,6 +153,7 @@
         }
         return this.teamSetup.playerPerTeam;
       },
+
       async handleAssignTeam({ userId, teamId }) {
         const tourneyId = this.$route.params.id;
         try {
@@ -153,6 +171,7 @@
           );
         }
       },
+
       async handleRemoveUser(userId) {
         const tourneyId = this.$route.params.id;
         const teamId = this.$route.params.teamId;
@@ -173,6 +192,7 @@
           );
         }
       },
+
       async assignUnassignedUserToTeam() {
         const tourneyId = this.$route.params.id;
         const teamId = this.$route.params.teamId;
@@ -196,6 +216,7 @@
           );
         }
       },
+
       goBackToTeams() {
         this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
       },

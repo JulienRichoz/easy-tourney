@@ -227,10 +227,6 @@
         required: false,
         default: () => [],
       },
-      isAssigned: {
-        type: Boolean,
-        default: false,
-      },
       teamSetup: {
         type: Object,
         required: false,
@@ -276,6 +272,9 @@
       };
     },
     computed: {
+      hasActions() {
+        return this.enableAssignTeam || this.enableRemoveUser;
+      },
       availableTeams() {
         if (!this.teamSetup) return [];
 
@@ -285,7 +284,9 @@
 
         return this.teams.filter((team) => {
           const isCurrentTeam = currentTeamIds.includes(team.id);
-          const hasSpace = team.Users.length < this.getTeamCapacity(team);
+          const hasSpace =
+            (team.usersTourneys ? team.usersTourneys.length : 0) <
+            this.getTeamCapacity(team);
           return isCurrentTeam || hasSpace;
         });
       },
@@ -294,7 +295,7 @@
           const capacity = this.getTeamCapacity(team);
           return {
             id: team.id,
-            teamName: `${team.teamName} (${team.Users.length}/${capacity})`,
+            teamName: `${team.teamName} (${team.usersTourneys.length}/${capacity})`,
           };
         });
       },
@@ -368,12 +369,12 @@
           if (team.type === 'assistant') {
             assistantTeam = {
               ...team,
-              assignedUsers: team.Users ? [...team.Users] : [],
+              assignedUsers: team.usersTourneys ? [...team.usersTourneys] : [],
             };
           } else {
             teams.push({
               ...team,
-              assignedUsers: team.Users ? [...team.Users] : [],
+              assignedUsers: team.usersTourneys ? [...team.usersTourneys] : [],
             });
           }
         });
