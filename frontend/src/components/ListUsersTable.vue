@@ -146,7 +146,7 @@
                 fontAwesomeIcon="pen"
                 iconClass="w-5 h-5 text-light-buttonVariants-warning-default hover:text-light-buttonVariants-warning-hover dark:text-dark-buttonVariants-warning-default hover:dark:text-dark-buttonVariants-warning-hover"
                 aria-label="Éditer l'utilisateur"
-                @click.stop="navigateToEdit(user.id)"
+                @click="handleEditClick(user)"
               />
             </td>
             <td class="px-4 py-2">{{ user.name || 'N/A' }}</td>
@@ -290,6 +290,7 @@
 </template>
 
 <script>
+  import apiService from '@/services/apiService';
   import TitleComponent from '@/components/TitleComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import SoftButtonComponent from '@/components/SoftButtonComponent.vue';
@@ -380,6 +381,10 @@
         required: false,
         default: () => [],
       },
+      editUserFunction: {
+        type: Function,
+        default: null,
+      },
     },
     emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],
     data() {
@@ -397,6 +402,19 @@
         showRemoveFromTourneyModal: false,
         userIdToRemoveFromTourney: null,
         tourneyIdToRemove: null,
+
+        // Handle form edit for user creation/update
+        showEditUserModal: false,
+        editingUser: null,
+        newUser: {
+          name: '',
+          email: '',
+          phone: '',
+          password: '',
+          roleId: '',
+        },
+        formErrors: {},
+        isFormValid: false,
       };
     },
     computed: {
@@ -455,6 +473,44 @@
 
         return filtered;
       },
+      userFormFields() {
+        return [
+          {
+            name: 'name',
+            label: 'Nom',
+            type: 'text',
+            required: true,
+          },
+          {
+            name: 'email',
+            label: 'Email',
+            type: 'email',
+            required: true,
+          },
+          {
+            name: 'phone',
+            label: 'Téléphone',
+            type: 'text',
+            required: false,
+          },
+          {
+            name: 'password',
+            label: 'Mot de passe',
+            type: 'password',
+            required: false,
+          },
+          {
+            name: 'roleId',
+            label: 'Rôle',
+            type: 'select',
+            required: true,
+            options: [
+              { value: 1, label: 'Admin' },
+              { value: 2, label: 'Utilisateur' },
+            ],
+          },
+        ];
+      },
     },
     methods: {
       getTeamCapacity(team) {
@@ -500,6 +556,13 @@
         }
         const mailtoLink = `mailto:${emails.join(',')}`;
         window.location.href = mailtoLink;
+      },
+      handleEditClick(user) {
+        if (this.editUserFunction) {
+          this.editUserFunction(user);
+        } else {
+          this.navigateToEdit(user.id);
+        }
       },
       navigateToEdit(userId) {
         const tourneyId = this.$route.params.id;
@@ -666,6 +729,60 @@
         this.showRemoveFromTourneyModal = false;
         this.userIdToRemoveFromTourney = null;
         this.tourneyIdToRemove = null;
+      },
+
+      /*
+       * Fonctions pour la gestion des erreurs de formulaire
+       */
+      editUser(user) {
+        this.editingUser = user;
+        this.newUser = { ...user };
+        this.showEditUserModal = true;
+        this.formErrors = {};
+        this.isFormValid = true;
+      },
+
+      closeEditUserModal() {
+        this.showEditUserModal = false;
+        this.editingUser = null;
+        this.newUser = {
+          name: '',
+          email: '',
+          phone: '',
+          // Réinitialisez les champs
+        };
+      },
+
+      validateUserForm() {
+        const errors = {};
+        if (!this.newUser.name) {
+          errors.name = 'Le nom est obligatoire.';
+        }
+        if (!this.newUser.email) {
+          errors.email = "L'email est obligatoire.";
+        }
+        // Ajoutez d'autres validations si nécessaire
+        this.formErrors = errors;
+        this.isFormValid = Object.keys(errors).length === 0;
+        return errors;
+      },
+
+      async handleUserFormSubmit() {
+        this.validateUserForm();
+        if (!this.isFormValid) return;
+
+        try {
+          await apiService.put(`/users/${this.editingUser.id}`, this.newUser);
+          toast.success('Utilisateur mis à jour avec succès!');
+          this.closeEditUserModal();
+          this.$emit('user-updated');
+        } catch (error) {
+          console.error(
+            "Erreur lors de la mise à jour de l'utilisateur :",
+            error
+          );
+          toast.error("Erreur lors de la mise à jour de l'utilisateur!");
+        }
       },
     },
     watch: {

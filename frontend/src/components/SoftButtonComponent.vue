@@ -5,7 +5,7 @@
       disabled ? 'opacity-50 cursor-not-allowed' : '',
     ]"
     :style="{ color: iconColor, fontSize: iconSize }"
-    @click="!disabled && $emit('click')"
+    @click="!disabled && $emit('click', $event)"
     role="button"
     :aria-label="ariaLabel"
   >
