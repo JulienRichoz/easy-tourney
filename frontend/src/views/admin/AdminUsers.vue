@@ -7,10 +7,14 @@
       :enableEditUser="true"
       :enableAssignTourney="true"
       :enableRemoveUserFromTourney="true"
+      :tournaments="tournaments"
+      :showTourney="true"
+      :showAssignTourney="true"
       :enableAssignTeam="false"
       :showEmailButton="false"
       :showBackButton="false"
       :showPhone="false"
+      :showFilters="true"
       @add-user="handleAddUser"
       @edit-user="handleEditUser"
       @assign-tourney="handleAssignTourney"
@@ -31,6 +35,7 @@
     data() {
       return {
         users: [],
+        tournaments: [],
       };
     },
     async created() {
@@ -39,8 +44,12 @@
     methods: {
       async fetchData() {
         try {
-          const response = await apiService.get('/users/all/details');
-          this.users = response.data;
+          const [usersResponse, tourneysResponse] = await Promise.all([
+            apiService.get('/users/all/details'),
+            apiService.get('/tourneys'),
+          ]);
+          this.users = usersResponse.data;
+          this.tournaments = tourneysResponse.data;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des utilisateurs:',

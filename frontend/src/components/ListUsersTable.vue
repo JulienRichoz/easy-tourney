@@ -46,6 +46,30 @@
       </ButtonComponent>
     </div>
 
+    <!-- FILTRES -->
+    <div v-if="showFilters" class="flex items-center space-x-4 mb-4">
+      <!-- Filtre par tournoi -->
+      <div>
+        <v-select
+          v-model="selectedTournamentFilter"
+          :options="tournamentOptions"
+          placeholder="Filtrer par tournoi"
+          label="name"
+          :reduce="(tourney) => tourney.id"
+          clearable
+        />
+      </div>
+      <!-- Filtre de recherche -->
+      <div>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher par nom ou email"
+          class="border border-light-form-border dark:border-dark-form-border rounded-md p-2 w-full sm:w-64 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
+        />
+      </div>
+    </div>
+
     <!-- Message d'information si tous les groupes sont complets -->
     <p
       v-if="!hasAvailableTeams && enableAssignTeam"
@@ -84,6 +108,19 @@
             >
               Téléphone
             </th>
+            <th
+              v-if="showTourney"
+              class="px-4 py-2 text-left text-light-title dark:text-dark-title"
+            >
+              Tournois
+            </th>
+            <!-- Colonne Ajouter au Tournoi -->
+            <th
+              v-if="showAssignTourney"
+              class="px-4 py-2 text-left text-light-title dark:text-dark-title"
+            >
+              Ajouter au Tournoi
+            </th>
             <!-- Colonne Équipe (affichée uniquement si enableAssignTeam est true) -->
             <th
               v-if="enableAssignTeam"
@@ -99,7 +136,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="user in users"
+            v-for="user in displayedUsers"
             :key="user.id"
             class="hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground"
           >
@@ -120,6 +157,47 @@
               >
                 {{ user.email || '-' }}
               </a>
+            </td>
+
+            <!-- Colonne Tournois -->
+            <td v-if="showTourney" class="px-4 py-2">
+              <ul>
+                <li
+                  v-for="userTourney in user.usersTourneys || []"
+                  :key="userTourney.tourney.id"
+                  class="flex items-center space-x-2"
+                >
+                  <span>{{ userTourney.tourney.name }}</span>
+                  <SoftButtonComponent
+                    fontAwesomeIcon="trash"
+                    iconClass="w-4 h-4 text-red-500 hover:text-red-700"
+                    aria-label="Retirer du tournoi"
+                    @click="
+                      confirmRemoveFromTourney(user.id, userTourney.tourney.id)
+                    "
+                  />
+                </li>
+              </ul>
+            </td>
+            <!-- Colonne Ajouter au Tournoi -->
+            <td v-if="showAssignTourney" class="px-4 py-2">
+              <v-select
+                v-model="selectedTourneyIds[user.id]"
+                :options="availableTourneys[user.id]"
+                placeholder="Sélectionner un tournoi"
+                label="name"
+                :reduce="(tourney) => tourney.id"
+                clearable
+                class="w-full sm:w-64"
+              />
+              <ButtonComponent
+                variant="primary"
+                size="sm"
+                @click="assignTourney(user.id)"
+                :disabled="!selectedTourneyIds[user.id]"
+              >
+                <span>Ajouter</span>
+              </ButtonComponent>
             </td>
             <td v-if="showPhone" class="px-4 py-2 hidden md:table-cell">
               {{ user.phone || '-' }}
@@ -198,6 +276,16 @@
       @confirm="deleteUser"
       @cancel="closeDeleteModal"
     />
+
+    <!-- Confirmation modal pour retirer un utilisateur d'un tournoi -->
+    <DeleteConfirmationModal
+      v-if="showRemoveFromTourneyModal"
+      :isVisible="showRemoveFromTourneyModal"
+      title="Confirmer le retrait"
+      message="Êtes-vous sûr de vouloir retirer cet utilisateur du tournoi?"
+      @confirm="removeUserFromTourney"
+      @cancel="closeRemoveFromTourneyModal"
+    />
   </div>
 </template>
 
@@ -275,6 +363,23 @@
         type: Boolean,
         default: true,
       },
+      showFilters: {
+        type: Boolean,
+        default: false,
+      },
+      showTourney: {
+        type: Boolean,
+        default: false,
+      },
+      showAssignTourney: {
+        type: Boolean,
+        default: false,
+      },
+      tournaments: {
+        type: Array,
+        required: false,
+        default: () => [],
+      },
     },
     emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],
     data() {
@@ -284,6 +389,14 @@
         selectedTeamIds: {},
         isAutoFilled: false,
         initialSelectedTeamIds: {},
+        selectedTournamentFilter: null,
+        searchQuery: '',
+        tournamentOptions: [],
+        selectedTourneyIds: {},
+        availableTourneys: {},
+        showRemoveFromTourneyModal: false,
+        userIdToRemoveFromTourney: null,
+        tourneyIdToRemove: null,
       };
     },
     computed: {
@@ -316,6 +429,31 @@
       },
       hasAvailableTeams() {
         return this.availableTeams.length > 0;
+      },
+      displayedUsers() {
+        return this.showFilters ? this.filteredUsers : this.users;
+      },
+      filteredUsers() {
+        let filtered = this.users;
+
+        if (this.selectedTournamentFilter) {
+          filtered = filtered.filter((user) =>
+            user.usersTourneys?.some(
+              (ut) => ut.tourney.id === this.selectedTournamentFilter
+            )
+          );
+        }
+
+        if (this.searchQuery) {
+          const query = this.searchQuery.toLowerCase();
+          filtered = filtered.filter(
+            (user) =>
+              (user.name && user.name.toLowerCase().includes(query)) ||
+              (user.email && user.email.toLowerCase().includes(query))
+          );
+        }
+
+        return filtered;
       },
     },
     methods: {
@@ -477,6 +615,58 @@
         this.selectedTeamIds = { ...this.initialSelectedTeamIds };
         this.isAutoFilled = false;
       },
+
+      /*
+       * Fonctions pour assigner des utilisateurs à des tournois
+       */
+      async loadAvailableTourneys() {
+        const allTourneys = this.tournaments;
+        this.users.forEach((user) => {
+          const userTourneys = (user.usersTourneys || []).map(
+            (ut) => ut.tourney.id
+          );
+          this.availableTourneys[user.id] = allTourneys.filter(
+            (tourney) => !userTourneys.includes(tourney.id)
+          );
+        });
+      },
+
+      assignTourney(userId) {
+        const tourneyId = this.selectedTourneyIds[userId];
+        if (tourneyId) {
+          this.$emit('assign-tourney', { userId, tourneyId });
+          this.selectedTourneyIds[userId] = null;
+          this.loadAvailableTourneys();
+        } else {
+          toast.info('Veuillez sélectionner un tournoi.');
+        }
+      },
+
+      confirmRemoveFromTourney(userId, tourneyId) {
+        this.userIdToRemoveFromTourney = userId;
+        this.tourneyIdToRemove = tourneyId;
+        this.showRemoveFromTourneyModal = true;
+      },
+
+      removeUserFromTourney() {
+        if (
+          this.userIdToRemoveFromTourney !== null &&
+          this.tourneyIdToRemove !== null
+        ) {
+          this.$emit('remove-user-from-tourney', {
+            userId: this.userIdToRemoveFromTourney,
+            tourneyId: this.tourneyIdToRemove,
+          });
+          this.closeRemoveFromTourneyModal();
+          this.loadAvailableTourneys();
+        }
+      },
+
+      closeRemoveFromTourneyModal() {
+        this.showRemoveFromTourneyModal = false;
+        this.userIdToRemoveFromTourney = null;
+        this.tourneyIdToRemove = null;
+      },
     },
     watch: {
       users: {
@@ -486,6 +676,15 @@
               this.selectedTeamIds[user.id] = user.teamId;
             }
           });
+          if (this.showAssignTourney) {
+            this.loadAvailableTourneys();
+          }
+        },
+        immediate: true,
+      },
+      tournaments: {
+        handler(newTournaments) {
+          this.tournamentOptions = newTournaments;
         },
         immediate: true,
       },
