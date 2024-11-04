@@ -71,7 +71,7 @@ exports.getTourneysByUser = async (req, res) => {
 // Récupérer tous les utilisateurs (admin seulement)
 exports.getAllUsers = async (req, res) => {
     try {
-        // Vérifiez que l'utilisateur est admin avant de continuer
+        // Vérifier que l'utilisateur est admin avant de continuer
         if (req.user.roleId !== roles.ADMIN) {
             return res.status(403).json({ message: 'Accès interdit. Seuls les administrateurs peuvent accéder à cette ressource.' });
         }
@@ -90,7 +90,7 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     const { userId } = req.params;
     try {
-        // Vérifiez si l'utilisateur fait la requête pour lui-même ou s'il est admin
+        // Vérifier si l'utilisateur fait la requête pour lui-même ou s'il est admin
         if (req.user.id !== parseInt(userId, 10) && req.user.roleId !== roles.ADMIN) {
             return res.status(403).json({ message: 'Accès interdit.' });
         }
@@ -135,7 +135,7 @@ exports.updateUser = async (req, res) => {
     const { name, email, phone } = req.body;
 
     try {
-        // Vérifiez si l'utilisateur fait la requête pour lui-même ou s'il est admin
+        // Vérifier si l'utilisateur fait la requête pour lui-même ou s'il est admin
         if (req.user.id !== parseInt(userId, 10) && req.user.roleId !== roles.ADMIN) {
             return res.status(403).json({ message: 'Accès interdit. Vous ne pouvez pas modifier cet utilisateur.' });
         }
@@ -169,7 +169,7 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
     try {
-        // Vérifiez que l'utilisateur est admin avant de continuer
+        // Vérifier que l'utilisateur est admin avant de continuer
         if (req.user.roleId !== roles.ADMIN) {
             return res.status(403).json({ message: 'Accès interdit. Seuls les administrateurs peuvent supprimer des utilisateurs.' });
         }
