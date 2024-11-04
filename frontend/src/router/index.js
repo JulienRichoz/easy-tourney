@@ -21,6 +21,7 @@ import TourneyFields from '../views/admin/TourneyFields.vue'; // Gestion des ter
 import TourneySportsFields from '../views/admin/TourneySportsFields.vue'; // Gestion des sports sur les terrains
 import TourneyUnassignedUsers from '../views/admin/TourneyUnassignedUsers.vue'; // Liste des utilisateurs sans équipe
 import TourneyTeamUsers from '../views/admin/TourneyTeamUsers.vue'; // Liste des utilisateurs d'une équipe
+import AdminUsers from '../views/admin/AdminUsers.vue';
 
 // Définition des routes de l'application
 const routes = [
@@ -142,6 +143,14 @@ const routes = [
     path: '/tourneys/:id/teams/:teamId/users',
     name: 'TourneyTeamUsers',
     component: TourneyTeamUsers,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+
+  // Route pour la gestion des utilisateurs
+  {
+    path: '/users',
+    name: 'AdminUsers',
+    component: AdminUsers,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
 ];
