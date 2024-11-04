@@ -111,10 +111,10 @@
           this.teamSetup = data.teamSetup;
           this.teams = data.teams;
 
-          // Exclure les admins de unassignedUsers
-          this.unassignedUsers = data.unassignedUsers.filter(
-            (userTourney) => userTourney.user.role.id !== 1
-          );
+          // Exclure les admins et extraire les objets 'user'
+          this.unassignedUsers = data.unassignedUsers
+            .filter((userTourney) => userTourney.user.role.id !== 1)
+            .map((userTourney) => userTourney.user);
 
           // Trouver l'équipe
           this.team = this.teams.find((t) => t.id === parseInt(teamId));
