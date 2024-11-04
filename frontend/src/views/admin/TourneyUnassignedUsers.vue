@@ -43,8 +43,11 @@
             `/tourneys/${tourneyId}/teams-details`
           );
           const data = response.data;
-          this.unassignedUsers = data.unassignedUsers;
+
+          // Extraire les utilisateurs depuis unassignedUsers
+          this.unassignedUsers = data.unassignedUsers.map((ut) => ut.user);
           this.teams = data.teams;
+
           this.teamSetup = data.teamSetup;
         } catch (error) {
           console.error(
@@ -61,20 +64,8 @@
             { teamId }
           );
 
-          // Retirer l'utilisateur de la liste des utilisateurs sans groupe
-          const user = this.unassignedUsers.find((u) => u.id === userId);
-          this.unassignedUsers = this.unassignedUsers.filter(
-            (user) => user.id !== userId
-          );
-
-          // Ajouter l'utilisateur à l'équipe correspondante
-          const team = this.teams.find((t) => t.id === teamId);
-          if (team) {
-            if (!team.Users) {
-              team.Users = [];
-            }
-            team.Users.push(user);
-          }
+          // Rafraîchir les données après l'assignation
+          await this.fetchData();
 
           toast.success("Utilisateur assigné avec succès à l'équipe.");
         } catch (error) {
@@ -88,9 +79,9 @@
         const tourneyId = this.$route.params.id;
         try {
           await apiService.delete(`/tourneys/${tourneyId}/users/${userId}`);
-          this.unassignedUsers = this.unassignedUsers.filter(
-            (user) => user.id !== userId
-          );
+
+          // Rafraîchir les données après la suppression
+          await this.fetchData();
 
           toast.success('Utilisateur supprimé avec succès.');
         } catch (error) {
@@ -114,7 +105,7 @@
             assignments,
           });
 
-          // Mettre à jour les données locales
+          // Rafraîchir les données après la validation
           await this.fetchData();
 
           toast.success('Affectations validées avec succès.');
