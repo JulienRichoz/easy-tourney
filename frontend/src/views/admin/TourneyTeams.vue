@@ -140,8 +140,8 @@
             :title="team.teamName || 'Nom manquant'"
             :cornerCount="
               team.type === 'assistant'
-                ? `${team.Users.length}`
-                : `${team.Users.length}/${teamSetup.playerPerTeam}`
+                ? `${team.usersTourneys.length}`
+                : `${team.usersTourneys.length}/${teamSetup.playerPerTeam}`
             "
             :titleColor="getStatusColor(team)"
             :hasActions="isEditable"
@@ -155,12 +155,12 @@
             <template #user-list>
               <ul class="grid grid-cols-2 gap-2 mt-2">
                 <li
-                  v-for="user in team.Users"
-                  :key="user.id"
+                  v-for="userTourney in team.usersTourneys"
+                  :key="userTourney.userId"
                   class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
                 >
                   <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
-                  <span class="truncate">{{ user.name }}</span>
+                  <span class="truncate">{{ userTourney.user.name }}</span>
                 </li>
               </ul>
             </template>
@@ -361,13 +361,16 @@
           const minPlayers = this.teamSetup.minPlayerPerTeam;
 
           if (this.filters[0].value === 'valid') {
-            return team.Users.length >= minPlayers; // Équipes valides
+            return team.usersTourneys.length >= minPlayers; // Équipes valides
           }
           if (this.filters[0].value === 'partial') {
-            return team.Users.length > 0 && team.Users.length < minPlayers; // Partiellement remplies
+            return (
+              team.usersTourneys.length > 0 &&
+              team.usersTourneys.length < minPlayers
+            ); // Partiellement remplies
           }
           if (this.filters[0].value === 'empty') {
-            return team.Users.length === 0; // Équipes vides
+            return team.usersTourneys.length === 0; // Équipes vides
           }
           return true;
         });
@@ -404,7 +407,7 @@
         'setTournamentName',
         'clearTournamentName',
       ]),
-      // Nouvelle méthode pour récupérer toutes les données nécessaires en une seule requête
+      // Méthode pour récupérer toutes les données nécessaires en une seule requête
       async fetchTourneyDetails() {
         try {
           this.fetchTourneyStatuses(this.tourneyId);
@@ -470,13 +473,16 @@
         const maxPlayers = this.teamSetup.playerPerTeam || team.maxPlayers;
         const minPlayers = this.teamSetup.minPlayerPerTeam;
 
-        if (team.Users.length > maxPlayers && team.type !== 'assistant') {
+        if (
+          team.usersTourneys.length > maxPlayers &&
+          team.type !== 'assistant'
+        ) {
           return 'red'; // Erreur grave : trop de joueurs dans l'équipe
         } else if (team.type === 'assistant') {
           return 'purple'; // Assistant : équipe d'encadrement
-        } else if (team.Users.length >= minPlayers) {
+        } else if (team.usersTourneys.length >= minPlayers) {
           return 'green'; // Valide : nombre de joueurs suffisant
-        } else if (team.Users.length > 0) {
+        } else if (team.usersTourneys.length > 0) {
           return 'orange'; // Partiel : encore des places disponibles
         } else {
           return 'gray'; // Aucun joueur, pas de pastille

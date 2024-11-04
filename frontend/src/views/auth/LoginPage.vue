@@ -11,7 +11,7 @@
 <script>
   import AuthComponentForm from '@/components/AuthComponentForm.vue';
   import apiService from '@/services/apiService';
-  import { jwtDecode } from 'jwt-decode'; // Assurez-vous d'avoir installé ce package
+  import { jwtDecode } from 'jwt-decode';
   import { roles } from '@/services/permissions';
 
   export default {

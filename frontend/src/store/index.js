@@ -58,7 +58,7 @@ export default createStore({
     /*
       * Initialiser l'authentification
       * Vérifie si un token est présent dans le localStorage
-      * Si le token est valide, décodez-le et mettez à jour l'état de l'authentification
+      * Si le token est valide, le decoder et mettre à jour l'état de l'authentification
       */
     initializeAuth({ commit }) {
       const token = localStorage.getItem('token');

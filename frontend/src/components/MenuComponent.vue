@@ -36,7 +36,6 @@
           @click="toggleDarkMode"
           class="mr-2 p-2 rounded text-blue-200 dark:text-yellow-300 hover:text-blue-300 dark:hover:text-yellow-500"
         >
-          <!-- Utilisez le composant FontAwesomeIcon -->
           <font-awesome-icon v-if="isDarkMode" :icon="['fas', 'sun']" />
           <font-awesome-icon v-else :icon="['fas', 'moon']" />
         </button>
@@ -86,7 +85,7 @@
         isAuthenticated: (state) => state.isAuthenticated, // Vérifie l'authentification
         isAdmin: (state) => state.user?.roleId === 1, // Vérifie si l'utilisateur est admin
         userName: (state) => state.user?.name, // Récupère le nom de l'utilisateur
-        // Utilisez mapState avec namespace pour accéder au module 'tourney'
+        // mapState avec namespace pour accéder au module 'tourney'
         ...mapState('tourney', {
           tournamentName: (state) => state.currentTournamentName, // Nom du tournoi depuis Vuex
         }),

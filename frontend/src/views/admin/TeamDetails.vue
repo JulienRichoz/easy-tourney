@@ -110,7 +110,6 @@
         // Exclure l'équipe actuelle
         return this.teams.filter((team) => {
           if (team.id === parseInt(this.teamId)) return false;
-          // Si vous souhaitez permettre la souplesse maximale, commentez les lignes suivantes
           if (!this.teamSetup || team.type === 'assistant') return true;
           const maxPlayers = this.teamSetup.playerPerTeam;
           return team.Users.length < maxPlayers;
