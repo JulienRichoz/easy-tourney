@@ -5,7 +5,7 @@
       disabled ? 'opacity-50 cursor-not-allowed' : '',
     ]"
     :style="{ color: iconColor, fontSize: iconSize }"
-    @click="!disabled && $emit('click', $event)"
+    @click="!disabled && handleClick"
     role="button"
     :aria-label="ariaLabel"
   >
@@ -59,6 +59,11 @@
           PencilIcon,
         },
       };
+    },
+    methods: {
+      handleClick() {
+        this.$emit('click');
+      },
     },
   };
 </script>

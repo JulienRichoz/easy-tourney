@@ -30,18 +30,23 @@ export default createStore({
     CLEAR_ALERT_MESSAGE(state) {
       state.alertMessage = null;
     },
+    UPDATE_USER_NAME(state, newName) {
+      if (state.user) {
+        state.user.name = newName;
+      }
+    },
   },
   actions: {
     async login({ commit }, { email, password }) {
       try {
         const response = await axios.post('/api/auth/login', { email, password });
-        const { token, expiresIn } = response.data;
+        const { token, expiresIn, user } = response.data;
 
         localStorage.setItem('token', token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         commit('SET_AUTH',
-          { isAuthenticated: true, user: response.data.user, expiresIn });
+          { isAuthenticated: true, user, expiresIn });
 
       } catch (error) {
         console.error('Erreur de connexion:', error);
@@ -71,7 +76,11 @@ export default createStore({
             // Si le token n'est pas expiré
             commit('SET_AUTH', {
               isAuthenticated: true,
-              user: decoded,
+              user: {
+                id: decoded.id,
+                name: decoded.name,
+                roleId: decoded.roleId,
+              },
               tokenExpiration: decoded.exp,  // On récupère l'expiration
             });
           } else {

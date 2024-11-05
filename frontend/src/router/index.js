@@ -21,7 +21,9 @@ import TourneyFields from '../views/admin/TourneyFields.vue'; // Gestion des ter
 import TourneySportsFields from '../views/admin/TourneySportsFields.vue'; // Gestion des sports sur les terrains
 import TourneyUnassignedUsers from '../views/admin/TourneyUnassignedUsers.vue'; // Liste des utilisateurs sans équipe
 import TourneyTeamUsers from '../views/admin/TourneyTeamUsers.vue'; // Liste des utilisateurs d'une équipe
-import AdminUsers from '../views/admin/AdminUsers.vue';
+import AdminUsers from '../views/admin/AdminUsers.vue'; // Liste de tous les utilisateurs de l'application
+import UserProfile from '@/views/user/UserProfile.vue'; // Page profil utilisateur
+import AdminUserProfile from '@/views/admin/AdminUserProfile.vue'; // Page profil utilisateur pour les administrateurs
 
 // Définition des routes de l'application
 const routes = [
@@ -153,6 +155,18 @@ const routes = [
     component: AdminUsers,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
+  {
+    path: '/profile',
+    name: 'UserProfile',
+    component: UserProfile,
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
+  },
+  {
+    path: '/users/:userId',
+    name: 'AdminUserProfile',
+    component: AdminUserProfile,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
 ];
 
 // Configuration du routeur Vue
@@ -238,7 +252,12 @@ router.beforeEach(async (to, from, next) => {
         const decoded = jwtDecode(newToken);
         store.commit('SET_AUTH', {
           isAuthenticated: true,
-          user: decoded,
+          user: {
+            id: decoded.id,
+            name: decoded.name,
+            roleId: decoded.roleId,
+          },
+          tokenExpiration: decoded.exp,
         });
 
         const userRole = decoded.roleId;

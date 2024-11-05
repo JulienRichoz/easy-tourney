@@ -1,15 +1,11 @@
 const roles = {
     ADMIN: 1,
-    ASSISTANT: 2,
-    PLAYER: 3,
-    GUEST: 4,
+    USER: 2,
 };
 
 const permissions = {
-    [roles.ADMIN]: ['viewAdminPage', 'manageUsers', 'viewUserPage', 'viewDashboard'],
-    [roles.ASSISTANT]: ['viewAssistantPage', 'viewUserPage', 'viewDashboard'],
-    [roles.PLAYER]: ['viewUserPage', 'viewDashboard'],
-    [roles.GUEST]: ['viewUserPage', 'viewDashboard'],
+    [roles.ADMIN]: ['viewAdminPage', 'manageUsers', 'viewUserPage', 'viewDashboard', 'viewAssistantPage'],
+    [roles.USER]: ['viewUserPage', 'viewDashboard'],
 };
 
 export { roles, permissions };

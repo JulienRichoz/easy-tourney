@@ -229,7 +229,6 @@
           toast.error("Erreur lors de la création de l'utilisateur!");
         }
       },
-
       async handleAssignTourney({ userId, tourneyId }) {
         try {
           await apiService.post(`/users/${userId}/tourneys/${tourneyId}`);

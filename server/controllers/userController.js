@@ -309,15 +309,25 @@ exports.updateUser = async (req, res) => {
     try {
         // Vérification des permissions déjà gérée par authorizeUserOrAdmin
 
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId, {
+            include: [
+                {
+                    model: Role,
+                    as: 'role',
+                    attributes: ['id', 'name'],
+                },
+            ],
+        });
         if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
 
-        const updatedData = { name, email, phone };
+        let updatedData = { name, email, phone };
 
         // Permettre à un administrateur de modifier le rôle
-        if (req.user.roleId === roles.ADMIN && roleId) {
-            updatedData.roleId = roleId;
-        } else roleId = 2;
+        if (req.user.roleId === roles.ADMIN) {
+            if (roleId) {
+                updatedData.roleId = roleId;
+            }
+        }
 
         if (password) {
             // Si l'utilisateur est un admin, il peut changer le mot de passe sans l'ancien mot de passe
@@ -381,3 +391,5 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur.' });
     }
 };
+
+
