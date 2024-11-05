@@ -708,8 +708,7 @@
        * @param {Number} userId - ID de l'utilisateur.
        */
       navigateToEdit(userId) {
-        const tourneyId = this.$route.params.id;
-        this.$router.push(`/tourneys/${tourneyId}/users/${userId}/edit`);
+        this.$router.push(`/users/${userId}`);
       },
 
       /*

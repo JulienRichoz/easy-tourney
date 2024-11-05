@@ -9,23 +9,16 @@
           <!-- Champ Nom -->
           <div>
             <div class="flex items-center">
-              <label
-                class="block text-lg font-medium text-gray-700 dark:text-gray-300"
-                >Nom</label
-              >
+              <label class="block text-lg font-medium">Nom</label>
               <SoftButtonComponent
                 fontAwesomeIcon="fa-pen-alt"
-                iconClass="w-4 h-4 ml-2 cursor-pointer"
+                iconClass="w-4 h-4 ml-2"
                 @click="toggleEdit('name')"
                 v-if="!editingField.name"
               />
             </div>
             <div class="flex items-center">
-              <span
-                v-if="!editingField.name"
-                class="text-gray-900 dark:text-gray-100"
-                @click="toggleEdit('name')"
-              >
+              <span v-if="!editingField.name" @click="toggleEdit('name')">
                 {{ userData.name }}
               </span>
               <div v-else class="flex items-center w-full">
@@ -36,12 +29,12 @@
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="fa-check"
-                  iconClass="w-4 h-4 text-green-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-green-500 ml-2"
                   @click="saveField('name')"
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="times"
-                  iconClass="w-4 h-4 text-red-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-red-500 ml-2"
                   @click="cancelEdit('name')"
                 />
               </div>
@@ -50,21 +43,17 @@
           <!-- Champ Email -->
           <div>
             <div class="flex items-center">
-              <label
-                class="block text-lg font-medium text-gray-700 dark:text-gray-300"
-                >Email</label
-              >
+              <label class="block text-lg font-medium">Email</label>
               <SoftButtonComponent
                 v-if="canEditEmail && !editingField.email"
                 fontAwesomeIcon="fa-pen-alt"
-                iconClass="w-4 h-4 ml-2 cursor-pointer"
+                iconClass="w-4 h-4 ml-2"
                 @click="toggleEdit('email')"
               />
             </div>
             <div class="flex items-center">
               <span
                 v-if="!editingField.email"
-                class="text-gray-900 dark:text-gray-100"
                 @click="canEditEmail ? toggleEdit('email') : null"
               >
                 {{ userData.email }}
@@ -78,12 +67,12 @@
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="check"
-                  iconClass="w-5 h-5 text-green-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-green-500 ml-2"
                   @click="saveField('email')"
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="times"
-                  iconClass="w-5 h-5 text-red-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-red-500 ml-2"
                   @click="cancelEdit('email')"
                 />
               </div>
@@ -92,10 +81,7 @@
           <!-- Champ Téléphone -->
           <div>
             <div class="flex items-center">
-              <label
-                class="block text-lg font-medium text-gray-700 dark:text-gray-300"
-                >Téléphone</label
-              >
+              <label class="block text-lg font-medium">Téléphone</label>
               <SoftButtonComponent
                 fontAwesomeIcon="fa-pen-alt"
                 iconClass="w-4 h-4 ml-2 cursor-pointer"
@@ -104,11 +90,7 @@
               />
             </div>
             <div class="flex items-center">
-              <span
-                v-if="!editingField.phone"
-                class="text-gray-900 dark:text-gray-100"
-                @click="toggleEdit('phone')"
-              >
+              <span v-if="!editingField.phone" @click="toggleEdit('phone')">
                 {{ userData.phone || 'Non renseigné' }}
               </span>
               <div v-else class="flex items-center w-full">
@@ -119,12 +101,12 @@
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="check"
-                  iconClass="w-5 h-5 text-green-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-green-500 ml-2"
                   @click="saveField('phone')"
                 />
                 <SoftButtonComponent
                   fontAwesomeIcon="times"
-                  iconClass="w-5 h-5 text-red-500 ml-2 cursor-pointer"
+                  iconClass="w-5 h-5 text-red-500 ml-2"
                   @click="cancelEdit('phone')"
                 />
               </div>
@@ -133,13 +115,10 @@
           <!-- Changement de mot de passe -->
           <div>
             <div class="flex items-center">
-              <label
-                class="block text-lg font-medium text-gray-700 dark:text-gray-300"
-                >Mot de passe</label
-              >
+              <label class="block text-lg font-medium">Mot de passe</label>
               <SoftButtonComponent
                 fontAwesomeIcon="fa-pen-alt"
-                iconClass="w-4 h-4 ml-2 cursor-pointer"
+                iconClass="w-4 h-4 ml-2"
                 @click="toggleEdit('password')"
                 v-if="!editingField.password"
               />
@@ -147,7 +126,6 @@
             <div class="flex items-center">
               <span
                 v-if="!editingField.password"
-                class="text-gray-900 dark:text-gray-100"
                 @click="toggleEdit('password')"
               >
                 ••••••••
@@ -176,12 +154,12 @@
                 <div class="flex space-x-2 mt-2">
                   <SoftButtonComponent
                     fontAwesomeIcon="check"
-                    iconClass="w-5 h-5 text-green-500 cursor-pointer"
+                    iconClass="w-5 h-5 text-green-500"
                     @click="updatePassword"
                   />
                   <SoftButtonComponent
                     fontAwesomeIcon="times"
-                    iconClass="w-5 h-5 text-red-500 cursor-pointer"
+                    iconClass="w-5 h-5 text-red-500"
                     @click="cancelEdit('password')"
                   />
                 </div>
@@ -284,7 +262,7 @@
             <li
               v-for="tourney in userTournaments"
               :key="tourney.id"
-              class="border-b border-gray-300 py-2 flex justify-between items-center"
+              class="border-b py-2 flex justify-between items-center"
             >
               <span>{{ tourney.name }}</span>
               <SoftButtonComponent
@@ -300,7 +278,7 @@
     </div>
 
     <!-- Actions administrateur (uniquement pour les administrateurs) -->
-    <div v-if="isAdmin" class="mt-8">
+    <div v-if="isAdmin && userId !== currentUserId" class="mt-8">
       <h2 class="text-2xl font-semibold mb-4">Actions administrateur</h2>
       <ButtonComponent variant="danger" size="sm" @click="confirmDeleteUser">
         Supprimer l'utilisateur
@@ -391,9 +369,16 @@
         // Si vous voulez permettre aux utilisateurs de modifier leur email, changez cette valeur
         return this.isAdmin;
       },
+      currentUserId() {
+        return this.$store.state.user ? this.$store.state.user.id : null;
+      },
     },
     async created() {
       await this.fetchUserData();
+      if (this.userNotFound) {
+        // Ne pas exécuter le reste du code si l'utilisateur n'existe pas
+        return;
+      }
       if (this.isAdmin) {
         await this.fetchAvailableTourneys();
         await this.fetchRoles();
@@ -424,9 +409,15 @@
             'Erreur lors de la récupération des données utilisateur:',
             error
           );
-          toast.error(
-            'Une erreur est survenue lors de la récupération des données.'
-          );
+          if (error.response && error.response.status === 404) {
+            // Rediriger vers la page 404
+            this.$router.push('/404');
+          } else {
+            // Afficher un message d'erreur général
+            toast.error(
+              'Une erreur est survenue lors de la récupération des données.'
+            );
+          }
         }
       },
       /**
@@ -434,7 +425,7 @@
        */
       async fetchAvailableTourneys() {
         try {
-          const response = await apiService.get('/roles');
+          const response = await apiService.get('/tourneys');
           const userTourneyIds = this.userTournaments.map((t) => t.id);
           this.availableTourneys = response.data.filter(
             (t) => !userTourneyIds.includes(t.id)
@@ -469,8 +460,6 @@
        * @param {String} field - Le champ à sauvegarder.
        */
       async saveField(field) {
-        console.log(`saveField called for ${field}`);
-
         await this.updateField(field);
         this.editingField[field] = false;
       },
