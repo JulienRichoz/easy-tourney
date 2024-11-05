@@ -70,6 +70,7 @@
           placeholder="Filtrer par tournoi"
           label="name"
           :reduce="(tourney) => tourney.id"
+          appendToBody
           clearable
           class="w-full sm:w-64"
         />
@@ -226,6 +227,7 @@
                 placeholder="Tournoi"
                 label="name"
                 :reduce="(tourney) => tourney.id"
+                appendToBody
                 clearable
                 class="w-full sm:w-48"
               />

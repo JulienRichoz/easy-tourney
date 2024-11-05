@@ -17,7 +17,7 @@
             <span class="hidden sm:md:inline">Config Equipes</span>
           </ButtonComponent>
 
-          <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max de groupes n'est pas atteint -->
+          <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max d'équipe n'est pas atteint -->
           <ButtonComponent
             v-if="
               isEditable &&
@@ -41,7 +41,7 @@
             variant="danger"
             fontAwesomeIcon="trash"
           >
-            <span class="hidden sm:inline mr-auto">Tous les groupes</span>
+            <span class="hidden sm:inline mr-auto">Toutes les équipes</span>
           </ButtonComponent>
           <StatusSelectorComponent
             :tourneyId="tourneyId"
@@ -96,7 +96,8 @@
               <strong>Inscrits :</strong> {{ allUsers.length }}
             </div>
             <div class="text-sm">
-              <strong>Groupes affichés :</strong> {{ allDisplayedTeams.length }}
+              <strong>Equipes affichées :</strong>
+              {{ allDisplayedTeams.length }}
             </div>
             <div class="text-sm">
               <strong>Min joueur/equipe:</strong>
@@ -117,7 +118,7 @@
               v-if="unassignedUsers.length === 0"
               class="text-sm text-gray-600"
             >
-              Tous les utilisateurs inscrits sont dans des groupes.
+              Tous les utilisateurs inscrits sont dans des équipes.
             </span>
           </div>
         </div>
@@ -126,10 +127,10 @@
         <div
           class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
         >
-          <!-- Carte pour ajouter un nouveau groupe (affichée si isEditable) -->
+          <!-- Carte pour ajouter une nouvelle équipe (affichée si isEditable) -->
           <CardAddComponent
             v-if="isEditable && playerTeams.length < teamSetup.maxTeamNumber"
-            title="Groupe"
+            title="Equipe"
             @openAddElementModal="openAddTeamModal"
           />
 
@@ -196,7 +197,7 @@
       <ModalComponent
         :isVisible="showModal"
         :title="
-          editingTeamId ? 'Modifier le Groupe' : 'Ajouter un Nouveau Groupe'
+          editingTeamId ? 'Modifier équipe' : 'Ajouter une nouvelle équipe'
         "
         @close="closeModal"
       >
@@ -235,7 +236,7 @@
         @cancel="closeModalResetTeams"
         @confirm="handleResetAllTeamsSubmit"
         :isHardDelete="true"
-        hardDeleteMessage="Tous les groupes seront supprimés et les utilisateurs n'auront plus de groupe (reset complet). Il ne sera pas possible de revenir en arrière. Êtes-vous sûr de vouloir continuer ?"
+        hardDeleteMessage="Toutes les équipes seront supprimées et les utilisateurs n'auront plus d'équipe (reset complet). Il ne sera pas possible de revenir en arrière. Êtes-vous sûr de vouloir continuer ?"
       />
     </div>
   </div>
@@ -299,7 +300,7 @@
             label: 'Equipes',
             value: '',
             options: [
-              { label: 'Tous les groupes', value: '' },
+              { label: 'Toutes les équipes', value: '' },
               { label: 'Valides', value: 'valid' },
               { label: 'Invalides', value: 'partial' },
               { label: 'Vide', value: 'empty' },
@@ -383,13 +384,13 @@
         return [
           {
             name: 'teamName',
-            label: 'Nom du groupe',
+            label: "Nom de l'équipe",
             type: 'text',
             required: true,
           },
           {
             name: 'type',
-            label: 'Type du groupe',
+            label: "Type d'équipe",
             type: 'select',
             options: [
               { label: 'Assistant', value: 'assistant' },
@@ -516,11 +517,11 @@
       async deleteTeam(id) {
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/teams/${id}`);
-          toast.success('Groupe supprimé avec succès !');
+          toast.success('Equipe supprimée avec succès !');
           this.fetchTourneyDetails(); // Récupérer les données mises à jour
           this.closeDeleteConfirmation();
         } catch (error) {
-          toast.error('Erreur lors de la suppression du groupe.');
+          toast.error("Erreur lors de la suppression de l'équipe.");
         }
       },
       openModalResetTeams() {
@@ -647,12 +648,14 @@
           }
 
           toast.success(
-            `Groupe ${this.editingTeamId ? 'modifié' : 'ajouté'} avec succès !`
+            `Equipe ${
+              this.editingTeamId ? 'modifiée' : 'ajoutée'
+            } avec succès !`
           );
           this.fetchTourneyDetails(); // Récupérer les données mises à jour
         } catch (error) {
-          console.error("Erreur lors de l'enregistrement du groupe:", error);
-          toast.error("Erreur lors de l'enregistrement du groupe.");
+          console.error("Erreur lors de l'enregistrement de l'équipe:", error);
+          toast.error("Erreur lors de l'enregistrement de l'équipe.");
         } finally {
           this.isSubmitting = false;
           this.closeModal();
