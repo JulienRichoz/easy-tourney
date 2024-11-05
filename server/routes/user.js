@@ -2,11 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getTourneysByUser, getAllUsers, getUserById, createUser, updateUser, deleteUser, getAllUsersWithDetails, removeUserFromTourney, addUserToTourney,
+    getTourneysByUser, getAllUsers, getUserById, createUser, updateUser, deleteUser, getAllUsersWithDetails, removeUserFromTourney, addUserToTourney, getOwnData,
 } = require('../controllers/userController');
 const { isAdmin, isAuthenticated, authorizeUserOrAdmin } = require('../middlewares');
 
 // Base URL: http://localhost:3000/api/users
+router.get('/me', isAuthenticated, getOwnData);
 router.get('/all/details', isAuthenticated, isAdmin, getAllUsersWithDetails); // Récupérer tous les utilisateurs avec leurs détails
 router.post('/', isAuthenticated, isAdmin, createUser); // Créer un utilisateur (admin seulement)
 router.post('/:userId/tourneys/:tourneyId', isAuthenticated, isAdmin, addUserToTourney); // Ajouter un utilisateur à un tournoi (admin seulement)
