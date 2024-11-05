@@ -29,9 +29,14 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             unique: true,
             allowNull: false,
-            validate: {
+            /*validate: {
                 isEmail: true,
-            },
+                args: {
+                    allow_utf8_local_part: false,
+                    require_tld: false, // Permet d'accepter les emails sans TLD valide (CONSOLE.LOG("REMOVE FOR PRODUCTION"))
+                  },
+                  msg: 'Veuillez fournir une adresse email valide.',
+            },*/
         },
         password: {
             type: DataTypes.STRING,
