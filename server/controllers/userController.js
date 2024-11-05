@@ -304,7 +304,7 @@ exports.getUserById = async (req, res) => {
 // Mettre à jour un utilisateur (admin ou soi-même)
 exports.updateUser = async (req, res) => {
     const { userId } = req.params;
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, roleId } = req.body;
 
     try {
         // Vérification des permissions déjà gérée par authorizeUserOrAdmin
@@ -313,6 +313,11 @@ exports.updateUser = async (req, res) => {
         if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
 
         const updatedData = { name, email, phone };
+
+        // Permettre à un administrateur de modifier le rôle
+        if (req.user.roleId === roles.ADMIN && roleId) {
+            updatedData.roleId = roleId;
+        } else roleId = 2;
 
         if (password) {
             // Si l'utilisateur est un admin, il peut changer le mot de passe sans l'ancien mot de passe
