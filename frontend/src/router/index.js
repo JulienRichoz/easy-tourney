@@ -248,19 +248,20 @@ router.beforeEach(async (to, from, next) => {
       try {
         const newToken = await refreshToken(); // Rafraîchir le token
         localStorage.setItem('token', newToken); // Mettre à jour le token dans le localStorage
+        apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+        // Récupérer les informations de l'utilisateur depuis le serveur
+        const userResponse = await apiService.get('/users/me');
+        const user = userResponse.data;
 
         const decoded = jwtDecode(newToken);
         store.commit('SET_AUTH', {
           isAuthenticated: true,
-          user: {
-            id: decoded.id,
-            name: decoded.name,
-            roleId: decoded.roleId,
-          },
+          user,
           tokenExpiration: decoded.exp,
         });
 
-        const userRole = decoded.roleId;
+        const userRole = user.roleId;
         // Vérification des permissions pour l'accès à la route
         if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
           return next('/access-denied'); // Rediriger vers la page d'accès refusé si l'utilisateur n'a pas les droits

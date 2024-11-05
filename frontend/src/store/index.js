@@ -1,5 +1,5 @@
 import { createStore } from 'vuex';
-import axios from 'axios';
+import apiService from '@/services/apiService';
 import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
 import tourney from './modules/tourney';
 
@@ -39,11 +39,15 @@ export default createStore({
   actions: {
     async login({ commit }, { email, password }) {
       try {
-        const response = await axios.post('/api/auth/login', { email, password });
-        const { token, expiresIn, user } = response.data;
+        const response = await apiService.post('/auth/login', { email, password });
+        const { token, expiresIn } = response.data;
 
         localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        apiService.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        // Récupérer les informations de l'utilisateur depuis le serveur
+        const userResponse = await apiService.get('/users/me');
+        const user = userResponse.data;
 
         commit('SET_AUTH',
           { isAuthenticated: true, user, expiresIn });
@@ -55,7 +59,7 @@ export default createStore({
     },
     logout({ commit }) {
       localStorage.removeItem('token');  // Supprime le token de localStorage
-      delete axios.defaults.headers.common['Authorization'];  // Supprime l'en-tête d'autorisation
+      delete apiService.defaults.headers.common['Authorization'];  // Supprime l'en-tête d'autorisation
 
       commit('LOGOUT');  // Réinitialise l'état
     },
@@ -65,7 +69,7 @@ export default createStore({
       * Vérifie si un token est présent dans le localStorage
       * Si le token est valide, le decoder et mettre à jour l'état de l'authentification
       */
-    initializeAuth({ commit }) {
+    async initializeAuth({ commit }) {
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -74,13 +78,14 @@ export default createStore({
 
           if (decoded.exp && currentTime < decoded.exp) {
             // Si le token n'est pas expiré
+            apiService.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            // Récupérer les informations de l'utilisateur depuis le serveur
+            const response = await apiService.get('/users/me');
+            const user = response.data;
+
             commit('SET_AUTH', {
               isAuthenticated: true,
-              user: {
-                id: decoded.id,
-                name: decoded.name,
-                roleId: decoded.roleId,
-              },
+              user,
               tokenExpiration: decoded.exp,  // On récupère l'expiration
             });
           } else {
