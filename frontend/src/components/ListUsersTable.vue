@@ -7,6 +7,17 @@
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-2">
         <TitleComponent :title="title" />
+
+        <!-- Bouton Ajouter Utilisateur -->
+        <ButtonComponent
+          v-if="enableAddUser"
+          variant="primary"
+          fontAwesomeIcon="fa-user"
+          @click="handleAddUserClick"
+        >
+          <span class="hidden sm:inline"> Nouvel utilisateur</span>
+        </ButtonComponent>
+
         <!-- Bouton Envoyer Email -->
         <ButtonComponent
           v-if="showEmailButton"
@@ -17,6 +28,7 @@
         >
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
+
         <!-- Bouton Remplir Groupes (affiché uniquement si enableAutoFill est true) -->
         <ButtonComponent
           v-if="hasAvailableTeams && enableAutoFill"
@@ -36,6 +48,8 @@
           <span class="hidden sm:inline">Annuler</span>
         </ButtonComponent>
       </div>
+
+      <!-- Bouton Retour -->
       <ButtonComponent
         v-if="showBackButton"
         variant="secondary"
@@ -57,6 +71,7 @@
           label="name"
           :reduce="(tourney) => tourney.id"
           clearable
+          class="w-full sm:w-64"
         />
       </div>
       <!-- Filtre de recherche -->
@@ -67,6 +82,19 @@
           placeholder="Rechercher par nom ou email"
           class="border border-light-form-border dark:border-dark-form-border rounded-md p-2 w-full sm:w-64 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
         />
+      </div>
+      <!-- Filtre utilisateurs sans tournoi -->
+      <div class="mt-2">
+        <label class="inline-flex items-center">
+          <input
+            type="checkbox"
+            v-model="filterNoTournament"
+            class="form-checkbox h-5 w-5 text-indigo-600"
+          />
+          <span class="ml-2 text-gray-700 dark:text-gray-300">
+            Sans tournoi
+          </span>
+        </label>
       </div>
     </div>
 
@@ -92,32 +120,36 @@
             >
               Edit
             </th>
+            <!-- Colonne Nom -->
             <th
               class="px-4 py-2 text-left text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Nom
             </th>
+            <!-- Colonne Email -->
             <th
               class="px-4 py-2 text-left text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Email
             </th>
+            <!-- Colonne Téléphone -->
             <th
               v-if="showPhone"
               class="px-4 py-2 text-left text-light-title dark:text-dark-title hidden md:table-cell border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Téléphone
             </th>
+            <!-- Colonne Tournois -->
             <th
               v-if="showTourney"
-              class="px-4 py-2 text-left text-light-title dark:text-dark-title"
+              class="px-4 py-2 text-left text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Tournois
             </th>
             <!-- Colonne Ajouter au Tournoi -->
             <th
               v-if="showAssignTourney"
-              class="px-4 py-2 text-left text-light-title dark:text-dark-title"
+              class="px-4 py-2 text-left text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
             >
               Ajouter au Tournoi
             </th>
@@ -128,10 +160,12 @@
             >
               Équipe
             </th>
-            <!-- Colonne Actions -->
+            <!-- Colonne Suppression -->
             <th
               class="px-2 py-2 text-center text-light-title dark:text-dark-title border-b border-light-subMenu-border dark:border-dark-subMenu-border"
-            ></th>
+            >
+              Del
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +183,9 @@
                 @click="handleEditClick(user)"
               />
             </td>
+            <!-- Colonne Username -->
             <td class="px-4 py-2">{{ user.name || 'N/A' }}</td>
+            <!-- Colonne Email -->
             <td class="px-4 py-2 truncate">
               <a
                 :href="`mailto:${user.email}`"
@@ -160,7 +196,7 @@
             </td>
 
             <!-- Colonne Tournois -->
-            <td v-if="showTourney" class="px-4 py-2">
+            <td v-if="showTourney" class="px-4 py-2 max-h-24 overflow-y-auto">
               <ul>
                 <li
                   v-for="userTourney in user.usersTourneys || []"
@@ -169,8 +205,8 @@
                 >
                   <span>{{ userTourney.tourney.name }}</span>
                   <SoftButtonComponent
-                    fontAwesomeIcon="trash"
-                    iconClass="w-4 h-4 text-red-500 hover:text-red-700"
+                    fontAwesomeIcon="fa-times"
+                    iconClass="w-4 h-4 text-light-logoutButton-default hover:text-light-logoutButton-hover dark:text-dark-logoutButton-default hover:dark:text-dark-logoutButton-hover"
                     aria-label="Retirer du tournoi"
                     @click="
                       confirmRemoveFromTourney(user.id, userTourney.tourney.id)
@@ -180,25 +216,28 @@
               </ul>
             </td>
             <!-- Colonne Ajouter au Tournoi -->
-            <td v-if="showAssignTourney" class="px-4 py-2">
+            <td
+              v-if="showAssignTourney"
+              class="px-4 py-2 flex items-center space-x-2"
+            >
               <v-select
                 v-model="selectedTourneyIds[user.id]"
                 :options="availableTourneys[user.id]"
-                placeholder="Sélectionner un tournoi"
+                placeholder="Tournoi"
                 label="name"
                 :reduce="(tourney) => tourney.id"
                 clearable
-                class="w-full sm:w-64"
+                class="w-full sm:w-48"
               />
               <ButtonComponent
                 variant="primary"
                 size="sm"
+                heroIcon="PlusIcon"
                 @click="assignTourney(user.id)"
                 :disabled="!selectedTourneyIds[user.id]"
-              >
-                <span>Ajouter</span>
-              </ButtonComponent>
+              />
             </td>
+            <!-- Colonne Phone -->
             <td v-if="showPhone" class="px-4 py-2 hidden md:table-cell">
               {{ user.phone || '-' }}
             </td>
@@ -385,8 +424,24 @@
         type: Function,
         default: null,
       },
+      addUserFunction: {
+        type: Function,
+        default: null,
+      },
+      enableAddUser: {
+        type: Boolean,
+        default: false,
+      },
     },
-    emits: ['go-back', 'assign-team', 'delete-user', 'validate-assignments'],
+    emits: [
+      'go-back',
+      'assign-team',
+      'delete-user',
+      'validate-assignments',
+      'assign-tourney',
+      'remove-user-from-tourney',
+      'user-updated',
+    ],
     data() {
       return {
         showDeleteModal: false,
@@ -396,6 +451,7 @@
         initialSelectedTeamIds: {},
         selectedTournamentFilter: null,
         searchQuery: '',
+        filterNoTournament: false,
         tournamentOptions: [],
         selectedTourneyIds: {},
         availableTourneys: {},
@@ -418,9 +474,18 @@
       };
     },
     computed: {
+      /**
+       * Indique s'il y a des actions disponibles pour les utilisateurs.
+       * @returns {Boolean}
+       */
       hasActions() {
         return this.enableAssignTeam || this.enableRemoveUser;
       },
+
+      /**
+       * Retourne les équipes disponibles pour l'assignation.
+       * @returns {Array}
+       */
       availableTeams() {
         if (!this.teamSetup) return [];
 
@@ -436,6 +501,11 @@
           return isCurrentTeam || hasSpace;
         });
       },
+
+      /**
+       * Options pour le sélecteur d'équipes.
+       * @returns {Array}
+       */
       teamOptions() {
         return this.availableTeams.map((team) => {
           const capacity = this.getTeamCapacity(team);
@@ -445,12 +515,27 @@
           };
         });
       },
+
+      /**
+       * Indique s'il y a des équipes disponibles.
+       * @returns {Boolean}
+       */
       hasAvailableTeams() {
         return this.availableTeams.length > 0;
       },
+
+      /**
+       * Utilisateurs à afficher en fonction des filtres.
+       * @returns {Array}
+       */
       displayedUsers() {
         return this.showFilters ? this.filteredUsers : this.users;
       },
+
+      /**
+       * Utilisateurs filtrés.
+       * @returns {Array}
+       */
       filteredUsers() {
         let filtered = this.users;
 
@@ -459,6 +544,12 @@
             user.usersTourneys?.some(
               (ut) => ut.tourney.id === this.selectedTournamentFilter
             )
+          );
+        }
+
+        if (this.filterNoTournament) {
+          filtered = filtered.filter(
+            (user) => !user.usersTourneys || user.usersTourneys.length === 0
           );
         }
 
@@ -513,15 +604,29 @@
       },
     },
     methods: {
+      /**
+       * Retourne la capacité maximale d'une équipe.
+       * @param {Object} team - L'équipe.
+       * @returns {Number}
+       */
       getTeamCapacity(team) {
         if (team.type === 'assistant') {
           return this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber;
         }
         return this.teamSetup.playerPerTeam;
       },
+
+      /**
+       * Émet l'événement pour retourner en arrière.
+       */
       goBack() {
         this.$emit('go-back');
       },
+
+      /**
+       * Assigne un utilisateur à une équipe.
+       * @param {Number} userId - ID de l'utilisateur.
+       */
       assignTeam(userId) {
         const teamId = this.selectedTeamIds[userId];
         if (teamId) {
@@ -532,20 +637,37 @@
           toast.info('Veuillez sélectionner une équipe pour cet utilisateur.');
         }
       },
+
+      /**
+       * Ouvre la modale de confirmation de suppression d'un utilisateur.
+       * @param {Number} userId - ID de l'utilisateur à supprimer.
+       */
       confirmDelete(userId) {
         this.userIdToDelete = userId;
         this.showDeleteModal = true;
       },
+
+      /**
+       * Supprime l'utilisateur après confirmation.
+       */
       deleteUser() {
         if (this.userIdToDelete !== null) {
           this.$emit('delete-user', this.userIdToDelete);
           this.closeDeleteModal();
         }
       },
+
+      /**
+       * Ferme la modale de suppression.
+       */
       closeDeleteModal() {
         this.showDeleteModal = false;
         this.userIdToDelete = null;
       },
+
+      /**
+       * Envoie un email à tous les utilisateurs.
+       */
       sendEmailToAll() {
         const emails = this.users
           .map((user) => user.email)
@@ -557,6 +679,11 @@
         const mailtoLink = `mailto:${emails.join(',')}`;
         window.location.href = mailtoLink;
       },
+
+      /**
+       * Gère le clic sur le bouton d'édition d'un utilisateur.
+       * @param {Object} user - L'utilisateur à éditer.
+       */
       handleEditClick(user) {
         if (this.editUserFunction) {
           this.editUserFunction(user);
@@ -564,6 +691,20 @@
           this.navigateToEdit(user.id);
         }
       },
+
+      /**
+       * Ouvre la modale d'ajout d'un utilisateur.
+       */
+      handleAddUserClick() {
+        if (this.addUserFunction) {
+          this.addUserFunction();
+        }
+      },
+
+      /**
+       * Navigation vers la page d'édition.
+       * @param {Number} userId - ID de l'utilisateur.
+       */
       navigateToEdit(userId) {
         const tourneyId = this.$route.params.id;
         this.$router.push(`/tourneys/${tourneyId}/users/${userId}/edit`);
@@ -679,8 +820,9 @@
         this.isAutoFilled = false;
       },
 
-      /*
-       * Fonctions pour assigner des utilisateurs à des tournois
+      /**
+       * Charge les tournois disponibles pour chaque utilisateur.
+       * @returns {Promise<void>}
        */
       async loadAvailableTourneys() {
         const allTourneys = this.tournaments;
@@ -694,6 +836,10 @@
         });
       },
 
+      /**
+       * Assigne un utilisateur à un tournoi.
+       * @param {Number} userId - ID de l'utilisateur.
+       */
       assignTourney(userId) {
         const tourneyId = this.selectedTourneyIds[userId];
         if (tourneyId) {
@@ -705,12 +851,20 @@
         }
       },
 
+      /**
+       * Ouvre la modale de confirmation pour retirer un utilisateur d'un tournoi.
+       * @param {Number} userId - ID de l'utilisateur.
+       * @param {Number} tourneyId - ID du tournoi.
+       */
       confirmRemoveFromTourney(userId, tourneyId) {
         this.userIdToRemoveFromTourney = userId;
         this.tourneyIdToRemove = tourneyId;
         this.showRemoveFromTourneyModal = true;
       },
 
+      /**
+       * Retire un utilisateur d'un tournoi après confirmation.
+       */
       removeUserFromTourney() {
         if (
           this.userIdToRemoveFromTourney !== null &&
@@ -786,6 +940,9 @@
       },
     },
     watch: {
+      /**
+       * Surveille les changements dans la liste des utilisateurs.
+       */
       users: {
         handler(newUsers) {
           newUsers.forEach((user) => {
@@ -799,6 +956,10 @@
         },
         immediate: true,
       },
+
+      /**
+       * Surveille les changements dans la liste des tournois.
+       */
       tournaments: {
         handler(newTournaments) {
           this.tournamentOptions = newTournaments;

@@ -13,19 +13,19 @@
     <font-awesome-icon
       v-if="fontAwesomeIcon"
       :icon="['fas', fontAwesomeIcon]"
-      class="w-5 h-5 mr-1 inline-block"
+      class="w-5 h-5 inline-block"
     />
     <component
       v-if="heroIcon"
       :is="icons[heroIcon]"
-      class="w-5 h-5 mr-1 inline-block"
+      class="w-5 h-5 inline-block"
     />
     <slot />
   </button>
 </template>
 
 <script>
-  import { TrashIcon, PencilIcon } from '@heroicons/vue/24/outline';
+  import { TrashIcon, PencilIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
   export default {
     props: {
@@ -73,6 +73,7 @@
         icons: {
           TrashIcon,
           PencilIcon,
+          PlusIcon,
         },
       };
     },

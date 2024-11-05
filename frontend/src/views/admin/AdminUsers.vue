@@ -16,6 +16,7 @@
       :showPhone="false"
       :showFilters="true"
       :editUserFunction="editUser"
+      :addUserFunction="addUser"
       @assign-tourney="handleAssignTourney"
       @remove-user-from-tourney="handleRemoveUserFromTourney"
       @delete-user="handleDeleteUser"
@@ -39,10 +40,29 @@
         />
       </template>
     </ModalComponent>
+
+    <!-- Modale pour ajouter un nouvel utilisateur -->
+    <ModalComponent
+      :isVisible="showAddUserModal"
+      title="Ajouter un utilisateur"
+      @close="closeAddUserModal"
+    >
+      <template #content>
+        <FormComponent
+          v-model="newUser"
+          :fields="userFormFields"
+          :isEditing="false"
+          @form-submit="handleAddUserSubmit"
+          @cancel="closeAddUserModal"
+          :customValidation="validateUserForm"
+        />
+      </template>
+    </ModalComponent>
   </div>
 </template>
 
 <script>
+  // Importation des composants nécessaires
   import ListUsersTable from '@/components/ListUsersTable.vue';
   import apiService from '@/services/apiService';
   import { toast } from 'vue3-toastify';
@@ -60,13 +80,14 @@
         users: [],
         tournaments: [],
         showEditUserModal: false,
+        showAddUserModal: false, // État pour la modale d'ajout
         editingUser: null,
         newUser: {
           name: '',
           email: '',
           phone: '',
           password: '',
-          roleId: '',
+          roleId: 2, // Par défaut, rôle utilisateur
         },
         formErrors: {},
         isFormValid: false,
@@ -76,6 +97,10 @@
       await this.fetchData();
     },
     methods: {
+      /**
+       * Récupère les données des utilisateurs et des tournois depuis l'API.
+       * @returns {Promise<void>}
+       */
       async fetchData() {
         try {
           const [usersResponse, tourneysResponse] = await Promise.all([
@@ -94,6 +119,10 @@
           );
         }
       },
+      /**
+       * Ouvre la modale d'édition avec les données de l'utilisateur sélectionné.
+       * @param {Object} user - L'utilisateur à éditer.
+       */
       editUser(user) {
         this.editingUser = user;
         this.newUser = {
@@ -107,17 +136,46 @@
         this.formErrors = {};
         this.isFormValid = true;
       },
+      /**
+       * Ferme la modale d'édition et réinitialise les données.
+       */
       closeEditUserModal() {
         this.showEditUserModal = false;
         this.editingUser = null;
+        this.resetNewUser();
+      },
+      /**
+       * Ouvre la modale d'ajout d'un nouvel utilisateur.
+       */
+      addUser() {
+        this.resetNewUser();
+        this.showAddUserModal = true;
+        this.formErrors = {};
+        this.isFormValid = true;
+      },
+      /**
+       * Ferme la modale d'ajout et réinitialise les données.
+       */
+      closeAddUserModal() {
+        this.showAddUserModal = false;
+        this.resetNewUser();
+      },
+      /**
+       * Réinitialise les données du nouvel utilisateur.
+       */
+      resetNewUser() {
         this.newUser = {
           name: '',
           email: '',
           phone: '',
           password: '',
-          roleId: '',
+          roleId: 2, // Par défaut, rôle utilisateur
         };
       },
+      /**
+       * Valide le formulaire d'utilisateur.
+       * @returns {Object} - Les erreurs de validation.
+       */
       validateUserForm() {
         const errors = {};
         if (!this.newUser.name) {
@@ -126,15 +184,21 @@
         if (!this.newUser.email) {
           errors.email = "L'email est obligatoire.";
         }
+        if (!this.newUser.password && !this.editingUser) {
+          errors.password = 'Le mot de passe est obligatoire.';
+        }
         // ... autres validations si nécessaire ...
         this.formErrors = errors;
         this.isFormValid = Object.keys(errors).length === 0;
         return errors;
       },
+      /**
+       * Soumet le formulaire d'édition d'un utilisateur.
+       * @returns {Promise<void>}
+       */
       async handleUserFormSubmit() {
         this.validateUserForm();
         if (!this.isFormValid) return;
-        console.log('Soumission du formulaire:', this.newUser);
         try {
           await apiService.put(`/users/${this.editingUser.id}`, this.newUser);
           toast.success('Utilisateur mis à jour avec succès!');
@@ -148,6 +212,24 @@
           toast.error("Erreur lors de la mise à jour de l'utilisateur!");
         }
       },
+      /**
+       * Soumet le formulaire d'ajout d'un nouvel utilisateur.
+       * @returns {Promise<void>}
+       */
+      async handleAddUserSubmit() {
+        this.validateUserForm();
+        if (!this.isFormValid) return;
+        try {
+          await apiService.post('/users', this.newUser);
+          toast.success('Utilisateur créé avec succès!');
+          this.closeAddUserModal();
+          await this.fetchData();
+        } catch (error) {
+          console.error("Erreur lors de la création de l'utilisateur:", error);
+          toast.error("Erreur lors de la création de l'utilisateur!");
+        }
+      },
+
       async handleAssignTourney({ userId, tourneyId }) {
         try {
           await apiService.post(`/users/${userId}/tourneys/${tourneyId}`);
@@ -187,14 +269,12 @@
           );
         }
       },
-      handleAddUser() {
-        this.$router.push('/users/create');
-      },
-      handleEditUser(userId) {
-        this.$router.push(`/users/${userId}/edit`);
-      },
     },
     computed: {
+      /**
+       * Définit les champs du formulaire d'utilisateur.
+       * @returns {Array} - Les champs du formulaire.
+       */
       userFormFields() {
         return [
           {
@@ -219,7 +299,7 @@
             name: 'password',
             label: 'Mot de passe',
             type: 'password',
-            required: false,
+            required: !this.editingUser, // Le mot de passe est requis uniquement lors de la création
           },
           {
             name: 'roleId',
