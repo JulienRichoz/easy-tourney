@@ -20,6 +20,7 @@
           <!-- Bouton pour générer les équipes, visible uniquement si teamSetup existe et si le nombre max d'équipe n'est pas atteint -->
           <ButtonComponent
             v-if="
+              !isRegistrationActive &&
               isEditable &&
               teamSetupConfigured &&
               playerTeams.length < teamSetup.maxTeamNumber
@@ -33,8 +34,9 @@
           </ButtonComponent>
         </div>
 
-        <!-- Sélecteur de statut et bouton Reset -->
+        <!-- Affichage Reset/InvitationLink/Status -->
         <div class="flex items-center ml-auto">
+          <!-- Sélecteur de statut et bouton Reset -->
           <ButtonComponent
             v-if="isEditable && playerTeams.length > 0 && !isRegistrationActive"
             @click="openModalResetTeams"
@@ -43,6 +45,28 @@
           >
             <span class="hidden sm:inline mr-auto">Toutes les équipes</span>
           </ButtonComponent>
+
+          <!-- Champ pour afficher le lien d'invitation et bouton pour le générer -->
+          <div
+            v-if="isRegistrationActive"
+            class="flex items-center space-x-2 ml-4"
+          >
+            <input
+              type="text"
+              v-model="inviteLink"
+              class="w-auto p-2 border rounded-md bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
+              readonly
+            />
+            <ButtonComponent
+              @click="generateInviteLink"
+              variant="algo"
+              fontAwesomeIcon="cog"
+            >
+              Lien Invitation
+            </ButtonComponent>
+          </div>
+
+          <!-- Sélecteur de statut pour les inscriptions -->
           <StatusSelectorComponent
             :tourneyId="tourneyId"
             label="Inscriptions:"
@@ -280,6 +304,7 @@
         teams: [], // Liste des équipes
         unassignedUsers: [], // Utilisateurs non assignés
         allUsers: [], // Tous les utilisateurs inscrits (hors admin)
+        inviteLink: '', // Stocke le lien d'invitation
         showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
@@ -463,6 +488,23 @@
           this.fetchTourneyDetails(); // Récupérer les données mises à jour
         } catch (error) {
           toast.error('Erreur lors de la réinitialisation des équipes.');
+        }
+      },
+
+      // Générer un lien d'invitation
+      async generateInviteLink() {
+        try {
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/generate-invite`
+          );
+          this.inviteLink = `${window.location.origin}/register?inviteToken=${response.data.token}`;
+          toast.success("Lien d'invitation généré avec succès !");
+        } catch (error) {
+          console.error(
+            "Erreur lors de la génération du lien d'invitation:",
+            error
+          );
+          toast.error("Erreur lors de la génération du lien d'invitation.");
         }
       },
       handleFilterChange(filter) {
