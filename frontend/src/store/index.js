@@ -26,6 +26,7 @@ export default createStore({
       state.tokenExpiration = null;
       state.inviteToken = null; // Reset du token d'invitation lors du logout
       localStorage.removeItem('inviteToken');
+      this.commit('tourney/RESET_TOURNEY_STATE');
     },
     SET_ALERT_MESSAGE(state, message) {
       state.alertMessage = message;

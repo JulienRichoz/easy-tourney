@@ -26,6 +26,16 @@ export default {
         UPDATE_STATUS(state, { key, value }) {
             state.statuses[key] = value;
         },
+        RESET_TOURNEY_STATE(state) {
+            state.currentTournamentName = '';  // Réinitialisation du nom du tournoi
+            state.statuses = {                 // Réinitialisation des statuts à un état "vide"
+                status: null,
+                fieldAssignmentStatus: null,
+                sportAssignmentStatus: null,
+                registrationStatus: null,
+                planningStatus: null,
+            };
+        }
     },
     actions: {
         async fetchTourneyStatuses({ commit }, tourneyId) {

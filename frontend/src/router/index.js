@@ -192,6 +192,9 @@ router.beforeEach(async (to, from, next) => {
         return next('/user');
       }
     }
+    if (to.query.inviteToken) {
+      store.dispatch('saveInviteToken', to.query.inviteToken); // Sauvegarde le token d’invitation
+    }
     return next(); // Poursuivre si l'utilisateur n'est pas authentifié
   }
 
