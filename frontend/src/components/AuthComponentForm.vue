@@ -98,27 +98,6 @@
           </p>
         </div>
 
-        <!-- Sélection du Rôle (uniquement pour l'inscription) -->
-        <div v-if="mode === 'register'" class="mb-6">
-          <label
-            for="role"
-            class="block text-light-form-text dark:text-dark-form-text font-semibold mb-2"
-          >
-            Rôle
-          </label>
-          <select
-            id="role"
-            v-model="formData.roleId"
-            required
-            class="w-full p-3 border rounded-md bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border-light-form-border-default dark:border-dark-form-border-default"
-          >
-            <option value="1">Admin</option>
-            <option value="2">Assistant</option>
-            <option value="3">Player</option>
-            <option value="4">Guest</option>
-          </select>
-        </div>
-
         <!-- Bouton de soumission -->
         <ButtonComponent
           variant="primary"
@@ -194,7 +173,6 @@
           name: '',
           email: '',
           password: '',
-          roleId: 3, // Valeur par défaut pour 'Player'
         },
         errors: {},
       };
@@ -234,7 +212,6 @@
           name: '',
           email: '',
           password: '',
-          roleId: 3,
         };
         this.errors = {};
       },
