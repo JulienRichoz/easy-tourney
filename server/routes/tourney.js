@@ -18,7 +18,7 @@ router.get('/', isAuthenticated, getTourneys); // Récupérer tous les tournois
 router.put('/:id', isAuthenticated, isAdmin, updateTourney); // Mettre à jour un tournoi (admin uniquement)
 router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
 router.get('/:id/statuses', isAuthenticated, isAdmin, getTourneyStatuses);
-router.post('/:id/invite', isAuthenticated, isAdmin, generateInviteToken) // Générer un token d'invitation
+router.post('/:id/generate-invite', isAuthenticated, isAdmin, generateInviteToken) // Générer un token d'invitation
 
 // Aggregate/custom routes
 router.get('/:id/teams-details', isAuthenticated, getTourneyTeamsDetails); // Team Page -> get all data required in one request
