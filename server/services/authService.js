@@ -53,9 +53,9 @@ exports.isAuthenticated = (token) => {
 };
 
 // Fonction pour générer un token d'invitation
-exports.generateInviteToken = (userId, tourneyId) => {
+exports.generateInviteToken = (tourneyId) => {
     return jwt.sign(
-        { userId, tourneyId },
+        { tourneyId, type: 'invite' },
         process.env.JWT_SECRET,
         { expiresIn: process.env.INVITE_TOKEN_EXPIRATION || '2w' }
     );

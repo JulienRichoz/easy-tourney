@@ -3,6 +3,7 @@
 const { Op } = require('sequelize');
 const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
+const authService  = require('../services/authService')
 
 /**
  * Créer un nouveau tournoi
@@ -505,19 +506,14 @@ exports.getTourneyStatuses = async (req, res) => {
 
 // Générer un token d'invitation pour un tournoi
 exports.generateInviteToken = async (req, res) => {
-    const { tourneyId } = req.params;
-
-    // Vérifie que l'utilisateur est un admin
-    if (req.user.roleId !== roles.ADMIN) {
-        return res.status(403).json({ message: 'Accès interdit.' });
-    }
-
+    const { id } = req.params; // `id` est l'identifiant du tournoi
+    
     try {
-        const token = authService.generateInviteToken(req.user.id, tourneyId);
+        // Créer un token d'invitation qui ne contient que le tourneyId
+        const token = authService.generateInviteToken(id);
         res.status(200).json({ token });
     } catch (error) {
         console.error('Erreur lors de la génération du token d\'invitation:', error);
         res.status(500).json({ message: 'Erreur serveur lors de la génération du token d\'invitation.' });
     }
 };
-

@@ -231,12 +231,31 @@ exports.getUserInfoByTourney = async (req, res) => {
 // Rejoindre un tournoi avec un token d'invitation
 exports.joinTourneyWithToken = async (req, res) => {
     const { token } = req.body;
+    console.log("Début de la fonction joinTourneyWithToken"); // Vérifie l'appel de la fonction
 
     try {
+        console.log("Token reçu:", token); // Vérifie le token reçu
+
         // Vérifie et décode le token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const { userId, tourneyId } = decoded;
+        console.log("Token décodé:", decoded); // Vérifie le contenu du token décodé
+        const { tourneyId, type } = decoded;
 
+        // Vérifie si le token est bien un token d'invitation
+        if (type !== 'invite') {
+            console.error("Erreur: ce n'est pas un token d'invitation valide.");
+            return res.status(400).json({ message: "Le token n'est pas valide pour une invitation." });
+        }
+
+        // Vérifie si le tourneyId est bien défini
+        if (!tourneyId) {
+            console.error("Erreur: tourneyId est indéfini dans le token.");
+            return res.status(400).json({ message: "Le token ne contient pas d'identifiant de tournoi valide." });
+        }
+
+        // Utiliser l'userId actuel de la session pour inscrire l'utilisateur au tournoi
+        const userId = req.user.id;
+        console.log("User id: ", userId);
         // Vérifie si l'utilisateur est déjà inscrit au tournoi
         const existingUserTourney = await UsersTourneys.findOne({
             where: { userId, tourneyId }

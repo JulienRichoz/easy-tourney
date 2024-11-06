@@ -15,7 +15,7 @@ const { isAuthenticated, isAdmin, authorizeUserOrAdmin } = require('../middlewar
 // Base URL: http://localhost:3000/api/tourneys/:tourneyId/users
 
 router.post('/', isAuthenticated, isAdmin, addUserToTourney); // Ajouter un utilisateur à un tournoi
-router.post('/join', joinTourneyWithToken)
+router.post('/join', isAuthenticated, joinTourneyWithToken) // Rejoindre un tournoi via un token
 router.post('/:userId/teams', isAuthenticated, isAdmin, assignTeamToUser); // Assigner une équipe à un utilisateur
 router.get('/', isAuthenticated, getUsersByTourney); // Récupérer tous les utilisateurs du tournoi (hors admin)
 router.get('/unassigned-users', isAuthenticated, isAdmin, getUnassignedUsersByTourney); // Récupérer les utilisateurs sans team pour un tournoi donné
