@@ -1,6 +1,7 @@
 // server/controllers/usersTourneysController.js
 const { UsersTourneys, User, Tourney, Team, Role } = require('../models');
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
 
 /**
  * Helper function to determine role based on team type.
@@ -224,5 +225,38 @@ exports.getUserInfoByTourney = async (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la récupération des informations de l\'utilisateur dans le tournoi:', error);
         res.status(500).json({ message: 'Erreur serveur lors de la récupération des informations de l\'utilisateur dans le tournoi.', error });
+    }
+};
+
+// Rejoindre un tournoi avec un token d'invitation
+exports.joinTourneyWithToken = async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        // Vérifie et décode le token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { userId, tourneyId } = decoded;
+
+        // Vérifie si l'utilisateur est déjà inscrit au tournoi
+        const existingUserTourney = await UsersTourneys.findOne({
+            where: { userId, tourneyId }
+        });
+
+        if (existingUserTourney) {
+            return res.status(400).json({ message: "Vous êtes déjà inscrit à ce tournoi." });
+        }
+
+        // Crée une nouvelle inscription au tournoi avec le rôle de "Guest"
+        const userTourney = await UsersTourneys.create({
+            userId,
+            tourneyId,
+            teamId: null,
+            tourneyRole: 'guest'
+        });
+
+        res.status(201).json({ message: 'Inscription réussie au tournoi.', userTourney });
+    } catch (error) {
+        console.error('Erreur lors de la vérification du token d\'invitation:', error);
+        res.status(400).json({ message: 'Token invalide ou expiré.' });
     }
 };
