@@ -5,17 +5,6 @@ const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, Us
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 /**
- * Helper function to determine role based on team type.
- * @param {string} type - Type of the team ('player', 'assistant').
- * @returns {string} - Corresponding role name.
- */
-const getRoleByTeamType = (type) => {
-    if (type === 'player') return 'player';
-    if (type === 'assistant') return 'assistant';
-    return 'guest'; // Default
-};
-
-/**
  * Créer un nouveau tournoi
  */
 exports.createTourney = async (req, res) => {
@@ -513,3 +502,22 @@ exports.getTourneyStatuses = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des statuts', error });
     }
 };
+
+// Générer un token d'invitation pour un tournoi
+exports.generateInviteToken = async (req, res) => {
+    const { tourneyId } = req.params;
+
+    // Vérifie que l'utilisateur est un admin
+    if (req.user.roleId !== roles.ADMIN) {
+        return res.status(403).json({ message: 'Accès interdit.' });
+    }
+
+    try {
+        const token = authService.generateInviteToken(req.user.id, tourneyId);
+        res.status(200).json({ token });
+    } catch (error) {
+        console.error('Erreur lors de la génération du token d\'invitation:', error);
+        res.status(500).json({ message: 'Erreur serveur lors de la génération du token d\'invitation.' });
+    }
+};
+
