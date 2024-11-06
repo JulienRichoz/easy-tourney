@@ -7,14 +7,16 @@ module.exports = {
       {
         userId: 1,
         tourneyId: 1,
-        teamId: null, // Guest
+        teamId: null,
+        tourneyRole: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
         userId: 2,
         tourneyId: 1,
-        teamId: null, // Admin
+        teamId: null, 
+        tourneyRole: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -22,6 +24,7 @@ module.exports = {
         userId: 3,
         tourneyId: 1,
         teamId: 1, // Assistant dans l'équipe Assistant
+        tourneyRole: 'assistant',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -29,6 +32,7 @@ module.exports = {
         userId: 4,
         tourneyId: 1,
         teamId: 2, // Joueur dans l'équipe 1
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -36,6 +40,7 @@ module.exports = {
         userId: 5,
         tourneyId: 1,
         teamId: 2, // Joueur dans l'équipe 1
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -43,6 +48,7 @@ module.exports = {
         userId: 6,
         tourneyId: 1,
         teamId: 2, // Joueur dans l'équipe 1
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -50,6 +56,7 @@ module.exports = {
         userId: 7,
         tourneyId: 1,
         teamId: 2, // Joueur dans l'équipe 1
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -57,6 +64,7 @@ module.exports = {
         userId: 8,
         tourneyId: 1,
         teamId: 3, // Joueur dans l'équipe 2
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -64,6 +72,7 @@ module.exports = {
         userId: 9,
         tourneyId: 1,
         teamId: 3, // Joueur dans l'équipe 2
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -71,6 +80,7 @@ module.exports = {
         userId: 10,
         tourneyId: 1,
         teamId: 3, // Joueur dans l'équipe 2
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -78,6 +88,7 @@ module.exports = {
         userId: 11,
         tourneyId: 1,
         teamId: 3, // Joueur dans l'équipe 2
+        tourneyRole: 'player',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
