@@ -42,14 +42,15 @@
         </button>
       </li>
       <li v-if="isAuthenticated" class="profile-section flex items-center">
-        <span
-          class="username text-light-menuText dark:text-dark-menuText font-bold mr-4"
-          >{{ userName }}</span
-        >
         <router-link
           to="/profile"
           class="profile-link text-light-profileText dark:text-dark-profileText mr-4 hover:text-light-profileHoverText dark:hover:text-dark-profileHoverText"
         >
+          <span
+            class="username text-light-menuText dark:text-dark-menuText font-bold mr-4"
+            >{{ userName }}</span
+          >
+
           <font-awesome-icon :icon="['fas', 'user']" />
         </router-link>
         <button
