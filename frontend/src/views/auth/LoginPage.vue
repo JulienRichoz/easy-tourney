@@ -11,7 +11,6 @@
 <script>
   import AuthComponentForm from '@/components/AuthComponentForm.vue';
   import apiService from '@/services/apiService';
-  import { jwtDecode } from 'jwt-decode';
   import { roles } from '@/services/permissions';
 
   export default {
@@ -37,21 +36,32 @@
           });
 
           const token = response.data.token;
-
           // Stocker le token
           localStorage.setItem('token', token);
-
-          // Décoder le token
-          const decoded = jwtDecode(token);
+          apiService.defaults.headers.common[
+            'Authorization'
+          ] = `Bearer ${token}`;
 
           // Mettre à jour le store avec les informations utilisateur
+          const userResponse = await apiService.get('/users/me');
+          const user = userResponse.data;
           this.$store.commit('SET_AUTH', {
             isAuthenticated: true,
-            user: decoded,
+            user,
           });
 
+          // Si un token d’invitation est présent, envoie la requête d’assignation
+          if (this.$store.state.inviteToken) {
+            await apiService.post(`/tourneys/join`, {
+              token: this.$store.state.inviteToken,
+            });
+            this.$store.dispatch('clearInviteToken'); // Nettoyer le token après l'assignation
+          }
+
           // Redirection selon le rôle de l'utilisateur
-          if (decoded.roleId === roles.ADMIN) {
+          // Redirection après connexion
+          const userRole = user.roleId;
+          if (userRole === roles.ADMIN) {
             this.$router.replace('/tourneys');
           } else {
             this.$router.replace('/user');

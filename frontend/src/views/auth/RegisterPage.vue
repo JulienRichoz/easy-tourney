@@ -11,6 +11,8 @@
 <script>
   import AuthComponentForm from '@/components/AuthComponentForm.vue';
   import apiService from '@/services/apiService';
+  import { jwtDecode } from 'jwt-decode';
+  import { roles } from '@/services/permissions';
 
   export default {
     name: 'RegisterPage',
@@ -29,15 +31,52 @@
         this.isSubmitting = true;
 
         try {
-          await apiService.post('/auth/register', {
+          // Créer le nouvel utilisateur
+          const response = await apiService.post('/auth/register', {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            roleId: formData.roleId,
           });
 
-          // Rediriger vers la page de connexion après l'inscription
-          this.$router.push('/login');
+          const token = response.data.token;
+          // Stocker le token dans le localStorage
+          localStorage.setItem('token', token);
+          apiService.defaults.headers.common[
+            'Authorization'
+          ] = `Bearer ${token}`;
+
+          // Mettre à jour le store Vuex avec les informations utilisateur
+          const userResponse = await apiService.get('/users/me');
+          const user = userResponse.data;
+          this.$store.commit('SET_AUTH', {
+            isAuthenticated: true,
+            user,
+          });
+
+          // Vérifier si un token d’invitation est présent dans le store Vuex
+          const inviteToken = this.$store.state.inviteToken;
+          if (inviteToken) {
+            await apiService.post(`/tourneys/join`, {
+              token: inviteToken,
+            });
+            this.$store.dispatch('clearInviteToken'); // Nettoyer le token d'invitation après usage
+          }
+
+          // Redirection après inscription
+          const userRole = user.roleId;
+          if (userRole === roles.ADMIN) {
+            this.$router.replace('/tourneys'); // Admin vers tournois
+          } else {
+            // Utiliser l'inviteToken pour la redirection
+            const tourneyId = inviteToken
+              ? jwtDecode(inviteToken).tourneyId
+              : null;
+            if (tourneyId) {
+              this.$router.replace(`/tourneys/${tourneyId}`);
+            } else {
+              this.$router.replace('/user'); // Autres utilisateurs vers page user par défaut
+            }
+          }
         } catch (err) {
           console.error("Erreur lors de l'inscription:", err);
           if (err.response && err.response.data && err.response.data.message) {
