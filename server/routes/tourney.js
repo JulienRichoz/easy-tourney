@@ -4,7 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, getTourneyTeamsDetails, getTourneyStatuses, generateInviteToken,
+    createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, getTourneyTeamsDetails, getTourneyStatuses, generateInviteToken, joinTourneyWithToken
 } = require('../controllers/tourneyController');
 
 const { isAuthenticated, isAdmin } = require('../middlewares');
@@ -19,6 +19,7 @@ router.put('/:id', isAuthenticated, isAdmin, updateTourney); // Mettre à jour u
 router.delete('/:id', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
 router.get('/:id/statuses', isAuthenticated, isAdmin, getTourneyStatuses);
 router.post('/:id/generate-invite', isAuthenticated, isAdmin, generateInviteToken) // Générer un token d'invitation
+router.post('/join', isAuthenticated, joinTourneyWithToken) // Rejoindre un tournoi via un token
 
 // Aggregate/custom routes
 router.get('/:id/teams-details', isAuthenticated, getTourneyTeamsDetails); // Team Page -> get all data required in one request

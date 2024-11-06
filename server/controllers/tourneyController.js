@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 const authService  = require('../services/authService')
+const jwt = require('jsonwebtoken');
 
 /**
  * Créer un nouveau tournoi
@@ -507,7 +508,7 @@ exports.getTourneyStatuses = async (req, res) => {
 // Générer un token d'invitation pour un tournoi
 exports.generateInviteToken = async (req, res) => {
     const { id } = req.params; // `id` est l'identifiant du tournoi
-    
+
     try {
         // Créer un token d'invitation qui ne contient que le tourneyId
         const token = authService.generateInviteToken(id);
@@ -517,3 +518,57 @@ exports.generateInviteToken = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur lors de la génération du token d\'invitation.' });
     }
 };
+
+
+// Rejoindre un tournoi avec un token d'invitation
+exports.joinTourneyWithToken = async (req, res) => {
+    const { token } = req.body;
+    console.log("Début de la fonction joinTourneyWithToken"); // Vérifie l'appel de la fonction
+
+    try {
+        console.log("Token reçu:", token); // Vérifie le token reçu
+
+        // Vérifie et décode le token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Token décodé:", decoded); // Vérifie le contenu du token décodé
+        const { tourneyId, type } = decoded;
+
+        // Vérifie si le token est bien un token d'invitation
+        if (type !== 'invite') {
+            console.error("Erreur: ce n'est pas un token d'invitation valide.");
+            return res.status(400).json({ message: "Le token n'est pas valide pour une invitation." });
+        }
+
+        // Vérifie si le tourneyId est bien défini
+        if (!tourneyId) {
+            console.error("Erreur: tourneyId est indéfini dans le token.");
+            return res.status(400).json({ message: "Le token ne contient pas d'identifiant de tournoi valide." });
+        }
+
+        // Utiliser l'userId actuel de la session pour inscrire l'utilisateur au tournoi
+        const userId = req.user.id;
+        console.log("User id: ", userId);
+        // Vérifie si l'utilisateur est déjà inscrit au tournoi
+        const existingUserTourney = await UsersTourneys.findOne({
+            where: { userId, tourneyId }
+        });
+
+        if (existingUserTourney) {
+            return res.status(400).json({ message: "Vous êtes déjà inscrit à ce tournoi." });
+        }
+
+        // Crée une nouvelle inscription au tournoi avec le rôle de "Guest"
+        const userTourney = await UsersTourneys.create({
+            userId,
+            tourneyId,
+            teamId: null,
+            tourneyRole: 'guest'
+        });
+
+        res.status(201).json({ message: 'Inscription réussie au tournoi.', userTourney });
+    } catch (error) {
+        console.error('Erreur lors de la vérification du token d\'invitation:', error);
+        res.status(400).json({ message: 'Token invalide ou expiré.' });
+    }
+};
+
