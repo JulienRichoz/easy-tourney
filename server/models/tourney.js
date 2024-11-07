@@ -13,7 +13,8 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'CASCADE', // Supprimer les terrains si le tournoi est supprimé
             });
             // Association avec Team
-             Tourney.hasMany(models.Team, { as: 'teams', foreignKey: 'tourneyId' });
+            Tourney.hasMany(models.Team, { as: 'teams', foreignKey: 'tourneyId' });
+
             // Association avec les utilisateurs via UsersTourneys (relation N-N)
             Tourney.belongsToMany(models.User, {
                 through: models.UsersTourneys, // Table intermédiaire
@@ -24,8 +25,15 @@ module.exports = (sequelize, DataTypes) => {
 
             // Association inverse pour accéder aux UsersTourneys
             Tourney.hasMany(models.UsersTourneys, { foreignKey: 'tourneyId', as: 'usersTourneys' });
-        }
-    }
+
+            // Association pour accéder aux tokens d'invitation
+            Tourney.hasMany(models.InviteToken, {
+                foreignKey: 'tourneyId',
+                as: 'inviteTokens',
+                onDelete: 'CASCADE',
+            });
+        };
+    };
 
     Tourney.init({
         name: {
