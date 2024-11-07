@@ -16,6 +16,7 @@
         </h2>
       </slot>
       <slot name="content"></slot>
+      <slot name="footer"></slot>
     </div>
   </div>
 </template>

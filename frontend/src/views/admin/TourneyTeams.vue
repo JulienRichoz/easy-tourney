@@ -10,6 +10,7 @@
           <TitleComponent title="Gestion des équipes"></TitleComponent>
           <!-- Bouton Réglages -->
           <ButtonComponent
+            v-if="!isRegistrationActive"
             fontAwesomeIcon="cog"
             @click="openTeamSetupModal"
             variant="secondary"
@@ -51,20 +52,125 @@
             v-if="isRegistrationActive"
             class="flex items-center space-x-2 ml-4"
           >
-            <input
-              type="text"
-              v-model="inviteLink"
-              class="w-auto p-2 border rounded-md bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
-              readonly
-            />
             <ButtonComponent
-              @click="generateInviteLink"
-              variant="algo"
-              fontAwesomeIcon="cog"
+              @click="openInviteTokenModal"
+              variant="success"
+              fontAwesomeIcon="link"
             >
               Lien Invitation
             </ButtonComponent>
           </div>
+          <ModalComponent
+            :isVisible="showInviteTokenModal"
+            title="Gestion des liens d'invitation"
+            @close="closeInviteTokenModal"
+          >
+            <template #content>
+              <div class="flex justify-between items-center mb-4">
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    v-model="showValidOnly"
+                    class="form-checkbox"
+                  />
+                  <span class="ml-2">Afficher liens valides</span>
+                </label>
+                <ButtonComponent
+                  @click="showAddTokenForm = !showAddTokenForm"
+                  variant="primary"
+                  fontAwesomeIcon="plus"
+                >
+                  Générer un lien
+                </ButtonComponent>
+              </div>
+              <div v-if="showAddTokenForm" class="mb-4">
+                <FormComponent
+                  v-model="inviteTokenForm"
+                  :fields="inviteTokenFields"
+                  @form-submit="handleGenerateInviteToken"
+                  @cancel="showAddTokenForm = false"
+                />
+              </div>
+
+              <ul class="space-y-2">
+                <li
+                  v-for="token in filteredSortedInviteTokens"
+                  :key="token.id"
+                  class="p-4 border rounded-md flex justify-between items-center"
+                  :class="{
+                    'bg-green-100':
+                      token.isValid && new Date(token.expiresAt) > new Date(),
+                    'bg-orange-100':
+                      token.isValid &&
+                      new Date(token.expiresAt) <=
+                        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                    'bg-red-100':
+                      !token.isValid || new Date(token.expiresAt) <= new Date(),
+                  }"
+                >
+                  <div class="flex-1">
+                    <label class="font-semibold">Lien d'invitation :</label>
+                    <font-awesome-icon
+                      icon="copy"
+                      class="ml-2 cursor-pointer text-gray-600 hover:text-gray-800"
+                      @click="copyToClipboard(token.token)"
+                      title="Copier le lien"
+                    />
+                    <div class="flex items-center">
+                      <input
+                        type="text"
+                        :value="`${BASE_URL}/register?inviteToken=${token.token}`"
+                        readonly
+                        class="w-full p-1 border rounded-md overflow-x-auto"
+                        style="max-width: 100%"
+                      />
+                    </div>
+                    <p>
+                      Expire le :
+                      {{ new Date(token.expiresAt).toLocaleDateString() }}
+                    </p>
+                    <p>
+                      Statut :
+                      <span
+                        :class="{
+                          'text-green-600': token.isValid,
+                          'text-red-600': !token.isValid,
+                        }"
+                      >
+                        {{ token.isValid ? 'Valide' : 'Invalide' }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="flex flex-col items-end">
+                    <ButtonComponent
+                      v-if="token.isValid"
+                      @click="invalidateToken(token.id)"
+                      variant="danger"
+                    >
+                      Invalider
+                    </ButtonComponent>
+                    <ButtonComponent
+                      v-else
+                      @click="validateToken(token.id)"
+                      variant="success"
+                    >
+                      Valider
+                    </ButtonComponent>
+                  </div>
+                </li>
+              </ul>
+            </template>
+            <template #footer>
+              <div class="flex mt-4">
+                <ButtonComponent
+                  @click="closeInviteTokenModal"
+                  variant="secondary"
+                >
+                  Annuler
+                </ButtonComponent>
+              </div>
+            </template>
+          </ModalComponent>
 
           <!-- Sélecteur de statut pour les inscriptions -->
           <StatusSelectorComponent
@@ -105,11 +211,20 @@
             <ButtonComponent
               v-if="unassignedUsers.length > 0"
               @click="navigateToUnassignedUsers"
-              variant="info"
+              variant="primary"
               class="flex items-left space-x-2"
               fontAwesomeIcon="user"
             >
-              <span>Assigner Joueurs ({{ unassignedUsers.length }})</span>
+              <span>Joueurs sans groupes ({{ unassignedUsers.length }})</span>
+            </ButtonComponent>
+            <!-- Bouton Envoyer Email -->
+            <ButtonComponent
+              variant="info"
+              fontAwesomeIcon="envelope"
+              @click="sendEmailToAll"
+              :disabled="allUsers.length === 0"
+            >
+              <span class="hidden sm:inline">Envoyer Email</span>
             </ButtonComponent>
           </div>
           <!-- Informations supplémentaires -->
@@ -282,6 +397,7 @@
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
+  const BASE_URL = apiService.defaults.baseURL.replace('/api', ''); // Supprime '/api' pour obtenir l'URL de base complète
 
   export default {
     components: {
@@ -300,6 +416,7 @@
     },
     data() {
       return {
+        BASE_URL,
         tourneyId: this.$route.params.id, // Récupération du tourneyId depuis les params
         teams: [], // Liste des équipes
         unassignedUsers: [], // Utilisateurs non assignés
@@ -358,6 +475,23 @@
           { value: 'draft', label: 'Fermées' },
           { value: 'active', label: 'Ouvertes' },
           { value: 'completed', label: 'Terminées' },
+        ],
+        // TOKEN INVITSATION
+        showInviteTokenModal: false,
+        inviteTokens: [], // Liste des tokens récupérés
+        showValidOnly: true, // Pour filtrer uniquement les tokens valides
+        showAddTokenForm: false,
+        inviteTokenForm: {
+          expiresInDays: 7, // Durée par défaut en jours
+        },
+        inviteTokenFields: [
+          {
+            name: 'expiresInDays',
+            label: 'Durée de validité (jours)',
+            type: 'number',
+            required: true,
+            min: 1, // Valeur minimale
+          },
         ],
       };
     },
@@ -425,6 +559,23 @@
           },
         ];
       },
+      filteredSortedInviteTokens() {
+        let tokens = this.inviteTokens;
+
+        // Filtrer les tokens si l'option est cochée
+        if (this.showValidOnly) {
+          tokens = tokens.filter(
+            (t) => t.isValid && new Date(t.expiresAt) > new Date()
+          );
+        }
+
+        // Trier les tokens : valides en premier
+        return tokens.sort((a, b) => {
+          const aValid = a.isValid && new Date(a.expiresAt) > new Date();
+          const bValid = b.isValid && new Date(b.expiresAt) > new Date();
+          return bValid - aValid;
+        });
+      },
     },
     methods: {
       // Mapper les actions du module `tourney`
@@ -491,22 +642,85 @@
         }
       },
 
-      // Générer un lien d'invitation
-      async generateInviteLink() {
+      /*
+       * GESTION TOKEN INVITATION
+       */
+
+      openInviteTokenModal() {
+        this.showInviteTokenModal = true;
+      },
+      closeInviteTokenModal() {
+        this.showInviteTokenModal = false;
+        this.showAddTokenForm = false; // Réinitialiser le formulaire
+      },
+      async handleGenerateInviteToken() {
         try {
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/generate-invite`
+            `/tourneys/${this.tourneyId}/invite-token`,
+            {
+              expiresInDays: this.inviteTokenForm.expiresInDays,
+            }
           );
-          this.inviteLink = `${window.location.origin}/register?inviteToken=${response.data.token}`;
+          this.inviteLink = `${BASE_URL}/register?inviteToken=${response.data.token}`;
           toast.success("Lien d'invitation généré avec succès !");
+          this.showAddTokenForm = false;
+          this.inviteTokenForm.expiresInDays = 7; // Réinitialiser le formulaire
+          this.fetchInviteTokens(); // Récupère les tokens après la création
         } catch (error) {
-          console.error(
-            "Erreur lors de la génération du lien d'invitation:",
-            error
-          );
-          toast.error("Erreur lors de la génération du lien d'invitation.");
+          console.error('Erreur lors de la génération du token:', error);
+          toast.error('Erreur lors de la génération du token.');
         }
       },
+
+      async invalidateToken(tokenId) {
+        try {
+          await apiService.patch(
+            `/tourneys/${this.tourneyId}/invite-token/${tokenId}/invalidate`
+          );
+          toast.success('Token invalidé avec succès.');
+          this.fetchInviteTokens(); // Actualiser la liste
+        } catch (error) {
+          console.error("Erreur lors de l'invalidation du token:", error);
+          toast.error("Erreur lors de l'invalidation du token.");
+        }
+      },
+      async validateToken(tokenId) {
+        try {
+          await apiService.patch(
+            `/tourneys/${this.tourneyId}/invite-token/${tokenId}/validate`
+          );
+          toast.success('Token validé avec succès.');
+          this.fetchInviteTokens(); // Actualiser la liste
+        } catch (error) {
+          console.error('Erreur lors de la validation du token:', error);
+          toast.error('Erreur lors de la validation du token.');
+        }
+      },
+
+      async fetchInviteTokens() {
+        try {
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/invite-token`
+          );
+          this.inviteTokens = response.data.inviteTokens;
+        } catch (error) {
+          console.error('Erreur lors de la récupération des tokens:', error);
+          toast.error('Erreur lors de la récupération des tokens.');
+        }
+      },
+      copyToClipboard(token) {
+        navigator.clipboard.writeText(
+          `${BASE_URL}/register?inviteToken=${token}`
+        );
+        toast.success('Lien copié dans le presse-papiers !');
+      },
+      toggleValidOnly() {
+        this.showValidOnly = !this.showValidOnly;
+      },
+
+      /**
+       *  GESTION DES FILTRES ET EQUIPES
+       **/
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
@@ -535,6 +749,9 @@
         this.$router.push(`/tourneys/${this.tourneyId}/unassigned-users`);
       },
 
+      /*
+       * GESTION DES POP UP
+       */
       openAddTeamModal() {
         this.editingTeamId = null;
         this.newTeam = {
@@ -643,6 +860,21 @@
           toast.error('Erreur lors de la configuration des équipes.');
         }
       },
+      /**
+       * Envoie un email à tous les utilisateurs inscrits.
+       */
+      sendEmailToAll() {
+        console.log(this.allUsers);
+        const emails = this.allUsers
+          .map((userTourney) => userTourney.user.email)
+          .filter((email) => email);
+        if (emails.length === 0) {
+          toast.error("Il n'y a aucun utilisateur pour envoyer un email.");
+          return;
+        }
+        const mailtoLink = `mailto:${emails.join(',')}`;
+        window.location.href = mailtoLink;
+      },
 
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
@@ -716,6 +948,7 @@
     },
     mounted() {
       this.fetchTourneyDetails();
+      this.fetchInviteTokens();
     },
   };
 </script>

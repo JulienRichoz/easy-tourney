@@ -37,7 +37,7 @@
           @click="isAutoFilled ? validateAssignments() : autoFillGroups()"
         >
           <span class="hidden sm:inline">
-            {{ isAutoFilled ? 'Valider' : 'Assigner tous les joueurs' }}
+            {{ isAutoFilled ? 'Valider' : 'Assignation Automatique' }}
           </span>
         </ButtonComponent>
         <ButtonComponent
