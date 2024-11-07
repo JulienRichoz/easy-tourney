@@ -314,22 +314,17 @@
             return;
           }
 
-          for (let i = 1; i <= numberOfFields; i++) {
-            const newField = {
-              name: `Terrain ${i}`,
-              description: '',
-              tourneyId: this.tourneyId,
-            };
-            await apiService.post(
-              `/tourneys/${this.tourneyId}/fields`,
-              newField
-            );
-          }
+          // Créer plusieurs terrains en 1 requête post
+          await apiService.post(`/tourneys/${this.tourneyId}/fields/multiple`, {
+            numberOfFields,
+          });
+          toast.success(`${numberOfFields} terrains créés avec succès !`);
 
           this.fetchFieldDetails();
           this.closeMultipleFieldsModal();
         } catch (error) {
           console.error('Erreur lors de la création des terrains:', error);
+          toast.error('Erreur lors de la création des terrains.');
         } finally {
           this.isSubmitting = false;
         }
