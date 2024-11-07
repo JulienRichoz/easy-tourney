@@ -17,7 +17,7 @@ router.get('/:tourneyId', isAuthenticated, getTourneyById); // Récupérer un to
 router.get('/', isAuthenticated, getTourneys); // Récupérer tous les tournois
 router.put('/:tourneyId', isAuthenticated, isAdmin, updateTourney); // Mettre à jour un tournoi (admin uniquement)
 router.delete('/:tourneyId', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
-router.get('/:tourneyId/statuses', isAuthenticated, isAdmin, getTourneyStatuses); // Récupérer tous les statuts d'un tournoi
+router.get('/:tourneyId/statuses', isAuthenticated, authorizeTournamentAccess, getTourneyStatuses); // Récupérer tous les statuts d'un tournoi
 router.get('/:tourneyId/registration-status', isAuthenticated, authorizeTournamentAccess, getRegistrationStatus); // Récupérer le statut d'inscription pour un user
 
 router.post('/join', isAuthenticated, joinTourneyWithToken) // Rejoindre un tournoi via un token

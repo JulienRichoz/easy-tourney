@@ -87,9 +87,9 @@
               ? jwtDecode(inviteToken).tourneyId
               : null;
             if (tourneyId) {
-              this.$router.replace(`/tourneys/${tourneyId}`);
+              this.$router.replace(`/tourneys/${tourneyId}/join-team`); // (`/tourneys/${tourneyId}`);
             } else {
-              this.$router.replace('/user'); // Autres utilisateurs vers page user par défaut
+              this.$router.replace('/profile'); // Autres utilisateurs vers page user par défaut
             }
           }
         } catch (err) {
