@@ -1,9 +1,8 @@
 // server/controllers/tourneyController.js
 
 const { Op } = require('sequelize');
-const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role } = require('../models');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role, InviteToken } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
-const authService  = require('../services/authService')
 const jwt = require('jsonwebtoken');
 
 /**
@@ -478,7 +477,6 @@ exports.getTourneyTeamsDetails = async (req, res) => {
   }
 };
 
-
 /**
  * Récupérer les statuts d'un tournoi
  */
@@ -505,21 +503,9 @@ exports.getTourneyStatuses = async (req, res) => {
     }
 };
 
-// Générer un token d'invitation pour un tournoi
-exports.generateInviteToken = async (req, res) => {
-    const { id } = req.params; // `id` est l'identifiant du tournoi
-
-    try {
-        // Créer un token d'invitation qui ne contient que le tourneyId
-        const token = authService.generateInviteToken(id);
-        res.status(200).json({ token });
-    } catch (error) {
-        console.error('Erreur lors de la génération du token d\'invitation:', error);
-        res.status(500).json({ message: 'Erreur serveur lors de la génération du token d\'invitation.' });
-    }
-};
-
-// Rejoindre un tournoi avec un token d'invitation
+/*
+* Rejointe un tournoi via un token d'invitation
+*/
 exports.joinTourneyWithToken = async (req, res) => {
     const { token } = req.body;
 
@@ -527,6 +513,7 @@ exports.joinTourneyWithToken = async (req, res) => {
         // Vérifie et décode le token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { tourneyId, type } = decoded;
+        console.log("Token décodé avec succès :", decoded);
 
         // Vérifie si le token est bien un token d'invitation
         if (type !== 'invite') {
@@ -549,7 +536,11 @@ exports.joinTourneyWithToken = async (req, res) => {
 
         // Vérifie l'état des inscriptions du tournoi
         const tourney = await Tourney.findByPk(tourneyId);
-        if (!tourney || tourney.registrationStatus !== 'active') {
+        // Vérifier que le tournoi existe
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé.' });
+        }
+        if (tourney.registrationStatus !== 'active') {
             return res.status(400).json({ message: "Les inscriptions pour ce tournoi ne sont pas ouvertes." });
         }
 
