@@ -28,6 +28,8 @@
     methods: {
       async handleLogin(formData) {
         this.error = '';
+        this.toastSuccess = null;
+        this.toastError = null;
         this.isSubmitting = true;
 
         try {
@@ -68,6 +70,7 @@
                     'Impossible de rejoindre le tournoi.'
                 );
               } else {
+                this.toastError = 'Erreur lors de la jonction au tournoi.';
                 toast.error('Erreur lors de la jonction au tournoi.');
               }
               this.$store.dispatch('clearInviteToken'); // Nettoyer le token même si l'appel échoue
@@ -78,9 +81,21 @@
           // Redirection après connexion
           const userRole = user.roleId;
           if (userRole === roles.ADMIN) {
-            this.$router.replace('/tourneys');
+            this.$router.replace('/tourneys').then(() => {
+              if (this.toastSuccess) {
+                toast.success(this.toastSuccess);
+              } else if (this.toastError) {
+                toast.error(this.toastError);
+              }
+            });
           } else {
-            this.$router.replace('/user');
+            this.$router.replace('/profile').then(() => {
+              if (this.toastSuccess) {
+                toast.success(this.toastSuccess);
+              } else if (this.toastError) {
+                toast.error(this.toastError);
+              }
+            });
           }
         } catch (err) {
           console.error('Erreur lors de la connexion:', err);

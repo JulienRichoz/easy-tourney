@@ -215,7 +215,7 @@
 
       <!-- Colonne droite : Tournois -->
       <div class="w-full md:w-1/2 md:pl-4 mt-8 md:mt-0">
-        <h2 class="text-2xl font-semibold mb-4">Tournois</h2>
+        <h2 class="text-2xl font-semibold mb-4">Tournois Inscrits</h2>
         <!-- Si l'utilisateur n'est pas admin, on affiche simplement la liste des tournois -->
         <div v-if="!isAdmin">
           <ul>
