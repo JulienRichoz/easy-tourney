@@ -12,6 +12,7 @@
   import AuthComponentForm from '@/components/AuthComponentForm.vue';
   import apiService from '@/services/apiService';
   import { roles } from '@/services/permissions';
+  import { toast } from 'vue3-toastify';
 
   export default {
     name: 'LoginPage',
@@ -52,10 +53,25 @@
 
           // Si un token d’invitation est présent, envoie la requête d’assignation
           if (this.$store.state.inviteToken) {
-            await apiService.post(`/tourneys/join`, {
-              token: this.$store.state.inviteToken,
-            });
-            this.$store.dispatch('clearInviteToken'); // Nettoyer le token après l'assignation
+            try {
+              await apiService.post(`/tourneys/join`, {
+                token: this.$store.state.inviteToken,
+              });
+              this.$store.dispatch('clearInviteToken'); // Nettoyer le token après l'assignation
+              toast.success('Vous avez rejoint le tournoi avec succès.');
+            } catch (err) {
+              console.error('Erreur lors de la jonction au tournoi:', err);
+              if (err.response && err.response.status === 400) {
+                // Afficher le message d'erreur renvoyé par le serveur
+                toast.error(
+                  err.response.data.message ||
+                    'Impossible de rejoindre le tournoi.'
+                );
+              } else {
+                toast.error('Erreur lors de la jonction au tournoi.');
+              }
+              this.$store.dispatch('clearInviteToken'); // Nettoyer le token même si l'appel échoue
+            }
           }
 
           // Redirection selon le rôle de l'utilisateur
