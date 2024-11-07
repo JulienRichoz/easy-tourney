@@ -81,7 +81,8 @@ const authorizeTournamentAccess = async (req, res, next) => {
     try {
         const userId = req.user.id; // ID de l'utilisateur actuel à partir du token
         const tourneyId = parseInt(req.params.tourneyId, 10); // ID du tournoi à partir des paramètres de la route
-        console.log('userId, tourneyId: ', userId, tourneyId);
+        const userRole = req.user.roleId;
+        if(userRole === roles.ADMIN) return next();
         // Vérifier si l'utilisateur est associé au tournoi
         const userTourney = await UsersTourneys.findOne({
             where: {
