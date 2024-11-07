@@ -57,7 +57,7 @@
               variant="success"
               fontAwesomeIcon="link"
             >
-              Lien Invitation
+              Lien d'invitation
             </ButtonComponent>
           </div>
           <ModalComponent
@@ -166,7 +166,7 @@
                   @click="closeInviteTokenModal"
                   variant="secondary"
                 >
-                  Annuler
+                  Fermer
                 </ButtonComponent>
               </div>
             </template>
@@ -383,7 +383,7 @@
 
 <script>
   import { mapState, mapActions } from 'vuex';
-  import apiService from '@/services/apiService';
+  import apiService, { BASE_URL } from '@/services/apiService';
   import CardAddComponent from '@/components/CardAddComponent.vue';
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
@@ -397,7 +397,6 @@
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
-  const BASE_URL = apiService.defaults.baseURL.replace('/api', ''); // Supprime '/api' pour obtenir l'URL de base complète
 
   export default {
     components: {
