@@ -25,6 +25,40 @@ exports.createField = async (req, res) => {
     }
 };
 
+// Créer plusieurs terrains pour un tournoi
+exports.createMultipleFields = async (req, res) => {
+    const { tourneyId } = req.params;
+    const { numberOfFields } = req.body; // Récupérer le nombre de terrains à créer
+
+    if (!numberOfFields || numberOfFields < 1) {
+        return res.status(400).json({ error: 'Veuillez fournir un nombre valide de terrains à créer.' });
+    }
+
+    try {
+        const tourney = await Tourney.findByPk(tourneyId);
+        if (!tourney) {
+            return res.status(404).json({ error: 'Tournoi introuvable' });
+        }
+
+        // Créer un tableau de terrains à insérer en une seule requête
+        const fields = [];
+        for (let i = 1; i <= numberOfFields; i++) {
+            fields.push({ name: `Terrain ${i}`, description: '', tourneyId });
+        }
+
+        // Insérer les terrains en une seule requête
+        const createdFields = await Field.bulkCreate(fields);
+
+        // Mettre à jour les statuts après la création des terrains
+        await checkAndUpdateStatuses(tourneyId);
+
+        res.status(201).json({ message: `${numberOfFields} terrains créés avec succès`, fields: createdFields });
+    } catch (error) {
+        console.error('Erreur lors de la création des terrains:', error);
+        res.status(500).json({ error: 'Erreur lors de la création des terrains' });
+    }
+};
+
 // Récupérer tous les terrains d'un tournoi
 exports.getFieldsByTourneyId = async (req, res) => {
     const { tourneyId } = req.params;

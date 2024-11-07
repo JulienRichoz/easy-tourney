@@ -1,7 +1,7 @@
 // server/routes/field.js
 const express = require('express');
 
-const { createField, getFieldsByTourneyId, getFieldById, updateField, deleteField, deleteAllTourneyFields } = require('../controllers/fieldController');
+const { createField, createMultipleFields, getFieldsByTourneyId, getFieldById, updateField, deleteField, deleteAllTourneyFields } = require('../controllers/fieldController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId dans les contrôleurs
@@ -10,6 +10,7 @@ const router = express.Router({ mergeParams: true }); // mergeParams pour accéd
 // http://localhost:3000/api/tourneys/:tourneyId/fields
 
 router.post('/', isAuthenticated, isAdmin, createField); // Créer un terrain (admin uniquement)
+router.post('/multiple', isAuthenticated, isAdmin, createMultipleFields);
 router.get('/', isAuthenticated, getFieldsByTourneyId); // Récupérer tous les terrains d'un tournoi
 router.get('/:id', isAuthenticated, getFieldById); // Récupérer un terrain spécifique par son ID
 router.put('/:id', isAuthenticated, isAdmin, updateField); // Mettre à jour un terrain (admin uniquement)
