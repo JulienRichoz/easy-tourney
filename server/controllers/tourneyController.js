@@ -519,35 +519,43 @@ exports.generateInviteToken = async (req, res) => {
     }
 };
 
-
 // Rejoindre un tournoi avec un token d'invitation
 exports.joinTourneyWithToken = async (req, res) => {
     const { token } = req.body;
-    console.log("Début de la fonction joinTourneyWithToken"); // Vérifie l'appel de la fonction
 
     try {
-        console.log("Token reçu:", token); // Vérifie le token reçu
-
         // Vérifie et décode le token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Token décodé:", decoded); // Vérifie le contenu du token décodé
         const { tourneyId, type } = decoded;
 
         // Vérifie si le token est bien un token d'invitation
         if (type !== 'invite') {
-            console.error("Erreur: ce n'est pas un token d'invitation valide.");
             return res.status(400).json({ message: "Le token n'est pas valide pour une invitation." });
         }
 
-        // Vérifie si le tourneyId est bien défini
-        if (!tourneyId) {
-            console.error("Erreur: tourneyId est indéfini dans le token.");
-            return res.status(400).json({ message: "Le token ne contient pas d'identifiant de tournoi valide." });
+        // Vérifie si le token est valide et non expiré dans la base de données
+        const inviteToken = await InviteToken.findOne({
+            where: { token, tourneyId, isValid: true }
+        });
+
+        if (!inviteToken) {
+            return res.status(400).json({ message: 'Token invalide ou expiré.' });
+        }
+
+        // Vérifie que le token n'est pas expiré
+        if (new Date() > inviteToken.expiresAt) {
+            return res.status(400).json({ message: 'Le token a expiré.' });
+        }
+
+        // Vérifie l'état des inscriptions du tournoi
+        const tourney = await Tourney.findByPk(tourneyId);
+        if (!tourney || tourney.registrationStatus !== 'active') {
+            return res.status(400).json({ message: "Les inscriptions pour ce tournoi ne sont pas ouvertes." });
         }
 
         // Utiliser l'userId actuel de la session pour inscrire l'utilisateur au tournoi
         const userId = req.user.id;
-        console.log("User id: ", userId);
+
         // Vérifie si l'utilisateur est déjà inscrit au tournoi
         const existingUserTourney = await UsersTourneys.findOne({
             where: { userId, tourneyId }
@@ -571,4 +579,5 @@ exports.joinTourneyWithToken = async (req, res) => {
         res.status(400).json({ message: 'Token invalide ou expiré.' });
     }
 };
+
 
