@@ -62,8 +62,8 @@
           warning:
             'bg-light-buttonVariants-warning-default dark:bg-dark-buttonVariants-warning-default text-white hover:bg-light-buttonVariants-warning-hover dark:hover:bg-dark-buttonVariants-warning-hover',
           gray: 'bg-light-buttonVariants-disabled-default dark:bg-dark-buttonVariants-disabled-default text-white',
-          info: 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700',
-          algo: 'bg-purple-600 dark:bg-purple-700 text-white hover:bg-purple-700 dark:hover:bg-purple-800',
+          info: 'bg-light-buttonVariants-info-default dark:bg-dark-buttonVariants-info-default text-white hover:bg-light-buttonVariants-info-hover dark:hover:bg-dark-buttonVariants-info-hover',
+          algo: 'bg-light-buttonVariants-algo-default dark:bg-dark-buttonVariants-algo-default text-white hover:bg-light-buttonVariants-algo-hover dark:hover:bg-dark-buttonVariants-algo-hover',
         };
         return variants[this.variant] || variants.primary;
       },

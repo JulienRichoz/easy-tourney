@@ -52,6 +52,14 @@ module.exports = {
               default: '#eab308', // yellow-500
               hover: '#ca8a04',   // yellow-600
             },
+            info: {
+              default: '#3b82f6', // blue-500
+              hover: '#2563eb',   // blue-600
+            },
+            algo: {
+              default: '#9333ea', // purple-600
+              hover: '#7e22ce',   // purple-700
+            },
             disabled: {
               default: '#9ca3af', // gray-400
             },
@@ -117,6 +125,14 @@ module.exports = {
             warning: {
               default: '#ca8a04', // yellow-600 (jaune plus ocre)
               hover: '#a16207',   // yellow-700
+            },
+            info: {
+              default: '#2563eb', // blue-600
+              hover: '#1d4ed8'   // blue-700
+            },
+            algo: {
+              default: '#7e22ce', // purple-700
+              hover: '#6b21a8',   // purple-800
             },
             disabled: {
               default: '#6b7280', // gray-500
