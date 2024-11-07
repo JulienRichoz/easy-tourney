@@ -167,6 +167,24 @@ const routes = [
     component: AdminUserProfile,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
+
+  /*
+  * USER ROUTES
+  */
+  // Route pour lister et rejoindre une équipe
+  {
+    path: '/tourneys/:id/join-team',
+    name: 'TourneyTeamsUser',
+    component: () => import('@/views/user/TourneyTeamsUser.vue'),
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
+  },
+  // Route détail d'un équipe
+  {
+    path: '/tourneys/:id/teams/:teamId/details',
+    name: 'TourneyTeamDetailsUser',
+    component: () => import('@/views/user/TourneyTeamDetailsUser.vue'),
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
+  }
 ];
 
 // Configuration du routeur Vue
