@@ -101,7 +101,7 @@
     },
     methods: {
       async fetchData() {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
         try {
           const response = await apiService.get(
@@ -155,7 +155,7 @@
       },
 
       async handleAssignTeam({ userId, teamId }) {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         try {
           await apiService.post(
             `/tourneys/${tourneyId}/users/${userId}/teams`,
@@ -173,7 +173,7 @@
       },
 
       async handleRemoveUser(userId) {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
         try {
           await apiService.delete(
@@ -194,7 +194,7 @@
       },
 
       async assignUnassignedUserToTeam() {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
         const userId = this.selectedUnassignedUserId;
         try {
@@ -218,7 +218,7 @@
       },
 
       goBackToTeams() {
-        this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
+        this.$router.push(`/tourneys/${this.$route.params.tourneyId}/teams`);
       },
     },
   };

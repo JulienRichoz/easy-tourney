@@ -79,24 +79,6 @@ exports.getSportsFieldsByTourney = async (req, res) => {
     }
   };
   
-// Récupérer une association sport-terrain par son ID
-exports.getSportFieldById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const sportsFields = await SportsFields.findByPk(id);
-
-        if (!sportsFields) {
-            return res.status(404).json({ message: "Sport associé au terrain non trouvé" });
-        }
-
-        res.status(200).json(sportsFields);
-    } catch (error) {
-        console.error("Erreur lors de la récupération du sport associé au terrain :", error);
-        res.status(500).json({ message: "Erreur lors de la récupération du sport associé au terrain" });
-    }
-};
-
 // Récupérer les sports associés à un terrain spécifique
 exports.getSportsByField = async (req, res) => {
     try {
@@ -127,10 +109,10 @@ exports.getSportsByField = async (req, res) => {
 // Mettre à jour une association sport-terrain
 exports.updateSportsFields = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { sportsFieldsId } = req.params;
         const { startTime, endTime, fieldId } = req.body;
 
-        const sportsFields = await SportsFields.findByPk(id);
+        const sportsFields = await SportsFields.findByPk(sportsFieldsId);
 
         if (!sportsFields) {
             return res.status(404).json({ message: "Sport associé au terrain non trouvé" });
@@ -148,10 +130,10 @@ exports.updateSportsFields = async (req, res) => {
 // Supprimer une association sport-terrain
 exports.deleteSportsFields = async (req, res) => {
     try {
-        const { id, tourneyId } = req.params;
+        const { sportsFieldsId, tourneyId } = req.params;
 
         // Trouver l'association sport-terrain par son ID
-        const sportsFields = await SportsFields.findByPk(id);
+        const sportsFields = await SportsFields.findByPk(sportsFieldsId);
 
         if (!sportsFields) {
             return res.status(404).json({ message: "Sport-terrain non trouvé." });

@@ -416,7 +416,7 @@
     data() {
       return {
         BASE_URL,
-        tourneyId: this.$route.params.id, // Récupération du tourneyId depuis les params
+        tourneyId: this.$route.params.tourneyId, // Récupération du tourneyId depuis les params
         teams: [], // Liste des équipes
         unassignedUsers: [], // Utilisateurs non assignés
         allUsers: [], // Tous les utilisateurs inscrits (hors admin)
@@ -431,7 +431,7 @@
         newTeam: {
           teamName: '',
           type: 'player',
-          tourneyId: this.$route.params.id,
+          tourneyId: this.$route.params.tourneyId,
         },
         editingTeamId: null,
         isSubmitting: false,

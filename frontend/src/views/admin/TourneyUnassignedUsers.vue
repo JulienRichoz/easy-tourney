@@ -37,7 +37,7 @@
     },
     methods: {
       async fetchData() {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         try {
           const response = await apiService.get(
             `/tourneys/${tourneyId}/teams-details`
@@ -57,7 +57,7 @@
         }
       },
       async handleAssignTeam({ userId, teamId }) {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         try {
           await apiService.post(
             `/tourneys/${tourneyId}/users/${userId}/teams`,
@@ -76,7 +76,7 @@
         }
       },
       async handleDeleteUser(userId) {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         try {
           await apiService.delete(`/tourneys/${tourneyId}/users/${userId}`);
 
@@ -95,10 +95,10 @@
         }
       },
       goBackToTeams() {
-        this.$router.push(`/tourneys/${this.$route.params.id}/teams`);
+        this.$router.push(`/tourneys/${this.$route.params.tourneyId}/teams`);
       },
       async handleValidateAssignments(assignments) {
-        const tourneyId = this.$route.params.id;
+        const tourneyId = this.$route.params.tourneyId;
         try {
           // Envoyer les affectations au backend
           await apiService.post(`/tourneys/${tourneyId}/teams/auto-fill`, {

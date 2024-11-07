@@ -24,11 +24,11 @@ router.post('/generate-teams', isAuthenticated, isAdmin, generateTeams); // Gén
 router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers);  // Réinitialiser les équipes et les utilisateurs
 
 // Routes pour les opérations sur des équipes spécifiques
-router.post('/:id/users', isAuthenticated, isAdmin, assignUserToTeam); // Assigner un utilisateur à une équipe
-router.delete('/:id/users/:userId', isAuthenticated, isAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
-router.get('/:id', isAuthenticated, authorizeTournamentAccess, getTeamById); // Récupérer les détails d'une équipe (admin uniquement)
-router.put('/:id', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
-router.delete('/:id', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
+router.post('/:teamId/users', isAuthenticated, isAdmin, assignUserToTeam); // Assigner un utilisateur à une équipe
+router.delete('/:teamId/users/:userId', isAuthenticated, isAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
+router.get('/:teamId', isAuthenticated, authorizeTournamentAccess, getTeamById); // Récupérer les détails d'une équipe (admin uniquement)
+router.put('/:teamId', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
+router.delete('/:teamId', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
 
 // Routes pour les opérations globales sur les équipes
 router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe pour un tournoi (admin uniquement)

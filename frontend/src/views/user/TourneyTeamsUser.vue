@@ -132,7 +132,7 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id,
+        tourneyId: this.$route.params.tourneyId,
         teams: [],
         userTeam: null,
         teamSetup: null,

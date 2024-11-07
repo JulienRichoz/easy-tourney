@@ -11,8 +11,8 @@ const { isAuthenticated, isAdmin } = require('../middlewares');
 
 router.post('/', isAuthenticated, isAdmin, upload, createSport); // Créer un sport (admin uniquement)
 router.get('/', getSports); // Récupérer tous les sports
-router.get('/:id', getSportById); // Récupérer un sport par son ID
-router.put('/:id', isAuthenticated, isAdmin, upload, updateSport); // Mettre à jour un sport (admin uniquement)
-router.delete('/:id', isAuthenticated, isAdmin, deleteSport); // Supprimer un sport (admin uniquement)
+router.get('/:sportId', getSportById); // Récupérer un sport par son ID
+router.put('/:sportId', isAuthenticated, isAdmin, upload, updateSport); // Mettre à jour un sport (admin uniquement)
+router.delete('/:sportId', isAuthenticated, isAdmin, deleteSport); // Supprimer un sport (admin uniquement)
 
 module.exports = router;

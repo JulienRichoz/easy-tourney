@@ -106,43 +106,43 @@ const routes = [
     Gestion des détails d'un tournoi, des terrains, et des sports sur les terrains.
   */
   {
-    path: '/tourneys/:id',
+    path: '/tourneys/:tourneyId',
     name: 'TourneyDetails',
     component: TourneyDetails,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/tourneys/:id/fields',
+    path: '/tourneys/:tourneyId/fields',
     name: 'TourneyFields',
     component: TourneyFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/tourneys/:id/sports-fields',
+    path: '/tourneys/:tourneyId/sports-fields',
     name: 'TourneySportsFields',
     component: TourneySportsFields,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/tourneys/:id/teams',
+    path: '/tourneys/:tourneyId/teams',
     name: 'TourneyTeams',
     component: () => import('@/views/admin/TourneyTeams.vue'), //
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },/*
   {
-    path: '/tourneys/:id/teams/:teamId',
+    path: '/tourneys/:tourneyId/teams/:teamId',
     name: 'TeamDetails',
     component: () => import('@/views/admin/TourneyTeamDetails.vue'), //  Lazy loading du composant, Composant pour la page de gestion d'une équipe individuelle
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },*/
   {
-    path: '/tourneys/:id/unassigned-users',
+    path: '/tourneys/:tourneyId/unassigned-users',
     name: 'TourneyUnassignedUsers',
     component: TourneyUnassignedUsers,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
-    path: '/tourneys/:id/teams/:teamId/users',
+    path: '/tourneys/:tourneyId/teams/:teamId/users',
     name: 'TourneyTeamUsers',
     component: TourneyTeamUsers,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
@@ -173,14 +173,14 @@ const routes = [
   */
   // Route pour lister et rejoindre une équipe
   {
-    path: '/tourneys/:id/join-team',
+    path: '/tourneys/:tourneyId/join-team',
     name: 'TourneyTeamsUser',
     component: () => import('@/views/user/TourneyTeamsUser.vue'),
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
   // Route détail d'un équipe
   {
-    path: '/tourneys/:id/teams/:teamId/details',
+    path: '/tourneys/:tourneyId/teams/:teamId/details',
     name: 'TourneyTeamDetailsUser',
     component: () => import('@/views/user/TourneyTeamDetailsUser.vue'),
     meta: { requiresAuth: true, permission: 'viewUserPage' },
@@ -234,10 +234,10 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Vérification si la route concerne un tournoi
-  const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.id;
+  const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.tourneyId;
   if (isTournamentRoute) {
     try {
-      const tourneyId = to.params.id;
+      const tourneyId = to.params.tourneyId;
 
       // Récupérer les statuts via fetchTourneyStatuses
       await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);

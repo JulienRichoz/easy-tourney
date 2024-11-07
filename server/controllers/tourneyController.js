@@ -111,9 +111,9 @@ exports.getTourneys = async (req, res) => {
  */
 exports.getTourneyById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { tourneyId } = req.params;
 
-        const tourney = await Tourney.findByPk(id, {
+        const tourney = await Tourney.findByPk(tourneyId, {
             include: [
                 {
                     model: Team,
@@ -181,10 +181,10 @@ exports.getTourneyById = async (req, res) => {
  */
 exports.updateTourney = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { tourneyId } = req.params;
         const { status, ...otherUpdates } = req.body;
 
-        const tourney = await Tourney.findByPk(id);
+        const tourney = await Tourney.findByPk(tourneyId);
 
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé.' });
@@ -243,14 +243,14 @@ exports.updateTourney = async (req, res) => {
  */
 exports.deleteTourney = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { tourneyId } = req.params;
 
         // Démarrer une transaction pour assurer l'atomicité
         const transaction = await Tourney.sequelize.transaction();
 
         try {
             const tourney = await Tourney.findOne({
-                where: { id },
+                where: { tourneyId },
                 include: [
                     {
                         model: Team,
@@ -304,13 +304,13 @@ exports.deleteTourney = async (req, res) => {
 
             // Supprimer toutes les associations UsersTourneys non liées aux équipes
             await UsersTourneys.destroy({
-                where: { tourneyId: id, teamId: null },
+                where: { tourneyId: tourneyId, teamId: null },
                 transaction,
             });
 
             // Supprimer les équipes
             await Team.destroy({
-                where: { tourneyId: id },
+                where: { tourneyId: tourneyId },
                 transaction,
             });
 
@@ -366,7 +366,7 @@ exports.getSportsByField = async (req, res) => {
  * Récupérer les détails d'un tournoi, y compris les équipes et les utilisateurs associés
  */
 exports.getTourneyTeamsDetails = async (req, res) => {
-  const tourneyId = req.params.id;
+  const tourneyId = req.params.tourneyId;
 
   try {
     // Vérifier si le tournoi existe
@@ -482,8 +482,8 @@ exports.getTourneyTeamsDetails = async (req, res) => {
  */
 exports.getTourneyStatuses = async (req, res) => {
     try {
-        const { id } = req.params;
-        const tourney = await Tourney.findByPk(id);
+        const { tourneyId } = req.params;
+        const tourney = await Tourney.findByPk(tourneyId);
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
@@ -508,8 +508,8 @@ exports.getTourneyStatuses = async (req, res) => {
  */
 exports.getRegistrationStatus = async (req, res) => {
     try {
-        const { id } = req.params;
-        const tourney = await Tourney.findByPk(id);
+        const { tourneyId } = req.params;
+        const tourney = await Tourney.findByPk(tourneyId);
         if (!tourney) {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }

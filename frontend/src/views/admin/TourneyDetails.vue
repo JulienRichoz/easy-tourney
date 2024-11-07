@@ -94,7 +94,7 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id,
+        tourneyId: this.$route.params.tourneyId,
         tourney: {}, // Détails du tournoi récupérés du serveur
         currentStepNumber: 1, // Pour gérer l'étape actuelle en nombre
         mapIsReady: false,

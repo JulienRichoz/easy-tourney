@@ -73,7 +73,7 @@ exports.getSports = async (req, res) => {
 // Récupérer un sport par son ID
 exports.getSportById = async (req, res) => {
     try {
-        const sport = await Sport.findByPk(req.params.id);
+        const sport = await Sport.findByPk(req.params.sportId);
         if (!sport) {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }
@@ -87,7 +87,7 @@ exports.getSportById = async (req, res) => {
 // Mettre à jour un sport
 exports.updateSport = async (req, res) => {
     try {
-        const sport = await Sport.findByPk(req.params.id);
+        const sport = await Sport.findByPk(req.params.sportId);
         if (!sport) {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }
@@ -132,7 +132,7 @@ const protectedImages = [
 // Supprimer un sport
 exports.deleteSport = async (req, res) => {
     try {
-        const sport = await Sport.findByPk(req.params.id);
+        const sport = await Sport.findByPk(req.params.sportId);
         if (!sport) {
             return res.status(404).json({ message: 'Sport non trouvé' });
         }

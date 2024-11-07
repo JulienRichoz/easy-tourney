@@ -110,7 +110,7 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id, // ID du tournoi courant
+        tourneyId: this.$route.params.tourneyId, // ID du tournoi courant
         tourney: {}, // Détails du tournoi
         fields: [], // Liste des terrains du tournoi
         sports: [], // Liste des sports disponibles

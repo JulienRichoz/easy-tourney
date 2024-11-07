@@ -150,7 +150,7 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.id,
+        tourneyId: this.$route.params.tourneyId,
         fields: [],
         showModal: false,
         showMultipleFieldsModal: false,

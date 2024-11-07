@@ -93,7 +93,8 @@
       }),
       showTournamentName() {
         return (
-          this.$route.path.startsWith('/tourneys/') && this.$route.params.id
+          this.$route.path.startsWith('/tourneys/') &&
+          this.$route.params.tourneyId
         );
       },
     },

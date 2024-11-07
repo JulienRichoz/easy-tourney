@@ -74,10 +74,10 @@ exports.getFieldsByTourneyId = async (req, res) => {
 
 // Récupérer un terrain par son ID
 exports.getFieldById = async (req, res) => {
-    const { id } = req.params;
+    const { fieldId } = req.params;
 
     try {
-        const field = await Field.findByPk(id, {
+        const field = await Field.findByPk(fieldId, {
             include: [{ model: Tourney, as: 'tourney' }],
         });
 
@@ -94,11 +94,11 @@ exports.getFieldById = async (req, res) => {
 
 // Mettre à jour un terrain
 exports.updateField = async (req, res) => {
-    const { id } = req.params;
+    const { fieldId } = req.params;
     const { name, description } = req.body;
 
     try {
-        const field = await Field.findByPk(id);
+        const field = await Field.findByPk(fieldId);
         if (!field) {
             return res.status(404).json({ error: 'Terrain introuvable' });
         }
@@ -113,10 +113,10 @@ exports.updateField = async (req, res) => {
 
 // Supprimer un terrain
 exports.deleteField = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { fieldId, tourneyId } = req.params;
 
     try {
-        const field = await Field.findByPk(id);
+        const field = await Field.findByPk(fieldId);
         if (!field) {
             return res.status(404).json({ error: 'Terrain introuvable' });
         }
