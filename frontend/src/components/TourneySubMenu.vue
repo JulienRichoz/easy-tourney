@@ -37,7 +37,7 @@
       :class="{ active: $route.name === 'TourneyTeams' }"
     >
       <font-awesome-icon :icon="['fas', 'user']" />
-      <span class="hidden sm:inline"> Groupes</span>
+      <span class="hidden sm:inline"> Inscriptions</span>
     </router-link>
     <router-link
       :to="`/tourneys/${tourneyId}/planning`"

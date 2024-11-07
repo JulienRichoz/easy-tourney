@@ -513,7 +513,6 @@ exports.joinTourneyWithToken = async (req, res) => {
         // Vérifie et décode le token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { tourneyId, type } = decoded;
-        console.log("Token décodé avec succès :", decoded);
 
         // Vérifie si le token est bien un token d'invitation
         if (type !== 'invite') {

@@ -6,7 +6,6 @@ const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 const { jwtDecode } = require('jwt-decode');
 
-
 // Fonction pour générer un token JWT avec une durée d'expiration variable
 exports.generateToken = (user) => {
     return jwt.sign(
