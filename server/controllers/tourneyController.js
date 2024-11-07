@@ -503,6 +503,28 @@ exports.getTourneyStatuses = async (req, res) => {
     }
 };
 
+/**
+ * Récupérer les statuts d'enregistrememnt du tournoi
+ */
+exports.getRegistrationStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tourney = await Tourney.findByPk(id);
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé' });
+        }
+
+        const { name, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, planningStatus } = tourney;
+        res.status(200).json({
+            name: name,
+            registrationStatus,
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du statut inscription:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération du statut inscription', error });
+    }
+};
+
 /*
 * Rejointe un tournoi via un token d'invitation
 */

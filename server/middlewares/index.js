@@ -4,6 +4,7 @@
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { roles } = require('../config/roles');
+const { UsersTourneys } = require('../models');
 
 // Middleware pour authentifier le token
 const authenticateToken = (req, res, next) => {
@@ -73,6 +74,33 @@ const authorizeUserOrAdmin = (req, res, next) => {
     return res.status(403).json({ message: 'Accès interdit. Vous ne pouvez accéder qu\'à votre propre profil.' });
 };
 
+/**
+ * Middleware pour vérifier si l'utilisateur a accès au tournoi
+ */
+const authorizeTournamentAccess = async (req, res, next) => {
+    try {
+        const userId = req.user.id; // ID de l'utilisateur actuel à partir du token
+        const tourneyId = parseInt(req.params.tourneyId, 10); // ID du tournoi à partir des paramètres de la route
+        console.log('userId, tourneyId: ', userId, tourneyId);
+        // Vérifier si l'utilisateur est associé au tournoi
+        const userTourney = await UsersTourneys.findOne({
+            where: {
+                userId,
+                tourneyId,
+            },
+        });
+
+        if (!userTourney) {
+            return res.status(403).json({ message: 'Accès interdit. Vous n\'avez pas accès à ce tournoi.' });
+        }
+
+        next(); // Passer à l'étape suivante si l'utilisateur a accès
+    } catch (error) {
+        console.error('Erreur lors de la vérification de l\'accès au tournoi:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+};
+
 
 module.exports = {
     isAuthenticated: authenticateToken, // Alias pour authenticateToken
@@ -81,5 +109,6 @@ module.exports = {
     limiter,
     isAdmin,
     authorizeRoles,
-    authorizeUserOrAdmin
+    authorizeUserOrAdmin,
+    authorizeTournamentAccess,
 };
