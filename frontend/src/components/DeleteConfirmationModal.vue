@@ -6,6 +6,8 @@
     ref="modalContainer"
     class="fixed inset-0 bg-light-modal-background z-50 dark:bg-dark-modal-background flex items-center justify-center"
     tabindex="0"
+    aria-modal="true"
+    aria-labelledby="modal-title"
     @keydown.enter="handleConfirm"
   >
     <div
@@ -56,7 +58,7 @@
         </template>
       </FormComponent>
 
-      <!-- Si ce n'est pas une suppression "hard", afficher les boutons directement -->
+      <!-- Si ce n'est pas un hard-delete, afficher les boutons directement -->
       <div v-else class="flex justify-end space-x-4">
         <ButtonComponent variant="secondary" @click="handleCancel">
           Annuler

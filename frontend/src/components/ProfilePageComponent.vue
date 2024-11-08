@@ -287,7 +287,6 @@
 
     <!-- Modale de confirmation pour la suppression -->
     <DeleteConfirmationModal
-      v-if="showDeleteModal"
       :isVisible="showDeleteModal"
       title="Confirmer la suppression"
       message="Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
@@ -297,7 +296,6 @@
 
     <!-- Modale de confirmation pour retirer du tournoi -->
     <DeleteConfirmationModal
-      v-if="showRemoveFromTourneyModal"
       :isVisible="showRemoveFromTourneyModal"
       title="Confirmer le retrait"
       message="Êtes-vous sûr de vouloir retirer l'utilisateur de ce tournoi ?"
