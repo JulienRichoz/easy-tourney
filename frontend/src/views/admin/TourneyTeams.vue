@@ -207,6 +207,15 @@
               :filters="filters"
               @filter-change="handleFilterChange"
             />
+            <!--Filtres pour chercher par nom -->
+            <div>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Rechercher par nom ou mail"
+                class="border border-light-form-border dark:border-dark-form-border rounded-md p-2 w-full sm:w-64 bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text"
+              />
+            </div>
             <!-- Bouton pour Utilisateurs Non Assignés -->
             <ButtonComponent
               v-if="unassignedUsers.length > 0"
@@ -219,13 +228,13 @@
             </ButtonComponent>
             <!-- Bouton Envoyer Email -->
             <ButtonComponent
-              v-if="unassignedUsers.length > 0"
+              v-if="allUsers.length > 0"
               variant="info"
               fontAwesomeIcon="envelope"
               @click="sendEmailToAll"
               :disabled="allUsers.length === 0"
             >
-              <span class="hidden sm:inline">Envoyer Email</span>
+              <span class="hidden sm:inline">Mail All</span>
             </ButtonComponent>
           </div>
           <!-- Informations supplémentaires -->
@@ -493,6 +502,7 @@
             min: 1, // Valeur minimale
           },
         ],
+        searchQuery: '',
       };
     },
     computed: {
@@ -517,24 +527,40 @@
       filteredPlayerTeams() {
         if (!this.teamSetupConfigured) return [];
 
-        return this.playerTeams.filter((team) => {
+        let filteredTeams = this.playerTeams.filter((team) => {
           const minPlayers = this.teamSetup.minPlayerPerTeam;
 
           if (this.filters[0].value === 'valid') {
-            return team.usersTourneys.length >= minPlayers; // Équipes valides
+            return team.usersTourneys.length >= minPlayers;
           }
           if (this.filters[0].value === 'partial') {
             return (
               team.usersTourneys.length > 0 &&
               team.usersTourneys.length < minPlayers
-            ); // Partiellement remplies
+            );
           }
           if (this.filters[0].value === 'empty') {
-            return team.usersTourneys.length === 0; // Équipes vides
+            return team.usersTourneys.length === 0;
           }
           return true;
         });
+
+        // Appliquer le filtre de recherche par nom de joueur
+        if (this.searchQuery) {
+          const query = this.searchQuery.toLowerCase();
+          filteredTeams = filteredTeams.filter((team) =>
+            team.usersTourneys.some(
+              (userTourney) =>
+                userTourney.user.name.toLowerCase().includes(query) ||
+                (userTourney.user.email &&
+                  userTourney.user.email.toLowerCase().includes(query))
+            )
+          );
+        }
+
+        return filteredTeams;
       },
+
       // Combine les équipes "player" filtrées et les équipes "assistant"
       allDisplayedTeams() {
         return [...this.assistantTeams, ...this.filteredPlayerTeams];
