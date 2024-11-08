@@ -9,8 +9,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
 
     const weakPassword = await authService.hashPassword('a');
-    // Team Assistant ID = 1
-    // Team Player = 2 et +
+    // ID 1 (a) est un super admin. Il peut supprimer d'autres admin. Idée à developper par la suite
     await queryInterface.bulkInsert('Users', [
       { name: 'a', email: 'a@a.a', password: weakPassword, roleId: 1, phone: null, createdAt: new Date(), updatedAt: new Date() },
       { name: 'Admin User', email: 'admin@example.com', password: await authService.hashPassword('password'), roleId: 1, phone: null, createdAt: new Date(), updatedAt: new Date() },
