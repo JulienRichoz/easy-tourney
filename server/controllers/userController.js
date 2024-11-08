@@ -399,19 +399,30 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
     try {
-        // Vérifier que l'utilisateur est admin avant de continuer
-        if (req.user.roleId !== roles.ADMIN) {
-            return res.status(403).json({ message: 'Accès interdit. Seuls les administrateurs peuvent supprimer des utilisateurs.' });
+        // Récupérer l'utilisateur actuel qui effectue la requête grâce au middleware authenticateToken
+        const currentUser = req.user;
+
+        // Vérifier si l'utilisateur à supprimer existe
+        const userToDelete = await User.findByPk(userId);
+        if (!userToDelete) {
+            return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
 
-        const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
-        await user.destroy();
+        // Vérifier si l'utilisateur à supprimer est un admin
+        if (userToDelete.roleId === roles.ADMIN) {
+            // Si l'utilisateur actuel n'est pas le super admin (id 1), interdire la suppression
+            if (currentUser.id !== 1) {
+                return res.status(403).json({
+                    message: "Seul le super admin peut supprimer un autre administrateur.",
+                });
+            }
+        }
+
+        // Supprimer l'utilisateur
+        await userToDelete.destroy();
         res.status(204).send();
     } catch (error) {
         console.error('Erreur lors de la suppression de l\'utilisateur :', error);
         res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur.' });
     }
 };
-
-

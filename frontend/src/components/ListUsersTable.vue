@@ -169,7 +169,15 @@
               />
             </td>
             <!-- Colonne Username -->
-            <td class="px-4 py-2">{{ user.name || 'N/A' }}</td>
+            <td class="px-4 py-2">
+              <span
+                v-if="user.role.id === 1"
+                class="mr-1 px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full"
+              >
+                Admin
+              </span>
+              {{ user.name || 'N/A' }}
+            </td>
             <!-- Colonne Email -->
             <td class="px-4 py-2 truncate">
               <a
@@ -631,6 +639,17 @@
        * @param {Number} userId - ID de l'utilisateur à supprimer.
        */
       confirmDelete(userId) {
+        const user = this.users.find((u) => u.id == userId);
+        const currentUserId = this.$store.state.user.id;
+        // Vérifier si l'utilisateur est un admin et si le super admin est le seul à pouvoir le supprimer
+        console.log('Current user ID:', currentUserId);
+        if (user && user.role.id === 1 && currentUserId !== 1) {
+          toast.error(
+            'Seul le super admin peut supprimer un autre administrateur.'
+          );
+          return;
+        }
+
         this.userIdToDelete = userId;
         this.showDeleteModal = true;
       },
