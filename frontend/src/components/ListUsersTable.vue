@@ -263,7 +263,7 @@
                 v-if="availableTeams.length > 0 && allowAssignToOtherTeams"
                 variant="primary"
                 @click="assignTeam(user.id)"
-                :disabled="selectedTeamIds[user.id] === user.teamId"
+                :disabled="localSelectedTeamIds[user.id] === user.teamId"
               >
                 <span class="hidden md:inline">Assigner</span>
               </ButtonComponent>

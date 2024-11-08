@@ -17,6 +17,8 @@
       :back-button-text="'Retour aux équipes'"
       :delete-modal-title="'Confirmer le retrait'"
       :delete-modal-message="'Êtes-vous sûr de vouloir retirer cet utilisateur de la team ?'"
+      :selected-team-ids="selectedTeamIds"
+      @update:selectedTeamIds="selectedTeamIds = $event"
       @assign-team="handleAssignTeam"
       @delete-user="handleRemoveUser"
       @go-back="goBackToTeams"
@@ -80,6 +82,9 @@
         teamSetup: null,
         unassignedUsers: [],
         selectedUnassignedUserId: null,
+        selectedTeamIds: {},
+        isAutoFilled: false,
+        initialSelectedTeamIds: {},
       };
     },
     computed: {
@@ -94,6 +99,33 @@
       },
       hasUnassignedUsers() {
         return this.unassignedUsers.length > 0;
+      },
+      hasAvailableTeams() {
+        return this.availableTeams.length > 0;
+      },
+      availableTeams() {
+        if (!this.teamSetup) return [];
+
+        const currentTeamIds = this.unassignedUsers
+          .map((user) => user.teamId)
+          .filter((teamId) => teamId != null);
+
+        return this.teams.filter((team) => {
+          const isCurrentTeam = currentTeamIds.includes(team.id);
+          const hasSpace =
+            (team.usersTourneys ? team.usersTourneys.length : 0) <
+            this.getTeamCapacity(team);
+          return isCurrentTeam || hasSpace;
+        });
+      },
+      teamOptions() {
+        return this.availableTeams.map((team) => {
+          const capacity = this.getTeamCapacity(team);
+          return {
+            id: team.id,
+            teamName: `${team.teamName} (${team.usersTourneys.length}/${capacity})`,
+          };
+        });
       },
     },
     async created() {
@@ -135,6 +167,13 @@
           } else {
             this.teamUsers = [];
           }
+          // Initialiser selectedTeamIds
+          this.selectedTeamIds = {};
+          this.teamUsers.forEach((user) => {
+            if (user.teamId) {
+              this.selectedTeamIds[user.id] = user.teamId;
+            }
+          });
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
