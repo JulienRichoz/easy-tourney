@@ -29,24 +29,8 @@
           <span class="hidden sm:inline">Envoyer Email</span>
         </ButtonComponent>
 
-        <!-- Bouton Remplir Groupes (affiché uniquement si enableAutoFill est true) -->
-        <ButtonComponent
-          v-if="hasAvailableTeams && enableAutoFill"
-          :variant="isAutoFilled ? 'algo' : 'algo'"
-          fontAwesomeIcon="cog"
-          @click="isAutoFilled ? validateAssignments() : autoFillGroups()"
-        >
-          <span class="hidden sm:inline">
-            {{ isAutoFilled ? 'Valider' : 'Assignation Automatique' }}
-          </span>
-        </ButtonComponent>
-        <ButtonComponent
-          v-if="isAutoFilled && enableAutoFill"
-          variant="secondary"
-          @click="cancelAutoFill"
-        >
-          <span class="hidden sm:inline">Annuler</span>
-        </ButtonComponent>
+        <!-- Slot pour les boutons supplémentaires -->
+        <slot name="header-buttons"></slot>
       </div>
 
       <!-- Bouton Retour -->
@@ -255,7 +239,7 @@
                   teamSetup &&
                   allowAssignToOtherTeams
                 "
-                v-model="selectedTeamIds[user.id]"
+                v-model="localSelectedTeamIds[user.id]"
                 :options="teamOptions"
                 placeholder="Select Team"
                 appendToBody
@@ -365,10 +349,6 @@
         required: false,
         default: null,
       },
-      enableAutoFill: {
-        type: Boolean,
-        default: true,
-      },
       enableAssignTeam: {
         type: Boolean,
         default: true,
@@ -434,6 +414,10 @@
         type: Boolean,
         default: false,
       },
+      selectedTeamIds: {
+        type: Object,
+        default: () => ({}),
+      },
     },
     emits: [
       'go-back',
@@ -443,12 +427,12 @@
       'assign-tourney',
       'remove-user-from-tourney',
       'user-updated',
+      'update:selectedTeamIds',
     ],
     data() {
       return {
         showDeleteModal: false,
         userIdToDelete: null,
-        selectedTeamIds: {},
         isAutoFilled: false,
         initialSelectedTeamIds: {},
         selectedTournamentFilter: null,
@@ -456,6 +440,7 @@
         filterNoTournament: false,
         tournamentOptions: [],
         selectedTourneyIds: {},
+        localSelectedTeamIds: {},
         availableTourneys: {},
         showRemoveFromTourneyModal: false,
         userIdToRemoveFromTourney: null,
@@ -630,11 +615,14 @@
        * @param {Number} userId - ID de l'utilisateur.
        */
       assignTeam(userId) {
-        const teamId = this.selectedTeamIds[userId];
+        const teamId = this.localSelectedTeamIds[userId];
         if (teamId) {
           this.$emit('assign-team', { userId, teamId });
-          // Supprimer l'entrée après l'assignation
-          delete this.selectedTeamIds[userId];
+          // Remove the entry after assignment
+          const newSelectedTeamIds = { ...this.localSelectedTeamIds };
+          delete newSelectedTeamIds[userId];
+          this.localSelectedTeamIds = newSelectedTeamIds;
+          this.$emit('update:selectedTeamIds', this.localSelectedTeamIds);
         } else {
           toast.info('Veuillez sélectionner une équipe pour cet utilisateur.');
         }
@@ -711,99 +699,6 @@
         this.$router.push(`/users/${userId}`);
       },
 
-      /*
-       * Fonctions pour pré-remplir automatiquement les groupes
-       */
-      autoFillGroups() {
-        // 1. Stocker l'état initial
-        this.initialSelectedTeamIds = { ...this.selectedTeamIds };
-        let unassignedUsers = [...this.users];
-
-        // 2. Séparer les équipes 'player' et l'équipe 'assistant'
-        let assistantTeam = null;
-        let teams = [];
-
-        this.teams.forEach((team) => {
-          if (team.type === 'assistant') {
-            assistantTeam = {
-              ...team,
-              assignedUsers: team.usersTourneys ? [...team.usersTourneys] : [],
-            };
-          } else {
-            teams.push({
-              ...team,
-              assignedUsers: team.usersTourneys ? [...team.usersTourneys] : [],
-            });
-          }
-        });
-
-        // 3. Fonction pour assigner des utilisateurs à une équipe
-        const assignUsersToTeam = (team, numberOfUsersNeeded) => {
-          const usersToAssign = unassignedUsers.splice(0, numberOfUsersNeeded);
-          team.assignedUsers.push(...usersToAssign);
-          usersToAssign.forEach((user) => {
-            this.selectedTeamIds[user.id] = team.id;
-          });
-        };
-
-        // a) Remplir les groupes partiels jusqu'au seuil minimal
-        teams
-          .filter(
-            (team) =>
-              team.assignedUsers.length > 0 &&
-              team.assignedUsers.length < this.teamSetup.minPlayerPerTeam
-          )
-          .forEach((team) => {
-            const needed =
-              this.teamSetup.minPlayerPerTeam - team.assignedUsers.length;
-            assignUsersToTeam(team, Math.min(needed, unassignedUsers.length));
-          });
-
-        // b) Calculer combien d'équipes vides peuvent être entièrement remplies
-        const emptyTeams = teams.filter(
-          (team) => team.assignedUsers.length === 0
-        );
-        const maxFillableEmptyTeams = Math.floor(
-          unassignedUsers.length / this.teamSetup.minPlayerPerTeam
-        );
-        const teamsToFill = emptyTeams.slice(0, maxFillableEmptyTeams);
-
-        // Remplir les équipes vides identifiées
-        teamsToFill.forEach((team) => {
-          assignUsersToTeam(team, this.teamSetup.minPlayerPerTeam);
-        });
-
-        // c) Distribuer les utilisateurs restants aux équipes jusqu'au maximum autorisé
-        let distributionPossible = true;
-
-        while (unassignedUsers.length > 0 && distributionPossible) {
-          distributionPossible = false;
-          for (const team of teams) {
-            if (
-              team.assignedUsers.length < this.teamSetup.playerPerTeam &&
-              unassignedUsers.length > 0
-            ) {
-              assignUsersToTeam(team, 1);
-              distributionPossible = true;
-              if (unassignedUsers.length === 0) break;
-            }
-          }
-        }
-
-        // d) Assigner les utilisateurs restants à l'équipe 'assistant' si nécessaire
-        if (unassignedUsers.length > 0) {
-          if (!assistantTeam) {
-            toast.error(
-              "Aucune équipe 'assistant' disponible pour les utilisateurs restants."
-            );
-            return;
-          }
-          assignUsersToTeam(assistantTeam, unassignedUsers.length);
-        }
-
-        this.isAutoFilled = true;
-      },
-
       validateAssignments() {
         const assignments = Object.entries(this.selectedTeamIds)
           .filter(([teamId]) => teamId !== null && teamId !== undefined)
@@ -815,10 +710,12 @@
         this.isAutoFilled = false;
         this.initialSelectedTeamIds = {};
       },
-
-      cancelAutoFill() {
-        this.selectedTeamIds = { ...this.initialSelectedTeamIds };
-        this.isAutoFilled = false;
+      updateSelectedTeamId(userId, teamId) {
+        this.localSelectedTeamIds = {
+          ...this.localSelectedTeamIds,
+          [userId]: teamId,
+        };
+        this.$emit('update:selectedTeamIds', this.localSelectedTeamIds);
       },
 
       /**
@@ -945,12 +842,7 @@
        * Surveille les changements dans la liste des utilisateurs.
        */
       users: {
-        handler(newUsers) {
-          newUsers.forEach((user) => {
-            if (user.teamId) {
-              this.selectedTeamIds[user.id] = user.teamId;
-            }
-          });
+        handler() {
           if (this.showAssignTourney) {
             this.loadAvailableTourneys();
           }
@@ -966,6 +858,14 @@
           this.tournamentOptions = newTournaments;
         },
         immediate: true,
+      },
+
+      selectedTeamIds: {
+        immediate: true,
+        deep: true,
+        handler(newVal) {
+          this.localSelectedTeamIds = { ...newVal };
+        },
       },
     },
   };
