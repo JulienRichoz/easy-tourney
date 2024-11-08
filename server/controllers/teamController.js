@@ -73,11 +73,11 @@ exports.getTeamsByTourney = async (req, res) => {
 
 // Récupérer les détails d'une équipe, y compris les utilisateurs associés via UsersTourneys
 exports.getTeamById = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { teamId, tourneyId } = req.params;
 
     try {
         const team = await Team.findOne({
-            where: { id, tourneyId },
+            where: { id: teamId, tourneyId },
             include: [
                 {
                     model: UsersTourneys,
@@ -106,12 +106,12 @@ exports.getTeamById = async (req, res) => {
 
 // Mettre à jour une équipe et ajuster les rôles des utilisateurs associés si le type de l'équipe change
 exports.updateTeam = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { teamId, tourneyId } = req.params;
     const { teamName, type } = req.body;
 
     try {
         const team = await Team.findOne({ 
-            where: { id, tourneyId },
+            where: { id: teamId, tourneyId },
             include: [{ model: UsersTourneys, as: 'usersTourneys', include: [{ model: User, as: 'user' }] }]
         });
         if (!team) {
@@ -146,7 +146,7 @@ exports.updateTeam = async (req, res) => {
 
 // Supprimer une équipe et réassigner ses utilisateurs à "Guest" via UsersTourneys
 exports.deleteTeam = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { teamId, tourneyId } = req.params;
 
     // Démarrer une transaction pour assurer l'atomicité
     const transaction = await sequelize.transaction();
@@ -154,7 +154,7 @@ exports.deleteTeam = async (req, res) => {
     try {
         // Trouver l'équipe à supprimer avec ses utilisateurs
         const team = await Team.findOne({
-            where: { id, tourneyId },
+            where: { id: teamId, tourneyId },
             include: [
                 {
                     model: UsersTourneys,
@@ -202,11 +202,11 @@ exports.deleteTeam = async (req, res) => {
 
 // Assigner un utilisateur à une équipe via UsersTourneys
 exports.assignUserToTeam = async (req, res) => {
-    const { id, tourneyId } = req.params;
+    const { teamId, tourneyId } = req.params;
     const { userId } = req.body;
 
     try {
-        const team = await Team.findOne({ where: { id, tourneyId } });
+        const team = await Team.findOne({ where: { id: teamId, tourneyId } });
         if (!team) {
             return res.status(404).json({ message: 'Équipe non trouvée.' });
         }
@@ -219,12 +219,12 @@ exports.assignUserToTeam = async (req, res) => {
             return res.status(400).json({ message: 'L\'utilisateur ne participe pas à ce tournoi.' });
         }
 
-        if (userTourney.teamId && userTourney.teamId !== id) {
+        if (userTourney.teamId && userTourney.teamId !== teamId) {
             return res.status(400).json({ message: 'L\'utilisateur est déjà assigné à une autre équipe.' });
         }
 
         // Assigner l'utilisateur à l'équipe via UsersTourneys
-        userTourney.teamId = id;
+        userTourney.teamId = teamId;
         userTourney.tourneyRole = getRoleByTeamType(team.type);
         await userTourney.save();
 
@@ -237,12 +237,12 @@ exports.assignUserToTeam = async (req, res) => {
 
 // Supprimer un utilisateur d'une équipe
 exports.removeUserFromTeam = async (req, res) => {
-    const { id, userId, tourneyId } = req.params;
+    const { teamId, userId, tourneyId } = req.params;
 
     try {
         // Trouver l'association UsersTourneys
         const userTourney = await UsersTourneys.findOne({
-            where: { userId, teamId: id, tourneyId },
+            where: { userId, teamId, tourneyId },
             include: [{ model: User, as: 'user' }]
         });
 

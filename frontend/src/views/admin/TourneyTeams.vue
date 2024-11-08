@@ -219,6 +219,7 @@
             </ButtonComponent>
             <!-- Bouton Envoyer Email -->
             <ButtonComponent
+              v-if="unassignedUsers.length > 0"
               variant="info"
               fontAwesomeIcon="envelope"
               @click="sendEmailToAll"

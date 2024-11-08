@@ -250,7 +250,7 @@ exports.deleteTourney = async (req, res) => {
 
         try {
             const tourney = await Tourney.findOne({
-                where: { tourneyId },
+                where: { id: tourneyId },
                 include: [
                     {
                         model: Team,
@@ -304,13 +304,13 @@ exports.deleteTourney = async (req, res) => {
 
             // Supprimer toutes les associations UsersTourneys non liées aux équipes
             await UsersTourneys.destroy({
-                where: { tourneyId: tourneyId, teamId: null },
+                where: { tourneyId, teamId: null },
                 transaction,
             });
 
             // Supprimer les équipes
             await Team.destroy({
-                where: { tourneyId: tourneyId },
+                where: { tourneyId },
                 transaction,
             });
 
