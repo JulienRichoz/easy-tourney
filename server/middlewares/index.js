@@ -4,10 +4,10 @@
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { roles } = require('../config/roles');
-const { UsersTourneys } = require('../models');
+const { UsersTourneys, User } = require('../models');
 
 // Middleware pour authentifier le token
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -18,6 +18,13 @@ const authenticateToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
+
+        // Vérifier si l'utilisateur existe toujours dans la base de données
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(401).json({ message: 'Utilisateur non trouvé. Veuillez vous reconnecter.' });
+        }
+
         // Définir isAdmin sur la base du roleId
         req.user.isAdmin = req.user.roleId === roles.ADMIN;
         next();

@@ -78,7 +78,7 @@
           // Redirection après connexion
           const userRole = user.roleId;
           if (userRole === roles.ADMIN) {
-            this.$router.replace('/tourneys').then(() => {
+            this.$router.replace('/admin/tourneys').then(() => {
               if (this.toastSuccess) {
                 toast.success(this.toastSuccess);
               } else if (this.toastError) {

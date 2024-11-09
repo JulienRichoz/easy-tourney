@@ -256,8 +256,16 @@
       async handleDeleteUser(userId) {
         try {
           await apiService.delete(`/users/${userId}`);
-          await this.fetchData();
           toast.success('Utilisateur supprimé avec succès.');
+
+          // Vérifier si l'utilisateur supprimé est l'utilisateur actuel
+          if (userId === this.$store.state.user.id) {
+            // Déconnecter l'utilisateur et le rediriger vers la page de connexion
+            this.$store.dispatch('logout');
+            this.$router.push('/login');
+          } else {
+            await this.fetchData();
+          }
         } catch (error) {
           console.error(
             "Erreur lors de la suppression de l'utilisateur:",
