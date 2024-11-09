@@ -313,7 +313,7 @@
         }
       },
       viewTourneyDetails(tourneyId) {
-        this.$router.push(`/tourneys/${tourneyId}`);
+        this.$router.push(`/admin/tourneys/${tourneyId}`);
       },
       closeModal() {
         this.showModal = false;

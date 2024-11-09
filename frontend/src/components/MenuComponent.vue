@@ -6,23 +6,26 @@
     <!-- Section de gauche -->
     <ul class="left-section flex items-center">
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/tourneys" :class="getLinkClass('/tourneys')">
+        <router-link
+          to="/admin/tourneys"
+          :class="getLinkClass('/admin/tourneys')"
+        >
           Tournois
         </router-link>
       </li>
       <!-- Lien pour les utilisateurs non-admins -->
       <li v-if="isAuthenticated && !isAdmin" class="mr-6">
-        <router-link to="/my-tourneys" :class="getLinkClass('/my-tourneys')">
+        <router-link to="/tourneys" :class="getLinkClass('/tourneys')">
           Mes tournois
         </router-link>
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/sports" :class="getLinkClass('/sports')">
+        <router-link to="/admin/sports" :class="getLinkClass('/admin/sports')">
           Sports
         </router-link>
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/users" :class="getLinkClass('/users')">
+        <router-link to="/admin/users" :class="getLinkClass('/admin/users')">
           Utilisateurs
         </router-link>
       </li>

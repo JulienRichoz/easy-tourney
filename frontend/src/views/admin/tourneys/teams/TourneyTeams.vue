@@ -10,7 +10,7 @@
           <TitleComponent title="Gestion des équipes"></TitleComponent>
           <!-- Bouton Réglages -->
           <ButtonComponent
-            v-if="!isRegistrationActive"
+            v-if="!isRegistrationActive && isEditable"
             fontAwesomeIcon="cog"
             @click="openTeamSetupModal"
             variant="secondary"
@@ -767,7 +767,7 @@
         }
       },
       navigateToUnassignedUsers() {
-        this.$router.push(`/tourneys/${this.tourneyId}/unassigned-users`);
+        this.$router.push(`/admin/tourneys/${this.tourneyId}/unassigned-users`);
       },
 
       /*
@@ -788,7 +788,9 @@
         this.showModal = true;
       },
       openTeamDetails(team) {
-        this.$router.push(`/tourneys/${this.tourneyId}/teams/${team.id}/users`);
+        this.$router.push(
+          `/admin/tourneys/${this.tourneyId}/teams/${team.id}/users`
+        );
       },
       confirmDeleteTeam(id) {
         this.confirmedDeleteTeamId = id;

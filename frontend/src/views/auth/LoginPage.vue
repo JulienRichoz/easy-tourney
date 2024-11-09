@@ -93,7 +93,7 @@
             if (tourneyId) {
               this.$router.replace(`/tourneys/${tourneyId}/join-team`);
             } else {
-              this.$router.replace('/profile').then(() => {
+              this.$router.replace('/tourneys').then(() => {
                 if (this.toastSuccess) {
                   toast.success(this.toastSuccess);
                 } else if (this.toastError) {

@@ -35,7 +35,7 @@
             <template #button-actions>
               <ButtonComponent
                 v-if="isRegistrationActive"
-                @click.stop="leaveTeam"
+                @click.stop="confirmLeaveTeam"
                 variant="danger"
               >
                 Quitter
@@ -54,6 +54,16 @@
               </ul>
             </template>
           </CardEditComponent>
+
+          <!-- Confirmation de suppression -->
+          <DeleteConfirmationModal
+            :title="'Quitter le groupe'"
+            :message="'Êtes-vous sûr de vouloir quitter le groupe ?'"
+            :isVisible="showDeleteConfirmation"
+            :textButton="'Quitter'"
+            @cancel="closeDeleteConfirmation"
+            @confirm="leaveTeam"
+          />
         </div>
       </div>
 
@@ -131,12 +141,14 @@
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import { toast } from 'vue3-toastify';
+  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
 
   export default {
     components: {
       TitleComponent,
       CardEditComponent,
       ButtonComponent,
+      DeleteConfirmationModal,
     },
     data() {
       return {
@@ -147,6 +159,7 @@
         registrationStatus: null,
         searchQuery: '', // Variable pour la recherche
         selectedFilter: '', // Variable pour le filtre
+        showDeleteConfirmation: false,
       };
     },
     computed: {
@@ -291,6 +304,7 @@
         }
       },
       async joinTeam(teamId) {
+        this.showDeleteConfirmation = false;
         try {
           if (this.userTeam) {
             toast.error(
@@ -323,6 +337,12 @@
             toast.error('Erreur lors de la tentative de rejoindre le groupe.');
           }
         }
+      },
+      confirmLeaveTeam() {
+        this.showDeleteConfirmation = true;
+      },
+      closeDeleteConfirmation() {
+        this.showDeleteConfirmation = false;
       },
       async leaveTeam() {
         try {

@@ -52,7 +52,7 @@
               nativeType="submit"
               :disabled="formData.confirmationText !== 'CONFIRM'"
             >
-              Supprimer
+              {{ textButton }}
             </ButtonComponent>
           </div>
         </template>
@@ -64,7 +64,7 @@
           Annuler
         </ButtonComponent>
         <ButtonComponent variant="danger" @click="handleConfirm">
-          Supprimer
+          {{ textButton }}
         </ButtonComponent>
       </div>
     </div>
@@ -102,6 +102,10 @@
         type: String,
         default:
           'Cette action est irréversible et entraîne des suppressions en cascade. Risque de pertes de données annexes.',
+      },
+      textButton: {
+        type: String,
+        default: 'Supprimer',
       },
     },
     setup(props, { emit }) {

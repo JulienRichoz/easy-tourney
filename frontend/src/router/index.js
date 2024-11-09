@@ -1,197 +1,21 @@
 // router/index.js
 
-// Import des modules nécessaires pour la gestion des routes
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store'; // Vuex pour gérer les rôles
+import store from '../store';
 import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
+import { jwtDecode } from 'jwt-decode';
 import apiService from '@/services/apiService';
-import { jwtDecode } from 'jwt-decode'; // Corrigé l'import pour jwtDecode
 
-// Importation des composants de vues
-import AdminPage from '../views/admin/AdminPage.vue';
-import UserPage from '../views/user/UserPage.vue';
-import LoginPage from '../views/auth/LoginPage.vue';
-import RegisterPage from '../views/auth/RegisterPage.vue';
-import NotFoundPage from '../views/NotFound.vue';
-import AccessDenied from '../views/AccessDenied.vue';
-import SportsPage from '../views/admin/SportsPage.vue'; // Gestion des sports d'un tournoi
-import TourneysPage from '../views/admin/TourneysPage.vue'; // Liste des tournois
-import TourneyDetails from '../views/admin/TourneyDetails.vue'; // Détails d'un tournoi
-import TourneyFields from '../views/admin/TourneyFields.vue'; // Gestion des terrains d'un tournoi
-import TourneySportsFields from '../views/admin/TourneySportsFields.vue'; // Gestion des sports sur les terrains
-import TourneyUnassignedUsers from '../views/admin/TourneyUnassignedUsers.vue'; // Liste des utilisateurs sans équipe
-import TourneyTeamUsers from '../views/admin/TourneyTeamUsers.vue'; // Liste des utilisateurs d'une équipe
-import AdminUsers from '../views/admin/AdminUsers.vue'; // Liste de tous les utilisateurs de l'application
-import UserProfile from '@/views/user/UserProfile.vue'; // Page profil utilisateur
-import AdminUserProfile from '@/views/admin/AdminUserProfile.vue'; // Page profil utilisateur pour les administrateurs
+// Importation des fichiers de routes
+import authRoutes from './authRoutes';
+import adminRoutes from './adminRoutes';
+import userRoutes from './userRoutes';
 
 // Définition des routes de l'application
 const routes = [
-  /*
-    ROUTE D'ERREUR (Page 404)
-    Cette route capte toutes les routes non définies et redirige vers la page NotFound.
-  */
-  {
-    path: '/404',
-    name: 'NotFoundPage',
-    component: NotFoundPage,
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/404',
-  },
-
-  /*
-    ROUTE D'ACCÈS REFUSÉ
-    Utilisée lorsque l'utilisateur n'a pas les permissions requises.
-  */
-  {
-    path: '/access-denied',
-    name: 'AccessDenied',
-    component: AccessDenied,
-  },
-
-  /*
-    ROUTES D'AUTHENTIFICATION (Login, Register)
-    Redirection par défaut vers la page de login.
-  */
-  {
-    path: '/',
-    redirect: '/login',
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: LoginPage,
-    meta: { requiresAuth: false },
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: RegisterPage,
-    meta: { requiresAuth: false },
-  },
-
-  /*
-    ROUTES PROTÉGÉES (User et Admin)
-    Ces routes nécessitent une authentification et des permissions spécifiques.
-  */
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: AdminPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/user',
-    name: 'User',
-    component: UserPage,
-    meta: { requiresAuth: true, permission: 'viewUserPage' },
-  },
-  {
-    path: '/tourneys',
-    name: 'Tourneys',
-    component: TourneysPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/sports',
-    name: 'SportsPage',
-    component: SportsPage,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-
-  /*
-    ROUTES LIÉES À UN TOURNOI
-    Gestion des détails d'un tournoi, des terrains, et des sports sur les terrains.
-  */
-  {
-    path: '/tourneys/:tourneyId',
-    name: 'TourneyDetails',
-    component: TourneyDetails,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/tourneys/:tourneyId/fields',
-    name: 'TourneyFields',
-    component: TourneyFields,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/tourneys/:tourneyId/sports-fields',
-    name: 'TourneySportsFields',
-    component: TourneySportsFields,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/tourneys/:tourneyId/teams',
-    name: 'TourneyTeams',
-    component: () => import('@/views/admin/TourneyTeams.vue'), //
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },/*
-  {
-    path: '/tourneys/:tourneyId/teams/:teamId',
-    name: 'TeamDetails',
-    component: () => import('@/views/admin/TourneyTeamDetails.vue'), //  Lazy loading du composant, Composant pour la page de gestion d'une équipe individuelle
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },*/
-  {
-    path: '/tourneys/:tourneyId/unassigned-users',
-    name: 'TourneyUnassignedUsers',
-    component: TourneyUnassignedUsers,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/tourneys/:tourneyId/teams/:teamId/users',
-    name: 'TourneyTeamUsers',
-    component: TourneyTeamUsers,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-
-  // Route pour la gestion des utilisateurs
-  {
-    path: '/users',
-    name: 'AdminUsers',
-    component: AdminUsers,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-  {
-    path: '/profile',
-    name: 'UserProfile',
-    component: UserProfile,
-    meta: { requiresAuth: true, permission: 'viewUserPage' },
-  },
-  {
-    path: '/users/:userId',
-    name: 'AdminUserProfile',
-    component: AdminUserProfile,
-    meta: { requiresAuth: true, permission: 'viewAdminPage' },
-  },
-
-  /*
-  * USER ROUTES
-  */
-  // Route pour lister et rejoindre une équipe
-  {
-    path: '/tourneys/:tourneyId/join-team',
-    name: 'TourneyTeamsUser',
-    component: () => import('@/views/user/TourneyTeamsUser.vue'),
-    meta: { requiresAuth: true, permission: 'viewUserPage' },
-  },
-  // Route détail d'un équipe
-  {
-    path: '/tourneys/:tourneyId/teams/:teamId/details',
-    name: 'TourneyTeamDetailsUser',
-    component: () => import('@/views/user/TourneyTeamDetailsUser.vue'),
-    meta: { requiresAuth: true, permission: 'viewUserPage' },
-  },
-  // Route tournois d'un utilisateur
-  {
-    path: '/my-tourneys',
-    name: 'UserTourneys',
-    component: () => import('@/views/user/UserTourneys.vue'),
-    meta: { requiresAuth: true, permission: 'viewUserPage' },
-  }
+  ...authRoutes,
+  ...adminRoutes,
+  ...userRoutes,
 ];
 
 // Configuration du routeur Vue

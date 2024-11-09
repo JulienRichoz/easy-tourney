@@ -9,7 +9,6 @@
 
 <script>
   import ProfilePageComponent from '@/components/ProfilePageComponent.vue';
-
   export default {
     components: {
       ProfilePageComponent,

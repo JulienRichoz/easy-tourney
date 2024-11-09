@@ -257,7 +257,9 @@
       },
 
       goBackToTeams() {
-        this.$router.push(`/tourneys/${this.$route.params.tourneyId}/teams`);
+        this.$router.push(
+          `/admin/tourneys/${this.$route.params.tourneyId}/teams`
+        );
       },
     },
   };

@@ -18,6 +18,8 @@ const authenticateToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
+        // Définir isAdmin sur la base du roleId
+        req.user.isAdmin = req.user.roleId === roles.ADMIN;
         next();
     } catch (error) {
         console.error('Erreur lors de la vérification du token:', error);
