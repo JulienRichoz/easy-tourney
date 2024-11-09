@@ -35,7 +35,7 @@
             <template #button-actions>
               <ButtonComponent
                 v-if="isRegistrationActive"
-                @click="leaveTeam"
+                @click.stop="leaveTeam"
                 variant="danger"
               >
                 Quitter
