@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 
-import store from './store';    // Importe Vuex (ton store)
+import store from './store';    // Importe Vuex store
 import router from './router'; // Importer le router
 import vue3TouchEvents from "vue3-touch-events";
 import Vue3Toastify from 'vue3-toastify';

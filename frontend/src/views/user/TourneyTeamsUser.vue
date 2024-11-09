@@ -1,12 +1,9 @@
-<!-- TourneyTeamsUser.vue -->
 <template>
   <div>
     <div class="p-6">
-      <!-- Titre de la page -->
+      <!-- Titre de la page et statut des inscriptions -->
       <div class="flex items-center mb-8 justify-between">
         <TitleComponent title="Groupes du tournoi"></TitleComponent>
-
-        <!-- Afficher le statut des inscriptions -->
         <p v-if="isRegistrationActive" class="text-green-600">
           Les inscriptions sont ouvertes. Vous pouvez rejoindre ou quitter un
           groupe.
@@ -21,8 +18,8 @@
         </p>
       </div>
 
-      <!-- Si l'utilisateur est dans une équipe -->
-      <div v-if="userTeam" class="mb-4">
+      <!-- Team de l'utilisateur -->
+      <div v-if="userTeam" class="mb-8">
         <p>
           Vous êtes dans le groupe : <strong>{{ userTeam.teamName }}</strong>
         </p>
@@ -41,72 +38,80 @@
         </div>
       </div>
 
-      <!-- Si l'utilisateur n'est pas dans une équipe et que les inscriptions sont ouvertes -->
-      <div v-else-if="isRegistrationActive">
-        <div class="mb-4 flex items-center space-x-4">
-          <!-- Champ de recherche pour les équipes -->
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Rechercher un groupe ou un utilisateur"
-            class="border p-2 rounded w-full md:w-1/3"
-          />
-
-          <!-- Filtres -->
-          <select v-model="selectedFilter" class="border p-2 rounded">
-            <option value="">Tous les groupes</option>
-            <option value="non-full">Groupes non pleins</option>
-            <option value="full">Groupes pleins</option>
-            <option value="empty">Groupes vides</option>
-            <option value="partial">Groupes partiels</option>
-            <option value="assistant">Groupes d'assistants</option>
-          </select>
-        </div>
-
-        <!-- Liste des équipes -->
-        <div
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6"
-        >
-          <CardEditComponent
-            v-for="team in filteredTeams"
-            :key="team.id"
-            :title="team.teamName || 'Nom manquant'"
-            :cornerCount="`${team.usersTourneys.length}/${getTeamCapacity(
-              team
-            )}`"
-            :titleColor="getStatusColor(team)"
-            @click="openTeamDetails(team)"
-          >
-            <!-- Bouton pour rejoindre l'équipe -->
-            <template #actions>
-              <ButtonComponent
-                v-if="!userTeam && team.type === 'player'"
-                @click.stop="joinTeam(team.id)"
-                variant="primary"
-                :disabled="team.usersTourneys.length >= getTeamCapacity(team)"
-              >
-                Rejoindre
-              </ButtonComponent>
-            </template>
-            <!-- Liste des membres de l'équipe -->
-            <template #user-list>
-              <ul class="mt-2">
-                <li
-                  v-for="userTourney in team.usersTourneys"
-                  :key="userTourney.userId"
-                  class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
-                >
-                  <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
-                  <span class="truncate">{{ userTourney.user.name }}</span>
-                </li>
-              </ul>
-            </template>
-          </CardEditComponent>
-        </div>
+      <!-- Options de recherche et filtres -->
+      <div class="mb-4 flex items-center space-x-4">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Rechercher un groupe ou un utilisateur"
+          class="border p-2 rounded w-full md:w-1/3"
+        />
+        <select v-model="selectedFilter" class="border p-2 rounded">
+          <option value="">Tous les groupes</option>
+          <option value="non-full">Groupes non pleins</option>
+          <option value="full">Groupes pleins</option>
+          <option value="empty">Groupes vides</option>
+          <option value="partial">Groupes partiels</option>
+          <option value="assistant">Groupes d'assistants</option>
+        </select>
       </div>
 
-      <!-- Si les inscriptions sont fermées ou terminées et que l'utilisateur n'est pas dans une équipe -->
-      <div v-else>
+      <!-- Liste des autres équipes -->
+      <div
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6"
+      >
+        <CardEditComponent
+          v-for="team in filteredTeams"
+          :key="team.id"
+          :title="team.teamName || 'Nom manquant'"
+          :cornerCount="`${team.usersTourneys.length}/${getTeamCapacity(team)}`"
+          :titleColor="getStatusColor(team)"
+          :showDeleteButton="false"
+          :showEditButton="false"
+          :hasActions="isRegistrationActive"
+          :isEditable="isRegistrationActive"
+          @click="openTeamDetails(team)"
+        >
+          <!-- Bouton pour rejoindre l'équipe -->
+          <template #actions>
+            <ButtonComponent
+              v-if="!userTeam && team.type === 'player'"
+              @click.stop="joinTeam(team.id)"
+              variant="primary"
+              :disabled="
+                team.usersTourneys.length >= getTeamCapacity(team) ||
+                !isRegistrationActive
+              "
+            >
+              Rejoindre
+            </ButtonComponent>
+            <ButtonComponent
+              v-if="userTeam && isRegistrationActive && team.id === userTeam.id"
+              @click.stop="leaveTeam"
+              variant="danger"
+              class="ml-2"
+            >
+              Quitter
+            </ButtonComponent>
+          </template>
+          <!-- Liste des membres de l'équipe -->
+          <template #user-list>
+            <ul class="mt-2">
+              <li
+                v-for="userTourney in team.usersTourneys"
+                :key="userTourney.userId"
+                class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
+              >
+                <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
+                <span class="truncate">{{ userTourney.user.name }}</span>
+              </li>
+            </ul>
+          </template>
+        </CardEditComponent>
+      </div>
+
+      <!-- Message si les inscriptions sont fermées ou terminées et que l'utilisateur n'est pas dans une équipe -->
+      <div v-if="!userTeam && !isRegistrationActive" class="mt-4">
         <p>
           Les inscriptions sont fermées ou terminées. Vous ne pouvez pas
           rejoindre un groupe.
@@ -137,8 +142,8 @@
         userTeam: null,
         teamSetup: null,
         registrationStatus: null,
-        searchQuery: '', // Nouvelle variable pour la recherche
-        selectedFilter: '', // Nouvelle variable pour le filtre
+        searchQuery: '', // Variable pour la recherche
+        selectedFilter: '', // Variable pour le filtre
       };
     },
     computed: {
@@ -154,8 +159,14 @@
       currentUserId() {
         return this.$store.state.user ? this.$store.state.user.id : null;
       },
+      otherTeams() {
+        if (this.userTeam) {
+          return this.teams.filter((team) => team.id !== this.userTeam.id);
+        }
+        return this.teams;
+      },
       filteredTeams() {
-        let teams = this.teams;
+        let teams = this.otherTeams;
 
         // Appliquer les filtres
         if (this.selectedFilter === 'non-full') {
@@ -329,7 +340,6 @@
       },
       openTeamDetails(team) {
         // Naviguer vers la page de détails de l'équipe
-        console.log(this.tourneyId, team.id);
         this.$router.push(
           `/tourneys/${this.tourneyId}/teams/${team.id}/details`
         );

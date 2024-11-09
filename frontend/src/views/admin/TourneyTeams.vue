@@ -234,7 +234,7 @@
               @click="sendEmailToAll"
               :disabled="allUsers.length === 0"
             >
-              <span class="hidden sm:inline">Mail All</span>
+              <span class="hidden sm:inline"></span>
             </ButtonComponent>
           </div>
           <!-- Informations supplémentaires -->
