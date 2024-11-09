@@ -3,7 +3,7 @@
     <div class="p-6">
       <!-- Titre de la page et statut des inscriptions -->
       <div class="flex items-center mb-8 justify-between">
-        <TitleComponent title="Groupes du tournoi"></TitleComponent>
+        <TitleComponent title="Equipes du tournoi"></TitleComponent>
         <p v-if="isRegistrationActive" class="text-green-600">
           Les inscriptions sont ouvertes. Vous pouvez rejoindre ou quitter un
           groupe.
@@ -18,26 +18,47 @@
         </p>
       </div>
 
-      <!-- Team de l'utilisateur -->
+      <!-- Section de votre équipe -->
       <div v-if="userTeam" class="mb-8">
-        <p>
-          Vous êtes dans le groupe : <strong>{{ userTeam.teamName }}</strong>
-        </p>
-        <div class="mt-2">
-          <ButtonComponent @click="openTeamDetails(userTeam)" variant="primary">
-            Voir le groupe
-          </ButtonComponent>
-          <ButtonComponent
-            v-if="isRegistrationActive"
-            @click="leaveTeam"
-            variant="danger"
-            class="ml-2"
+        <h2 class="text-2xl font-semibold mb-4">Votre équipe</h2>
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <CardEditComponent
+            :title="userTeam.teamName || 'Nom manquant'"
+            :cornerCount="`${
+              userTeam.usersTourneys ? userTeam.usersTourneys.length : 0
+            }/${getTeamCapacity(userTeam)}`"
+            :titleColor="getStatusColor(userTeam)"
+            @click="openTeamDetails(userTeam)"
           >
-            Quitter le groupe
-          </ButtonComponent>
+            <template #button-actions>
+              <ButtonComponent
+                v-if="isRegistrationActive"
+                @click="leaveTeam"
+                variant="danger"
+              >
+                Quitter
+              </ButtonComponent>
+            </template>
+            <template #user-list>
+              <ul class="grid grid-cols-2 gap-2 mt-2">
+                <li
+                  v-for="userTourney in userTeam.usersTourneys || []"
+                  :key="userTourney.userId"
+                  class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
+                >
+                  <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
+                  <span class="truncate">{{ userTourney.user.name }}</span>
+                </li>
+              </ul>
+            </template>
+          </CardEditComponent>
         </div>
       </div>
 
+      <!-- Section des autres équipes -->
+      <h2 class="text-2xl font-semibold mt-8 mb-4">Toutes les équipes</h2>
       <!-- Options de recherche et filtres -->
       <div class="mb-4 flex items-center space-x-4">
         <input
@@ -48,17 +69,15 @@
         />
         <select v-model="selectedFilter" class="border p-2 rounded">
           <option value="">Tous les groupes</option>
-          <option value="non-full">Groupes non pleins</option>
+          <option value="non-full">Groupes partiels</option>
           <option value="full">Groupes pleins</option>
           <option value="empty">Groupes vides</option>
-          <option value="partial">Groupes partiels</option>
-          <option value="assistant">Groupes d'assistants</option>
         </select>
       </div>
 
       <!-- Liste des autres équipes -->
       <div
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       >
         <CardEditComponent
           v-for="team in filteredTeams"
@@ -66,36 +85,21 @@
           :title="team.teamName || 'Nom manquant'"
           :cornerCount="`${team.usersTourneys.length}/${getTeamCapacity(team)}`"
           :titleColor="getStatusColor(team)"
-          :showDeleteButton="isRegistrationActive"
-          :showEditButton="isRegistrationActive"
           :isEditable="isRegistrationActive"
           @click="openTeamDetails(team)"
         >
-          <!-- Bouton pour rejoindre l'équipe -->
-          <template #actions>
+          <template #button-actions>
             <ButtonComponent
-              v-if="!userTeam && team.type === 'player'"
+              v-if="!userTeam && isRegistrationActive"
+              :disabled="team.usersTourneys.length >= getTeamCapacity(team)"
               @click.stop="joinTeam(team.id)"
               variant="primary"
-              :disabled="
-                team.usersTourneys.length >= getTeamCapacity(team) ||
-                !isRegistrationActive
-              "
             >
               Rejoindre
             </ButtonComponent>
-            <ButtonComponent
-              v-if="userTeam && isRegistrationActive && team.id === userTeam.id"
-              @click.stop="leaveTeam"
-              variant="danger"
-              class="ml-2"
-            >
-              Quitter
-            </ButtonComponent>
           </template>
-          <!-- Liste des membres de l'équipe -->
           <template #user-list>
-            <ul class="mt-2">
+            <ul class="grid grid-cols-2 gap-2 mt-2">
               <li
                 v-for="userTourney in team.usersTourneys"
                 :key="userTourney.userId"
@@ -184,15 +188,6 @@
           teams = teams.filter(
             (team) => team.usersTourneys.length === 0 && team.type === 'player'
           );
-        } else if (this.selectedFilter === 'partial') {
-          teams = teams.filter(
-            (team) =>
-              team.usersTourneys.length > 0 &&
-              team.usersTourneys.length < this.getTeamCapacity(team) &&
-              team.type === 'player'
-          );
-        } else if (this.selectedFilter === 'assistant') {
-          teams = teams.filter((team) => team.type === 'assistant');
         }
 
         // Filtrer par recherche
@@ -231,10 +226,19 @@
 
           // Vérifier si l'utilisateur actuel est déjà dans une équipe
           const userId = this.currentUserId;
-          this.userTeam =
-            teamsResponse.data.allUsers.find(
-              (userTourney) => userTourney.userId === userId && userTourney.team
-            )?.team || null;
+
+          // Récupérer les membres de l'équipe de l'utilisateur
+          const userTourney = teamsResponse.data.allUsers.find(
+            (userTourney) => userTourney.userId === userId && userTourney.team
+          );
+
+          if (userTourney) {
+            this.userTeam = this.teams.find(
+              (team) => team.id === userTourney.teamId
+            );
+          } else {
+            this.userTeam = null;
+          }
 
           // Mettre à jour le statut d'inscription à partir de la méthode séparée
           await this.fetchRegistrationStatus();
@@ -270,15 +274,17 @@
         return this.teamSetup ? this.teamSetup.playerPerTeam : 0;
       },
       getStatusColor(team) {
-        // Logique pour déterminer la couleur de l'équipe
+        // Vérifiez si usersTourneys est défini avant d'accéder à sa propriété length
+        const teamSize = team.usersTourneys ? team.usersTourneys.length : 0;
+
         const minPlayers = this.teamSetup ? this.teamSetup.minPlayerPerTeam : 0;
         const maxPlayers = this.getTeamCapacity(team);
 
-        if (team.usersTourneys.length >= maxPlayers) {
+        if (teamSize >= maxPlayers) {
           return 'red'; // Équipe pleine
-        } else if (team.usersTourneys.length >= minPlayers) {
+        } else if (teamSize >= minPlayers) {
           return 'green'; // Équipe valide
-        } else if (team.usersTourneys.length > 0) {
+        } else if (teamSize > 0) {
           return 'orange'; // Équipe partiellement remplie
         } else {
           return 'gray'; // Équipe vide
@@ -292,10 +298,11 @@
             );
             return;
           }
+          const userId = this.currentUserId;
           await apiService.post(
-            `/tourneys/${this.tourneyId}/users/${this.currentUserId}/teams`,
+            `/tourneys/${this.tourneyId}/teams/${teamId}/users`,
             {
-              teamId,
+              userId,
             }
           );
           toast.success('Vous avez rejoint le groupe avec succès.');

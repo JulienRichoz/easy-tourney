@@ -248,10 +248,6 @@
               <strong>Equipes affichées :</strong>
               {{ allDisplayedTeams.length }}
             </div>
-            <div class="text-sm">
-              <strong>Min joueur/equipe:</strong>
-              {{ teamSetup.minPlayerPerTeam }}
-            </div>
           </div>
         </div>
 

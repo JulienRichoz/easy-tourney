@@ -83,6 +83,9 @@
         fontAwesomeIcon="trash"
         @click.stop="onDelete"
       />
+      <div class="flex justify-center mt-4 w-full">
+        <slot name="button-actions"></slot>
+      </div>
       <ButtonComponent
         v-if="showEditButton"
         variant="warning"

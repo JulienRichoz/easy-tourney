@@ -95,6 +95,7 @@ module.exports = {
           menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
           profileText: '#38a169', // green-400
+          textInCard: '#ff7200', // gray-500
           profileHoverText: '#2f855a', // green-700
           logoutButton: {
             default: '#dc2626', // red-600 (adoucissement de la couleur rouge)
