@@ -10,6 +10,12 @@
           Tournois
         </router-link>
       </li>
+      <!-- Lien pour les utilisateurs non-admins -->
+      <li v-if="isAuthenticated && !isAdmin" class="mr-6">
+        <router-link to="/my-tourneys" :class="getLinkClass('/my-tourneys')">
+          Mes tournois
+        </router-link>
+      </li>
       <li v-if="isAdmin" class="mr-6">
         <router-link to="/sports" :class="getLinkClass('/sports')">
           Sports

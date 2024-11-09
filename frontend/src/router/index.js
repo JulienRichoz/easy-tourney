@@ -184,6 +184,13 @@ const routes = [
     name: 'TourneyTeamDetailsUser',
     component: () => import('@/views/user/TourneyTeamDetailsUser.vue'),
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+  },
+  // Route tournois d'un utilisateur
+  {
+    path: '/my-tourneys',
+    name: 'UserTourneys',
+    component: () => import('@/views/user/UserTourneys.vue'),
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
   }
 ];
 
