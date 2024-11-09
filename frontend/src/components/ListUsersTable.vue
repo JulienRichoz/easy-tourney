@@ -470,10 +470,10 @@
       /**
        * Indique s'il y a des actions disponibles pour les utilisateurs.
        * @returns {Boolean}
-       */
+       TODO:REMOVE IF NOT USED
       hasActions() {
         return this.enableAssignTeam || this.enableRemoveUser;
-      },
+      },*/
 
       /**
        * Retourne les équipes disponibles pour l'assignation.

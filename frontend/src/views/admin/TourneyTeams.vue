@@ -208,7 +208,7 @@
               @filter-change="handleFilterChange"
             />
             <!--Filtres pour chercher par nom -->
-            <div>
+            <div v-if="allDisplayedTeams.length > 0">
               <input
                 v-model="searchQuery"
                 type="text"
@@ -224,7 +224,7 @@
               class="flex items-left space-x-2"
               fontAwesomeIcon="user"
             >
-              <span>Joueurs sans groupes ({{ unassignedUsers.length }})</span>
+              <span>Joueurs sans groupe ({{ unassignedUsers.length }})</span>
             </ButtonComponent>
             <!-- Bouton Envoyer Email -->
             <ButtonComponent
@@ -294,7 +294,6 @@
                 : `${team.usersTourneys.length}/${teamSetup.playerPerTeam}`
             "
             :titleColor="getStatusColor(team)"
-            :hasActions="isEditable"
             :showDeleteButton="isEditable"
             :showEditButton="isEditable"
             @delete="confirmDeleteTeam(team.id)"

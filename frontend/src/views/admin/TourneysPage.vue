@@ -34,7 +34,6 @@
         :location="tourney.location"
         :date="tourney.dateTourney"
         :status="tourney.status"
-        :hasActions="true"
         :showDeleteButton="true"
         :showEditButton="true"
         @click="viewTourneyDetails(tourney.id)"

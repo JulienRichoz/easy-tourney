@@ -66,9 +66,8 @@
           :title="team.teamName || 'Nom manquant'"
           :cornerCount="`${team.usersTourneys.length}/${getTeamCapacity(team)}`"
           :titleColor="getStatusColor(team)"
-          :showDeleteButton="false"
-          :showEditButton="false"
-          :hasActions="isRegistrationActive"
+          :showDeleteButton="isRegistrationActive"
+          :showEditButton="isRegistrationActive"
           :isEditable="isRegistrationActive"
           @click="openTeamDetails(team)"
         >

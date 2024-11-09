@@ -53,7 +53,6 @@
           :key="field.id"
           :title="field.name"
           :description="field.description"
-          :hasActions="true"
           :showDeleteButton="isEditable"
           :showEditButton="true"
           :isEditable="isEditable"

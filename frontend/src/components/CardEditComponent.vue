@@ -76,15 +76,15 @@
       <slot name="additional-content"></slot>
     </div>
 
-    <div v-if="hasActions" class="flex justify-between mt-4 w-full">
+    <div class="flex justify-between mt-4 w-full">
       <ButtonComponent
-        v-if="(showDeleteButton || hasActions) && isEditable"
+        v-if="showDeleteButton && isEditable"
         variant="danger"
         fontAwesomeIcon="trash"
         @click.stop="onDelete"
       />
       <ButtonComponent
-        v-if="showEditButton || hasActions"
+        v-if="showEditButton"
         variant="warning"
         fontAwesomeIcon="pen"
         @click.stop="onEdit"
@@ -122,10 +122,6 @@
         default: false,
       },
       showEditButton: {
-        type: Boolean,
-        default: false,
-      },
-      hasActions: {
         type: Boolean,
         default: false,
       },
