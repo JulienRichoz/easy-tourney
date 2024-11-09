@@ -1,7 +1,7 @@
 // server/controllers/teamController.js
 const { Team, TeamSetup, Tourney, User, UsersTourneys, sequelize } = require('../models');
 const { Op } = require('sequelize');
-const { checkAndUpdateStatuses } = require('../utils/statusUtils');
+const { checkAndUpdateStatuses, getRegistrationStatus } = require('../utils/statusUtils');
 
 /**
  * Helper function to determine role based on team type.
@@ -204,8 +204,17 @@ exports.deleteTeam = async (req, res) => {
 exports.assignUserToTeam = async (req, res) => {
     const { teamId, tourneyId } = req.params;
     const { userId } = req.body;
+    const isAdmin = req.user && req.user.isAdmin; // Vérifiez si l'utilisateur est admin
 
     try {
+        // Vérifier le statut des inscriptions si l'utilisateur n'est pas admin
+        if (!isAdmin) {
+            const registrationStatus = await getRegistrationStatus(tourneyId);
+            if (registrationStatus !== 'active') {
+                return res.status(403).json({ message: 'Les inscriptions ne sont pas ouvertes.' });
+            }
+        }
+
         const team = await Team.findOne({ where: { id: teamId, tourneyId } });
         if (!team) {
             return res.status(404).json({ message: 'Équipe non trouvée.' });
@@ -238,9 +247,17 @@ exports.assignUserToTeam = async (req, res) => {
 // Supprimer un utilisateur d'une équipe
 exports.removeUserFromTeam = async (req, res) => {
     const { teamId, userId, tourneyId } = req.params;
+    const isAdmin = req.user && req.user.isAdmin; // Vérifiez si l'utilisateur est admin
 
     try {
-        // Trouver l'association UsersTourneys
+        // Vérifier le statut des inscriptions si l'utilisateur n'est pas admin
+        if (!isAdmin) {
+            const registrationStatus = await getRegistrationStatus(tourneyId);
+            if (registrationStatus !== 'active') {
+                return res.status(403).json({ message: 'Les inscriptions ne sont pas ouvertes.' });
+            }
+        }
+
         const userTourney = await UsersTourneys.findOne({
             where: { userId, teamId, tourneyId },
             include: [{ model: User, as: 'user' }]
