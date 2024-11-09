@@ -84,7 +84,22 @@ const checkAndUpdateStatuses = async (tourneyId) => {
     await updateGlobalStatus(tourney);
 };
 
+/**
+ * Récupère le statut d'enregistrement d'un tournoi.
+ * @param {number} tourneyId - ID du tournoi.
+ * @returns {Promise<string>} - Le statut d'enregistrement du tournoi.
+ * @throws {Error} - Si le tournoi n'est pas trouvé.
+ */
+const getRegistrationStatus = async (tourneyId) => {
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+        throw new Error('Tournoi non trouvé');
+    }
+    return tourney.registrationStatus;
+};
+
 module.exports = {
     checkAndUpdateStatuses,
-    updateGlobalStatus
+    updateGlobalStatus,
+    getRegistrationStatus,
 };
