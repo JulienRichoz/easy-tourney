@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         // Nombre min de joueurs par team pour en valider une
         minPlayerPerTeam: {
             type: DataTypes.INTEGER,
-            allowNull: false, // Doit être rempli
+            allowNull: false,
         },
         // Nombre max de team par pool
         maxTeamPerPool: {

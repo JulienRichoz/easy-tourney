@@ -3,7 +3,7 @@ const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body; 
+    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam, minTeamPerPool, maxTeamPerPool } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -16,13 +16,25 @@ exports.createTeamSetup = async (req, res) => {
             return res.status(400).json({
                 message: 'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe.'
             });
-        }       
+        }
+
+        // Vérifier que minTeamPerPool et maxTeamPerPool ne sont pas `null` avant de faire la vérification
+        if (minTeamPerPool !== null && maxTeamPerPool !== null) {
+            // Vérifier que le minTeamPerPool est inférieur ou égal au maxTeamPerPool
+            if (minTeamPerPool > maxTeamPerPool) {
+                return res.status(400).json({
+                    message: 'Le nombre minimum d\'équipes par pool doit être inférieur ou égal au nombre maximum d\'équipes par pool.'
+                });
+            }
+        }
 
         const teamSetup = await TeamSetup.create({
             tourneyId,
             maxTeamNumber,
             playerPerTeam,
             minPlayerPerTeam,
+            minTeamPerPool,
+            maxTeamPerPool
         });
     
         await checkAndUpdateStatuses(tourneyId);
@@ -36,7 +48,7 @@ exports.createTeamSetup = async (req, res) => {
 
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body; 
+    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam, minTeamPerPool, maxTeamPerPool } = req.body; 
     const { tourneyId } = req.params;
 
     try {
@@ -51,10 +63,21 @@ exports.updateTeamSetup = async (req, res) => {
             });
         }   
 
+        // Vérifier que minTeamPerPool et maxTeamPerPool ne sont pas `null` avant de faire la vérification
+        if (minTeamPerPool !== null && maxTeamPerPool !== null) {
+            if (minTeamPerPool > maxTeamPerPool) {
+                return res.status(400).json({
+                    message: 'Le nombre minimum d\'équipes par pool doit être inférieur ou égal au nombre maximum d\'équipes par pool.'
+                });
+            }
+        }
+
         // Mise à jour des champs
         teamSetup.maxTeamNumber = maxTeamNumber;
         teamSetup.playerPerTeam = playerPerTeam;
         teamSetup.minPlayerPerTeam = minPlayerPerTeam;
+        teamSetup.minTeamPerPool = minTeamPerPool;
+        teamSetup.maxTeamPerPool = maxTeamPerPool;
 
         await teamSetup.save();
 
@@ -78,6 +101,8 @@ exports.getTeamSetup = async (req, res) => {
                 maxTeamNumber: null,
                 playerPerTeam: null,
                 minPlayerPerTeam: null,
+                minTeamPerPool: null,
+                maxTeamPerPool: null,
                 message: 'Aucune configuration trouvée. Veuillez configurer les équipes.'
             });
         }
@@ -87,5 +112,6 @@ exports.getTeamSetup = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
 
 
