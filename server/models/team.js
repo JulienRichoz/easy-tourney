@@ -21,6 +21,16 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: 'player',
         },
+        poolId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+              model: 'Pools',
+              key: 'id',
+            },
+            onDelete: 'SET NULL', // Si on supprime Team, rendre NULL l'association
+            onUpdate: 'CASCADE',
+          },
     }, {
         sequelize,
         modelName: 'Team',
