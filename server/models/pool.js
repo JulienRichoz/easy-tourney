@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
       // Associations
       Pool.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
       Pool.hasMany(models.Team, { foreignKey: 'poolId', as: 'teams' });
-      Pool.hasMany(models.Game, { foreignKey: 'poolId', as: 'games' }); //TODO: Associer les games au pool ??
     }
   }
 
