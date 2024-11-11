@@ -642,7 +642,6 @@
         const user = this.users.find((u) => u.id == userId);
         const currentUserId = this.$store.state.user.id;
         // Vérifier si l'utilisateur est un admin et si le super admin est le seul à pouvoir le supprimer
-        console.log('Current user ID:', currentUserId);
         if (user && user.role.id === 1 && currentUserId !== 1) {
           toast.error(
             'Seul le super admin peut supprimer un autre administrateur.'

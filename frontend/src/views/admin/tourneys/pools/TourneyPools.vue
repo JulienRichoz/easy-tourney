@@ -16,8 +16,13 @@
             variant="secondary"
             class="ml-2"
           >
-            <span class="hidden sm:inline">Réglages Pools</span>
+            <span class="hidden sm:inline">Config Pools</span>
           </ButtonComponent>
+
+          <FilterComponent
+            :filters="filters"
+            @filter-change="handleFilterChange"
+          />
           <!-- Bouton pour assigner les équipes aux pools -->
           <ButtonComponent
             v-if="isEditable && unassignedTeams.length > 0"
@@ -37,7 +42,7 @@
           <StatusSelectorComponent
             :tourneyId="tourneyId"
             label="Pools:"
-            statusKey="poolAssignmentStatus"
+            statusKey="poolStatus"
             :statusOptions="poolStatusOptions"
           />
         </div>
@@ -56,10 +61,11 @@
 
         <!-- Cartes des pools existantes -->
         <CardEditComponent
-          v-for="pool in pools"
+          v-for="pool in filteredPools"
           :key="pool.id"
           :title="pool.name"
           :cornerCount="`${pool.teams.length} Équipes`"
+          :titleColor="getPoolStatusColor(pool)"
           :showDeleteButton="isEditable"
           :showEditButton="isEditable"
           @delete="confirmDeletePool(pool.id)"
@@ -145,6 +151,7 @@
   import TitleComponent from '@/components/TitleComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
+  import FilterComponent from '@/components/FilterComponent.vue';
 
   export default {
     components: {
@@ -157,12 +164,14 @@
       FormComponent,
       TitleComponent,
       StatusSelectorComponent,
+      FilterComponent,
     },
     data() {
       return {
         tourneyId: this.$route.params.tourneyId, // Récupération du tourneyId depuis les params
         pools: [], // Liste des pools
         teams: [], // Liste des équipes du tournoi
+        selectedStatus: this.currentStatus,
         showModal: false,
         showDeleteConfirmation: false,
         showPoolSetupModal: false,
@@ -203,6 +212,18 @@
           { value: 'draft', label: 'En cours' },
           { value: 'completed', label: 'Terminé' },
         ],
+        filters: [
+          {
+            label: 'Pools',
+            value: '',
+            options: [
+              { label: 'Toutes les Pools', value: '' },
+              { label: 'Valides', value: 'valid' },
+              { label: 'Invalides', value: 'partial' },
+              { label: 'Vides', value: 'empty' },
+            ],
+          },
+        ],
       };
     },
     computed: {
@@ -210,13 +231,26 @@
         statuses: (state) => state.statuses,
       }),
       isEditable() {
-        return (
-          this.statuses.poolAssignmentStatus !== 'completed' &&
-          this.statuses.status !== 'completed'
-        );
+        return this.statuses.poolStatus !== 'completed';
       },
       unassignedTeams() {
         return this.teams.filter((team) => !team.poolId);
+      },
+      filteredPools() {
+        return this.pools.filter((pool) => {
+          const minTeams = this.teamSetup?.minTeamPerPool || 0;
+
+          if (this.filters[0].value === 'valid') {
+            return pool.teams.length >= minTeams;
+          }
+          if (this.filters[0].value === 'partial') {
+            return pool.teams.length > 0 && pool.teams.length < minTeams;
+          }
+          if (this.filters[0].value === 'empty') {
+            return pool.teams.length === 0;
+          }
+          return true;
+        });
       },
     },
     methods: {
@@ -239,6 +273,9 @@
           );
           toast.error('Erreur lors de la récupération des détails des pools.');
         }
+      },
+      handleFilterChange(filter) {
+        this.filters[0].value = filter.value;
       },
       openAddPoolModal() {
         this.editingPoolId = null;
@@ -358,6 +395,21 @@
         this.$router.push(
           `/admin/tourneys/${this.tourneyId}/assign-teams-to-pools`
         );
+      },
+
+      // Ajouter pastille de couleur pour indiquer l'état du Pool
+      getPoolStatusColor(pool) {
+        if (!this.teamSetup) return 'gray';
+
+        const minTeams = this.teamSetup.minTeamPerPool || 0;
+
+        if (pool.teams.length >= minTeams) {
+          return 'green'; // Valide
+        } else if (pool.teams.length > 0) {
+          return 'orange'; // Partielle
+        } else {
+          return 'gray'; // Vide
+        }
       },
     },
     mounted() {
