@@ -101,9 +101,6 @@
         }),
       }),
       showTournamentName() {
-        console.log(this.$route.path);
-        console.log(this.$route.params.tourneyId);
-        console.log(this.tournamentName);
         return (
           (this.$route.path.startsWith('/tourneys/') ||
             this.$route.path.startsWith('/admin/tourneys/')) &&

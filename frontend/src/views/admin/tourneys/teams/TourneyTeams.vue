@@ -887,7 +887,6 @@
        * Envoie un email à tous les utilisateurs inscrits.
        */
       sendEmailToAll() {
-        console.log(this.allUsers);
         const emails = this.allUsers
           .map((userTourney) => userTourney.user.email)
           .filter((email) => email);

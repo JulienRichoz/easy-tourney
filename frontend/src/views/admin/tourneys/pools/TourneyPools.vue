@@ -20,13 +20,15 @@
           </ButtonComponent>
           <!-- Bouton pour assigner les équipes aux pools -->
           <ButtonComponent
-            v-if="isEditable && pools.length > 0 && teams.length > 0"
+            v-if="isEditable && unassignedTeams.length > 0"
             @click="navigateToAssignTeams"
             variant="primary"
             fontAwesomeIcon="users"
             class="ml-2"
           >
-            <span class="hidden sm:inline">Assigner Équipes</span>
+            <span class="hidden sm:inline">
+              Assigner Équipes ({{ unassignedTeams.length }})
+            </span>
           </ButtonComponent>
         </div>
 
@@ -175,6 +177,14 @@
           minTeamPerPool: null,
           maxTeamPerPool: null,
         },
+        formFields: [
+          {
+            name: 'name',
+            label: 'Nom de la Pool',
+            type: 'text',
+            required: true,
+          },
+        ],
         poolSetupFields: [
           {
             name: 'minTeamPerPool',
@@ -190,7 +200,6 @@
           },
         ],
         poolStatusOptions: [
-          { value: 'notStarted', label: 'Non commencé' },
           { value: 'draft', label: 'En cours' },
           { value: 'completed', label: 'Terminé' },
         ],
@@ -205,6 +214,9 @@
           this.statuses.poolAssignmentStatus !== 'completed' &&
           this.statuses.status !== 'completed'
         );
+      },
+      unassignedTeams() {
+        return this.teams.filter((team) => !team.poolId);
       },
     },
     methods: {
@@ -318,6 +330,8 @@
             `/tourneys/${this.tourneyId}/team-setup`,
             this.localPoolSetup
           );
+          // Mettez à jour teamSetup avec les nouvelles valeurs
+          this.teamSetup = { ...this.teamSetup, ...this.localPoolSetup };
           toast.success('Réglages des pools mis à jour avec succès !');
           this.closePoolSetupModal();
         } catch (error) {
