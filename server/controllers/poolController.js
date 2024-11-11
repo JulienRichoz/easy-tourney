@@ -1,5 +1,5 @@
 // server/controllers/poolController.js
-const { Pool, Team, TeamSetup } = require('../models');
+const { Tourney, Pool, Team, TeamSetup } = require('../models');
 const { Op } = require('sequelize');
 
 /**

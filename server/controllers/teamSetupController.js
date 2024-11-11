@@ -115,3 +115,45 @@ exports.getTeamSetup = async (req, res) => {
 
 
 
+
+/**
+ * Mettre à jour les champs minTeamPerPool et maxTeamPerPool d'une configuration de team existante
+ */
+exports.updatePoolTeamLimits = async (req, res) => {
+    const { tourneyId } = req.params;
+    const { minTeamPerPool, maxTeamPerPool } = req.body;
+
+    try {
+        const teamSetup = await TeamSetup.findOne({ where: { tourneyId } });
+        if (!teamSetup) {
+            return res.status(404).json({ message: 'Configuration de team non trouvée' });
+        }
+
+        // Mettre à jour uniquement si les valeurs sont fournies
+        if (minTeamPerPool !== undefined) {
+            teamSetup.minTeamPerPool = minTeamPerPool;
+        }
+        if (maxTeamPerPool !== undefined) {
+            teamSetup.maxTeamPerPool = maxTeamPerPool;
+        }
+
+        // Vérifier que minTeamPerPool et maxTeamPerPool ne sont pas `null` avant de faire la vérification
+        if (minTeamPerPool !== null && maxTeamPerPool !== null) {
+        if (minTeamPerPool > maxTeamPerPool) {
+            return res.status(400).json({
+                message: 'Le nombre minimum d\'équipes par pool doit être inférieur ou égal au nombre maximum d\'équipes par pool.'
+            });
+        }
+    }
+
+        await teamSetup.save();
+
+        res.status(200).json({
+            message: 'Champs minTeamPerPool et maxTeamPerPool mis à jour avec succès',
+            teamSetup,
+        });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des limites de team par pool:', error);
+        res.status(500).json({ message: 'Erreur serveur', error });
+    }
+};
