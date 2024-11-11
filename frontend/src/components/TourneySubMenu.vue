@@ -6,6 +6,7 @@
     class="tourney-nav w-full z-50 bg-light-subMenu-background dark:bg-dark-subMenu-background shadow-lg border-b border-light-subMenu-border dark:border-dark-subMenu-border"
   >
     <!-- Liens du menu -->
+    <!-- DETAILS -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
@@ -15,6 +16,8 @@
 
       <span class="hidden sm:inline"> Détails</span>
     </router-link>
+
+    <!-- TERRAINS -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/fields`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
@@ -23,6 +26,8 @@
       <font-awesome-icon :icon="['fas', 'map']" />
       <span class="hidden sm:inline"> Terrains</span>
     </router-link>
+
+    <!-- ASSIGNATION SPORTS AUX TERRAINS -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/sports-fields`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
@@ -31,6 +36,8 @@
       <font-awesome-icon :icon="['fas', 'futbol']" />
       <span class="hidden sm:inline"> Assignation</span>
     </router-link>
+
+    <!-- INSCRIPTIONS ET GESTION DES EQUIPES -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/teams`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
@@ -39,6 +46,18 @@
       <font-awesome-icon :icon="['fas', 'user']" />
       <span class="hidden sm:inline"> Inscriptions</span>
     </router-link>
+
+    <!-- POOLS -->
+    <router-link
+      :to="`/admin/tourneys/${tourneyId}/pools`"
+      class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
+      :class="{ active: $route.name === 'AdminTourneyPools' }"
+    >
+      <font-awesome-icon :icon="['fas', 'users']" />
+      <span class="hidden sm:inline"> Pools</span>
+    </router-link>
+
+    <!-- PLANNING -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/planning`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
