@@ -144,7 +144,7 @@ exports.assignTeamsToPool = async (req, res) => {
       return res.status(404).json({ message: 'Pool non trouvée.' });
     }
 
-    // Vérifier que les équipes existent et qu'elles appartiennent au même tournoi que la pool
+    // Vérifier que les équipes existent, appartiennent au même tournoi que la pool et ne sont pas de type 'assistant'
     const teams = await Team.findAll({
       where: {
         id: {
@@ -158,24 +158,34 @@ exports.assignTeamsToPool = async (req, res) => {
       return res.status(400).json({ message: 'Certaines équipes spécifiées sont invalides ou n\'appartiennent pas au même tournoi.' });
     }
 
+    // Filtrer les équipes de type 'assistant'
+    const assistantTeams = teams.filter(team => team.type === 'assistant');
+    const validTeams = teams.filter(team => team.type !== 'assistant');
+
+    if (validTeams.length === 0) {
+      return res.status(400).json({ message: 'Toutes les équipes spécifiées sont de type assistant et ne peuvent pas être assignées.' });
+    }
+
     // Vérifier explicitement les équipes déjà associées à cette pool
     const alreadyAssignedTeams = await Team.findAll({
       where: {
         id: {
-          [Op.in]: teamIds,
+          [Op.in]: validTeams.map(team => team.id),
         },
         poolId: poolId,
       },
     });
 
     const alreadyAssignedTeamIds = alreadyAssignedTeams.map(team => team.id);
-    const teamIdsToUpdate = teamIds.filter(id => !alreadyAssignedTeamIds.includes(id));
+    const teamIdsToUpdate = validTeams
+      .map(team => team.id)
+      .filter(id => !alreadyAssignedTeamIds.includes(id));
 
     if (teamIdsToUpdate.length === 0) {
       return res.status(400).json({ message: 'Toutes les équipes spécifiées sont déjà assignées à cette pool.' });
     }
 
-    // Assigner les équipes restantes à la pool
+    // Assigner les équipes valides restantes à la pool
     await Team.update({ poolId }, {
       where: {
         id: {
@@ -184,16 +194,24 @@ exports.assignTeamsToPool = async (req, res) => {
       },
     });
 
-    res.status(200).json({
+    // Construction du message d'information
+    const responseMessage = {
       message: 'Équipes assignées à la pool avec succès.',
       assignedTeamIds: teamIdsToUpdate,
       alreadyAssignedTeamIds: alreadyAssignedTeamIds,
-    });
+    };
+
+    if (assistantTeams.length > 0) {
+      responseMessage.warning = `Les équipes suivantes de type 'assistant' n'ont pas été assignées : ${assistantTeams.map(team => team.id).join(', ')}`;
+    }
+
+    res.status(200).json(responseMessage);
   } catch (error) {
     console.error('Erreur lors de l\'assignation des équipes à la pool :', error);
     res.status(500).json({ message: 'Erreur lors de l\'assignation des équipes à la pool.', error });
   }
 };
+
 
 
 /**
