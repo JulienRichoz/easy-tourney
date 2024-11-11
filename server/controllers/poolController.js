@@ -158,21 +158,43 @@ exports.assignTeamsToPool = async (req, res) => {
       return res.status(400).json({ message: 'Certaines équipes spécifiées sont invalides ou n\'appartiennent pas au même tournoi.' });
     }
 
-    // Assigner les équipes à la pool
-    await Team.update({ poolId }, {
+    // Vérifier explicitement les équipes déjà associées à cette pool
+    const alreadyAssignedTeams = await Team.findAll({
       where: {
         id: {
           [Op.in]: teamIds,
         },
+        poolId: poolId,
       },
     });
 
-    res.status(200).json({ message: 'Équipes assignées à la pool avec succès.' });
+    const alreadyAssignedTeamIds = alreadyAssignedTeams.map(team => team.id);
+    const teamIdsToUpdate = teamIds.filter(id => !alreadyAssignedTeamIds.includes(id));
+
+    if (teamIdsToUpdate.length === 0) {
+      return res.status(400).json({ message: 'Toutes les équipes spécifiées sont déjà assignées à cette pool.' });
+    }
+
+    // Assigner les équipes restantes à la pool
+    await Team.update({ poolId }, {
+      where: {
+        id: {
+          [Op.in]: teamIdsToUpdate,
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: 'Équipes assignées à la pool avec succès.',
+      assignedTeamIds: teamIdsToUpdate,
+      alreadyAssignedTeamIds: alreadyAssignedTeamIds,
+    });
   } catch (error) {
     console.error('Erreur lors de l\'assignation des équipes à la pool :', error);
     res.status(500).json({ message: 'Erreur lors de l\'assignation des équipes à la pool.', error });
   }
 };
+
 
 /**
  * Retirer une ou plusieurs équipes d'une pool.
@@ -191,8 +213,8 @@ exports.removeTeamsFromPool = async (req, res) => {
       return res.status(404).json({ message: 'Pool non trouvée.' });
     }
 
-    // Retirer les équipes de la pool
-    await Team.update({ poolId: null }, {
+    // Vérifier quelles équipes parmi teamIds sont réellement assignées à cette pool
+    const assignedTeams = await Team.findAll({
       where: {
         id: {
           [Op.in]: teamIds,
@@ -201,12 +223,27 @@ exports.removeTeamsFromPool = async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: 'Équipes retirées de la pool avec succès.' });
+    if (assignedTeams.length === 0) {
+      return res.status(400).json({ message: 'Aucune des équipes spécifiées n\'est associée à cette pool.' });
+    }
+
+    // Retirer les équipes de la pool
+    const assignedTeamIds = assignedTeams.map(team => team.id);
+    await Team.update({ poolId: null }, {
+      where: {
+        id: {
+          [Op.in]: assignedTeamIds,
+        },
+      },
+    });
+
+    res.status(200).json({ message: 'Équipes retirées de la pool avec succès.', removedTeamIds: assignedTeamIds });
   } catch (error) {
     console.error('Erreur lors du retrait des équipes de la pool :', error);
     res.status(500).json({ message: 'Erreur lors du retrait des équipes de la pool.', error });
   }
 };
+
 
 /**
  * Assigner automatiquement des équipes aux pools de manière équilibrée.
