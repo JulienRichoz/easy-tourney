@@ -1,3 +1,4 @@
+// migrations/create-inviteToken.js
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {

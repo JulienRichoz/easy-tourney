@@ -1,3 +1,4 @@
+// migrations/create-user.js
 'use strict';
 
 module.exports = {

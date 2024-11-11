@@ -1,3 +1,4 @@
+// migrations/create-scheduleTourney.js
 'use strict';
 
 module.exports = {

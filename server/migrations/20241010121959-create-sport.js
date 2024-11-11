@@ -1,3 +1,4 @@
+// migrations/create-sport.js
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
