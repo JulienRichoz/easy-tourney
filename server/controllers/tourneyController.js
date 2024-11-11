@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 
 const { Op } = require('sequelize');
-const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role, InviteToken } = require('../models');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role, InviteToken, Pool } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 const jwt = require('jsonwebtoken');
 
@@ -594,4 +594,82 @@ exports.joinTourneyWithToken = async (req, res) => {
     }
 };
 
-
+/**
+ * Récupérer les détails des pools d'un tournoi, y compris les pools, les équipes, et la configuration des équipes
+ */
+exports.getTourneyPoolsDetails = async (req, res) => {
+    const tourneyId = req.params.tourneyId;
+  
+    try {
+      // Vérifier si le tournoi existe
+      const tourney = await Tourney.findByPk(tourneyId);
+      if (!tourney) {
+        return res.status(404).json({ message: 'Tournoi non trouvé' });
+      }
+  
+      // Récupérer les pools avec les équipes associées
+      const pools = await Pool.findAll({
+        where: { tourneyId },
+        include: [
+          {
+            model: Team,
+            as: 'teams',
+            attributes: ['id', 'teamName'],
+          },
+        ],
+      });
+  
+      // Récupérer les équipes du tournoi (type 'player')
+      const teams = await Team.findAll({
+        where: {
+          tourneyId,
+          type: 'player',
+        },
+        attributes: ['id', 'teamName', 'type', 'poolId'],
+        include: [
+          {
+            model: UsersTourneys,
+            as: 'usersTourneys',
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'email'],
+                where: {
+                  roleId: { [Op.ne]: 1 }, // Exclure les admins
+                },
+                include: [
+                  {
+                    model: Role,
+                    as: 'role',
+                    attributes: ['id', 'name'],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+  
+      // Récupérer la configuration des équipes
+      const teamSetup = await TeamSetup.findOne({
+        where: { tourneyId },
+        attributes: [
+          'maxTeamNumber',
+          'playerPerTeam',
+          'minPlayerPerTeam',
+          'minTeamPerPool',
+          'maxTeamPerPool',
+        ],
+      });
+  
+      res.json({
+        pools,
+        teams,
+        teamSetup,
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails des pools du tournoi:', error);
+      res.status(500).json({ message: 'Erreur serveur', error });
+    }
+  };
