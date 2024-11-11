@@ -19,6 +19,7 @@ const usersTourneysRoutes = require('./routes/usersTourneys');
 const userRoutes = require('./routes/user');
 const roleRoutes = require('./routes/role');
 const inviteTokenRoutes = require('./routes/inviteToken');
+const poolRoutes = require('./routes/pool');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -48,6 +49,8 @@ app.use('/api/tourneys/:tourneyId/fields', fieldRoutes);
 app.use('/api/tourneys/:tourneyId/sports-fields', sportsFieldsRoutes);
 app.use('/api/tourneys/:tourneyId/users', usersTourneysRoutes);
 app.use('/api/tourneys/:tourneyId/invite-token', inviteTokenRoutes);
+app.use('/api/tourneys/:tourneyId/pools', poolRoutes);
+
 
 // Gestion des erreurs
 app.use(errorHandler);
