@@ -36,7 +36,7 @@
       v-if="showTournamentName"
       class="tournament-name text-lg font-bold absolute left-1/2 transform -translate-x-1/2 text-light-profileText dark:text-dark-profileText hidden md:block"
     >
-      {{ tournamentName }}
+      {{ this.tournamentName }}
     </div>
 
     <!-- Section de droite -->
@@ -97,12 +97,16 @@
         isAdmin: (state) => state.user?.roleId === 1,
         userName: (state) => state.user?.name,
         ...mapState('tourney', {
-          tournamentName: (state) => state.currentTournamentName,
+          tournamentName: (state) => state.statuses.name,
         }),
       }),
       showTournamentName() {
+        console.log(this.$route.path);
+        console.log(this.$route.params.tourneyId);
+        console.log(this.tournamentName);
         return (
-          this.$route.path.startsWith('/tourneys/') &&
+          (this.$route.path.startsWith('/tourneys/') ||
+            this.$route.path.startsWith('/admin/tourneys/')) &&
           this.$route.params.tourneyId
         );
       },
