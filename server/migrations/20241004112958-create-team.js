@@ -1,3 +1,4 @@
+// migrations/create-team.js
 'use strict';
 
 module.exports = {
@@ -26,6 +27,16 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
+      },
+      poolId:{
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'Pools',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL', 
       },
       createdAt: {
         allowNull: false,
