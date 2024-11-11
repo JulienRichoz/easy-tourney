@@ -77,6 +77,11 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: 'notStarted',
             allowNull: true,
         },
+        poolStatus: {
+            type: DataTypes.ENUM('notStarted', 'draft', 'completed'),
+            defaultValue: 'notStarted',
+            allowNull: false,
+        },
         planningStatus: {
             type: DataTypes.ENUM('notStarted', 'draft', 'completed'),
             defaultValue: 'notStarted',

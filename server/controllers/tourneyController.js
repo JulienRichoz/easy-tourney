@@ -204,6 +204,7 @@ exports.updateTourney = async (req, res) => {
                 const canMoveToReady = tourney.fieldAssignmentStatus === 'completed' &&
                                        tourney.sportAssignmentStatus === 'completed' &&
                                        tourney.registrationStatus === 'completed' &&
+                                       tourney.poolStatus === 'completed' &&
                                        tourney.planningStatus === 'completed';
 
                 if (canMoveToReady) {
@@ -488,13 +489,14 @@ exports.getTourneyStatuses = async (req, res) => {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
 
-        const { name, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, planningStatus } = tourney;
+        const { name, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, poolStatus, planningStatus } = tourney;
         res.status(200).json({
             name: name,
             status,
             fieldAssignmentStatus,
             sportAssignmentStatus,
             registrationStatus,
+            poolStatus,
             planningStatus,
         });
     } catch (error) {

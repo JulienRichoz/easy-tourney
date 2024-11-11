@@ -1,6 +1,6 @@
 // server/utils/statusUtils.js
 
-const { Tourney, Field, SportsFields, TeamSetup, ScheduleTourney } = require('../models');
+const { Tourney, Field, SportsFields, TeamSetup, ScheduleTourney, Pool } = require('../models');
 
 /**
  * Met à jour le statut global du tournoi en fonction des statuts des composants.
@@ -14,6 +14,7 @@ const updateGlobalStatus = async (tourney) => {
         tourney.fieldAssignmentStatus === 'completed',
         tourney.sportAssignmentStatus === 'completed',
         tourney.registrationStatus === 'completed',
+        tourney.poolStatus === 'completed',
         tourney.planningStatus === 'completed'
     ].every(Boolean);
 
@@ -68,6 +69,17 @@ const checkAndUpdateStatuses = async (tourneyId) => {
         tourney.registrationStatus = 'draft';
     } else if (!teamSetup && (tourney.registrationStatus === 'draft' || tourney.registrationStatus === 'active')) {
         tourney.registrationStatus = 'notStarted';
+    }
+    await tourney.save();
+
+    // poolStatus: notStarted <-> draft/active
+    const poolsCount = await Pool.count({ where: { tourneyId } });
+    const hasMinMaxTeamPerPool = teamSetup && teamSetup.minTeamPerPool !== null && teamSetup.maxTeamPerPool !== null;
+    
+    if ((poolsCount > 0 || hasMinMaxTeamPerPool) && tourney.poolStatus === 'notStarted') {
+        tourney.poolStatus = 'draft';
+    } else if (poolsCount === 0 && !hasMinMaxTeamPerPool && tourney.poolStatus !== 'notStarted') {
+        tourney.poolStatus = 'notStarted';
     }
     await tourney.save();
 
