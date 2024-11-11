@@ -211,27 +211,21 @@
       // Mapper les actions du module `tourney`
       ...mapActions('tourney', ['fetchTourneyStatuses']),
       // Récupérer les pools du tournoi
-      async fetchPools() {
+      async fetchTourneyPoolsDetails() {
         try {
           const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/pools`
+            `/tourneys/${this.tourneyId}/pools-details`
           );
-          this.pools = response.data;
+          const { pools, teams, teamSetup } = response.data;
+          this.pools = pools;
+          this.teams = teams;
+          this.teamSetup = teamSetup;
         } catch (error) {
-          console.error('Erreur lors de la récupération des pools:', error);
-          toast.error('Erreur lors de la récupération des pools.');
-        }
-      },
-      // Récupérer les équipes du tournoi
-      async fetchTeams() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/teams`
+          console.error(
+            'Erreur lors de la récupération des détails des pools:',
+            error
           );
-          this.teams = response.data.filter((team) => team.type === 'player');
-        } catch (error) {
-          console.error('Erreur lors de la récupération des équipes:', error);
-          toast.error('Erreur lors de la récupération des équipes.');
+          toast.error('Erreur lors de la récupération des détails des pools.');
         }
       },
       openAddPoolModal() {
@@ -269,7 +263,7 @@
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/pools/${id}`);
           toast.success('Pool supprimée avec succès !');
-          this.fetchPools(); // Récupérer les données mises à jour
+          this.fetchTourneyPoolsDetails(); // Récupérer les données mises à jour
           this.closeDeleteConfirmation();
         } catch (error) {
           toast.error('Erreur lors de la suppression de la pool.');
@@ -297,7 +291,7 @@
           toast.success(
             `Pool ${this.editingPoolId ? 'modifiée' : 'ajoutée'} avec succès !`
           );
-          this.fetchPools(); // Récupérer les données mises à jour
+          this.fetchTourneyPoolsDetails(); // Récupérer les données mises à jour
         } catch (error) {
           console.error("Erreur lors de l'enregistrement de la pool:", error);
           toast.error("Erreur lors de l'enregistrement de la pool.");
@@ -345,22 +339,6 @@
 
         return errors;
       },
-      async fetchTeamSetup() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/team-setup`
-          );
-          this.teamSetup = response.data;
-        } catch (error) {
-          console.error(
-            'Erreur lors de la récupération de la configuration des équipes:',
-            error
-          );
-          toast.error(
-            'Erreur lors de la récupération de la configuration des équipes.'
-          );
-        }
-      },
       navigateToAssignTeams() {
         // Rediriger vers la page pour assigner les équipes aux pools (à implémenter)
         this.$router.push(
@@ -370,9 +348,7 @@
     },
     mounted() {
       this.fetchTourneyStatuses(this.tourneyId);
-      this.fetchPools();
-      this.fetchTeams();
-      this.fetchTeamSetup();
+      this.fetchTourneyPoolsDetails();
     },
   };
 </script>
