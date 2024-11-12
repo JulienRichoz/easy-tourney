@@ -39,7 +39,7 @@ module.exports = {
             'ladder',              // Tournoi en escalier : les participants défient ceux au-dessus dans un classement ; le gagnant monte dans le classement
             'custom-round-robin'   // Variante de round-robin où chaque équipe doit jouer un nombre minimal de matchs contre des équipes différentes, à définir par le tourney
         ),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'custom-round-robin'
     },
     defaultMaxTeamPerPool:{
@@ -52,32 +52,32 @@ module.exports = {
     },
       status: {
         type: Sequelize.ENUM('draft', 'ready', 'active', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'draft',
       },
       fieldAssignmentStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'notStarted'
       },      
       sportAssignmentStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'notStarted'
       },
       registrationStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'active', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'notStarted'
       },
       poolStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'notStarted',
       },
       planningStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 'notStarted'
       },
       createdAt: {
