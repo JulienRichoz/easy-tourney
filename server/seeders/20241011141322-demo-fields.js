@@ -7,8 +7,7 @@ module.exports = {
     // Fields for High Tournament
     for (let i = 1; i <= 5; i++) {
       fields.push({
-        name: `High Field ${i}`,
-        description: `Field ${i} for High Tournament`,
+        name: `Field ${i}`,
         tourneyId: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -18,8 +17,7 @@ module.exports = {
     // Fields for Mid Tournament
     for (let i = 1; i <= 4; i++) {
       fields.push({
-        name: `Mid Field ${i}`,
-        description: `Field ${i} for Mid Tournament`,
+        name: `Field ${i}`,
         tourneyId: 2,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -29,8 +27,7 @@ module.exports = {
     // Fields for Low Tournament
     for (let i = 1; i <= 2; i++) {
       fields.push({
-        name: `Low Field ${i}`,
-        description: `Field ${i} for Low Tournament`,
+        name: `Field ${i}`,
         tourneyId: 3,
         createdAt: new Date(),
         updatedAt: new Date(),
