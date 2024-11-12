@@ -24,17 +24,8 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        // Nombre max de team par pool
-        maxTeamPerPool: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        // Nombre min de team par pool
-        minTeamPerPool: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-    }, {
+    }, 
+    {
         sequelize,
         modelName: 'TeamSetup',
     });

@@ -10,7 +10,17 @@ const jwt = require('jsonwebtoken');
  */
 exports.createTourney = async (req, res) => {
     try {
-        const { name, location, dateTourney, emergencyDetails, status } = req.body;
+        const {
+            name,
+            location,
+            dateTourney,
+            emergencyDetails,
+            domain,
+            tourneyType,
+            defaultMaxTeamPerPool,
+            defaultMinTeamPerPool,
+            status
+        } = req.body;
 
         if (!name || !location || !dateTourney) {
             return res.status(400).json({ message: "Les champs 'name', 'location' et 'dateTourney' sont requis." });
@@ -22,6 +32,10 @@ exports.createTourney = async (req, res) => {
             location,
             dateTourney,
             emergencyDetails,
+            domain,
+            tourneyType,
+            defaultMaxTeamPerPool,
+            defaultMinTeamPerPool,
             status
         });
 
@@ -31,6 +45,7 @@ exports.createTourney = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la création du tournoi', error });
     }
 };
+
 
 /**
  * Ajouter le planning au tournoi
@@ -601,8 +616,15 @@ exports.getTourneyPoolsDetails = async (req, res) => {
     const tourneyId = req.params.tourneyId;
   
     try {
-      // Vérifier si le tournoi existe
-      const tourney = await Tourney.findByPk(tourneyId);
+      // Vérifier si le tournoi existe et récupérer les valeurs par défaut
+      const tourney = await Tourney.findByPk(tourneyId, {
+        attributes: [
+          'id',
+          'name',
+          'defaultMaxTeamPerPool',
+          'defaultMinTeamPerPool',
+        ],
+      });
       if (!tourney) {
         return res.status(404).json({ message: 'Tournoi non trouvé' });
       }
@@ -651,25 +673,18 @@ exports.getTourneyPoolsDetails = async (req, res) => {
         ],
       });
   
-      // Récupérer la configuration des équipes
-      const teamSetup = await TeamSetup.findOne({
-        where: { tourneyId },
-        attributes: [
-          'maxTeamNumber',
-          'playerPerTeam',
-          'minPlayerPerTeam',
-          'minTeamPerPool',
-          'maxTeamPerPool',
-        ],
-      });
-  
       res.json({
         pools,
         teams,
-        teamSetup,
+        tourneySetup: {
+          defaultMaxTeamPerPool: tourney.defaultMaxTeamPerPool,
+          defaultMinTeamPerPool: tourney.defaultMinTeamPerPool,
+        },
       });
     } catch (error) {
       console.error('Erreur lors de la récupération des détails des pools du tournoi:', error);
       res.status(500).json({ message: 'Erreur serveur', error });
     }
-  };
+};
+  
+  
