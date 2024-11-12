@@ -1,42 +1,120 @@
 <!-- TourneyPoolDetails.vue -->
 <template>
   <div>
-    <div class="p-6">
-      <!-- Titre avec le nom de la Pool -->
+    <div class="p-6" v-if="pool">
       <div class="flex items-center mb-4">
-        <TitleComponent :title="`Détails de la Pool : ${pool.name}`" />
+        <TitleComponent :title="`Détails : ${pool.name}`" />
+        <!-- Bouton Retour -->
+        <ButtonComponent
+          variant="secondary"
+          fontAwesomeIcon="arrow-left"
+          class="absolute right-0"
+          @click="goBackToPools"
+        >
+          <span class="hidden sm:inline">Retour aux Pools</span>
+        </ButtonComponent>
       </div>
 
+      <!-- Section pour les équipes déjà assignées à la Pool -->
+      <div>
+        <h2 class="text-lg font-semibold mb-2">Équipes dans cette Pool</h2>
+        <div v-if="assignedTeams.length > 0">
+          <form @submit.prevent="removeSelectedTeams">
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white rounded-lg shadow-md">
+                <thead>
+                  <tr class="bg-gray-100 border-b">
+                    <th class="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        v-model="selectAllAssigned"
+                        @change="toggleSelectAllAssigned"
+                      />
+                      <span class="ml-2">All</span>
+                    </th>
+                    <th class="px-4 py-3 text-left">Nom de l'équipe</th>
+                    <th class="px-4 py-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="team in assignedTeams"
+                    :key="team.id"
+                    class="border-t hover:bg-gray-50"
+                    @click="toggleRemoveTeamSelection(team.id)"
+                  >
+                    <td class="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        v-model="selectedAssignedTeams"
+                        :value="team.id"
+                        @click.stop
+                      />
+                    </td>
+                    <td class="px-4 py-2">{{ team.teamName }}</td>
+                    <td class="px-4 py-2">
+                      <SoftButtonComponent
+                        fontAwesomeIcon="fa-trash"
+                        iconClass="w-4 h-4 text-red-500 hover:text-red-700"
+                        aria-label="Retirer du pool"
+                        @click="removeTeam(team.id)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ButtonComponent
+              type="submit"
+              variant="danger"
+              class="mt-2"
+              :disabled="selectedAssignedTeams.length === 0"
+            >
+              Retirer
+            </ButtonComponent>
+          </form>
+        </div>
+        <div v-else>
+          <p>Aucune équipe dans cette Pool.</p>
+        </div>
+      </div>
       <!-- Section pour ajouter des équipes à la Pool -->
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-2">Équipes non assignées</h2>
-        <div v-if="unassignedTeams.length > 0">
+        <div
+          v-if="unassignedTeams.length > 0"
+          class="overflow-y-auto"
+          style="max-height: 300px"
+        >
           <form @submit.prevent="assignSelectedTeams">
             <div class="overflow-x-auto">
-              <table class="min-w-full bg-white">
+              <table class="min-w-full bg-white rounded-lg shadow-md">
                 <thead>
-                  <tr>
-                    <th class="px-4 py-2">
+                  <tr class="bg-gray-100 border-b">
+                    <th class="px-4 py-3 text-left">
                       <input
                         type="checkbox"
                         v-model="selectAllUnassigned"
                         @change="toggleSelectAllUnassigned"
                       />
+                      <span class="ml-2">All</span>
                     </th>
-                    <th class="px-4 py-2">Nom de l'équipe</th>
+                    <th class="px-4 py-3 text-left">Nom de l'équipe</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr
                     v-for="team in unassignedTeams"
                     :key="team.id"
-                    class="border-t"
+                    class="border-t hover:bg-gray-50"
+                    @click="toggleTeamSelection(team.id)"
                   >
                     <td class="px-4 py-2">
                       <input
                         type="checkbox"
                         v-model="selectedUnassignedTeams"
                         :value="team.id"
+                        @click.stop
                       />
                     </td>
                     <td class="px-4 py-2">{{ team.teamName }}</td>
@@ -50,99 +128,12 @@
               class="mt-2"
               :disabled="selectedUnassignedTeams.length === 0"
             >
-              Assigner les équipes sélectionnées à cette Pool
+              Assigner
             </ButtonComponent>
           </form>
         </div>
         <div v-else>
           <p>Aucune équipe non assignée.</p>
-        </div>
-      </div>
-
-      <!-- Section pour les équipes déjà assignées à la Pool -->
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Équipes dans cette Pool</h2>
-        <div v-if="assignedTeams.length > 0">
-          <form @submit.prevent="removeSelectedTeams">
-            <div class="overflow-x-auto">
-              <table class="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th class="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        v-model="selectAllAssigned"
-                        @change="toggleSelectAllAssigned"
-                      />
-                    </th>
-                    <th class="px-4 py-2">Nom de l'équipe</th>
-                    <th class="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="team in assignedTeams"
-                    :key="team.id"
-                    class="border-t"
-                  >
-                    <td class="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        v-model="selectedAssignedTeams"
-                        :value="team.id"
-                      />
-                    </td>
-                    <td class="px-4 py-2">{{ team.teamName }}</td>
-                    <td class="px-4 py-2">
-                      <ButtonComponent
-                        variant="danger"
-                        fontAwesomeIcon="trash"
-                        @click="removeTeam(team.id)"
-                      >
-                      </ButtonComponent>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <ButtonComponent
-              type="submit"
-              variant="danger"
-              class="mt-2"
-              :disabled="selectedAssignedTeams.length === 0"
-            >
-              Retirer les équipes sélectionnées de cette Pool
-            </ButtonComponent>
-          </form>
-        </div>
-        <div v-else>
-          <p>Aucune équipe dans cette Pool.</p>
-        </div>
-      </div>
-
-      <!-- Section pour les sessions de la Pool -->
-      <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-2">Sessions de la Pool</h2>
-        <div v-if="poolSchedules.length > 0">
-          <ul>
-            <li v-for="schedule in poolSchedules" :key="schedule.id">
-              {{ schedule.date }} - {{ schedule.startTime }} à
-              {{ schedule.endTime }} sur {{ schedule.field.name }}
-            </li>
-          </ul>
-        </div>
-        <div v-else>
-          <p>Aucune session programmée pour cette Pool.</p>
-        </div>
-
-        <!-- Formulaire pour ajouter une nouvelle session -->
-        <div v-if="isEditable" class="mt-4">
-          <h3 class="text-md font-semibold mb-2">Ajouter une session</h3>
-          <FormComponent
-            v-model="newPoolSchedule"
-            :fields="poolScheduleFields"
-            @form-submit="createPoolSchedule"
-          />
         </div>
       </div>
     </div>
@@ -154,64 +145,27 @@
   import apiService from '@/services/apiService';
   import TitleComponent from '@/components/TitleComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import SoftButtonComponent from '@/components/SoftButtonComponent.vue';
   import { toast } from 'vue3-toastify';
 
   export default {
     components: {
       TitleComponent,
       ButtonComponent,
+      SoftButtonComponent,
     },
     data() {
       return {
         tourneyId: this.$route.params.tourneyId,
         poolId: this.$route.params.poolId,
-        pool: {},
-        poolSchedules: [],
-        newPoolSchedule: {
-          fieldId: null,
-          startTime: '',
-          endTime: '',
-          date: '',
-        },
-        fields: [],
+        pool: null,
         teams: [],
-        tourneySetup: {},
         assignedTeams: [],
         unassignedTeams: [],
         selectedUnassignedTeams: [],
         selectedAssignedTeams: [],
         selectAllUnassigned: false,
         selectAllAssigned: false,
-        poolScheduleFields: [
-          {
-            name: 'date',
-            label: 'Date',
-            type: 'date',
-            required: true,
-          },
-          {
-            name: 'startTime',
-            label: 'Heure de début',
-            type: 'time',
-            required: true,
-          },
-          {
-            name: 'endTime',
-            label: 'Heure de fin',
-            type: 'time',
-            required: true,
-          },
-          {
-            name: 'fieldId',
-            label: 'Terrain',
-            type: 'select',
-            options: this.fields.map((field) => ({
-              value: field.id,
-              label: field.name,
-            })),
-            required: true,
-          },
-        ],
       };
     },
     computed: {
@@ -229,31 +183,25 @@
       ...mapActions('tourney', ['fetchTourneyStatuses']),
       async fetchPoolDetails() {
         try {
-          // Récupérer les détails de la pool
+          // Récupérer les détails de la pool, incluant les équipes assignées
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/pools/${this.poolId}`
           );
-          const pool = response.data;
-          this.pool = pool;
+          this.pool = response.data;
 
-          // Récupérer les valeurs par défaut du tournoi
-          const tourneyResponse = await apiService.get(
-            `/tourneys/${this.tourneyId}/pools-details`
-          );
-          const { tourneySetup } = tourneyResponse.data;
-          this.tourneySetup = tourneySetup;
-
-          // Récupérer toutes les équipes du tournoi
+          // Récupérer toutes les équipes du tournoi et filtrer
           const teamsResponse = await apiService.get(
             `/tourneys/${this.tourneyId}/teams`
           );
           const allTeams = teamsResponse.data;
 
-          // Séparer les équipes assignées et non assignées
-          this.assignedTeams = allTeams.filter(
-            (team) => team.poolId === this.poolId
+          // Séparer les équipes non assignées, sans assistant et sans poolId
+          this.unassignedTeams = allTeams.filter(
+            (team) => team.type === 'player' && !team.poolId
           );
-          this.unassignedTeams = allTeams.filter((team) => !team.poolId);
+
+          // Utiliser les équipes assignées directement de `this.pool`
+          this.assignedTeams = this.pool.teams;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails de la Pool:',
@@ -262,38 +210,6 @@
           toast.error('Erreur lors de la récupération des détails de la Pool.');
         }
       },
-
-      async fetchPoolSchedules() {
-        try {
-          const response = await apiService.get(
-            `/pools/${this.poolId}/schedules`
-          );
-          this.poolSchedules = response.data;
-        } catch (error) {
-          console.error(
-            'Erreur lors de la récupération des sessions de Pool:',
-            error
-          );
-          toast.error('Erreur lors de la récupération des sessions de Pool.');
-        }
-      },
-      async createPoolSchedule() {
-        try {
-          await apiService.post(
-            `/pools/${this.poolId}/schedules`,
-            this.newPoolSchedule
-          );
-          toast.success('Session de Pool créée avec succès !');
-          this.fetchPoolSchedules();
-        } catch (error) {
-          console.error(
-            'Erreur lors de la création de la session de Pool:',
-            error
-          );
-          toast.error('Erreur lors de la création de la session de Pool.');
-        }
-      },
-
       toggleSelectAllUnassigned() {
         if (this.selectAllUnassigned) {
           this.selectedUnassignedTeams = this.unassignedTeams.map(
@@ -319,7 +235,8 @@
             this.assignedTeams.length + this.selectedUnassignedTeams.length;
           const maxTeams =
             this.pool.maxTeamPerPool ||
-            this.tourneySetup?.defaultMaxTeamPerPool;
+            this.pool.defaultMaxTeamPerPool ||
+            Number.MAX_SAFE_INTEGER;
 
           if (maxTeams && totalTeamsAfterAssignment > maxTeams) {
             toast.error(
@@ -328,9 +245,12 @@
             return;
           }
 
-          await apiService.post(`/pools/${this.poolId}/assign-teams`, {
-            teamIds: this.selectedUnassignedTeams,
-          });
+          await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/${this.poolId}/assign-teams`,
+            {
+              teamIds: this.selectedUnassignedTeams,
+            }
+          );
           toast.success('Équipes assignées avec succès !');
           this.selectedUnassignedTeams = [];
           this.selectAllUnassigned = false;
@@ -343,9 +263,12 @@
 
       async removeTeam(teamId) {
         try {
-          await apiService.post(`/pools/${this.poolId}/remove-teams`, {
-            teamIds: [teamId],
-          });
+          await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/${this.poolId}/remove-teams`,
+            {
+              teamIds: [teamId],
+            }
+          );
           toast.success('Équipe retirée avec succès !');
           this.fetchPoolDetails();
         } catch (error) {
@@ -356,9 +279,12 @@
 
       async removeSelectedTeams() {
         try {
-          await apiService.post(`/pools/${this.poolId}/remove-teams`, {
-            teamIds: this.selectedAssignedTeams,
-          });
+          await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/${this.poolId}/remove-teams`,
+            {
+              teamIds: this.selectedAssignedTeams,
+            }
+          );
           toast.success('Équipes retirées avec succès !');
           this.selectedAssignedTeams = [];
           this.selectAllAssigned = false;
@@ -368,27 +294,38 @@
           toast.error('Erreur lors du retrait des équipes.');
         }
       },
-      async fetchFields() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/fields`
+      toggleTeamSelection(teamId) {
+        if (this.selectedUnassignedTeams.includes(teamId)) {
+          this.selectedUnassignedTeams = this.selectedUnassignedTeams.filter(
+            (id) => id !== teamId
           );
-          this.fields = response.data;
-        } catch (error) {
-          console.error('Erreur lors de la récupération des terrains:', error);
-          toast.error('Erreur lors de la récupération des terrains.');
+        } else {
+          this.selectedUnassignedTeams.push(teamId);
         }
+      },
+
+      toggleRemoveTeamSelection(teamId) {
+        if (this.assignedTeams.includes(teamId)) {
+          this.selectedAssignedTeams = this.selectedAssignedTeams.filter(
+            (id) => id !== teamId
+          );
+        } else {
+          this.selectedAssignedTeams.push(teamId);
+        }
+      },
+      goBackToPools() {
+        this.$router.push(
+          `/admin/tourneys/${this.$route.params.tourneyId}/pools`
+        );
       },
     },
     mounted() {
       this.fetchTourneyStatuses(this.tourneyId);
       this.fetchPoolDetails();
-      this.fetchPoolSchedules();
-      this.fetchFields();
     },
   };
 </script>
 
 <style scoped>
-  /* Ajoutez vos styles ici */
+  /* Vos styles ici */
 </style>

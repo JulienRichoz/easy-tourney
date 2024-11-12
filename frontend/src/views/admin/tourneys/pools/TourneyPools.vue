@@ -35,6 +35,18 @@
               Assigner Équipes ({{ unassignedTeams.length }})
             </span>
           </ButtonComponent>
+
+          <!-- Bouton de génération des pools -->
+          <div class="flex justify-end">
+            <ButtonComponent
+              v-if="isEditable"
+              variant="algo"
+              fontAwesomeIcon="cog"
+              @click="openGeneratePoolsModal"
+            >
+              Générer des Pools
+            </ButtonComponent>
+          </div>
         </div>
 
         <!-- Sélecteur de statut pour les pools -->
@@ -138,6 +150,47 @@
           />
         </template>
       </ModalComponent>
+
+      <!-- Modale pour générer des pools -->
+      <ModalComponent
+        :isVisible="showGeneratePoolsModal"
+        title="Générer des Pools"
+        @close="closeGeneratePoolsModal"
+      >
+        <template #content>
+          <p class="mb-4 text-gray-600">
+            Pour un tournus optimal, il est recommandé de créer un nombre de
+            pools équivalent au nombre de terrains disponibles (<strong>{{
+              availableFields
+            }}</strong>
+            terrains).
+          </p>
+          <div class="flex flex-col mb-4">
+            <label
+              for="poolCount"
+              class="text-sm font-medium text-gray-700 mb-2"
+            >
+              Nombre de Pools :
+            </label>
+            <input
+              type="number"
+              v-model="desiredPoolCount"
+              :placeholder="`Nombre optimal : ${availableFields}`"
+              min="1"
+              :max="Math.ceil(availableFields * 1.5)"
+              class="input-style border border-gray-300 rounded-md p-2"
+            />
+          </div>
+        </template>
+        <template #footer>
+          <ButtonComponent variant="primary" @click="generatePools">
+            Générer
+          </ButtonComponent>
+          <ButtonComponent variant="secondary" @click="closeGeneratePoolsModal">
+            Annuler
+          </ButtonComponent>
+        </template>
+      </ModalComponent>
     </div>
   </div>
 </template>
@@ -190,6 +243,9 @@
           minTeamPerPool: null,
           maxTeamPerPool: null,
         },
+        showGeneratePoolsModal: false,
+        availableFields: 0,
+        desiredPoolCount: null,
         formFields: [
           {
             name: 'name',
@@ -200,6 +256,7 @@
           {
             name: 'stage',
             label: 'Stade',
+            placeholder: 'Demi-finale, Finale, etc.',
             type: 'text',
             required: false,
           },
@@ -439,6 +496,32 @@
           return 'orange'; // Partielle
         } else {
           return 'gray'; // Vide
+        }
+      },
+
+      // Pool generation
+      openGeneratePoolsModal() {
+        this.showGeneratePoolsModal = true;
+      },
+      closeGeneratePoolsModal() {
+        this.showGeneratePoolsModal = false;
+      },
+      async generatePools() {
+        if (!this.desiredPoolCount || this.desiredPoolCount < 1) {
+          return toast.error('Veuillez entrer un nombre valide de pools.');
+        }
+
+        try {
+          // Appel à l'API ou logique pour générer les pools
+          await apiService.post(`/tourneys/${this.tourneyId}/pools/generate`, {
+            poolCount: this.desiredPoolCount,
+          });
+
+          toast.success('Pools générés avec succès !');
+          this.closeGeneratePoolsModal();
+        } catch (error) {
+          console.error('Erreur lors de la génération des pools :', error);
+          toast.error('Erreur lors de la génération des pools.');
         }
       },
     },
