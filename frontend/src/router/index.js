@@ -36,7 +36,7 @@ router.beforeEach(async (to, from, next) => {
       const userRole = decoded.roleId;
       // Rediriger en fonction du rôle de l'utilisateur
       if (userRole === 1) {
-        return next('/tourneys');
+        return next('/admin/tourneys');
       } else {
         return next('/user');
       }
@@ -70,25 +70,20 @@ router.beforeEach(async (to, from, next) => {
     try {
       const tourneyId = to.params.tourneyId;
 
-      // Récupérer les statuts via fetchTourneyStatuses
+      // Récupérer les statuts, le nom et le tourneyType via fetchTourneyStatuses
       await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
-
-      // Stocker le nom du tournoi dans le store
-      const response = await apiService.get(`tourneys/${tourneyId}/statuses`);
-      const tournamentName = response.data.name;
-      await store.dispatch('tourney/setTournamentName', tournamentName);
 
     } catch (error) {
       console.error('Erreur lors de la récupération du tournoi:', error);
 
       if (error.response && error.response.status === 404) {
-        return next({ name: 'NotFoundPage' }); // Rediriger vers la page 404 si le tournoi n'existe pas
+        return next({ name: 'NotFoundPage' });
       } else {
-        await store.dispatch('tourney/clearTournamentName'); // Nettoyer les données du tournoi si erreur autre que 404
+        await store.dispatch('tourney/clearTournamentName');
       }
     }
   } else {
-    store.dispatch('tourney/clearTournamentName'); // Nettoyer le nom du tournoi si on quitte une route liée à un tournoi
+    store.dispatch('tourney/clearTournamentName');
   }
 
   // Vérification si la route nécessite une authentification
