@@ -16,13 +16,9 @@
             variant="secondary"
             class="ml-2"
           >
-            <span class="hidden sm:inline">Config Pools</span>
+            <span class="hidden sm:inline">Global Config Pools</span>
           </ButtonComponent>
 
-          <FilterComponent
-            :filters="filters"
-            @filter-change="handleFilterChange"
-          />
           <!-- Bouton pour assigner les équipes aux pools -->
           <ButtonComponent
             v-if="isEditable && unassignedTeams.length > 0"
@@ -60,6 +56,8 @@
         </div>
       </div>
 
+      <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
+      Total Equipe: {{ teams.length }}
       <!-- Grille d'affichage des pools -->
       <div
         class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
@@ -249,13 +247,13 @@
         poolSetupFields: [
           {
             name: 'defaultMinTeamPerPool',
-            label: "Nombre minimum d'équipes par pool par défaut",
+            label: "Nombre min. d'équipes par pool",
             type: 'number',
             required: true,
           },
           {
             name: 'defaultMaxTeamPerPool',
-            label: "Nombre maximum d'équipes par pool par défaut",
+            label: "Nombre max. d'équipes par pool",
             type: 'number',
             required: true,
           },

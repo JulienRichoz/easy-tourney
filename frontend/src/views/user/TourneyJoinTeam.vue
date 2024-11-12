@@ -189,6 +189,7 @@
           teams = teams.filter(
             (team) =>
               team.usersTourneys.length < this.getTeamCapacity(team) &&
+              team.usersTourneys.length > 0 &&
               team.type === 'player'
           );
         } else if (this.selectedFilter === 'full') {
