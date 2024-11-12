@@ -1,9 +1,6 @@
-<!-- PoolDetails.vue -->
+<!-- TourneyPoolDetails.vue -->
 <template>
   <div>
-    <!-- Sous-menu du tournoi -->
-    <TourneySubMenu :tourneyId="tourneyId" />
-
     <div class="p-6">
       <!-- Titre avec le nom de la Pool -->
       <div class="flex items-center mb-4">
@@ -122,6 +119,32 @@
           <p>Aucune équipe dans cette Pool.</p>
         </div>
       </div>
+
+      <!-- Section pour les sessions de la Pool -->
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-2">Sessions de la Pool</h2>
+        <div v-if="poolSchedules.length > 0">
+          <ul>
+            <li v-for="schedule in poolSchedules" :key="schedule.id">
+              {{ schedule.date }} - {{ schedule.startTime }} à
+              {{ schedule.endTime }} sur {{ schedule.field.name }}
+            </li>
+          </ul>
+        </div>
+        <div v-else>
+          <p>Aucune session programmée pour cette Pool.</p>
+        </div>
+
+        <!-- Formulaire pour ajouter une nouvelle session -->
+        <div v-if="isEditable" class="mt-4">
+          <h3 class="text-md font-semibold mb-2">Ajouter une session</h3>
+          <FormComponent
+            v-model="newPoolSchedule"
+            :fields="poolScheduleFields"
+            @form-submit="createPoolSchedule"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -129,14 +152,12 @@
 <script>
   import { mapState, mapActions } from 'vuex';
   import apiService from '@/services/apiService';
-  import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import { toast } from 'vue3-toastify';
 
   export default {
     components: {
-      TourneySubMenu,
       TitleComponent,
       ButtonComponent,
     },
@@ -145,6 +166,14 @@
         tourneyId: this.$route.params.tourneyId,
         poolId: this.$route.params.poolId,
         pool: {},
+        poolSchedules: [],
+        newPoolSchedule: {
+          fieldId: null,
+          startTime: '',
+          endTime: '',
+          date: '',
+        },
+        fields: [],
         teams: [],
         tourneySetup: {},
         assignedTeams: [],
@@ -153,6 +182,36 @@
         selectedAssignedTeams: [],
         selectAllUnassigned: false,
         selectAllAssigned: false,
+        poolScheduleFields: [
+          {
+            name: 'date',
+            label: 'Date',
+            type: 'date',
+            required: true,
+          },
+          {
+            name: 'startTime',
+            label: 'Heure de début',
+            type: 'time',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            label: 'Heure de fin',
+            type: 'time',
+            required: true,
+          },
+          {
+            name: 'fieldId',
+            label: 'Terrain',
+            type: 'select',
+            options: this.fields.map((field) => ({
+              value: field.id,
+              label: field.name,
+            })),
+            required: true,
+          },
+        ],
       };
     },
     computed: {
@@ -201,6 +260,37 @@
             error
           );
           toast.error('Erreur lors de la récupération des détails de la Pool.');
+        }
+      },
+
+      async fetchPoolSchedules() {
+        try {
+          const response = await apiService.get(
+            `/pools/${this.poolId}/schedules`
+          );
+          this.poolSchedules = response.data;
+        } catch (error) {
+          console.error(
+            'Erreur lors de la récupération des sessions de Pool:',
+            error
+          );
+          toast.error('Erreur lors de la récupération des sessions de Pool.');
+        }
+      },
+      async createPoolSchedule() {
+        try {
+          await apiService.post(
+            `/pools/${this.poolId}/schedules`,
+            this.newPoolSchedule
+          );
+          toast.success('Session de Pool créée avec succès !');
+          this.fetchPoolSchedules();
+        } catch (error) {
+          console.error(
+            'Erreur lors de la création de la session de Pool:',
+            error
+          );
+          toast.error('Erreur lors de la création de la session de Pool.');
         }
       },
 
@@ -278,10 +368,23 @@
           toast.error('Erreur lors du retrait des équipes.');
         }
       },
+      async fetchFields() {
+        try {
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/fields`
+          );
+          this.fields = response.data;
+        } catch (error) {
+          console.error('Erreur lors de la récupération des terrains:', error);
+          toast.error('Erreur lors de la récupération des terrains.');
+        }
+      },
     },
     mounted() {
       this.fetchTourneyStatuses(this.tourneyId);
       this.fetchPoolDetails();
+      this.fetchPoolSchedules();
+      this.fetchFields();
     },
   };
 </script>
