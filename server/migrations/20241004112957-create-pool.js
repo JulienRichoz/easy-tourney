@@ -25,6 +25,29 @@ module.exports = {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
+      // Nombre max de team par pool
+      maxTeamPerPool: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      // Nombre min de team par pool
+      minTeamPerPool: {
+          type: Sequelize.INTEGER,
+          allowNull: true,
+      },
+      // Stade du tournoi selon type (demi-final, final, etc.)
+      stage: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      startTime: {
+        type: Sequelize.TIME,
+        allowNull: true,
+      },
+      endTime: {
+        type: Sequelize.TIME,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
