@@ -87,6 +87,10 @@
                 + {{ pool.teams.length - 4 }} autres
               </li>
             </ul>
+            <!-- Afficher le nombre de sessions -->
+            <div class="mt-2 text-sm text-gray-500">
+              Sessions programmées : {{ pool.schedulesCount || 0 }}
+            </div>
           </template>
         </CardEditComponent>
       </div>
@@ -283,10 +287,13 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/pools-details`
           );
-          const { pools, teams, tourneySetup } = response.data; // Récupérer tourneySetup
-          this.pools = pools;
+          const { pools, teams, tourneySetup } = response.data;
+          this.pools = pools.map((pool) => ({
+            ...pool,
+            schedulesCount: pool.schedules ? pool.schedules.length : 0,
+          }));
           this.teams = teams;
-          this.tourneySetup = tourneySetup; // Stocker tourneySetup localement
+          this.tourneySetup = tourneySetup;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails des pools:',
@@ -314,9 +321,7 @@
       },
       openPoolDetails(pool) {
         // Rediriger vers la page d'une pool pour assigner les équipes (à implémenter)
-        this.$router.push(
-          `/admin/tourneys/${this.tourneyId}/pools/${pool.id}/teams`
-        );
+        this.$router.push(`/admin/tourneys/${this.tourneyId}/pools/${pool.id}`);
       },
       confirmDeletePool(id) {
         this.confirmedDeletePoolId = id;
