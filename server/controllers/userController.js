@@ -7,6 +7,7 @@ const Sequelize = require('sequelize');
 // Récupérer tous les utilisateurs avec leurs tournois et équipes (admin seulement)
 // DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
 // PROBLEM N+1
+// TODO:AMELIORATIONS => inclure système de cache (redis?). Mettre en place système de pagniation
 exports.getAllUsersWithDetails = async (req, res) => {
     try {
         if (req.user.roleId !== roles.ADMIN) {
