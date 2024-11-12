@@ -19,6 +19,29 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    // Nombre max de team par pool
+    maxTeamPerPool: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    // Nombre min de team par pool
+    minTeamPerPool: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    // Stade du tournoi selon type (demi-final, final, etc.)
+    stage: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    startTime: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    endTime: {
+      type: DataTypes.TIME,
+      allowNull: true
+    }
   }, {
     sequelize,
     modelName: 'Pool',
