@@ -2,7 +2,6 @@
 const { User, Tourney, Role, UsersTourneys, Team, sequelize } = require('../models');
 const { roles } = require('../config/roles');
 const authService = require('../services/authService');
-const Sequelize = require('sequelize');
 
 // Récupérer tous les utilisateurs avec leurs tournois et équipes (admin seulement)
 // DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
@@ -31,11 +30,11 @@ exports.getAllUsersWithDetails = async (req, res) => {
                             as: 'tourney',
                             attributes: ['id', 'name'],
                         },
-                        {
-                            model: Team,
+                        
+                           /* model: Team,
                             as: 'team',
-                            attributes: ['id', 'teamName', 'type'],
-                        },
+                            attributes: ['id', 'teamName', 'type'],*/
+                        
                     ],
                 },
                 {
