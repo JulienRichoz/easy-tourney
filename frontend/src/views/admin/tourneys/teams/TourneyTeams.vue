@@ -600,11 +600,7 @@
     },
     methods: {
       // Mapper les actions du module `tourney`
-      ...mapActions('tourney', [
-        'fetchTourneyStatuses',
-        'setTournamentName',
-        'clearTournamentName',
-      ]),
+      ...mapActions('tourney', ['fetchTourneyStatuses', 'setTournamentName']),
       // Méthode pour récupérer toutes les données nécessaires en une seule requête
       async fetchTourneyDetails() {
         try {

@@ -80,6 +80,7 @@
 
 <script>
   import 'leaflet/dist/leaflet.css';
+  import { mapState, mapActions } from 'vuex';
   import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import apiService from '@/services/apiService';
@@ -111,8 +112,11 @@
       this.mapIsReady = true; // Initialisation de la carte une fois les détails récupérés
     },
     methods: {
+      // Mapper les actions du module `tourney`
+      ...mapActions('tourney', ['fetchTourneyStatuses', 'setTournamentName']),
       async fetchTourneyDetails() {
         try {
+          this.fetchTourneyStatuses(this.tourneyId);
           const response = await apiService.get(`/tourneys/${this.tourneyId}`);
           this.tourney = response.data;
           // Optionnel: Définir l'étape actuelle en fonction des données du tournoi
@@ -131,6 +135,11 @@
       selectTab(tab) {
         this.activeTab = tab;
       },
+    },
+    computed: {
+      ...mapState('tourney', {
+        statuses: (state) => state.statuses,
+      }),
     },
   };
 </script>

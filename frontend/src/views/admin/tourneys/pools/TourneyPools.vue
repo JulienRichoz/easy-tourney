@@ -261,7 +261,7 @@
           },
         ],
         poolStatusOptions: [
-          { value: 'draft', label: 'En cours' },
+          { value: 'draft', label: 'Edition' },
           { value: 'completed', label: 'Terminé' },
         ],
         filters: [
