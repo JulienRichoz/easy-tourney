@@ -1,4 +1,3 @@
-<!-- components/StrategyPattern/Pool/strategies/CustomRoundRobinStrategy.vue -->
 <template>
   <div>
     <p class="mb-4 text-gray-600">
@@ -8,19 +7,6 @@
       est préférable d'effectuer cette action une fois les inscriptions
       terminées. Vous pourrez ensuite ajuster manuellement si nécessaire.
     </p>
-    <div class="flex flex-col mb-4">
-      <label for="poolCount" class="text-sm font-medium text-gray-700 mb-2">
-        Nombre de Pools :
-      </label>
-      <input
-        type="number"
-        v-model="poolCount"
-        :placeholder="`Nombre optimal : ${availableFields}`"
-        min="1"
-        :max="Math.ceil(availableFields * 1.5)"
-        class="input-style border border-gray-300 rounded-md p-2"
-      />
-    </div>
   </div>
 </template>
 
@@ -47,29 +33,29 @@
         required: true,
       },
     },
-    data() {
-      return {
-        poolCount: null,
-      };
-    },
     methods: {
       async generatePools() {
-        if (!this.poolCount || this.poolCount < 1) {
-          toast.error('Veuillez entrer un nombre valide de pools.');
-          return false;
-        }
-
         try {
-          await apiService.post(`/tourneys/${this.tourneyId}/pools/generate`, {
-            poolCount: this.poolCount,
-            strategy: 'customRoundRobin',
-          });
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/generate`,
+            {
+              strategy: 'customRoundRobin',
+            }
+          );
 
-          toast.success('Pools générés avec succès !');
+          const { pools } = response.data;
+          const poolCount = pools.length;
+
+          toast.success(
+            `Pools générées avec succès ! ${poolCount} pools ont été créées.`
+          );
           return true;
         } catch (error) {
           console.error('Erreur lors de la génération des pools :', error);
-          toast.error('Erreur lors de la génération des pools.');
+          const errorMessage =
+            error.response?.data?.message ||
+            'Erreur lors de la génération des pools.';
+          toast.error(errorMessage);
           return false;
         }
       },

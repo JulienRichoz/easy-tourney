@@ -1,11 +1,8 @@
 // services/poolStrategies/customRoundRobin.js
-const PoolStrategy = require('./poolStrategy');
-const { Pool, Team, Field, TourneySetup } = require('../../models');
 
-/**
- * Algorithme pour remplir des Pools équitablement selon le nombre de teams
- * Le but est ensuite de les faire jouer sans élimination, donc pas de création de pool anticipée pour les gagnants/perdants/etc.
- */
+const PoolStrategy = require('./poolStrategy');
+const { Pool, Team, Field, Tourney } = require('../../models');
+
 class CustomRoundRobin extends PoolStrategy {
   async generatePools() {
     // Récupérer les équipes de type 'player' (exclure les 'assistant')
@@ -33,13 +30,11 @@ class CustomRoundRobin extends PoolStrategy {
       throw new Error('Aucun terrain disponible pour ce tournoi.');
     }
 
-    // Récupérer les configurations des pools
-    const tourneySetup = await TourneySetup.findOne({
-      where: { tourneyId: this.tourneyId },
-    });
+    // Récupérer les configurations des pools depuis le Tourney
+    const tourney = await Tourney.findByPk(this.tourneyId);
 
-    const minTeamPerPool = tourneySetup?.defaultMinTeamPerPool || 3;
-    const maxTeamPerPool = tourneySetup?.defaultMaxTeamPerPool || 6;
+    const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
+    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 6;
 
     if (teamCount < minTeamPerPool) {
       throw new Error(
@@ -72,12 +67,14 @@ class CustomRoundRobin extends PoolStrategy {
     // Supprimer les pools existantes
     await Pool.destroy({ where: { tourneyId: this.tourneyId } });
 
-    // Créer les pools
+    // Créer les pools avec les configurations spécifiques
     const pools = [];
     for (let i = 0; i < poolCount; i++) {
       const pool = await Pool.create({
         name: `Pool ${String.fromCharCode(65 + i)}`,
         tourneyId: this.tourneyId,
+        maxTeamPerPool: maxTeamPerPool,
+        minTeamPerPool: minTeamPerPool,
       });
       pools.push(pool);
     }
