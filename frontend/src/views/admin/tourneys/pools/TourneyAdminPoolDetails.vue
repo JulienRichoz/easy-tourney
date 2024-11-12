@@ -146,6 +146,7 @@
         poolId: this.$route.params.poolId,
         pool: {},
         teams: [],
+        tourneySetup: {},
         assignedTeams: [],
         unassignedTeams: [],
         selectedUnassignedTeams: [],
@@ -169,11 +170,19 @@
       ...mapActions('tourney', ['fetchTourneyStatuses']),
       async fetchPoolDetails() {
         try {
+          // Récupérer les détails de la pool
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/pools/${this.poolId}`
           );
           const pool = response.data;
           this.pool = pool;
+
+          // Récupérer les valeurs par défaut du tournoi
+          const tourneyResponse = await apiService.get(
+            `/tourneys/${this.tourneyId}/pools-details`
+          );
+          const { tourneySetup } = tourneyResponse.data;
+          this.tourneySetup = tourneySetup;
 
           // Récupérer toutes les équipes du tournoi
           const teamsResponse = await apiService.get(
@@ -215,6 +224,20 @@
       },
       async assignSelectedTeams() {
         try {
+          // Vérifier si l'ajout des équipes ne dépasse pas la capacité maximale
+          const totalTeamsAfterAssignment =
+            this.assignedTeams.length + this.selectedUnassignedTeams.length;
+          const maxTeams =
+            this.pool.maxTeamPerPool ||
+            this.tourneySetup?.defaultMaxTeamPerPool;
+
+          if (maxTeams && totalTeamsAfterAssignment > maxTeams) {
+            toast.error(
+              `Impossible d'assigner les équipes : la pool atteindrait sa capacité maximale de ${maxTeams} équipes.`
+            );
+            return;
+          }
+
           await apiService.post(`/pools/${this.poolId}/assign-teams`, {
             teamIds: this.selectedUnassignedTeams,
           });
@@ -227,10 +250,11 @@
           toast.error("Erreur lors de l'assignation des équipes.");
         }
       },
+
       async removeTeam(teamId) {
         try {
-          await apiService.post(`/pools/${this.poolId}/remove-team`, {
-            teamId,
+          await apiService.post(`/pools/${this.poolId}/remove-teams`, {
+            teamIds: [teamId],
           });
           toast.success('Équipe retirée avec succès !');
           this.fetchPoolDetails();
@@ -239,6 +263,7 @@
           toast.error("Erreur lors du retrait de l'équipe.");
         }
       },
+
       async removeSelectedTeams() {
         try {
           await apiService.post(`/pools/${this.poolId}/remove-teams`, {

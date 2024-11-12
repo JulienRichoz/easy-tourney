@@ -193,17 +193,35 @@
             type: 'text',
             required: true,
           },
-        ],
-        poolSetupFields: [
           {
-            name: 'minTeamPerPool',
-            label: "Nombre minimum d'équipes par pool",
-            type: 'number',
-            required: true,
+            name: 'stage',
+            label: 'Stade',
+            type: 'text',
+            required: false,
           },
           {
             name: 'maxTeamPerPool',
             label: "Nombre maximum d'équipes par pool",
+            type: 'number',
+            required: false,
+          },
+          {
+            name: 'minTeamPerPool',
+            label: "Nombre minimum d'équipes par pool",
+            type: 'number',
+            required: false,
+          },
+        ],
+        poolSetupFields: [
+          {
+            name: 'defaultMinTeamPerPool',
+            label: "Nombre minimum d'équipes par pool par défaut",
+            type: 'number',
+            required: true,
+          },
+          {
+            name: 'defaultMaxTeamPerPool',
+            label: "Nombre maximum d'équipes par pool par défaut",
             type: 'number',
             required: true,
           },
@@ -238,7 +256,10 @@
       },
       filteredPools() {
         return this.pools.filter((pool) => {
-          const minTeams = this.teamSetup?.minTeamPerPool || 0;
+          const minTeams =
+            pool.minTeamPerPool ||
+            this.tourneySetup?.defaultMinTeamPerPool ||
+            0;
 
           if (this.filters[0].value === 'valid') {
             return pool.teams.length >= minTeams;
@@ -262,10 +283,10 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/pools-details`
           );
-          const { pools, teams, teamSetup } = response.data;
+          const { pools, teams, tourneySetup } = response.data; // Récupérer tourneySetup
           this.pools = pools;
           this.teams = teams;
-          this.teamSetup = teamSetup;
+          this.tourneySetup = tourneySetup; // Stocker tourneySetup localement
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails des pools:',
@@ -274,6 +295,7 @@
           toast.error('Erreur lors de la récupération des détails des pools.');
         }
       },
+
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
@@ -326,6 +348,9 @@
           const payload = {
             name: this.newPool.name,
             tourneyId: this.tourneyId,
+            stage: this.newPool.stage,
+            maxTeamPerPool: this.newPool.maxTeamPerPool,
+            minTeamPerPool: this.newPool.minTeamPerPool,
           };
 
           if (this.editingPoolId) {
@@ -351,10 +376,11 @@
       },
       // Ouvrir la modale de réglages des pools
       openPoolSetupModal() {
-        // Récupérer les réglages actuels depuis le teamSetup
         this.localPoolSetup = {
-          minTeamPerPool: this.teamSetup.minTeamPerPool || null,
-          maxTeamPerPool: this.teamSetup.maxTeamPerPool || null,
+          defaultMinTeamPerPool:
+            this.tourneySetup.defaultMinTeamPerPool || null,
+          defaultMaxTeamPerPool:
+            this.tourneySetup.defaultMaxTeamPerPool || null,
         };
         this.showPoolSetupModal = true;
       },
@@ -363,12 +389,12 @@
       },
       async handlePoolSetupSubmit() {
         try {
-          await apiService.patch(
-            `/tourneys/${this.tourneyId}/team-setup`,
+          await apiService.put(
+            `/tourneys/${this.tourneyId}`,
             this.localPoolSetup
           );
-          // Mettez à jour teamSetup avec les nouvelles valeurs
-          this.teamSetup = { ...this.teamSetup, ...this.localPoolSetup };
+          // Mettez à jour tourneySetup avec les nouvelles valeurs
+          this.tourneySetup = { ...this.tourneySetup, ...this.localPoolSetup };
           toast.success('Réglages des pools mis à jour avec succès !');
           this.closePoolSetupModal();
         } catch (error) {
@@ -379,6 +405,7 @@
           toast.error('Erreur lors de la mise à jour des réglages des pools.');
         }
       },
+
       customPoolSetupValidation() {
         const errors = {};
         const { minTeamPerPool, maxTeamPerPool } = this.localPoolSetup;
@@ -399,10 +426,8 @@
 
       // Ajouter pastille de couleur pour indiquer l'état du Pool
       getPoolStatusColor(pool) {
-        if (!this.teamSetup) return 'gray';
-
-        const minTeams = this.teamSetup.minTeamPerPool || 0;
-
+        const minTeams =
+          pool.minTeamPerPool || this.tourneySetup?.defaultMinTeamPerPool || 0;
         if (pool.teams.length >= minTeams) {
           return 'green'; // Valide
         } else if (pool.teams.length > 0) {
