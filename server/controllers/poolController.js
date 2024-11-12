@@ -382,10 +382,9 @@ exports.getPoolSchedules = async (req, res) => {
   }
 };
 
-// Generate Pools depending of the strategy used (tourneyType)
 exports.generatePools = async (req, res) => {
   const tourneyId = req.params.tourneyId;
-  const { poolCount, strategy } = req.body;
+  const { strategy } = req.body;
 
   try {
     // Vérifier si le tournoi existe
@@ -395,14 +394,15 @@ exports.generatePools = async (req, res) => {
     }
 
     const poolStrategyManager = new PoolStrategyManager(tourneyId, strategy);
-    const pools = await poolStrategyManager.generatePools(poolCount);
+    const pools = await poolStrategyManager.generatePools();
 
     res.status(200).json({ message: 'Pools générés avec succès.', pools });
   } catch (error) {
     console.error('Erreur lors de la génération des pools :', error);
-    res.status(500).json({ message: 'Erreur lors de la génération des pools.', error });
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
