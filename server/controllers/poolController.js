@@ -1,6 +1,7 @@
 // server/controllers/poolController.js
 const { Tourney, Pool, Team, PoolSchedule } = require('../models');
 const { Op } = require('sequelize');
+const PoolStrategyManager = require('../services/poolStrategies/poolStrategyManager');
 
 /**
  * Créer une nouvelle pool pour un tournoi
@@ -180,7 +181,6 @@ exports.assignTeamsToPool = async (req, res) => {
     }
 
     // Filtrer les équipes de type 'assistant'
-    const assistantTeams = teams.filter(team => team.type === 'assistant');
     const validTeams = teams.filter(team => team.type !== 'assistant');
 
     if (validTeams.length === 0) {
@@ -379,6 +379,28 @@ exports.getPoolSchedules = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la récupération des sessions de Pool :', error);
     res.status(500).json({ message: 'Erreur lors de la récupération des sessions de Pool.', error });
+  }
+};
+
+// Generate Pools depending of the strategy used (tourneyType)
+exports.generatePools = async (req, res) => {
+  const tourneyId = req.params.tourneyId;
+  const { poolCount, strategy } = req.body;
+
+  try {
+    // Vérifier si le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    const poolStrategyManager = new PoolStrategyManager(tourneyId, strategy);
+    const pools = await poolStrategyManager.generatePools(poolCount);
+
+    res.status(200).json({ message: 'Pools générés avec succès.', pools });
+  } catch (error) {
+    console.error('Erreur lors de la génération des pools :', error);
+    res.status(500).json({ message: 'Erreur lors de la génération des pools.', error });
   }
 };
 

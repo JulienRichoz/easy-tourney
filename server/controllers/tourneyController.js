@@ -504,9 +504,10 @@ exports.getTourneyStatuses = async (req, res) => {
             return res.status(404).json({ message: 'Tournoi non trouvé' });
         }
 
-        const { name, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, poolStatus, planningStatus } = tourney;
+        const { name, tourneyType, status, fieldAssignmentStatus, sportAssignmentStatus, registrationStatus, poolStatus, planningStatus } = tourney;
         res.status(200).json({
-            name: name,
+            name,
+            tourneyType,
             status,
             fieldAssignmentStatus,
             sportAssignmentStatus,

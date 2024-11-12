@@ -151,46 +151,17 @@
         </template>
       </ModalComponent>
 
-      <!-- Modale pour générer des pools -->
-      <ModalComponent
-        :isVisible="showGeneratePoolsModal"
-        title="Générer des Pools"
+      <!-- Modale pour générer des pools selon le DP strategy-->
+      <StrategyPoolGeneratorComponent
+        v-if="showGeneratePoolsModal"
+        :tourneyId="tourneyId"
+        :tourneyType="tourneyType"
+        :teams="teams"
+        :pools="pools"
+        :availableFields="availableFields"
+        @poolsGenerated="handlePoolsGenerated"
         @close="closeGeneratePoolsModal"
-      >
-        <template #content>
-          <p class="mb-4 text-gray-600">
-            Pour un tournus optimal, il est recommandé de créer un nombre de
-            pools équivalent au nombre de terrains disponibles (<strong>{{
-              availableFields
-            }}</strong>
-            terrains).
-          </p>
-          <div class="flex flex-col mb-4">
-            <label
-              for="poolCount"
-              class="text-sm font-medium text-gray-700 mb-2"
-            >
-              Nombre de Pools :
-            </label>
-            <input
-              type="number"
-              v-model="desiredPoolCount"
-              :placeholder="`Nombre optimal : ${availableFields}`"
-              min="1"
-              :max="Math.ceil(availableFields * 1.5)"
-              class="input-style border border-gray-300 rounded-md p-2"
-            />
-          </div>
-        </template>
-        <template #footer>
-          <ButtonComponent variant="primary" @click="generatePools">
-            Générer
-          </ButtonComponent>
-          <ButtonComponent variant="secondary" @click="closeGeneratePoolsModal">
-            Annuler
-          </ButtonComponent>
-        </template>
-      </ModalComponent>
+      />
     </div>
   </div>
 </template>
@@ -209,6 +180,7 @@
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import { toast } from 'vue3-toastify';
   import FilterComponent from '@/components/FilterComponent.vue';
+  import StrategyPoolGeneratorComponent from '@/components/StrategyPattern/Pool/StrategyPoolGeneratorComponent.vue';
 
   export default {
     components: {
@@ -222,6 +194,7 @@
       TitleComponent,
       StatusSelectorComponent,
       FilterComponent,
+      StrategyPoolGeneratorComponent,
     },
     data() {
       return {
@@ -308,6 +281,7 @@
     computed: {
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
+        tourneyType: (state) => state.tourneyType,
       }),
       isEditable() {
         return this.statuses.poolStatus !== 'completed';
@@ -359,7 +333,18 @@
           toast.error('Erreur lors de la récupération des détails des pools.');
         }
       },
-
+      async fetchAvailableFields() {
+        try {
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/fields`
+          );
+          const fields = response.data;
+          this.availableFields = fields.length;
+        } catch (error) {
+          console.error('Erreur lors de la récupération des terrains:', error);
+          toast.error('Erreur lors de la récupération des terrains.');
+        }
+      },
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
@@ -524,10 +509,17 @@
           toast.error('Erreur lors de la génération des pools.');
         }
       },
+
+      // rafraîchit les données des pools en appelant fetchTourneyPoolsDetails() et ferme la modale en appelant closeGeneratePoolsModal().
+      handlePoolsGenerated() {
+        this.fetchTourneyPoolsDetails();
+        this.closeGeneratePoolsModal();
+      },
     },
     mounted() {
       this.fetchTourneyStatuses(this.tourneyId);
       this.fetchTourneyPoolsDetails();
+      this.fetchAvailableFields();
     },
   };
 </script>

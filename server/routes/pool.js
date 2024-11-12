@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const { 
   createPool, getPoolsByTourney, getPoolById, updatePool, deletePool, 
-  assignTeamsToPool, removeTeamsFromPool, autoAssignTeamsToPools, createPoolSchedule, getPoolSchedules
+  assignTeamsToPool, removeTeamsFromPool, autoAssignTeamsToPools, createPoolSchedule, getPoolSchedules, generatePools
 } = require('../controllers/poolController');
 const { isAuthenticated, isAdmin, authorizeTournamentAccess } = require('../middlewares');
 
@@ -24,5 +24,9 @@ router.post('/auto-assign', isAuthenticated, isAdmin, autoAssignTeamsToPools);
 // Routes pour gérer poolSchedule
 router.post('/:poolId/schedules', isAuthenticated, isAdmin, createPoolSchedule);
 router.get('/:poolId/schedules', isAuthenticated, authorizeTournamentAccess, getPoolSchedules);
+
+// Strategy Pattern to generate Pools with teams depending on the strategy pattern used
+router.post('/generate', isAuthenticated, isAdmin, generatePools);
+
 
 module.exports = router;
