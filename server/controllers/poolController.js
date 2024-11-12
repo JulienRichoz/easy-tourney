@@ -212,46 +212,6 @@ exports.assignTeamsToPool = async (req, res) => {
 };
 
 /**
- * Retirer une équipe d'une pool.
- */
-exports.removeTeamFromPool = async (req, res) => {
-  try {
-    const { poolId } = req.params;
-    const { teamId } = req.body; // ID de l'équipe à retirer
-
-    if (!teamId) {
-      return res.status(400).json({ message: "Aucune équipe spécifiée pour le retrait." });
-    }
-
-    const pool = await Pool.findByPk(poolId);
-    if (!pool) {
-      return res.status(404).json({ message: 'Pool non trouvée.' });
-    }
-
-    // Vérifier si l'équipe est réellement assignée à cette pool
-    const team = await Team.findOne({
-      where: {
-        id: teamId,
-        poolId: poolId, // Assurer que l'équipe est bien dans la pool spécifiée
-      },
-    });
-
-    if (!team) {
-      return res.status(400).json({ message: "L'équipe spécifiée n'est pas associée à cette pool." });
-    }
-
-    // Retirer l'équipe de la pool
-    await team.update({ poolId: null });
-
-    res.status(200).json({ message: "Équipe retirée de la pool avec succès.", removedTeamId: teamId });
-  } catch (error) {
-    console.error('Erreur lors du retrait de l\'équipe de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors du retrait de l\'équipe de la pool.', error });
-  }
-};
-
-
-/**
  * Retirer une ou plusieurs équipes d'une pool.
  */
 exports.removeTeamsFromPool = async (req, res) => {
