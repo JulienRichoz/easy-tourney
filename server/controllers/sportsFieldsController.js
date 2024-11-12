@@ -48,36 +48,35 @@ exports.createSportsFields = async (req, res) => {
 // Récupérer les sports associés à un tournoi, avec la possibilité de filtrer par terrain
 exports.getSportsFieldsByTourney = async (req, res) => {
     try {
-      const tourneyId = req.params.tourneyId;
-  
-      // Récupérer tous les terrains du tournoi
-      const fields = await Field.findAll({
-        where: { tourneyId },
-        include: [
-          {
-            model: SportsFields,
-            as: 'sportsFields',
+        const tourneyId = req.params.tourneyId;
+
+        // Récupérer tous les terrains du tournoi avec les sports associés
+        const fields = await Field.findAll({
+            where: { tourneyId },
+            attributes: ['id', 'name', 'description'],
             include: [
-              {
-                model: Sport,
-                as: 'sport',
-                attributes: ['id', 'name', 'rule', 'scoreSystem', 'color', 'image'],
-              },
+                {
+                    model: SportsFields,
+                    as: 'sportsFields',
+                    attributes: ['id', 'startTime', 'endTime', 'information'],
+                    include: [
+                        {
+                            model: Sport,
+                            as: 'sport',
+                            attributes: ['id', 'name', 'color'],
+                        },
+                    ],
+                },
             ],
-          },
-        ],
-      });
-  
-      if (!fields || fields.length === 0) {
-        return res.status(200).json({ message: 'Aucun terrain trouvé. Veuillez créer des terrains.', fields: [] });
-    }
-  
-      res.status(200).json(fields);
+        });
+
+        res.status(200).json(fields);
     } catch (error) {
-      console.error('Erreur lors de la récupération des sports associés aux terrains du tournoi :', error);
-      res.status(500).json({ message: 'Erreur lors de la récupération des sports.' });
+        console.error('Erreur lors de la récupération des sports associés aux terrains du tournoi :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des sports.', error });
     }
-  };
+};
+
   
 // Récupérer les sports associés à un terrain spécifique
 exports.getSportsByField = async (req, res) => {
