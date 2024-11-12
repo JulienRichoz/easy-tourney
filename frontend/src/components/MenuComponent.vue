@@ -97,7 +97,7 @@
         isAdmin: (state) => state.user?.roleId === 1,
         userName: (state) => state.user?.name,
         ...mapState('tourney', {
-          tournamentName: (state) => state.statuses.name,
+          tournamentName: (state) => state.currentTournamentName,
         }),
       }),
       showTournamentName() {
