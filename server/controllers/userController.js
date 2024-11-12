@@ -2,21 +2,18 @@
 const { User, Tourney, Role, UsersTourneys, Team, sequelize } = require('../models');
 const { roles } = require('../config/roles');
 const authService = require('../services/authService');
+const Sequelize = require('sequelize');
 
 // Récupérer tous les utilisateurs avec leurs tournois et équipes (admin seulement)
+// DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
+// PROBLEM N+1
 exports.getAllUsersWithDetails = async (req, res) => {
     try {
-        // Vérifier que l'utilisateur est admin
         if (req.user.roleId !== roles.ADMIN) {
             return res.status(403).json({ message: 'Accès interdit.' });
         }
 
         const { tourneyId } = req.query;
-
-        const whereCondition = {};
-        if (tourneyId) {
-            whereCondition['$usersTourneys.tourneyId$'] = tourneyId;
-        }
 
         const users = await User.findAll({
             attributes: ['id', 'name', 'email', 'phone'],
@@ -24,7 +21,9 @@ exports.getAllUsersWithDetails = async (req, res) => {
                 {
                     model: UsersTourneys,
                     as: 'usersTourneys',
+                    attributes: ['tourneyId', 'teamId', 'tourneyRole'],
                     where: tourneyId ? { tourneyId } : undefined,
+                    required: !!tourneyId, // Inner join si `tourneyId` est défini
                     include: [
                         {
                             model: Tourney,
@@ -44,6 +43,7 @@ exports.getAllUsersWithDetails = async (req, res) => {
                     attributes: ['id', 'name'],
                 },
             ],
+            order: [['id', 'ASC']], // Ordonnancer les résultats pour une meilleure performance
         });
 
         res.json(users);
