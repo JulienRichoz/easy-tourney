@@ -1,36 +1,96 @@
-// seeders/xxx_demo-users.js
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 const authService = require('../services/authService');
-
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    const users = [];
+    const password =  await authService.hashPassword('password');// Faille sécurité car tjr meme password encrypté affiché mais allege generation seeder..
+    // Admin user
+    users.push({
+      id: 1,
+      name: 'a',
+      email: 'a@a.a',
+      password: await authService.hashPassword('a'),
+      roleId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
-    const weakPassword = await authService.hashPassword('a');
-    // ID 1 (a) est un super admin. Il peut supprimer d'autres admin. Idée à developper par la suite
-    await queryInterface.bulkInsert('Users', [
-      { name: 'a', email: 'a@a.a', password: weakPassword, roleId: 1, phone: null, createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Admin User', email: 'admin@example.com', password: await authService.hashPassword('password'), roleId: 1, phone: null, createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Assistant User', email: 'assistant@example.com', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Assistant dans l'équipe Assistant
+    // Assistant users
+    users.push({
+      id: 2,
+      name: 'High Assistant',
+      email: 'highassistant@example.com',
+      password: password,
+      roleId: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    users.push({
+      id: 3,
+      name: 'Mid Assistant',
+      email: 'midassistant@example.com',
+      password: password,
+      roleId: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    users.push({
+      id: 4,
+      name: 'Low Assistant',
+      email: 'lowassistant@example.com',
+      password: password,
+      roleId: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
-      { name: 'John A', email: 'john@a.a', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 1
-      { name: 'Julien A', email: 'julien@a.a', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 1
-      { name: 'Polo A', email: 'polo@a.a', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 1
-      { name: 'Ali A', email: 'ali@a.a', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 1
+    let userId = 5;
 
-      { name: 'Michel B', email: 'michel@a.b', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 2
-      { name: 'Larissa B', email: 'larissa@b.b', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 2
-      { name: 'Jordan B', email: 'jordan@b.b', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 2
-      { name: 'Alex A', email: 'alex@b.b', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }, // Joueur dans l'équipe 2
+    // Users for High Tournament
+    for (let i = 1; i <= 200; i++) {
+      users.push({
+        id: userId++,
+        name: `High User ${i}`,
+        email: `highuser${i}@example.com`,
+        password: password,
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
 
+    // Users for Mid Tournament
+    for (let i = 1; i <= 60; i++) {
+      users.push({
+        id: userId++,
+        name: `Mid User ${i}`,
+        email: `miduser${i}@example.com`,
+        password: password,
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
 
-      { name: 'Guest User', email: 'guest@example.com', password: await authService.hashPassword('password'), roleId: 2, phone: null, createdAt: new Date(), updatedAt: new Date() }  // Guest dans l'équipe 4
-    ]);
+    // Users for Low Tournament
+    for (let i = 1; i <= 15; i++) {
+      users.push({
+        id: userId++,
+        name: `Low User ${i}`,
+        email: `lowuser${i}@example.com`,
+        password: password,
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    await queryInterface.bulkInsert('Users', users);
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.bulkDelete('Users', null, {});
-  }
+  },
 };

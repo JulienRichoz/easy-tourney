@@ -1,40 +1,43 @@
-// seeders/xxx_demo-fields.js
 'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const tourneys = await queryInterface.sequelize.query(
-      'SELECT id FROM `Tourneys` WHERE name = "Tournoi de Printemps";',
-      {
-        type: Sequelize.QueryTypes.SELECT,
-      }
-    );
+    const fields = [];
 
-    if (tourneys.length > 0) {
-      await queryInterface.bulkInsert('Fields', [
-        {
-          name: 'Terrain 1',
-          description: 'Grand terrain de basket',
-          tourneyId: tourneys[0].id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          name: 'Terrain 2',
-          description: 'Terrain de volleyball extérieur',
-          tourneyId: tourneys[0].id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          name: 'Terrain 3',
-          description: 'Court de badminton',
-          tourneyId: tourneys[0].id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
+    // Fields for High Tournament
+    for (let i = 1; i <= 5; i++) {
+      fields.push({
+        name: `High Field ${i}`,
+        description: `Field ${i} for High Tournament`,
+        tourneyId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
+
+    // Fields for Mid Tournament
+    for (let i = 1; i <= 4; i++) {
+      fields.push({
+        name: `Mid Field ${i}`,
+        description: `Field ${i} for Mid Tournament`,
+        tourneyId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    // Fields for Low Tournament
+    for (let i = 1; i <= 2; i++) {
+      fields.push({
+        name: `Low Field ${i}`,
+        description: `Field ${i} for Low Tournament`,
+        tourneyId: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    await queryInterface.bulkInsert('Fields', fields);
   },
 
   down: async (queryInterface, Sequelize) => {
