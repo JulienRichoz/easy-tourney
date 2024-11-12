@@ -1,7 +1,7 @@
 // server/controllers/tourneyController.js
 
 const { Op } = require('sequelize');
-const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role, InviteToken, Pool } = require('../models');
+const { Tourney, SportsFields, Sport, TeamSetup, ScheduleTourney, User, Team, UsersTourneys, Role, InviteToken, Pool, PoolSchedule } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 const jwt = require('jsonwebtoken');
 
@@ -637,6 +637,11 @@ exports.getTourneyPoolsDetails = async (req, res) => {
             model: Team,
             as: 'teams',
             attributes: ['id', 'teamName'],
+          },
+          {
+            model: PoolSchedule,
+            as: 'schedules',
+            attributes: ['id'],
           },
         ],
       });
