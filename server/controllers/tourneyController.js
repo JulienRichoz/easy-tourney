@@ -124,7 +124,7 @@ exports.getTourneys = async (req, res) => {
 /**
  * Récupérer un tournoi par son ID avec les détails des équipes et des utilisateurs
  */
-exports.getTourneyById = async (req, res) => {
+exports.getAllDataTourneyById = async (req, res) => {
     try {
         const { tourneyId } = req.params;
 
@@ -178,6 +178,45 @@ exports.getTourneyById = async (req, res) => {
                     ]
                 }
             ]
+        });
+
+        if (!tourney) {
+            return res.status(404).json({ message: 'Tournoi non trouvé' });
+        }
+
+        res.status(200).json(tourney);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du tournoi :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération du tournoi', error });
+    }
+};
+
+/**
+ * Récupérer un tournoi par son ID avec les détails nécessaires
+ */
+exports.getTourneyById = async (req, res) => {
+    try {
+        const { tourneyId } = req.params;
+
+        const tourney = await Tourney.findByPk(tourneyId, {
+            attributes: [
+                'id',
+                'name',
+                'location',
+                'dateTourney',
+                'emergencyDetails',
+                'domain',
+                'tourneyType',
+                'defaultMaxTeamPerPool',
+                'defaultMinTeamPerPool',
+                'status',
+                'fieldAssignmentStatus',
+                'sportAssignmentStatus',
+                'registrationStatus',
+                'poolStatus',
+                'planningStatus'
+            ],
+            // Pas d'inclusion d'associations inutiles
         });
 
         if (!tourney) {
