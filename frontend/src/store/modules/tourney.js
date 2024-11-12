@@ -5,6 +5,7 @@ export default {
     namespaced: true,
     state: {
         currentTournamentName: '', // Stocker le nom du tournoi
+        tourneyType: '', // Stocker le type du tournoi
         statuses: {
             status: 'draft',
             fieldAssignmentStatus: 'notStarted',
@@ -16,6 +17,9 @@ export default {
     mutations: {
         SET_TOURNAMENT_NAME(state, name) {
             state.currentTournamentName = name;
+        },
+        SET_TOURNAMENT_TYPE(state, tourneyType) {
+            state.tourneyType = tourneyType;
         },
         CLEAR_TOURNAMENT_NAME(state) {
             state.currentTournamentName = '';
@@ -41,7 +45,10 @@ export default {
         async fetchTourneyStatuses({ commit }, tourneyId) {
             try {
                 const response = await apiService.get(`/tourneys/${tourneyId}/statuses`);
-                commit('SET_STATUSES', response.data);
+                const { name, tourneyType, ...statuses } = response.data;
+                commit('SET_TOURNAMENT_NAME', name);
+                commit('SET_TOURNAMENT_TYPE', tourneyType);
+                commit('SET_STATUSES', statuses);
             } catch (error) {
                 console.error('Erreur lors de la récupération des statuts:', error);
             }
