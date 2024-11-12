@@ -14,6 +14,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'tourneyId',
         onDelete: 'CASCADE', // Supprimer le terrain si le tournoi est supprimé
       });
+      Field.hasMany(models.PoolSchedule, { foreignKey: 'fieldId', as: 'poolSchedules' });
+
     }
   }
 

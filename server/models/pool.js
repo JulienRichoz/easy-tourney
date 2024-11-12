@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       // Associations
       Pool.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
       Pool.hasMany(models.Team, { foreignKey: 'poolId', as: 'teams' });
+      Pool.hasMany(models.PoolSchedule, { foreignKey: 'poolId', as: 'schedules' });
     }
   }
 
@@ -34,14 +35,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    startTime: {
-      type: DataTypes.TIME,
-      allowNull: true,
-    },
-    endTime: {
-      type: DataTypes.TIME,
-      allowNull: true
-    }
   }, {
     sequelize,
     modelName: 'Pool',
