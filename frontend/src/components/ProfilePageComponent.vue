@@ -560,7 +560,7 @@
         try {
           await apiService.delete(`/users/${this.userId}`);
           toast.success('Utilisateur supprimé avec succès.');
-          this.$router.push('/users');
+          this.$router.push('/admin/users');
         } catch (error) {
           console.error(
             "Erreur lors de la suppression de l'utilisateur:",
