@@ -20,7 +20,7 @@ class CustomRoundRobin extends PoolStrategy {
       throw new Error('Aucune équipe disponible pour générer des pools.');
     }
 
-    // Récupérer le nombre de terrains disponibles
+    // Récupérer le nombre de terrains disponibles et les configurations
     const fields = await Field.findAll({
       where: { tourneyId: this.tourneyId },
     });
@@ -30,24 +30,15 @@ class CustomRoundRobin extends PoolStrategy {
       throw new Error('Aucun terrain disponible pour ce tournoi.');
     }
 
-    // Récupérer les configurations des pools depuis le Tourney
+    // Récupérer le nombre maximal de pools depuis la configuration du tournoi
     const tourney = await Tourney.findByPk(this.tourneyId);
+    const maxPools = tourney?.maxPools || fieldCount; // Nombre de pools max ou égal au nombre de terrains
 
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
     const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 6;
 
-    if (teamCount < minTeamPerPool) {
-      throw new Error(
-        `Nombre insuffisant d'équipes pour créer des pools (minimum requis : ${minTeamPerPool}).`
-      );
-    }
-
-    // Calculer le nombre optimal de pools
-    let poolCount = Math.min(fieldCount, Math.floor(teamCount / minTeamPerPool));
-
-    if (poolCount === 0) {
-      poolCount = 1;
-    }
+    // Calculer le nombre de pools nécessaires en respectant le nombre max de pools
+    let poolCount = Math.min(maxPools, Math.floor(teamCount / minTeamPerPool));
 
     // Ajuster le nombre de pools pour respecter les contraintes min/max
     while (poolCount > 1) {
@@ -58,10 +49,10 @@ class CustomRoundRobin extends PoolStrategy {
       poolCount--;
     }
 
-    // Vérifier que les équipes par pool respectent les contraintes
+    // Vérifier si le nombre de pools calculé est suffisant pour toutes les équipes
     const teamsPerPool = Math.ceil(teamCount / poolCount);
     if (teamsPerPool > maxTeamPerPool) {
-      poolCount = Math.ceil(teamCount / maxTeamPerPool);
+      poolCount = Math.min(maxPools, Math.ceil(teamCount / maxTeamPerPool));
     }
 
     // Supprimer les pools existantes
@@ -79,13 +70,26 @@ class CustomRoundRobin extends PoolStrategy {
       pools.push(pool);
     }
 
-    // Répartir les équipes dans les pools
+    // Répartir les équipes dans les pools, les excédentaires seront sans pool
+    const teamsWithoutPool = [];
     for (let i = 0; i < teamCount; i++) {
-      const poolIndex = i % poolCount;
-      await teams[i].update({ poolId: pools[poolIndex].id });
+      if (i < poolCount * maxTeamPerPool) {
+        const poolIndex = i % poolCount;
+        await teams[i].update({ poolId: pools[poolIndex].id });
+      } else {
+        teamsWithoutPool.push(teams[i]);
+      }
     }
 
-    return pools;
+    // Si des équipes n'ont pas pu être assignées à un pool, afficher un avertissement
+    if (teamsWithoutPool.length > 0) {
+      console.warn(
+        `${teamsWithoutPool.length} équipes n'ont pas pu être assignées aux pools. ` +
+        `Considérez d'augmenter le nombre de terrains ou d'ajuster la taille des équipes.`
+      );
+    }
+
+    return { pools, teamsWithoutPool };
   }
 }
 
