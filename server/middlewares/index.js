@@ -5,7 +5,8 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { roles } = require('../config/roles');
 const { UsersTourneys, User } = require('../models');
-const { verifyPoolStatusDraft, verifyRegistrationStatusActive } = require('./statusMiddleware');
+const { verifyPoolStatusDraft, verifyRegistrationStatusActive, verifyFieldAssignmentStatus, 
+    verifySportAssignmentStatus, verifyPlanningStatus, } = require('./statusMiddleware');
 
 
 // Middleware pour authentifier le token
@@ -128,4 +129,7 @@ module.exports = {
     // Status Middleware
     verifyPoolStatusDraft,
     verifyRegistrationStatusActive,
+    verifyFieldAssignmentStatus,
+    verifySportAssignmentStatus,
+    verifyPlanningStatus,
 };
