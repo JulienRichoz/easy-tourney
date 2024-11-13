@@ -2,7 +2,7 @@
 <template>
   <div>
     <div class="p-6" v-if="pool">
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 relative">
         <TitleComponent :title="`Détails : ${pool.name}`" />
         <!-- Bouton Retour -->
         <ButtonComponent
@@ -16,8 +16,12 @@
       </div>
 
       <!-- Section pour les équipes déjà assignées à la Pool -->
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Équipes dans cette Pool</h2>
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-2">
+          Équipes dans cette Pool ({{ assignedTeams.length }}/{{
+            this.pool.maxTeamPerPool
+          }})
+        </h2>
         <div v-if="assignedTeams.length > 0">
           <form @submit.prevent="removeSelectedTeams">
             <div class="overflow-x-auto">
@@ -40,7 +44,7 @@
                   <tr
                     v-for="team in assignedTeams"
                     :key="team.id"
-                    class="border-t hover:bg-gray-50"
+                    class="border-t hover:bg-gray-50 cursor-pointer"
                     @click="toggleRemoveTeamSelection(team.id)"
                   >
                     <td class="px-4 py-2">
@@ -51,7 +55,15 @@
                         @click.stop
                       />
                     </td>
-                    <td class="px-4 py-2">{{ team.teamName }}</td>
+                    <td class="px-4 py-2">
+                      <router-link
+                        :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
+                        class="text-blue-600 hover:underline"
+                        @click.stop
+                      >
+                        {{ team.teamName }}
+                      </router-link>
+                    </td>
                     <td class="px-4 py-2">
                       <SoftButtonComponent
                         fontAwesomeIcon="fa-trash"
@@ -78,16 +90,13 @@
           <p>Aucune équipe dans cette Pool.</p>
         </div>
       </div>
+
       <!-- Section pour ajouter des équipes à la Pool -->
-      <div class="mb-8">
+      <div>
         <h2 class="text-lg font-semibold mb-2">Équipes non assignées</h2>
-        <div
-          v-if="unassignedTeams.length > 0"
-          class="overflow-y-auto"
-          style="max-height: 300px"
-        >
+        <div v-if="unassignedTeams.length > 0" class="relative">
           <form @submit.prevent="assignSelectedTeams">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
               <table class="min-w-full bg-white rounded-lg shadow-md">
                 <thead>
                   <tr class="bg-gray-100 border-b">
@@ -106,7 +115,7 @@
                   <tr
                     v-for="team in unassignedTeams"
                     :key="team.id"
-                    class="border-t hover:bg-gray-50"
+                    class="border-t hover:bg-gray-50 cursor-pointer"
                     @click="toggleTeamSelection(team.id)"
                   >
                     <td class="px-4 py-2">
@@ -117,7 +126,15 @@
                         @click.stop
                       />
                     </td>
-                    <td class="px-4 py-2">{{ team.teamName }}</td>
+                    <td class="px-4 py-2">
+                      <router-link
+                        :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
+                        class="text-blue-600 hover:underline"
+                        @click.stop
+                      >
+                        {{ team.teamName }}
+                      </router-link>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -176,6 +193,11 @@
         return (
           this.statuses.poolAssignmentStatus !== 'completed' &&
           this.statuses.status !== 'completed'
+        );
+      },
+      maxTeamsPerPool() {
+        return (
+          this.pool.maxTeamPerPool || this.pool.defaultMaxTeamPerPool || '∞'
         );
       },
     },
@@ -305,7 +327,7 @@
       },
 
       toggleRemoveTeamSelection(teamId) {
-        if (this.assignedTeams.includes(teamId)) {
+        if (this.selectedAssignedTeams.includes(teamId)) {
           this.selectedAssignedTeams = this.selectedAssignedTeams.filter(
             (id) => id !== teamId
           );
@@ -328,4 +350,24 @@
 
 <style scoped>
   /* Vos styles ici */
+
+  /* Style pour les lignes sélectionnées */
+  table tr.selected {
+    background-color: #e0f7fa;
+  }
+
+  /* Optionnel : ajouter une différence visuelle pour les sections */
+  h2 {
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Highlight selected rows */
+  table tr:hover {
+    background-color: #f5f5f5;
+  }
+
+  table tr.selected {
+    background-color: #d1fae5;
+  }
 </style>
