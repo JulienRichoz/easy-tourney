@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
             Team.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
             // Une équipe peut avoir plusieurs UsersTourneys
             Team.hasMany(models.UsersTourneys, { foreignKey: 'teamId', as: 'usersTourneys' });
+            // Une équipe peut appartenir à une Pool
+            Team.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
         }
     }
 

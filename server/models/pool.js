@@ -6,7 +6,13 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // Associations
       Pool.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
-      Pool.hasMany(models.Team, { foreignKey: 'poolId', as: 'teams' });
+      // Une Pool a plusieurs Équipes
+      Pool.hasMany(models.Team, { 
+        foreignKey: 'poolId', 
+        as: 'teams',
+        onDelete: 'SET NULL', // Mettre poolId à null lors de la suppression d'une Pool
+        hooks: true, // Nécessaire pour que 'onDelete' soit appliqué
+      });
       Pool.hasMany(models.PoolSchedule, { foreignKey: 'poolId', as: 'schedules' });
     }
   }
