@@ -17,8 +17,6 @@ router.put('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, updatePo
 router.delete('/reset', isAuthenticated, isAdmin, verifyPoolStatusDraft, deleteAllPools); // Placer avant poolId pour ordre des requetes
 router.delete('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, deletePool);
 
-
-
 // Routes pour assigner et retirer des équipes de pools
 router.post('/:poolId/assign-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, assignTeamsToPool);
 router.post('/:poolId/remove-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, removeTeamsFromPool);
