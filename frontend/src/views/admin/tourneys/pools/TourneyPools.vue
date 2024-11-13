@@ -57,7 +57,8 @@
       </div>
 
       <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
-      Total Equipe: {{ teams.length }}
+      Total Equipe: {{ teams.length }} Terrains disponible:
+      {{ availableFields }}
       <!-- Grille d'affichage des pools -->
       <div
         class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
@@ -246,6 +247,12 @@
         ],
         poolSetupFields: [
           {
+            name: 'maxNumberOfPools',
+            label: 'Nombre max. de pools',
+            type: 'number',
+            required: true,
+          },
+          {
             name: 'defaultMinTeamPerPool',
             label: "Nombre min. d'équipes par pool",
             type: 'number',
@@ -422,6 +429,7 @@
       // Ouvrir la modale de réglages des pools
       openPoolSetupModal() {
         this.localPoolSetup = {
+          maxNumberOfPools: this.tourneySetup.maxNumberOfPools || null,
           defaultMinTeamPerPool:
             this.tourneySetup.defaultMinTeamPerPool || null,
           defaultMaxTeamPerPool:
