@@ -70,6 +70,10 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: 'customRoundRobin'
         },
+        maxNumberOfPools:{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
         defaultMaxTeamPerPool:{
             type: DataTypes.INTEGER,
             allowNull: true,

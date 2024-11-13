@@ -38,7 +38,7 @@ module.exports = {
     for (let i = 0; i < 50; i++) {
       teams.push({
         id: teamId++,
-        teamName: `High Team ${i + 1}`,
+        teamName: `Team ${i + 1}`,
         type: 'player',
         tourneyId: 1,
         createdAt: new Date(),
@@ -50,7 +50,7 @@ module.exports = {
     for (let i = 0; i < 15; i++) {
       teams.push({
         id: teamId++,
-        teamName: `Mid Team ${i + 1}`,
+        teamName: `Team ${i + 1}`,
         type: 'player',
         tourneyId: 2,
         createdAt: new Date(),
@@ -62,7 +62,7 @@ module.exports = {
     for (let i = 0; i < 4; i++) {
       teams.push({
         id: teamId++,
-        teamName: `Low Team ${i + 1}`,
+        teamName: `Team ${i + 1}`,
         type: 'player',
         tourneyId: 3,
         createdAt: new Date(),

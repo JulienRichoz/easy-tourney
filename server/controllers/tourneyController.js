@@ -17,6 +17,7 @@ exports.createTourney = async (req, res) => {
             emergencyDetails,
             domain,
             tourneyType,
+            maxNumberOfPools,
             defaultMaxTeamPerPool,
             defaultMinTeamPerPool,
             status
@@ -34,6 +35,7 @@ exports.createTourney = async (req, res) => {
             emergencyDetails,
             domain,
             tourneyType,
+            maxNumberOfPools,
             defaultMaxTeamPerPool,
             defaultMinTeamPerPool,
             status
@@ -207,6 +209,7 @@ exports.getTourneyById = async (req, res) => {
                 'emergencyDetails',
                 'domain',
                 'tourneyType',
+                'maxNumberOfPools',
                 'defaultMaxTeamPerPool',
                 'defaultMinTeamPerPool',
                 'status',
@@ -661,6 +664,7 @@ exports.getTourneyPoolsDetails = async (req, res) => {
         attributes: [
           'id',
           'name',
+          'maxNumberOfPools',
           'defaultMaxTeamPerPool',
           'defaultMinTeamPerPool',
         ],
@@ -722,6 +726,7 @@ exports.getTourneyPoolsDetails = async (req, res) => {
         pools,
         teams,
         tourneySetup: {
+          maxNumberOfPools: tourney.maxNumberOfPools,
           defaultMaxTeamPerPool: tourney.defaultMaxTeamPerPool,
           defaultMinTeamPerPool: tourney.defaultMinTeamPerPool,
         },

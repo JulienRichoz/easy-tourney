@@ -42,6 +42,10 @@ module.exports = {
         allowNull: false,
         defaultValue: 'customRoundRobin'
     },
+    maxNumberOfPools:{
+      type: Sequelize.INTEGER,
+      allowNull: true,
+    },
     defaultMaxTeamPerPool:{
         type: Sequelize.INTEGER,
         allowNull: true,

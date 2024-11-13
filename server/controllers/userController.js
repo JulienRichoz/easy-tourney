@@ -7,51 +7,54 @@ const authService = require('../services/authService');
 // DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
 // PROBLEM N+1
 // TODO:AMELIORATIONS => inclure système de cache (redis?). Mettre en place système de pagniation
+// AUTRE PROBLEME INTERESSASNT AVEC CONSOLE TIMER: 37ms la requete en moyenne => probleme vient de Vue ;)
+// 2 secodnes ok.. mais à améliorer par la suite si critique. Problème peut prevenir sur la vue de v-select, v-for imbriqué, chargement multiple de composant custom
 exports.getAllUsersWithDetails = async (req, res) => {
     try {
         if (req.user.roleId !== roles.ADMIN) {
-            return res.status(403).json({ message: 'Accès interdit.' });
+        return res.status(403).json({ message: 'Accès interdit.' });
         }
 
         const { tourneyId } = req.query;
+        
+        // Démarrer le chronométrage
+        console.time('Execution time for getAllUsersWithDetails');
 
+        // Exécuter la requête
         const users = await User.findAll({
-            attributes: ['id', 'name', 'email', 'phone'],
             include: [
+            {
+                model: Role,
+                as: 'role',
+                attributes: ['id', 'name'],
+            },
+            {
+                model: UsersTourneys,
+                as: 'usersTourneys',
+                where: tourneyId ? { tourneyId } : undefined,
+                required: tourneyId ? true : false,
+                include: [
                 {
-                    model: UsersTourneys,
-                    as: 'usersTourneys',
-                    attributes: ['tourneyId', 'teamId', 'tourneyRole'],
-                    where: tourneyId ? { tourneyId } : undefined,
-                    required: !!tourneyId, // Inner join si `tourneyId` est défini
-                    include: [
-                        {
-                            model: Tourney,
-                            as: 'tourney',
-                            attributes: ['id', 'name'],
-                        },
-                        
-                           /* model: Team,
-                            as: 'team',
-                            attributes: ['id', 'teamName', 'type'],*/
-                        
-                    ],
-                },
-                {
-                    model: Role,
-                    as: 'role',
+                    model: Tourney,
+                    as: 'tourney',
                     attributes: ['id', 'name'],
                 },
+                ],
+            },
             ],
-            order: [['id', 'ASC']], // Ordonnancer les résultats pour une meilleure performance
+            order: [['id', 'ASC']],
         });
-
-        res.json(users);
+         // Arrêter le chronométrage
+         console.timeEnd('Execution time for getAllUsersWithDetails');
+  
+    res.json(users);
     } catch (error) {
-        console.error('Erreur lors de la récupération des utilisateurs avec détails :', error);
-        res.status(500).json({ message: 'Erreur serveur' });
+      console.error('Erreur lors de la récupération des utilisateurs avec détails :', error);
+      res.status(500).json({ message: 'Erreur serveur' });
     }
 };
+
+
 
 exports.getOwnData = async(req, res) => {
     try {
