@@ -1,5 +1,4 @@
 <!-- src/App.vue -->
-<!-- TODO:WAKEUP = corriger le toggle dans la page TourneyPoolDetails // Ameliorer page TOurneyPools // Mieux indiquer/gérer algorithme génération POOL ! ENSUITE PASSER AU PLANNING-->
 <template>
   <div
     id="app"
