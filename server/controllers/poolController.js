@@ -394,15 +394,35 @@ exports.generatePools = async (req, res) => {
     }
 
     const poolStrategyManager = new PoolStrategyManager(tourneyId, strategy);
-    const pools = await poolStrategyManager.generatePools();
+    const {pools, teamsWithoutPool} = await poolStrategyManager.generatePools();
 
-    res.status(200).json({ message: 'Pools générés avec succès.', pools });
+    res.status(200).json({ message: 'Pools générés avec succès.', pools, teamsWithoutPool });
   } catch (error) {
     console.error('Erreur lors de la génération des pools :', error);
     res.status(500).json({ message: error.message });
   }
 };
 
+/**
+ * Supprimer toutes les pools d'un tournoi
+ */
+exports.deleteAllPools = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
 
+    // Vérifier si le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
 
+    // Supprimer toutes les pools associées au tournoi
+    await Pool.destroy({ where: { tourneyId } });
+
+    res.status(200).json({ message: 'Toutes les pools ont été supprimées avec succès.' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression des pools:', error);
+    return res.status(500).json({ message: 'Erreur lors de la suppression des pools.', error });
+  }
+};
 

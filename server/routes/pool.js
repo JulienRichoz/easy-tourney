@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const { 
   createPool, getPoolsByTourney, getPoolById, updatePool, deletePool, 
-  assignTeamsToPool, removeTeamsFromPool, autoAssignTeamsToPools, createPoolSchedule, getPoolSchedules, generatePools
+  assignTeamsToPool, removeTeamsFromPool, autoAssignTeamsToPools, createPoolSchedule, getPoolSchedules, generatePools, deleteAllPools
 } = require('../controllers/poolController');
 const { isAuthenticated, isAdmin, authorizeTournamentAccess } = require('../middlewares');
 
@@ -14,7 +14,10 @@ router.post('/', isAuthenticated, isAdmin, createPool);
 router.get('/', isAuthenticated, authorizeTournamentAccess, getPoolsByTourney);
 router.get('/:poolId', isAuthenticated, authorizeTournamentAccess, getPoolById);
 router.put('/:poolId', isAuthenticated, isAdmin, updatePool);
+router.delete('/reset', isAuthenticated, isAdmin, deleteAllPools); // Placer avant poolId pour ordre des requetes
 router.delete('/:poolId', isAuthenticated, isAdmin, deletePool);
+
+
 
 // Routes pour assigner et retirer des équipes de pools
 router.post('/:poolId/assign-teams', isAuthenticated, isAdmin, assignTeamsToPool);
