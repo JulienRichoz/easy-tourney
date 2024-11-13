@@ -44,12 +44,24 @@
             }
           );
 
-          const { pools } = response.data;
+          const { pools, teamsWithoutPool } = response.data;
           const poolCount = pools.length;
+          const teamsWithoutPoolCount = teamsWithoutPool.length;
 
           toast.success(
-            `Pools générées avec succès ! ${poolCount} pools ont été créées.`
+            `Pools générées avec succès ! ${poolCount} pools ont été créées.`,
+            {
+              autoClose: 3000,
+            }
           );
+          if (teamsWithoutPoolCount > 0) {
+            toast.warning(
+              `${teamsWithoutPoolCount} équipes n'ont pas pu être assignées aux Pools.`,
+              {
+                autoClose: 4000,
+              }
+            );
+          }
           return true;
         } catch (error) {
           console.error('Erreur lors de la génération des pools :', error);

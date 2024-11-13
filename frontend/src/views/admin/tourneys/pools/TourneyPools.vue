@@ -19,19 +19,6 @@
             <span class="hidden sm:inline">Global Config Pools</span>
           </ButtonComponent>
 
-          <!-- Bouton pour assigner les équipes aux pools -->
-          <ButtonComponent
-            v-if="isEditable && unassignedTeams.length > 0"
-            @click="navigateToAssignTeams"
-            variant="primary"
-            fontAwesomeIcon="users"
-            class="ml-2"
-          >
-            <span class="hidden sm:inline">
-              Assigner Équipes ({{ unassignedTeams.length }})
-            </span>
-          </ButtonComponent>
-
           <!-- Bouton de génération des pools -->
           <div class="flex justify-end">
             <ButtonComponent
@@ -40,9 +27,18 @@
               fontAwesomeIcon="cog"
               @click="openGeneratePoolsModal"
             >
-              Générer des Pools
+              <span class="hidden sm:inline"> Générer Pools auto. </span>
             </ButtonComponent>
           </div>
+          <!-- Bouton pour supprimer toutes les pools -->
+          <ButtonComponent
+            v-if="isEditable && pools.length > 0"
+            variant="danger"
+            fontAwesomeIcon="trash"
+            @click="confirmDeleteAllPools"
+          >
+            <span class="hidden sm:inline"> Supprimer les Pools </span>
+          </ButtonComponent>
         </div>
 
         <!-- Sélecteur de statut pour les pools -->
@@ -56,16 +52,60 @@
         </div>
       </div>
 
-      <FilterComponent :filters="filters" @filter-change="handleFilterChange" />
-      Total Equipe: {{ teams.length }} Terrains disponible:
-      {{ availableFields }}
+      <!-- Conteneur pour les informations générales -->
+      <div class="mb-4 p-4 bg-blue-100 border border-blue-200 rounded-lg">
+        <p class="text-base text-blue-800">
+          <strong>Total d'équipes :</strong> {{ teams.length }} &emsp;
+          <strong>Terrains disponibles :</strong>
+          {{ availableFields }}
+        </p>
+        <!-- Message d'avertissement conditionnel pour customRoundRobin -->
+        <p
+          v-if="tourneyType === 'customRoundRobin' && warningMessage"
+          class="mt-4 text-sm text-red-600"
+        >
+          {{ warningMessage }}
+        </p>
+        <p
+          v-if="
+            tourneySetup &&
+            tourneyType === 'customRoundRobin' &&
+            shouldShowFieldWarning
+          "
+          class="mt-4 text-sm text-orange-600"
+        >
+          Vous avez {{ availableFields }} terrains disponibles, mais le nombre
+          maximum de pools est configuré à {{ tourneySetup.maxNumberOfPools }}.
+          Assurez-vous que c'est bien ce que vous souhaitez.
+        </p>
+      </div>
+
+      <!-- Filtre pour les pools -->
+      <div class="flex items-center space-x-2 w-full md:w-auto">
+        <FilterComponent
+          :filters="filters"
+          @filter-change="handleFilterChange"
+        />
+        <!-- Bouton pour assigner les équipes aux pools -->
+        <ButtonComponent
+          v-if="isEditable && unassignedTeams.length > 0"
+          @click="navigateToAssignTeams"
+          variant="primary"
+          fontAwesomeIcon="users"
+          class="ml-2"
+        >
+          <span class="hidden sm:inline">
+            Assigner Équipes ({{ unassignedTeams.length }})
+          </span>
+        </ButtonComponent>
+      </div>
       <!-- Grille d'affichage des pools -->
       <div
         class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4 mt-6"
       >
         <!-- Carte pour ajouter une nouvelle pool -->
         <CardAddComponent
-          v-if="isEditable"
+          v-if="isEditable && canAddMorePools"
           title="Pool"
           @openAddElementModal="openAddPoolModal"
         />
@@ -161,6 +201,19 @@
         @poolsGenerated="handlePoolsGenerated"
         @close="closeGeneratePoolsModal"
       />
+
+      <!-- Modale de confirmation pour supprimer toutes les pools -->
+      <DeleteConfirmationModal
+        :isVisible="showDeleteAllConfirmation"
+        :isHardDelete="false"
+        @cancel="closeDeleteAllConfirmation"
+        @confirm="deleteAllPools"
+      >
+        <template #message>
+          Êtes-vous sûr de vouloir supprimer toutes les pools ? Cette action est
+          irréversible.
+        </template>
+      </DeleteConfirmationModal>
     </div>
   </div>
 </template>
@@ -200,9 +253,11 @@
         tourneyId: this.$route.params.tourneyId, // Récupération du tourneyId depuis les params
         pools: [], // Liste des pools
         teams: [], // Liste des équipes du tournoi
+        warningMessage: '',
         selectedStatus: this.currentStatus,
         showModal: false,
         showDeleteConfirmation: false,
+        showDeleteAllConfirmation: false,
         showPoolSetupModal: false,
         confirmedDeletePoolId: null,
         newPool: {
@@ -218,6 +273,11 @@
         showGeneratePoolsModal: false,
         availableFields: 0,
         desiredPoolCount: null,
+        tourneySetup: {
+          maxNumberOfPools: 0, // Valeur par défaut
+          defaultMinTeamPerPool: 0, // Valeur par défaut
+          defaultMaxTeamPerPool: 0, // Valeur par défaut
+        },
         formFields: [
           {
             name: 'name',
@@ -248,7 +308,7 @@
         poolSetupFields: [
           {
             name: 'maxNumberOfPools',
-            label: 'Nombre max. de pools',
+            label: 'Nombre maximum de pools',
             type: 'number',
             required: true,
           },
@@ -294,6 +354,14 @@
       unassignedTeams() {
         return this.teams.filter((team) => !team.poolId);
       },
+      shouldShowFieldWarning() {
+        const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
+        return this.availableFields > maxNumberOfPools;
+      },
+      canAddMorePools() {
+        const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
+        return this.pools.length < maxNumberOfPools;
+      },
       filteredPools() {
         return this.pools.filter((pool) => {
           const minTeams =
@@ -330,6 +398,7 @@
           }));
           this.teams = teams;
           this.tourneySetup = tourneySetup;
+          this.calculateWarningMessage();
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails des pools:',
@@ -348,6 +417,20 @@
         } catch (error) {
           console.error('Erreur lors de la récupération des terrains:', error);
           toast.error('Erreur lors de la récupération des terrains.');
+        }
+      },
+      // Calculer le message d'avertissement si nécessaire
+      calculateWarningMessage() {
+        if (this.tourneyType === 'customRoundRobin') {
+          const maxTeamsPerPool = this.tourneySetup.defaultMaxTeamPerPool || 6;
+          const optimalPools = Math.ceil(this.teams.length / maxTeamsPerPool);
+
+          if (this.availableFields < optimalPools) {
+            const neededFields = optimalPools - this.availableFields;
+            this.warningMessage = `Avec ${this.availableFields} terrains disponibles et ${this.teams.length} équipes: risque de temps d'attente. Nous vous recommandons d'ajouter ${neededFields} terrain(s) supplémentaire(s) pour améliorer la fluidité du tournoi, ou de réduire les équipes (plus complexes si les joueurs sont déjà inscrits).`;
+          } else {
+            this.warningMessage = '';
+          }
         }
       },
       handleFilterChange(filter) {
@@ -424,6 +507,24 @@
         } finally {
           this.isSubmitting = false;
           this.closeModal();
+        }
+      },
+
+      confirmDeleteAllPools() {
+        this.showDeleteAllConfirmation = true;
+      },
+      closeDeleteAllConfirmation() {
+        this.showDeleteAllConfirmation = false;
+      },
+      async deleteAllPools() {
+        try {
+          await apiService.delete(`/tourneys/${this.tourneyId}/pools/reset`);
+          toast.success('Toutes les pools ont été supprimées avec succès !');
+          this.fetchTourneyPoolsDetails();
+        } catch (error) {
+          toast.error('Erreur lors de la suppression des pools.');
+        } finally {
+          this.closeDeleteAllConfirmation();
         }
       },
       // Ouvrir la modale de réglages des pools
