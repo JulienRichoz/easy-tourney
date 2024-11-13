@@ -513,3 +513,39 @@ exports.getTeamSetup = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 };
+
+/**
+ * Récupérer les équipes non assignées à une pool pour un tournoi donné.
+ */
+exports.getUnassignedTeams = async (req, res) => {
+    const { tourneyId } = req.params;
+  
+    try {
+      const unassignedTeams = await Team.findAll({
+        where: {
+          tourneyId,
+          poolId: null, // Équipes non assignées à une pool
+          type: 'player', // Exclure les équipes de type 'assistant'
+        },
+        include: [
+          {
+            model: UsersTourneys,
+            as: 'usersTourneys',
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'email', 'phone'],
+              },
+            ],
+          },
+        ],
+      });
+  
+      res.status(200).json(unassignedTeams);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des équipes non assignées :', error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des équipes non assignées.', error });
+    }
+  };
+

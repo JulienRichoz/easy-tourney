@@ -10,7 +10,8 @@ const {
     assignUserToTeam,
     removeUserFromTeam,
     resetTeamsAndReassignUsers,
-    autoFillTeams
+    autoFillTeams,
+    getUnassignedTeams
 } = require('../controllers/teamController');
 const { isAuthenticated, isAdmin, authorizeTournamentAccess, authorizeUserOrAdmin } = require('../middlewares');
 
@@ -26,9 +27,12 @@ router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers);  
 // Routes pour les opérations sur des équipes spécifiques
 router.post('/:teamId/users', isAuthenticated, authorizeTournamentAccess, assignUserToTeam); // Assigner un utilisateur à une équipe
 router.delete('/:teamId/users/:userId', isAuthenticated, authorizeTournamentAccess,authorizeUserOrAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
+router.get('/unassigned', isAuthenticated, isAdmin, getUnassignedTeams); // Route pour récupérer les équipes non assignées à une pool
 router.get('/:teamId', isAuthenticated, authorizeTournamentAccess, getTeamById); // Récupérer les détails d'une équipe (admin uniquement)
 router.put('/:teamId', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
 router.delete('/:teamId', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
+
+
 
 // Routes pour les opérations globales sur les équipes
 router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe pour un tournoi (admin uniquement)
