@@ -26,6 +26,22 @@ module.exports = {
             default: '#ef4444', // red-500
             hover: '#dc2626', // red-700
           },
+          pool: {
+            infoBg: '#dbeafe', // blue-100
+            infoBorder: '#bfdbfe', // blue-200
+            infoText: '#1e40af',// blue-800
+            text: '#6b7280', // gray-500
+            infoError: '#dc2626', // red-600
+            infoWarning: '#ea580c', // orange-600
+          },
+          poolDetails: {
+            card: '#f9fafb',
+            text: '#1f2937',
+            border: '#e5e7eb',
+            hover: '#f3f4f6',
+            selected: '#d1fae5',
+            selectedErase: '#fee2e2',
+          },
           subMenu: {
             background: '#ffffff',
             border: '#e2e8f0',
@@ -95,11 +111,27 @@ module.exports = {
           menuActive: '#22C55E', // green-500
           menuHoverText: '#38a169', // green-400
           profileText: '#38a169', // green-400
-          textInCard: '#ff7200', // gray-500
+          textInCard: '#ff7200', // orange
           profileHoverText: '#2f855a', // green-700
           logoutButton: {
             default: '#dc2626', // red-600 (adoucissement de la couleur rouge)
             hover: '#b91c1c',   // red-700 (rouge plus sombre)
+          },
+          pool: {
+            infoBg: '#1f2937',      // gray-800
+            infoBorder: '#64748b',  // gray-950
+            infoText: '#cbd5e1',    // slate-300
+            text: '#cbd5e1',  // gray-500
+            infoError: '#f87171',   // red-400
+            infoWarning: '#fbbf24', // yellow-500
+          },
+          poolDetails: {
+            card: '#374151',
+            text: '#f3f4f6',
+            border: '#4b5563',
+            hover: '#374151',
+            selected: '#2f855a',
+            selectedErase: '#450a0a',
           },
           subMenu: {
             background: '#2d3748',

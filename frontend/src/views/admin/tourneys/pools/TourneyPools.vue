@@ -53,8 +53,12 @@
       </div>
 
       <!-- Conteneur pour les informations générales -->
-      <div class="mb-4 p-4 bg-blue-100 border border-blue-200 rounded-lg">
-        <p class="text-base text-blue-800">
+      <div
+        class="mb-4 p-4 bg-light-pool-infoBg border border-light-pool-infoBorder rounded-lg dark:bg-dark-pool-infoBg dark:border-dark-pool-infoBorder"
+      >
+        <p
+          class="text-base text-light-pool-infoText dark:text-dark-pool-infoText"
+        >
           <strong>Total d'équipes :</strong> {{ teams.length }} &emsp;
           <strong>Terrains disponibles :</strong>
           {{ availableFields }}
@@ -62,7 +66,7 @@
         <!-- Message d'avertissement conditionnel pour customRoundRobin -->
         <p
           v-if="tourneyType === 'customRoundRobin' && warningMessage"
-          class="mt-4 text-sm text-red-600"
+          class="mt-4 text-sm text-light-pool-infoError dark:text-dark-pool-infoError"
         >
           {{ warningMessage }}
         </p>
@@ -72,7 +76,7 @@
             tourneyType === 'customRoundRobin' &&
             shouldShowFieldWarning
           "
-          class="mt-4 text-sm text-orange-600"
+          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
         >
           Vous avez {{ availableFields }} terrains disponibles, mais le nombre
           maximum de pools est configuré à {{ tourneySetup.maxNumberOfPools }}.
@@ -131,15 +135,23 @@
                 :key="team.id"
                 class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
               >
-                <font-awesome-icon icon="users" class="mr-2 text-gray-500" />
+                <font-awesome-icon
+                  icon="users"
+                  class="mr-2 text-light-pool-text dark:text-dark-pool-text"
+                />
                 <span class="truncate">{{ team.teamName }}</span>
               </li>
-              <li v-if="pool.teams.length > 4" class="text-sm text-gray-500">
+              <li
+                v-if="pool.teams.length > 4"
+                class="text-sm text-light-pool-text dark:text-dark-pool-text"
+              >
                 + {{ pool.teams.length - 4 }} autres
               </li>
             </ul>
             <!-- Afficher le nombre de sessions -->
-            <div class="mt-2 text-sm text-gray-500">
+            <div
+              class="mt-2 text-sm text-light-pool-text dark:text-dark-pool-text"
+            >
               Sessions programmées : {{ pool.schedulesCount || 0 }}
             </div>
           </template>

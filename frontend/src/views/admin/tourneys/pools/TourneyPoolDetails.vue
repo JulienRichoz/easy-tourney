@@ -1,157 +1,237 @@
 <!-- TourneyPoolDetails.vue -->
 <template>
-  <div>
-    <div class="p-6" v-if="pool">
-      <div class="flex items-center mb-4 relative">
-        <TitleComponent :title="`Détails : ${pool.name}`" />
-        <!-- Bouton Retour -->
-        <ButtonComponent
-          variant="secondary"
-          fontAwesomeIcon="arrow-left"
-          class="absolute right-0"
-          @click="goBackToPools"
+  <div class="p-6" v-if="pool">
+    <div class="flex items-center mb-4 relative">
+      <TitleComponent :title="`Détails : ${pool.name}`" />
+      <!-- Bouton Retour -->
+      <ButtonComponent
+        variant="secondary"
+        fontAwesomeIcon="arrow-left"
+        class="absolute right-0"
+        @click="goBackToPools"
+      >
+        <span class="hidden sm:inline">Retour aux Pools</span>
+      </ButtonComponent>
+    </div>
+
+    <!-- Section pour les équipes déjà assignées à la Pool -->
+    <div class="mb-8">
+      <h2
+        :class="[
+          'text-lg',
+          'font-semibold',
+          'mb-2',
+          'text-light-poolDetails-text',
+          'dark:text-dark-poolDetails-text',
+        ]"
+      >
+        Équipes dans cette Pool ({{ assignedTeams.length }}/{{
+          this.pool.maxTeamPerPool
+        }})
+      </h2>
+      <div v-if="assignedTeams.length > 0">
+        <form @submit.prevent="removeSelectedTeams">
+          <div class="overflow-x-auto">
+            <table
+              :class="[
+                'min-w-full',
+                'bg-light-poolDetails-card',
+                'dark:bg-dark-poolDetails-card',
+                'rounded-lg',
+                'shadow-md',
+              ]"
+            >
+              <thead>
+                <tr
+                  :class="[
+                    'bg-gray-100',
+                    'dark:bg-gray-800',
+                    'border-b',
+                    'hover:bg-light-poolDetails-hover',
+                    'dark:hover:bg-dark-poolDetails-hover',
+                  ]"
+                >
+                  <th class="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      v-model="selectAllAssigned"
+                      @change="toggleSelectAllAssigned"
+                    />
+                    <span class="ml-2">All</span>
+                  </th>
+                  <th class="px-4 py-3 text-left">Nom de l'équipe</th>
+                  <th class="px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="team in assignedTeams"
+                  :key="team.id"
+                  :class="[
+                    'border-t',
+                    'hover:bg-light-poolDetails-hover',
+                    'dark:hover:bg-dark-poolDetails-hover',
+                    'cursor-pointer',
+                    {
+                      'bg-light-poolDetails-selectedErase dark:bg-dark-poolDetails-selectedErase':
+                        selectedAssignedTeams.includes(team.id),
+                    },
+                  ]"
+                  @click="toggleRemoveTeamSelection(team.id)"
+                >
+                  <td class="px-4 py-2">
+                    <input
+                      type="checkbox"
+                      v-model="selectedAssignedTeams"
+                      :value="team.id"
+                      @click.stop
+                    />
+                  </td>
+                  <td class="px-4 py-2">
+                    <router-link
+                      :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
+                      class="text-blue-600 hover:underline dark:text-blue-400"
+                      @click.stop
+                    >
+                      {{ team.teamName }}
+                    </router-link>
+                  </td>
+                  <td class="px-4 py-2">
+                    <SoftButtonComponent
+                      fontAwesomeIcon="fa-trash"
+                      iconClass="w-4 h-4 text-red-500 hover:text-red-700"
+                      aria-label="Retirer du pool"
+                      @click="removeTeam(team.id)"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ButtonComponent
+            type="submit"
+            variant="danger"
+            class="mt-2"
+            :disabled="selectedAssignedTeams.length === 0"
+          >
+            Retirer
+          </ButtonComponent>
+        </form>
+      </div>
+      <div v-else>
+        <p
+          :class="[
+            'text-light-poolDetails-text',
+            'dark:text-dark-poolDetails-text',
+          ]"
         >
-          <span class="hidden sm:inline">Retour aux Pools</span>
-        </ButtonComponent>
+          Aucune équipe dans cette Pool.
+        </p>
       </div>
+    </div>
 
-      <!-- Section pour les équipes déjà assignées à la Pool -->
-      <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-2">
-          Équipes dans cette Pool ({{ assignedTeams.length }}/{{
-            this.pool.maxTeamPerPool
-          }})
-        </h2>
-        <div v-if="assignedTeams.length > 0">
-          <form @submit.prevent="removeSelectedTeams">
-            <div class="overflow-x-auto">
-              <table class="min-w-full bg-white rounded-lg shadow-md">
-                <thead>
-                  <tr class="bg-gray-100 border-b">
-                    <th class="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        v-model="selectAllAssigned"
-                        @change="toggleSelectAllAssigned"
-                      />
-                      <span class="ml-2">All</span>
-                    </th>
-                    <th class="px-4 py-3 text-left">Nom de l'équipe</th>
-                    <th class="px-4 py-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="team in assignedTeams"
-                    :key="team.id"
-                    class="border-t hover:bg-gray-50 cursor-pointer"
-                    @click="toggleRemoveTeamSelection(team.id)"
-                  >
-                    <td class="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        v-model="selectedAssignedTeams"
-                        :value="team.id"
-                        @click.stop
-                      />
-                    </td>
-                    <td class="px-4 py-2">
-                      <router-link
-                        :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
-                        class="text-blue-600 hover:underline"
-                        @click.stop
-                      >
-                        {{ team.teamName }}
-                      </router-link>
-                    </td>
-                    <td class="px-4 py-2">
-                      <SoftButtonComponent
-                        fontAwesomeIcon="fa-trash"
-                        iconClass="w-4 h-4 text-red-500 hover:text-red-700"
-                        aria-label="Retirer du pool"
-                        @click="removeTeam(team.id)"
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <ButtonComponent
-              type="submit"
-              variant="danger"
-              class="mt-2"
-              :disabled="selectedAssignedTeams.length === 0"
+    <!-- Section pour ajouter des équipes à la Pool -->
+    <div>
+      <h2
+        :class="[
+          'text-lg',
+          'font-semibold',
+          'mb-2',
+          'text-light-poolDetails-text',
+          'dark:text-dark-poolDetails-text',
+        ]"
+      >
+        Équipes non assignées
+      </h2>
+      <div v-if="unassignedTeams.length > 0" class="relative">
+        <form @submit.prevent="assignSelectedTeams">
+          <div class="overflow-x-auto max-h-60 overflow-y-auto">
+            <table
+              :class="[
+                'min-w-full',
+                'bg-light-poolDetails-card',
+                'dark:bg-dark-poolDetails-card',
+                'rounded-lg',
+                'shadow-md',
+              ]"
             >
-              Retirer
-            </ButtonComponent>
-          </form>
-        </div>
-        <div v-else>
-          <p>Aucune équipe dans cette Pool.</p>
-        </div>
+              <thead>
+                <tr
+                  :class="[
+                    'bg-gray-100',
+                    'dark:bg-gray-800',
+                    'border-b',
+                    'hover:bg-light-poolDetails-hover',
+                    'dark:hover:bg-dark-poolDetails-hover',
+                  ]"
+                >
+                  <th class="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      v-model="selectAllUnassigned"
+                      @change="toggleSelectAllUnassigned"
+                    />
+                    <span class="ml-2">All</span>
+                  </th>
+                  <th class="px-4 py-3 text-left">Nom de l'équipe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="team in unassignedTeams"
+                  :key="team.id"
+                  :class="[
+                    'border-t',
+                    'hover:bg-light-poolDetails-hover',
+                    'dark:hover:bg-dark-poolDetails-hover',
+                    'cursor-pointer',
+                    {
+                      'bg-light-poolDetails-selected dark:bg-dark-poolDetails-selected':
+                        selectedUnassignedTeams.includes(team.id),
+                    },
+                  ]"
+                  @click="toggleTeamSelection(team.id)"
+                >
+                  <td class="px-4 py-2">
+                    <input
+                      type="checkbox"
+                      v-model="selectedUnassignedTeams"
+                      :value="team.id"
+                      @click.stop
+                    />
+                  </td>
+                  <td class="px-4 py-2">
+                    <router-link
+                      :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
+                      class="text-blue-600 hover:underline dark:text-blue-400"
+                      @click.stop
+                    >
+                      {{ team.teamName }}
+                    </router-link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ButtonComponent
+            type="submit"
+            variant="primary"
+            class="mt-2"
+            :disabled="selectedUnassignedTeams.length === 0"
+          >
+            Assigner
+          </ButtonComponent>
+        </form>
       </div>
-
-      <!-- Section pour ajouter des équipes à la Pool -->
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Équipes non assignées</h2>
-        <div v-if="unassignedTeams.length > 0" class="relative">
-          <form @submit.prevent="assignSelectedTeams">
-            <div class="overflow-x-auto max-h-80 overflow-y-auto">
-              <table class="min-w-full bg-white rounded-lg shadow-md">
-                <thead>
-                  <tr class="bg-gray-100 border-b">
-                    <th class="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        v-model="selectAllUnassigned"
-                        @change="toggleSelectAllUnassigned"
-                      />
-                      <span class="ml-2">All</span>
-                    </th>
-                    <th class="px-4 py-3 text-left">Nom de l'équipe</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="team in unassignedTeams"
-                    :key="team.id"
-                    class="border-t hover:bg-gray-50 cursor-pointer"
-                    @click="toggleTeamSelection(team.id)"
-                  >
-                    <td class="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        v-model="selectedUnassignedTeams"
-                        :value="team.id"
-                        @click.stop
-                      />
-                    </td>
-                    <td class="px-4 py-2">
-                      <router-link
-                        :to="`/admin/tourneys/${tourneyId}/teams/${team.id}/users`"
-                        class="text-blue-600 hover:underline"
-                        @click.stop
-                      >
-                        {{ team.teamName }}
-                      </router-link>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <ButtonComponent
-              type="submit"
-              variant="primary"
-              class="mt-2"
-              :disabled="selectedUnassignedTeams.length === 0"
-            >
-              Assigner
-            </ButtonComponent>
-          </form>
-        </div>
-        <div v-else>
-          <p>Aucune équipe non assignée.</p>
-        </div>
+      <div v-else>
+        <p
+          :class="[
+            'text-light-poolDetails-text',
+            'dark:text-dark-poolDetails-text',
+          ]"
+        >
+          Aucune équipe non assignée.
+        </p>
       </div>
     </div>
   </div>

@@ -172,11 +172,16 @@
             <td class="px-4 py-2">
               <span
                 v-if="user.role.id === 1"
-                class="mr-1 px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full"
+                class="mr-1 px-2 py-1 text-xs font-semibold text-white bg-light-buttonVariants-info-default dark:bg-dark-buttonVariants-info-default rounded-full"
               >
                 Admin
               </span>
-              {{ user.name || 'N/A' }}
+              <router-link
+                :to="`/admin/users/${user.id}`"
+                class="text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {{ user.name || 'N/A' }}
+              </router-link>
             </td>
             <!-- Colonne Email -->
             <td class="px-4 py-2 truncate">
