@@ -68,7 +68,7 @@
                   :class="[
                     'border-t',
                     'hover:bg-light-poolDetails-hover',
-                    'dark:hover:bg-dark-poolDetails-card',
+                    'dark:hover:bg-dark-poolDetails-hover',
                     'cursor-pointer',
                     {
                       'bg-light-poolDetails-selectedErase dark:bg-dark-poolDetails-selectedErase':
