@@ -586,7 +586,7 @@
       navigateToAssignTeams() {
         // Rediriger vers la page pour assigner les équipes aux pools (à implémenter)
         this.$router.push(
-          `/admin/tourneys/${this.tourneyId}/assign-teams-to-pools`
+          `/admin/tourneys/${this.tourneyId}/pools/unassigned-teams`
         );
       },
 
