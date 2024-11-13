@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { roles } = require('../config/roles');
 const { UsersTourneys, User } = require('../models');
+const { verifyPoolStatusDraft, verifyRegistrationStatusActive } = require('./statusMiddleware');
+
 
 // Middleware pour authentifier le token
 const authenticateToken = async (req, res, next) => {
@@ -113,6 +115,7 @@ const authorizeTournamentAccess = async (req, res, next) => {
 
 
 module.exports = {
+    // Auth Middleware
     isAuthenticated: authenticateToken, // Alias pour authenticateToken
     authenticateToken,
     errorHandler,
@@ -121,4 +124,8 @@ module.exports = {
     authorizeRoles,
     authorizeUserOrAdmin,
     authorizeTournamentAccess,
+
+    // Status Middleware
+    verifyPoolStatusDraft,
+    verifyRegistrationStatusActive,
 };

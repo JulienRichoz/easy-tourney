@@ -110,8 +110,22 @@ const getRegistrationStatus = async (tourneyId) => {
     return tourney.registrationStatus;
 };
 
+/**
+ * Vérifie si le poolStatus est actif pour un tournoi.
+ * @param {number} tourneyId - L'ID du tournoi.
+ * @returns {Promise<boolean>} - `true` si le statut est 'active', sinon `false`.
+ */
+const isPoolStatusActive = async (tourneyId) => {
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+        throw new Error('Tournoi non trouvé');
+    }
+    return tourney && tourney.poolStatus === 'active';
+  };
+
 module.exports = {
     checkAndUpdateStatuses,
     updateGlobalStatus,
     getRegistrationStatus,
+    isPoolStatusActive
 };
