@@ -7,8 +7,8 @@ const authService = require('../services/authService');
 // DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
 // PROBLEM N+1
 // TODO:AMELIORATIONS => inclure système de cache (redis?). Mettre en place système de pagniation
-// AUTRE PROBLEME INTERESSASNT AVEC CONSOLE TIMER: 37ms la requete en moyenne => probleme vient de Vue ;)
-// 2 secodnes ok.. mais à améliorer par la suite si critique. Problème peut prevenir sur la vue de v-select, v-for imbriqué, chargement multiple de composant custom
+// AUTRE PROBLEME INTERESSASNT AVEC CONSOLE TIMER: 37ms la requete en moyenne => probleme vient de Vue qui met du temps à charger
+// 2 secondes ok.. mais à améliorer par la suite si critique. Problème peut prevenir sur la vue de v-select, v-for imbriqué, chargement multiple de composant custom
 exports.getAllUsersWithDetails = async (req, res) => {
     try {
         if (req.user.roleId !== roles.ADMIN) {
