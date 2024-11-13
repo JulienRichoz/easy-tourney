@@ -44,11 +44,9 @@
               <thead>
                 <tr
                   :class="[
-                    'bg-gray-100',
-                    'dark:bg-gray-800',
+                    'dark:bg-dark-menu',
                     'border-b',
-                    'hover:bg-light-poolDetails-hover',
-                    'dark:hover:bg-dark-poolDetails-hover',
+                    'dark:hover:bg-dark-menu',
                   ]"
                 >
                   <th class="px-4 py-3 text-left">
@@ -70,7 +68,7 @@
                   :class="[
                     'border-t',
                     'hover:bg-light-poolDetails-hover',
-                    'dark:hover:bg-dark-poolDetails-hover',
+                    'dark:hover:bg-dark-poolDetails-card',
                     'cursor-pointer',
                     {
                       'bg-light-poolDetails-selectedErase dark:bg-dark-poolDetails-selectedErase':
@@ -158,11 +156,9 @@
               <thead>
                 <tr
                   :class="[
-                    'bg-gray-100',
-                    'dark:bg-gray-800',
                     'border-b',
-                    'hover:bg-light-poolDetails-hover',
-                    'dark:hover:bg-dark-poolDetails-hover',
+                    'dark:bg-dark-menu',
+                    'dark:hover:bg-dark-menu',
                   ]"
                 >
                   <th class="px-4 py-3 text-left">

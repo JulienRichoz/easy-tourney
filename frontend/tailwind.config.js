@@ -104,7 +104,7 @@ module.exports = {
         // Palette de couleurs pour le mode sombre
         dark: {
           background: '#111827', // bg-custom_dark_1
-          card: '#1f2937', // bg-custom_dark_1
+          card: '#1f2937', // gray-800
           menu: '#1f2937', // bg-gray-800
           menuText: '#ffffff',
           errorMessage: '#ff7200',
