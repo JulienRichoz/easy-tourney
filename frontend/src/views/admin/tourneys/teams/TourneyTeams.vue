@@ -300,12 +300,18 @@
             <template #user-list>
               <ul class="grid grid-cols-2 gap-2 mt-2">
                 <li
-                  v-for="userTourney in team.usersTourneys"
+                  v-for="userTourney in team.usersTourneys.slice(0, 4)"
                   :key="userTourney.userId"
                   class="flex items-center text-sm text-light-form-text dark:text-dark-form-text truncate"
                 >
                   <font-awesome-icon icon="user" class="mr-2 text-gray-500" />
                   <span class="truncate">{{ userTourney.user.name }}</span>
+                </li>
+                <li
+                  v-if="team.usersTourneys.length > 4"
+                  class="text-sm text-gray-500"
+                >
+                  + {{ team.usersTourneys.length - 4 }} autres
                 </li>
               </ul>
             </template>
