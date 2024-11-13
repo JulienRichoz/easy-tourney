@@ -40,10 +40,12 @@ exports.createMultipleFields = async (req, res) => {
             return res.status(404).json({ error: 'Tournoi introuvable' });
         }
 
+        // Compter le nombre de terrains actuels pour déterminer le numéro de départ
+        const existingFieldsCount = await Field.count({ where: { tourneyId } });
         // Créer un tableau de terrains à insérer en une seule requête
         const fields = [];
         for (let i = 1; i <= numberOfFields; i++) {
-            fields.push({ name: `Terrain ${i}`, description: '', tourneyId });
+            fields.push({ name: `Terrain ${existingFieldsCount + i}`, description: '', tourneyId });
         }
 
         // Insérer les terrains en une seule requête
