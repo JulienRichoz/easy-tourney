@@ -342,9 +342,9 @@ exports.generateTeams = async (req, res) => {
         }
 
         // Insérer les nouvelles équipes dans la base de données
-        await Team.bulkCreate(teams);
+        const createdTeams = await Team.bulkCreate(teams, { returning: true });
 
-        res.status(201).json({ message: 'Équipes générées avec succès', teams });
+        res.status(201).json({ message: 'Équipes générées avec succès', teams: createdTeams });
     } catch (error) {
         console.error('Erreur lors de la génération des équipes:', error);
         res.status(500).json({ message: 'Erreur serveur' });
