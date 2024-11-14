@@ -51,6 +51,7 @@ export default {
                 commit('SET_STATUSES', statuses);
             } catch (error) {
                 console.error('Erreur lors de la récupération des statuts:', error);
+                throw error;
             }
         },
         async updateStatus({ commit }, { tourneyId, key, value }) {
