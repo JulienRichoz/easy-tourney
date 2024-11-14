@@ -29,7 +29,7 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupération du token JWT
   const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
 
-  // Si la route ne nécessite pas d'authentification
+  // Gestion des routes publiques (ne nécessitant pas d'authentification)
   if (to.meta.requiresAuth === false) {
     if (isAuthenticated) {
       const decoded = jwtDecode(token);
@@ -47,82 +47,88 @@ router.beforeEach(async (to, from, next) => {
     return next(); // Poursuivre si l'utilisateur n'est pas authentifié
   }
 
-  // Si le token est présent mais expiré
-  if (isAuthenticated && isTokenExpired()) {
-    handleTokenExpiration(); // Gérer l'expiration du token
-    return next('/login'); // Rediriger vers la page de connexion
-  }
-
   // Si l'utilisateur est déjà connecté et tente d'accéder aux pages login ou register
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
     const decoded = jwtDecode(token);
     const userRole = decoded.roleId;
     if (userRole === 1) {
-      return next('/tourneys');
+      return next('/admin/tourneys');
     } else {
       return next('/user');
     }
   }
 
-  // Vérification si la route concerne un tournoi
-  const isTournamentRoute = to.path.startsWith('/tourneys/') && to.params.tourneyId;
-  if (isTournamentRoute) {
-    try {
-      const tourneyId = to.params.tourneyId;
-
-      // Récupérer les statuts, le nom et le tourneyType via fetchTourneyStatuses
-      await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
-
-    } catch (error) {
-      console.error('Erreur lors de la récupération du tournoi:', error);
-
-      if (error.response && error.response.status === 404) {
-        return next({ name: 'NotFoundPage' });
-      } else {
-        await store.dispatch('tourney/clearTournamentName');
-      }
-    }
-  } else {
-    store.dispatch('tourney/clearTournamentName');
-  }
-
-  // Vérification si la route nécessite une authentification
+  // Gestion de l'authentification pour les routes protégées
   if (to.meta.requiresAuth) {
-    if (!token) {
+    // Vérifier si l'utilisateur est authentifié
+    if (!isAuthenticated) {
       store.dispatch('logout'); // Déconnecter si pas de token
       return next('/login'); // Rediriger vers la page de connexion
-    } else {
-      try {
-        const newToken = await refreshToken(); // Rafraîchir le token
-        localStorage.setItem('token', newToken); // Mettre à jour le token dans le localStorage
-        apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    }
 
-        // Récupérer les informations de l'utilisateur depuis le serveur
-        const userResponse = await apiService.get('/users/me');
-        const user = userResponse.data;
+    // Vérifier si le token est expiré
+    if (isTokenExpired()) {
+      handleTokenExpiration(); // Gérer l'expiration du token
+      return next('/login'); // Rediriger vers la page de connexion
+    }
 
-        const decoded = jwtDecode(newToken);
-        store.commit('SET_AUTH', {
-          isAuthenticated: true,
-          user,
-          tokenExpiration: decoded.exp,
-        });
+    try {
+      // Rafraîchir le token
+      const newToken = await refreshToken();
+      localStorage.setItem('token', newToken);
+      apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
-        const userRole = user.roleId;
-        // Vérification des permissions pour l'accès à la route
-        if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
-          return next('/access-denied'); // Rediriger vers la page d'accès refusé si l'utilisateur n'a pas les droits
-        }
+      // Récupérer les informations de l'utilisateur
+      const userResponse = await apiService.get('/users/me');
+      const user = userResponse.data;
 
-        return next(); // Autoriser l'accès si tout est correct
-      } catch (error) {
-        console.error('Erreur lors du rafraîchissement du token :', error);
-        store.dispatch('logout');
-        return next('/login'); // Rediriger vers la page de connexion en cas d'erreur de rafraîchissement
+      const decoded = jwtDecode(newToken);
+      store.commit('SET_AUTH', {
+        isAuthenticated: true,
+        user,
+        tokenExpiration: decoded.exp,
+      });
+
+      const userRole = user.roleId;
+
+      // Vérification des permissions pour l'accès à la route
+      if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
+        return next('/access-denied'); // Rediriger vers la page d'accès refusé
       }
+
+      // Vérification si la route concerne un tournoi
+      const isTournamentRoute = (
+        (to.path.startsWith('/tourneys/') || to.path.startsWith('/admin/tourneys/'))
+        && to.params.tourneyId
+      );
+
+      if (isTournamentRoute) {
+        try {
+          const tourneyId = to.params.tourneyId;
+          // Récupérer les statuts, le nom et le tourneyType via fetchTourneyStatuses
+          await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
+        } catch (error) {
+          console.error('Erreur lors de la récupération du tournoi:', error);
+
+          if (error.response && error.response.status === 404) {
+            return next({ name: 'NotFoundPage' });
+          } else {
+            await store.dispatch('tourney/clearTournamentName');
+          }
+        }
+      } else {
+        store.dispatch('tourney/clearTournamentName');
+      }
+
+      return next(); // Autoriser l'accès si tout est correct
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement du token :', error);
+      store.dispatch('logout');
+      return next('/login'); // Rediriger vers la page de connexion en cas d'erreur
     }
   } else {
-    next(); // Si la route ne nécessite pas d'authentification, continuer
+    // Si la route ne nécessite pas d'authentification, continuer
+    return next();
   }
 });
 
