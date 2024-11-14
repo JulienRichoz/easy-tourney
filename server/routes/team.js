@@ -32,8 +32,6 @@ router.get('/:teamId', isAuthenticated, authorizeTournamentAccess, getTeamById);
 router.put('/:teamId', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)
 router.delete('/:teamId', isAuthenticated, isAdmin, deleteTeam); // Supprimer une équipe d'un tournoi (admin uniquement)
 
-
-
 // Routes pour les opérations globales sur les équipes
 router.post('/', isAuthenticated, isAdmin, createTeam); // Créer une équipe pour un tournoi (admin uniquement)
 router.get('/', isAuthenticated, getTeamsByTourney); // Obtenir toutes les équipes d'un tournoi
