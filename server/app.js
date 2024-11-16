@@ -20,6 +20,8 @@ const userRoutes = require('./routes/user');
 const roleRoutes = require('./routes/role');
 const inviteTokenRoutes = require('./routes/inviteToken');
 const poolRoutes = require('./routes/pool');
+const gameRoutes = require('./routes/game');
+const gameEventRoutes = require('./routes/gameEvent');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -35,7 +37,7 @@ app.use(limiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// Routes globales
 app.use('/api/auth', authRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/users', userRoutes);
@@ -50,6 +52,8 @@ app.use('/api/tourneys/:tourneyId/sports-fields', sportsFieldsRoutes);
 app.use('/api/tourneys/:tourneyId/users', usersTourneysRoutes);
 app.use('/api/tourneys/:tourneyId/invite-token', inviteTokenRoutes);
 app.use('/api/tourneys/:tourneyId/pools', poolRoutes);
+app.use('/api/tourneys/:tourneyId/games', gameRoutes);
+app.use('/api/tourneys/:tourneyId/games/:gameId/events', gameEventRoutes);
 
 
 // Gestion des erreurs
