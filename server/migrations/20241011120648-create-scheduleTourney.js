@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Tourneys', // Nom de la table de référence
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE', // Si le tournoi est mis à jour, le planning est mis à jour
         onDelete: 'CASCADE', // Si le tournoi est supprimé, le planning est supprimé
@@ -27,27 +27,27 @@ module.exports = {
         type: Sequelize.TIME,
         allowNull: false,
       },
-      introductionStartTime: {
+      introStart: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      introductionEndTime: {
+      introEnd: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      lunchStartTime: {
+      lunchStart: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      lunchEndTime: {
+      lunchEnd: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      outroStartTime: {
+      outroStart: {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      outroEndTime: {
+      outroEnd: {
         type: Sequelize.TIME,
         allowNull: true,
       },
@@ -70,7 +70,7 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('ScheduleTourneys');
-  }
+  },
 };
