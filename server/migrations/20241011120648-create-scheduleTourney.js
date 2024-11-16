@@ -18,6 +18,7 @@ module.exports = {
         },
         onUpdate: 'CASCADE', // Si le tournoi est mis à jour, le planning est mis à jour
         onDelete: 'CASCADE', // Si le tournoi est supprimé, le planning est supprimé
+        unique: true, // Empêche plusieurs configurations pour un même tournoi
       },
       startTime: {
         type: Sequelize.TIME,

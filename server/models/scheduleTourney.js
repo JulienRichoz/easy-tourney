@@ -1,7 +1,10 @@
 const { Model } = require('sequelize');
+import { Unique } from '@sequelize/core/decorators-legacy';
+
 
 module.exports = (sequelize, DataTypes) => {
   class ScheduleTourney extends Model {
+    @Unique
     static associate(models) {
       ScheduleTourney.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
     }

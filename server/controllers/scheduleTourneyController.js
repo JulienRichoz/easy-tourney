@@ -20,6 +20,12 @@ exports.createScheduleTourney = async (req, res) => {
       timePoolRotation,
     } = req.body;
 
+    // Vérifier si un ScheduleTourney existe déjà pour ce tournoi
+    const existingSchedule = await ScheduleTourney.findOne({ where: { tourneyId } });
+    if (existingSchedule) {
+      return res.status(400).json({ message: "Un planning existe déjà pour ce tournoi." });
+    }
+
     if (!startTime || !endTime || !timeMatchRotation || !timePoolRotation) {
       return res.status(400).json({ message: "Les champs 'startTime', 'endTime', 'timeMatchRotation', et 'timePoolRotation' sont requis." });
     }

@@ -55,7 +55,7 @@ app.use('/api/tourneys/:tourneyId/invite-token', inviteTokenRoutes);
 app.use('/api/tourneys/:tourneyId/pools', poolRoutes);
 app.use('/api/tourneys/:tourneyId/games', gameRoutes);
 app.use('/api/tourneys/:tourneyId/games/:gameId/events', gameEventRoutes);
-app.use('/api/tourneys/:tourneyId/schedule-tourney', scheduleTourneyRoutes);
+app.use('/api/tourneys/:tourneyId/schedule', scheduleTourneyRoutes);
 
 
 // Gestion des erreurs
