@@ -1,0 +1,176 @@
+// server/controllers/gameController.js
+const { Game, Team, Field, Tourney, Sport, UsersTourneys } = require('../models');
+const { Op } = require('sequelize');
+
+/**
+ * Créer un nouveau match
+ */
+exports.createGame = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+    const { poolId, teamAId, teamBId, fieldId, sportId, startTime, endTime, refereeId } = req.body;
+
+    if (!teamAId || !teamBId || !fieldId || !startTime || !endTime) {
+      return res.status(400).json({ message: "Les champs 'teamAId', 'teamBId', 'fieldId', 'startTime', et 'endTime' sont requis." });
+    }
+
+    // Vérifier si le tournoi, les équipes et le terrain existent
+    const tourney = await Tourney.findByPk(tourneyId);
+    const teamA = await Team.findByPk(teamAId);
+    const teamB = await Team.findByPk(teamBId);
+    const field = await Field.findByPk(fieldId);
+
+    if (!tourney || !teamA || !teamB || !field) {
+      return res.status(404).json({ message: 'Tournoi, équipes ou terrain non trouvés.' });
+    }
+
+    // Créer le match
+    const game = await Game.create({
+      tourneyId,
+      poolId,
+      teamAId,
+      teamBId,
+      fieldId,
+      sportId,
+      startTime,
+      endTime,
+      refereeId,
+      status: 'scheduled',
+    });
+
+    res.status(201).json(game);
+  } catch (error) {
+    console.error('Erreur lors de la création du match :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+/**
+ * Récupérer tous les matchs d'un tournoi
+ */
+exports.getGamesByTourney = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    const games = await Game.findAll({
+      where: { tourneyId },
+      include: [
+        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+        { model: UsersTourneys, as: 'referee', attributes: ['id', 'tourneyRole'] },
+      ],
+    });
+
+    res.status(200).json(games);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des matchs :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+/**
+ * Récupérer un match par ID
+ */
+exports.getGameById = async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    const game = await Game.findByPk(gameId, {
+      include: [
+        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+        { model: UsersTourneys, as: 'referee', attributes: ['id', 'tourneyRole'] },
+      ],
+    });
+
+    if (!game) {
+      return res.status(404).json({ message: 'Match non trouvé.' });
+    }
+
+    res.status(200).json(game);
+  } catch (error) {
+    console.error('Erreur lors de la récupération du match :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+/**
+ * Mettre à jour un match
+ */
+exports.updateGame = async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const updates = req.body;
+
+    const game = await Game.findByPk(gameId);
+
+    if (!game) {
+      return res.status(404).json({ message: 'Match non trouvé.' });
+    }
+
+    await game.update(updates);
+    res.status(200).json(game);
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du match :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+/**
+ * Supprimer un match
+ */
+exports.deleteGame = async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    const game = await Game.findByPk(gameId);
+
+    if (!game) {
+      return res.status(404).json({ message: 'Match non trouvé.' });
+    }
+
+    await game.destroy();
+    res.status(204).send();
+  } catch (error) {
+    console.error('Erreur lors de la suppression du match :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+/**
+ * Valider les contraintes des matchs
+ */
+exports.validateGames = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    const games = await Game.findAll({ where: { tourneyId } });
+
+    // Exemple de validation : deux matchs ne doivent pas avoir lieu en même temps sur le même terrain
+    const conflicts = [];
+    for (let i = 0; i < games.length; i++) {
+      for (let j = i + 1; j < games.length; j++) {
+        if (
+          games[i].fieldId === games[j].fieldId &&
+          games[i].startTime < games[j].endTime &&
+          games[i].endTime > games[j].startTime
+        ) {
+          conflicts.push({ game1: games[i], game2: games[j] });
+        }
+      }
+    }
+
+    if (conflicts.length > 0) {
+      return res.status(400).json({ message: 'Conflits détectés.', conflicts });
+    }
+
+    res.status(200).json({ message: 'Aucun conflit détecté.' });
+  } catch (error) {
+    console.error('Erreur lors de la validation des matchs :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
