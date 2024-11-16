@@ -94,24 +94,3 @@ exports.updateScheduleTourney = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
-
-/**
- * Supprimer un planning
- */
-exports.deleteScheduleTourney = async (req, res) => {
-  try {
-    const { scheduleId } = req.params;
-
-    const schedule = await ScheduleTourney.findByPk(scheduleId);
-
-    if (!schedule) {
-      return res.status(404).json({ message: 'Planning non trouvé.' });
-    }
-
-    await schedule.destroy();
-    res.status(204).send();
-  } catch (error) {
-    console.error('Erreur lors de la suppression du planning :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
-  }
-};
