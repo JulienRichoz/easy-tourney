@@ -55,7 +55,18 @@ exports.createTourney = async (req, res) => {
 exports.createScheduleTourney = async (req, res) => {
     try {
         const { tourneyId } = req.params;
-        const { startTime, endTime, timeMatchRotation, timePoolRotation, introductionStartTime, introductionEndTime, lunchStartTime, lunchEndTime, outroStartTime, outroEndTime } = req.body;
+        const { 
+            startTime, 
+            endTime, 
+            timeMatchRotation, 
+            timePoolRotation, 
+            introStart, 
+            introEnd, 
+            lunchStart, 
+            lunchEnd, 
+            outroStart, 
+            outroEnd 
+        } = req.body;
 
         // Vérification de base pour s'assurer que les champs obligatoires sont présents
         if (!startTime || !endTime || !timeMatchRotation || !timePoolRotation) {
@@ -69,12 +80,12 @@ exports.createScheduleTourney = async (req, res) => {
             endTime,
             timeMatchRotation,
             timePoolRotation,
-            introductionStartTime,
-            introductionEndTime,
-            lunchStartTime,
-            lunchEndTime,
-            outroStartTime,
-            outroEndTime,
+            introStart,
+            introEnd,
+            lunchStart,
+            lunchEnd,
+            outroStart,
+            outroEnd,
         });
 
         res.status(201).json(schedule);
@@ -83,6 +94,7 @@ exports.createScheduleTourney = async (req, res) => {
         res.status(500).json({ message: error.message || 'Erreur lors de la création du planning', error });
     }
 };
+
 
 /**
  * Ajouter la configuration de team au tournoi
