@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     UsersTourneys.init({
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -33,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'UsersTourneys',
+        tableName: 'UsersTourneys',
     });
 
     return UsersTourneys;
