@@ -1,5 +1,5 @@
 // server/controllers/gameController.js
-const { Game, Team, Field, Tourney, Sport, UsersTourneys } = require('../models');
+const { Game, Team, Field, Tourney, Sport, UsersTourneys, User } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -8,7 +8,7 @@ const { Op } = require('sequelize');
 exports.createGame = async (req, res) => {
   try {
     const { tourneyId } = req.params;
-    const { poolId, teamAId, teamBId, fieldId, sportId, startTime, endTime, refereeId } = req.body;
+    const { poolId, teamAId, teamBId, fieldId, sportId, startTime, endTime, assistantId } = req.body;
 
     if (!teamAId || !teamBId || !fieldId || !startTime || !endTime) {
       return res.status(400).json({ message: "Les champs 'teamAId', 'teamBId', 'fieldId', 'startTime', et 'endTime' sont requis." });
@@ -24,6 +24,11 @@ exports.createGame = async (req, res) => {
       return res.status(404).json({ message: 'Tournoi, équipes ou terrain non trouvés.' });
     }
 
+    // Vérifier si les équipes sont de type "player"
+    if (teamA.type !== 'player' || teamB.type !== 'player') {
+      return res.status(400).json({ message: 'Les équipes doivent être de type "player".' });
+    }
+
     // Créer le match
     const game = await Game.create({
       tourneyId,
@@ -34,14 +39,14 @@ exports.createGame = async (req, res) => {
       sportId,
       startTime,
       endTime,
-      refereeId,
+      assistantId,
       status: 'scheduled',
     });
 
     res.status(201).json(game);
   } catch (error) {
     console.error('Erreur lors de la création du match :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
 
@@ -59,14 +64,28 @@ exports.getGamesByTourney = async (req, res) => {
         { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
         { model: Field, as: 'field', attributes: ['id', 'name'] },
         { model: Sport, as: 'sport', attributes: ['id', 'name'] },
-        { model: UsersTourneys, as: 'referee', attributes: ['id', 'tourneyRole'] },
+        {
+          model: UsersTourneys,
+          as: 'assistant',
+          attributes: ['userId', 'tourneyRole'], // Ajoutez les champs nécessaires
+          required: false,          
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+              required: false,
+            },
+          ],
+        },
       ],
+      logging: console.log,
     });
 
     res.status(200).json(games);
   } catch (error) {
     console.error('Erreur lors de la récupération des matchs :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
 
@@ -83,7 +102,7 @@ exports.getGameById = async (req, res) => {
         { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
         { model: Field, as: 'field', attributes: ['id', 'name'] },
         { model: Sport, as: 'sport', attributes: ['id', 'name'] },
-        { model: UsersTourneys, as: 'referee', attributes: ['id', 'tourneyRole'] },
+        { model: UsersTourneys, as: 'assistant', attributes: ['id', 'tourneyRole'] },
       ],
     });
 
