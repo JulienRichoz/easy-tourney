@@ -1,28 +1,16 @@
+// models/game.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Game extends Model {
     static associate(models) {
-      // Association avec le tournoi
       Game.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
-
-      // Association avec les pools
       Game.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
-
-      // Association avec les équipes
       Game.belongsTo(models.Team, { foreignKey: 'teamAId', as: 'teamA' });
       Game.belongsTo(models.Team, { foreignKey: 'teamBId', as: 'teamB' });
-
-      // Association avec le terrain
       Game.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
-
-      // Association avec le sport
       Game.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
-
-      // Association avec l'arbitre
-      Game.belongsTo(models.User, { foreignKey: 'refereeId', as: 'referee' });
-
-      // Association avec les événements
+      Game.belongsTo(models.UsersTourneys, { foreignKey: 'assistantId', as: 'assistant' });
       Game.hasMany(models.GameEvent, { foreignKey: 'gameId', as: 'events' });
     }
   }
@@ -77,7 +65,7 @@ module.exports = (sequelize, DataTypes) => {
       assistantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: { model: 'UsersTourneys', key: 'id' }, // Utilise UsersTourneys
+        references: { model: 'UsersTourneys', key: 'id' },
         onDelete: 'SET NULL',
       },
     },

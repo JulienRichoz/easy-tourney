@@ -1,3 +1,4 @@
+// migrations/create-games.js
 'use strict';
 
 module.exports = {
