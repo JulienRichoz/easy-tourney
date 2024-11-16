@@ -3,7 +3,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store';
 import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import apiService from '@/services/apiService';
 
 // Importation des fichiers de routes
