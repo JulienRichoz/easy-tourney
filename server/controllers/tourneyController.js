@@ -48,57 +48,9 @@ exports.createTourney = async (req, res) => {
     }
 };
 
-
-/**
- * Ajouter le planning au tournoi
- */
-exports.createScheduleTourney = async (req, res) => {
-    try {
-        const { tourneyId } = req.params;
-        const { 
-            startTime, 
-            endTime, 
-            timeMatchRotation, 
-            timePoolRotation, 
-            introStart, 
-            introEnd, 
-            lunchStart, 
-            lunchEnd, 
-            outroStart, 
-            outroEnd 
-        } = req.body;
-
-        // Vérification de base pour s'assurer que les champs obligatoires sont présents
-        if (!startTime || !endTime || !timeMatchRotation || !timePoolRotation) {
-            return res.status(400).json({ message: "Les champs 'startTime', 'endTime', 'timeMatchRotation', et 'timePoolRotation' sont requis." });
-        }
-
-        // Créer le planning (les hooks du modèle vont valider les heures)
-        const schedule = await ScheduleTourney.create({
-            tourneyId,
-            startTime,
-            endTime,
-            timeMatchRotation,
-            timePoolRotation,
-            introStart,
-            introEnd,
-            lunchStart,
-            lunchEnd,
-            outroStart,
-            outroEnd,
-        });
-
-        res.status(201).json(schedule);
-    } catch (error) {
-        console.error('Erreur lors de la création du planning :', error);
-        res.status(500).json({ message: error.message || 'Erreur lors de la création du planning', error });
-    }
-};
-
-
-/**
+/** TODO: DELETE IF NOT USED (16 nov 2024)
  * Ajouter la configuration de team au tournoi
- */
+ 
 exports.createTeamSetup = async (req, res) => {
     try {
         const { tourneyId } = req.params;
@@ -120,7 +72,7 @@ exports.createTeamSetup = async (req, res) => {
         console.error('Erreur lors de la création de la configuration de team :', error);
         res.status(500).json({ message: 'Erreur lors de la création de la configuration de team', error });
     }
-};
+};*/
 
 /**
  * Récupérer tous les tournois

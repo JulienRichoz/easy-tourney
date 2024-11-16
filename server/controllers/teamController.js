@@ -425,6 +425,7 @@ exports.autoFillTeams = async (req, res) => {
     }
 };
 
+/* TODO: DELETE IF NOT USED (16 nov 2024)
 // Créer une nouvelle configuration de team
 exports.createTeamSetup = async (req, res) => {
     const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body;
@@ -457,7 +458,7 @@ exports.createTeamSetup = async (req, res) => {
         console.error('Erreur lors de la création de la configuration de team:', error);
         res.status(500).json({ message: 'Erreur serveur', error });
     }
-};
+}; */
 
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
