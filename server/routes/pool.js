@@ -22,12 +22,7 @@ router.post('/:poolId/assign-teams', isAuthenticated, isAdmin, verifyPoolStatusD
 router.post('/:poolId/remove-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, removeTeamsFromPool);
 router.post('/auto-assign', isAuthenticated, isAdmin, verifyPoolStatusDraft, autoAssignTeamsToPools);
 
-// Routes pour gérer poolSchedule
-router.post('/:poolId/schedules', isAuthenticated, isAdmin, verifyPoolStatusDraft, createPoolSchedule);
-router.get('/:poolId/schedules', isAuthenticated, authorizeTournamentAccess, getPoolSchedules);
-
 // Strategy Pattern to generate Pools with teams depending on the strategy pattern used
 router.post('/generate', isAuthenticated, isAdmin, verifyPoolStatusDraft, generatePools);
-
 
 module.exports = router;

@@ -23,6 +23,8 @@ const poolRoutes = require('./routes/pool');
 const gameRoutes = require('./routes/game');
 const gameEventRoutes = require('./routes/gameEvent');
 const scheduleTourneyRoutes = require('./routes/scheduleTourney');
+const poolScheduleRoutes = require('./routes/poolSchedule');
+const planningRoutes = require('./routes/planning');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -56,7 +58,8 @@ app.use('/api/tourneys/:tourneyId/pools', poolRoutes);
 app.use('/api/tourneys/:tourneyId/games', gameRoutes);
 app.use('/api/tourneys/:tourneyId/games/:gameId/events', gameEventRoutes);
 app.use('/api/tourneys/:tourneyId/schedule', scheduleTourneyRoutes);
-
+app.use('/api/tourneys/:tourneyId/pools/:poolId/schedule', poolScheduleRoutes); // Routes pour les plannings des pools
+app.use('/api/tourneys/:tourneyId/planning', planningRoutes); // Routes pour la gestion des plannings
 
 // Gestion des erreurs
 app.use(errorHandler);

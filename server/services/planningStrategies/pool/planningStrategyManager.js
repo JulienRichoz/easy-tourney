@@ -1,4 +1,4 @@
-// services/planningStrategies/planningStrategyManager.js
+// services/planningStrategies/pool/planningStrategyManager.js
 const CustomRoundRobinPlanning = require('./customRoundRobinPlanning');
 // Importez d'autres stratégies si nécessaire
 

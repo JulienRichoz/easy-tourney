@@ -1,4 +1,4 @@
-// services/planningStrategies/planningStrategy.js
+// services/planningStrategies/pool/planningStrategy.js
 class PlanningStrategy {
     constructor(tourneyId) {
       this.tourneyId = tourneyId;

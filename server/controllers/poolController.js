@@ -327,60 +327,6 @@ exports.autoAssignTeamsToPools = async (req, res) => {
   }
 };
 
-exports.createPoolSchedule = async (req, res) => {
-  try {
-    const { poolId } = req.params;
-    const { fieldId, startTime, endTime, date } = req.body;
-
-    // Vérifier si la Pool existe
-    const pool = await Pool.findByPk(poolId);
-    if (!pool) {
-      return res.status(404).json({ message: 'Pool non trouvée.' });
-    }
-
-    // Vérifier si le Field existe
-    const field = await Field.findByPk(fieldId);
-    if (!field) {
-      return res.status(404).json({ message: 'Terrain non trouvé.' });
-    }
-
-    // Créer la session de Pool
-    const poolSchedule = await PoolSchedule.create({
-      poolId,
-      fieldId,
-      startTime,
-      endTime,
-      date,
-    });
-
-    res.status(201).json(poolSchedule);
-  } catch (error) {
-    console.error('Erreur lors de la création de la session de Pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la création de la session de Pool.', error });
-  }
-};
-
-exports.getPoolSchedules = async (req, res) => {
-  try {
-    const { poolId } = req.params;
-
-    const poolSchedules = await PoolSchedule.findAll({
-      where: { poolId },
-      include: [
-        {
-          model: Field,
-          as: 'field',
-          attributes: ['id', 'name'],
-        },
-      ],
-    });
-
-    res.status(200).json(poolSchedules);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des sessions de Pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération des sessions de Pool.', error });
-  }
-};
 
 exports.generatePools = async (req, res) => {
   const tourneyId = req.params.tourneyId;
