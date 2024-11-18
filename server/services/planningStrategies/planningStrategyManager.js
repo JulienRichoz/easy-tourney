@@ -1,0 +1,24 @@
+// services/planningStrategies/planningStrategyManager.js
+const CustomRoundRobinPlanning = require('./customRoundRobinPlanning');
+// Importez d'autres stratégies si nécessaire
+
+class PlanningStrategyManager {
+  constructor(tourneyId, strategyName) {
+    this.tourneyId = tourneyId;
+    this.strategy = this.getStrategy(strategyName);
+  }
+
+  getStrategy(strategyName) {
+    switch (strategyName) {
+      case 'customRoundRobin':
+      default:
+        return new CustomRoundRobinPlanning(this.tourneyId);
+    }
+  }
+
+  async generatePlanning() {
+    return this.strategy.generatePlanning();
+  }
+}
+
+module.exports = PlanningStrategyManager;
