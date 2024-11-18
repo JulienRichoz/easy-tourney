@@ -1,6 +1,6 @@
 // services/planningStrategies/pool/customRoundRobinPlanning.js
 const PlanningStrategy = require('./planningStrategy');
-const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields } = require('../../../models');
+const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields, Sport } = require('../../../models');
 
 class CustomRoundRobinPlanning extends PlanningStrategy {
   async generatePlanning() {
@@ -16,6 +16,11 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       include: {
         model: SportsFields,
         as: "sportsFields",
+        include: {
+          model: Sport,
+          as: "sport",
+          attributes: ["id", "name"],
+        },
         attributes: ["startTime", "endTime", "sportId"],
       },
     });
@@ -32,8 +37,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     }
 
     // Variables pour la planification
-    const { startTime, endTime, timePoolRotation, lunchStart, lunchEnd } =
-      scheduleTourney;
+    const { startTime, endTime, timePoolRotation, lunchStart, lunchEnd } = scheduleTourney;
 
     const startMinutes = this.timeToMinutes(startTime);
     const endMinutes = this.timeToMinutes(endTime);
@@ -62,19 +66,18 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     // Supprimer les PoolSchedules existants
     await PoolSchedule.destroy({ where: { poolId: pools.map((p) => p.id) } });
 
-    let poolIndex = 0;
     const totalPools = pools.length;
+    const totalFields = fields.length;
 
-    // Suivi des terrains déjà utilisés par créneau
-    let usedFields = {};
+    // Boucler sur les créneaux horaires avec rotation des pools
+    for (let timeSlotIndex = 0; timeSlotIndex < planning.length; timeSlotIndex++) {
+      let timeSlot = planning[timeSlotIndex];
+      for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
+        let field = fields[fieldIndex];
 
-    // Boucler sur les créneaux horaires
-    for (let timeSlot of planning) {
-      usedFields[timeSlot] = new Set(); // Initialiser un ensemble pour suivre les terrains utilisés
-      for (let field of fields) {
-        if (poolIndex >= totalPools) break;
-
-        const pool = pools[poolIndex];
+        // Calculer l'index du pool avec rotation
+        let poolIndex = (fieldIndex + timeSlotIndex) % totalPools;
+        let pool = pools[poolIndex];
 
         // Vérifier les créneaux horaires des SportsFields
         const validSportsField = field.sportsFields.find((sf) => {
@@ -86,12 +89,9 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
           );
         });
 
-        if (!validSportsField || usedFields[timeSlot].has(field.id)) {
-          continue; // Passer au prochain terrain si non valide ou déjà utilisé
+        if (!validSportsField) {
+          continue; // Passer au prochain terrain si non valide
         }
-
-        // Marquer le terrain comme utilisé
-        usedFields[timeSlot].add(field.id);
 
         // Créer le PoolSchedule
         await PoolSchedule.create({
@@ -102,12 +102,9 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
           date: scheduleTourney.date || new Date(),
           sportId: validSportsField.sportId, // Ajouter le sport associé
         });
-
-        // Passer à la pool suivante
-        poolIndex = (poolIndex + 1) % totalPools;
       }
     }
-mo
+
     return { message: "Planning généré avec succès." };
   }
 
@@ -124,4 +121,3 @@ mo
 }
 
 module.exports = CustomRoundRobinPlanning;
-

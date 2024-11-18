@@ -23,6 +23,7 @@
               <span>{{ schedule.field.name }}</span>
               <span>{{ schedule.startTime }} - {{ schedule.endTime }}</span>
               <span>{{ schedule.date }}</span>
+              <span>{{ schedule.sport.name }}</span>
             </li>
           </ul>
         </div>
@@ -50,7 +51,9 @@
     methods: {
       async fetchPlanningDetails() {
         try {
-          const response = await apiService.get(`/tourneys/1/planning/details`);
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/planning/details`
+          );
           this.pools = response.data.pools;
         } catch (error) {
           console.error(
