@@ -4,7 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, getTourneyTeamsDetails, getTourneyStatuses, joinTourneyWithToken, getRegistrationStatus, getTourneyPoolsDetails
+    createTourney, getTourneys, getTourneyById, updateTourney, deleteTourney, getTourneyTeamsDetails, getTourneyStatuses, joinTourneyWithToken, getRegistrationStatus, getTourneyPoolsDetails, getTourneyPlanningDetails
 } = require('../controllers/tourneyController');
 
 const { isAuthenticated, isAdmin, authorizeTournamentAccess } = require('../middlewares');
@@ -25,6 +25,8 @@ router.post('/join', isAuthenticated, joinTourneyWithToken) // Rejoindre un tour
 // Aggregate/custom routes
 router.get('/:tourneyId/teams-details', isAuthenticated, authorizeTournamentAccess, getTourneyTeamsDetails); // Team Page -> get all data required in one request
 router.get('/:tourneyId/pools-details', isAuthenticated, authorizeTournamentAccess, getTourneyPoolsDetails); // Team Pool -> get all data required in one request
+router.get('/:tourneyId/planning-details', isAuthenticated, authorizeTournamentAccess, getTourneyPlanningDetails); // Récupérer le planning d'un tournoi
+
 
 
 module.exports = router;
