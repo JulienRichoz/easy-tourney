@@ -27,6 +27,15 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
+      sportId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Sports',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
       startTime: {
         type: Sequelize.TIME,
         allowNull: false,

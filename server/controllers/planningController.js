@@ -18,7 +18,7 @@ exports.getPlanningDetails = async (req, res) => {
       },
     });
 
-    // Extraire une liste unique des sports depuis les terrains (inchangé)
+    // Extraire une liste unique des sports depuis les terrains
     const sports = [];
     fields.forEach(field => {
       field.sportsFields.forEach(sportsField => {
@@ -57,7 +57,7 @@ exports.getPlanningDetails = async (req, res) => {
       ],
     });
 
-    // Récupérer les matchs planifiés (inchangé)
+    // Récupérer les matchs planifiés
     const games = await Game.findAll({
       where: { tourneyId },
       include: [
@@ -67,12 +67,11 @@ exports.getPlanningDetails = async (req, res) => {
       attributes: ['id', 'fieldId', 'poolId', 'startTime', 'endTime'],
     });
 
-    // Récupérer la configuration du planning (inchangé)
+    // Récupérer la configuration du planning
     const scheduleTourney = await ScheduleTourney.findOne({
       where: { tourneyId },
     });
 
-    // Construire la réponse
     res.status(200).json({
       fields,
       pools,

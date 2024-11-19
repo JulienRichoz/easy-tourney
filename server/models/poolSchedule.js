@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       PoolSchedule.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
       PoolSchedule.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
+      PoolSchedule.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
     }
   }
 
@@ -15,6 +16,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     fieldId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    sportId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
