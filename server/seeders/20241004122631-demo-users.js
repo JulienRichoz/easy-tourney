@@ -5,7 +5,7 @@ const authService = require('../services/authService');
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [];
-    const password =  await authService.hashPassword('password');// Faille sécurité car tjr meme password encrypté affiché mais allege generation seeder..
+    const password = await authService.hashPassword('password');// Faille sécurité car tjr meme password encrypté affiché mais allege generation seeder.. (0.2 seconde vs 14 secondes)
     // Admin user
     users.push({
       id: 1,
