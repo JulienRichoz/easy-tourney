@@ -66,19 +66,20 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     // Supprimer les PoolSchedules existants
     await PoolSchedule.destroy({ where: { poolId: pools.map((p) => p.id) } });
 
-    const totalPools = pools.length;
-    const totalFields = fields.length;
+    // Initialiser les structures de données pour le suivi
+    const poolsPlayedSports = {};
+    const poolSportPlayCount = {};
+    const poolTotalAssignments = {};
 
-    // Boucler sur les créneaux horaires avec rotation des pools
-    for (let timeSlotIndex = 0; timeSlotIndex < planning.length; timeSlotIndex++) {
-      let timeSlot = planning[timeSlotIndex];
-      for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
-        let field = fields[fieldIndex];
+    pools.forEach(pool => {
+      poolsPlayedSports[pool.id] = new Set();
+      poolSportPlayCount[pool.id] = {};
+      poolTotalAssignments[pool.id] = 0;
+    });
 
-        // Calculer l'index du pool avec rotation
-        let poolIndex = (fieldIndex + timeSlotIndex) % totalPools;
-        let pool = pools[poolIndex];
-
+    // Boucler sur les créneaux horaires
+    for (let timeSlot of planning) {
+      for (let field of fields) {
         // Vérifier les créneaux horaires des SportsFields
         const validSportsField = field.sportsFields.find((sf) => {
           const fieldStartMinutes = this.timeToMinutes(sf.startTime);
@@ -93,15 +94,49 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
           continue; // Passer au prochain terrain si non valide
         }
 
+        const sportId = validSportsField.sportId;
+
+        // Trouver les pools qui n'ont pas encore joué ce sport
+        const availablePools = pools.filter(pool => !poolsPlayedSports[pool.id].has(sportId));
+
+        let selectedPool;
+
+        if (availablePools.length > 0) {
+          // Sélectionner la pool avec le moins de participations totales
+          selectedPool = availablePools.reduce((minPool, pool) => {
+            return poolTotalAssignments[pool.id] < poolTotalAssignments[minPool.id] ? pool : minPool;
+          });
+        } else {
+          // Toutes les pools ont déjà joué ce sport
+          // Trouver la pool qui a le moins joué ce sport
+          selectedPool = pools.reduce((minPool, pool) => {
+            const playCount = poolSportPlayCount[pool.id][sportId] || 0;
+            const minPlayCount = poolSportPlayCount[minPool.id][sportId] || 0;
+            if (playCount < minPlayCount) {
+              return pool;
+            } else if (playCount === minPlayCount) {
+              // Si égalité, choisir la pool avec le moins de participations totales
+              return poolTotalAssignments[pool.id] < poolTotalAssignments[minPool.id] ? pool : minPool;
+            } else {
+              return minPool;
+            }
+          }, pools[0]);
+        }
+
         // Créer le PoolSchedule
         await PoolSchedule.create({
-          poolId: pool.id,
+          poolId: selectedPool.id,
           fieldId: field.id,
           startTime: this.minutesToTime(timeSlot),
           endTime: this.minutesToTime(timeSlot + rotationDuration),
           date: scheduleTourney.date || new Date(),
-          sportId: validSportsField.sportId, // Ajouter le sport associé
+          sportId: sportId,
         });
+
+        // Mettre à jour les structures de données
+        poolsPlayedSports[selectedPool.id].add(sportId);
+        poolSportPlayCount[selectedPool.id][sportId] = (poolSportPlayCount[selectedPool.id][sportId] || 0) + 1;
+        poolTotalAssignments[selectedPool.id]++;
       }
     }
 
