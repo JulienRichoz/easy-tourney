@@ -41,6 +41,7 @@
           ]"
         >
           {{ pool.name }}
+          <span v-if="pool.sport"> - {{ pool.sport.name }}</span>
         </div>
       </div>
 
@@ -56,8 +57,9 @@
       <!-- Sélecteur de statut aligné à droite -->
       <StatusSelectorComponent
         :tourneyId="tourneyId"
-        statusKey="poolAssignmentStatus"
-        :statusOptions="poolAssignmentStatusOptions"
+        statusKey="planningStatus"
+        :statusOptions="planningStatusOptions"
+        v-model="currentStatus"
       />
     </div>
 
@@ -135,7 +137,7 @@
         fields: [],
         pools: [],
         poolSchedules: [],
-        poolAssignmentStatusOptions: [
+        planningStatusOptions: [
           { value: 'draft', label: 'Édition' },
           { value: 'completed', label: 'Terminé' },
         ],
@@ -240,6 +242,7 @@
             required: true,
           },
         ],
+        currentStatus: null, // Ajouté pour gérer le statut actuel
       };
     },
     computed: {
@@ -247,11 +250,23 @@
         statuses: (state) => state.statuses,
       }),
       isEditable() {
-        return this.statuses.poolAssignmentStatus !== 'completed';
+        return this.statuses.planningStatus !== 'completed';
       },
       /**
-       * Options du calendrier FullCalendar avec les ressources (terrains)
+       * Terrains triés par nom (ordre alphabétique ou numérique)
        */
+      sortedFields() {
+        return [...this.fields].sort((a, b) => {
+          // Trier par nom numérique si les noms sont des nombres
+          const aNum = parseInt(a.name);
+          const bNum = parseInt(b.name);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+          }
+          // Sinon, trier alphabétiquement
+          return a.name.localeCompare(b.name);
+        });
+      },
       /**
        * Options du calendrier FullCalendar avec les ressources (terrains)
        */
@@ -267,7 +282,9 @@
         this.poolSchedules.forEach((schedule) => {
           events.push({
             id: schedule.id.toString(),
-            title: schedule.pool.name,
+            title:
+              schedule.pool.name +
+              (schedule.sport ? ` - ${schedule.sport.name}` : ''),
             start: `${schedule.date}T${schedule.startTime}`,
             end: `${schedule.date}T${schedule.endTime}`,
             resourceId: schedule.field.id.toString(),
@@ -305,7 +322,8 @@
           droppable: true,
           slotMinTime: minTime,
           slotMaxTime: maxTime,
-          resources: this.fields.map((field) => ({
+          allDaySlot: false, // 1) Supprimer la section all-day
+          resources: this.sortedFields.map((field) => ({
             id: field.id.toString(),
             title: field.name,
           })),
@@ -316,6 +334,7 @@
             minute: '2-digit',
             hour12: false,
           },
+          headerToolbar: false, // 5) Supprimer les boutons du calendrier
           eventReceive: this.handleEventReceive,
           eventDrop: this.handleEventDrop,
           eventResize: this.handleEventResize,
@@ -344,6 +363,9 @@
         try {
           // Charger les statuts du tournoi
           await this.fetchTourneyStatuses(this.tourneyId);
+
+          // Définir le statut actuel
+          this.currentStatus = this.statuses.planningStatus;
 
           // Récupérer les détails du planning
           const response = await apiService.get(
@@ -751,6 +773,8 @@
           );
           this.showScheduleConfigModal = false;
           // Vous pouvez déclencher une mise à jour du planning ici si nécessaire
+          await this.fetchPlanningDetails();
+          this.initializeExternalEvents(); // Ré-initialiser les événements externes si nécessaire
         } catch (error) {
           console.error(
             'Erreur lors de la sauvegarde de la configuration du planning :',
