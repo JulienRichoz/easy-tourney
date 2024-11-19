@@ -58,9 +58,8 @@ app.use('/api/tourneys/:tourneyId/pools', poolRoutes);
 app.use('/api/tourneys/:tourneyId/games', gameRoutes);
 app.use('/api/tourneys/:tourneyId/games/:gameId/events', gameEventRoutes);
 app.use('/api/tourneys/:tourneyId/schedule', scheduleTourneyRoutes);
-app.use('/api/tourneys/:tourneyId/pools/:poolId/schedule', poolScheduleRoutes); // Routes pour les plannings des pools
+app.use('/api/tourneys/:tourneyId/pools/schedule', poolScheduleRoutes); // Routes pour les plannings des pools
 app.use('/api/tourneys/:tourneyId/planning', planningRoutes); // Routes pour la gestion des plannings
-
 // Gestion des erreurs
 app.use(errorHandler);
 

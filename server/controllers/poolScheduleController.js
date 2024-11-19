@@ -8,24 +8,24 @@ exports.assignPoolToField = async (req, res) => {
     const { tourneyId, poolId } = req.params;
     const { fieldId, startTime, endTime, date } = req.body;
 
-    // Vérifier si la pool existe
-    const pool = await Pool.findOne({ where: { id: poolId, tourneyId } });
-    if (!pool) {
-      return res.status(404).json({ message: 'Pool non trouvée.' });
+    // Validation des champs obligatoires
+    if (!fieldId || !startTime || !endTime || !date) {
+      return res.status(400).json({ message: 'Les champs fieldId, startTime, endTime et date sont requis.' });
     }
 
-    // Vérifier si le terrain existe
+    // Vérification de l'existence de la pool
+    const pool = await Pool.findOne({ where: { id: poolId, tourneyId } });
+    if (!pool) {
+      return res.status(404).json({ message: 'Pool non trouvée pour ce tournoi.' });
+    }
+
+    // Vérification de l'existence du terrain
     const field = await Field.findByPk(fieldId);
     if (!field) {
       return res.status(404).json({ message: 'Terrain non trouvé.' });
     }
 
-    // Vérifier si les horaires sont valides
-    if (!startTime || !endTime || !date) {
-      return res.status(400).json({ message: 'Les horaires et la date sont requis.' });
-    }
-
-    // Créer ou mettre à jour l'affectation de la pool au terrain
+    // Création du planning
     const poolSchedule = await PoolSchedule.create({
       poolId,
       fieldId,
@@ -49,26 +49,18 @@ exports.updatePoolSchedule = async (req, res) => {
     const { poolScheduleId } = req.params;
     const { fieldId, startTime, endTime, date } = req.body;
 
-    // Vérifier si le PoolSchedule existe
+    // Validation des champs obligatoires
+    if (!startTime || !endTime || !date) {
+      return res.status(400).json({ message: 'Les champs startTime, endTime et date sont requis.' });
+    }
+
+    // Vérification de l'existence du PoolSchedule
     const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
     if (!poolSchedule) {
       return res.status(404).json({ message: 'PoolSchedule non trouvé.' });
     }
 
-    // Vérifier si le terrain existe
-    if (fieldId) {
-      const field = await Field.findByPk(fieldId);
-      if (!field) {
-        return res.status(404).json({ message: 'Terrain non trouvé.' });
-      }
-    }
-
-    // Vérifier les horaires
-    if (!startTime || !endTime || !date) {
-      return res.status(400).json({ message: 'Les horaires et la date sont requis.' });
-    }
-
-    // Mettre à jour l'assignation
+    // Mise à jour des informations
     await poolSchedule.update({ fieldId, startTime, endTime, date });
 
     res.status(200).json({ message: 'PoolSchedule mis à jour avec succès.', poolSchedule });
@@ -85,13 +77,13 @@ exports.deletePoolSchedule = async (req, res) => {
   try {
     const { poolScheduleId } = req.params;
 
-    // Vérifier si le PoolSchedule existe
+    // Vérification de l'existence du PoolSchedule
     const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
     if (!poolSchedule) {
       return res.status(404).json({ message: 'PoolSchedule non trouvé.' });
     }
 
-    // Supprimer l'assignation
+    // Suppression
     await poolSchedule.destroy();
 
     res.status(200).json({ message: 'PoolSchedule supprimé avec succès.' });
@@ -102,7 +94,7 @@ exports.deletePoolSchedule = async (req, res) => {
 };
 
 /**
- * Récupérer tous les plannings des pools d'un tournoi
+ * Récupérer tous les plannings d'un pool d'un tournoi
  */
 exports.getPoolSchedulesByTourney = async (req, res) => {
   try {
@@ -127,6 +119,28 @@ exports.getPoolSchedulesByTourney = async (req, res) => {
     res.status(200).json(poolSchedules);
   } catch (error) {
     console.error('Erreur lors de la récupération des plannings des pools :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+exports.getPoolSchedulesByPool = async (req, res) => {
+  try {
+    const { poolId } = req.params;
+
+    const poolSchedules = await PoolSchedule.findAll({
+      where: { poolId },
+      include: [
+        {
+          model: Field,
+          as: 'field',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    res.status(200).json(poolSchedules);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des plannings de la pool :', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
