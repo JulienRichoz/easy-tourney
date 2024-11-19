@@ -55,11 +55,18 @@
  * ========================================================================
  */
 const PlanningStrategy = require('./planningStrategy');
-const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields, Sport } = require('../../../models');
+const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields, Sport, Tourney } = require('../../../models');
 
 class CustomRoundRobinPlanning extends PlanningStrategy {
   async generatePlanning() {
     // === 1. Récupération des données ===
+    // Récupérer le tournoi
+    const tourney = await Tourney.findOne({ where: { id: this.tourneyId } });
+    if (!tourney) {
+      throw new Error('Tournoi introuvable.');
+    }
+
+    const tourneyDate = tourney.dateTourney;
 
     // Récupérer les pools du tournoi
     const pools = await Pool.findAll({ where: { tourneyId: this.tourneyId } });
@@ -218,11 +225,11 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
     // === 4. Assignation initiale des pools ===
 
-    await this.initialAssignment(pools, planning, fields, scheduleTourney, poolDuration);
+    await this.initialAssignment(pools, planning, fields, tourneyDate, poolDuration);
 
     // === 5. Équilibrage des sessions ===
 
-    await this.balancePoolSessions(pools, planning, fields, scheduleTourney, poolDuration);
+    await this.balancePoolSessions(pools, planning, fields, tourneyDate, poolDuration);
 
     return { message: 'Planning généré avec succès.' };
   }
@@ -277,7 +284,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Object} scheduleTourney - Configuration du planning du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
-  async initialAssignment(pools, planning, fields, scheduleTourney, poolDuration) {
+  async initialAssignment(pools, planning, fields, tourneyDate, poolDuration) {
     // Initialiser la file d'attente des pools
     const poolQueue = [...pools];
 
@@ -326,7 +333,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
             }
 
             // Assigner la pool au terrain
-            await this.assignPoolToTimeSlot(selectedPool.id, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration);
+            await this.assignPoolToTimeSlot(selectedPool.id, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration);
 
             assigned = true;
             break; // Sortir de la boucle des sports
@@ -355,7 +362,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Object} scheduleTourney - Configuration du planning du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
-  async balancePoolSessions(pools, planning, fields, scheduleTourney, poolDuration) {
+  async balancePoolSessions(pools, planning, fields, tourneyDate, poolDuration) {
     const maxSessions = Math.max(...this.poolTotalAssignments.values());
     const poolsNeedingExtraSessions = pools.filter(pool => this.poolTotalAssignments.get(pool.id) < maxSessions);
 
@@ -391,7 +398,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
               }
 
               // Assigner la pool au terrain
-              await this.assignPoolToTimeSlot(pool.id, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration);
+              await this.assignPoolToTimeSlot(pool.id, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration);
 
               assigned = true;
               break; // Sortir de la boucle des sports
@@ -463,7 +470,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Object} scheduleTourney - Configuration du planning du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
-  async assignPoolToTimeSlot(poolId, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration) {
+  async assignPoolToTimeSlot(poolId, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration) {
     const { field } = fieldAssignment;
 
     // Créer le PoolSchedule
@@ -472,7 +479,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       fieldId: field.id,
       startTime: this.minutesToTime(timeSlot),
       endTime: this.minutesToTime(timeSlot + poolDuration),
-      date: scheduleTourney.date || new Date(),
+      date: tourneyDate || new Date(),
       sportId: sportId,
     });
 
