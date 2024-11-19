@@ -21,6 +21,7 @@
             'pool-item',
             'p-3',
             'mb-3',
+            'external-event',
             'rounded-lg',
             'text-center',
             'font-semibold',
@@ -49,6 +50,7 @@
         @click="openScheduleConfigModal"
         variant="secondary"
       >
+        Configurer le planning
       </ButtonComponent>
 
       <!-- Sélecteur de statut aligné à droite -->
@@ -65,39 +67,15 @@
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des pools."
       ></ErrorMessageComponent>
     </div>
-    <!-- Grille des terrains avec le calendrier FullCalendar -->
-    <div
-      v-if="tourney.dateTourney && fields.length"
-      class="grid gap-4 justify-items-stretch"
-      :class="gridClasses"
-    >
-      <div
-        v-for="(field, index) in fields"
-        :key="field.id"
-        class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 w-full"
-      >
-        <!-- Nom du terrain avec le numéro -->
-        <div class="flex justify-between items-center">
-          <h3 class="text-xl font-bold text-center truncate">
-            {{ field.name }}
-          </h3>
-          <span class="text-sm text-gray-500">
-            {{ index + 1 }}/{{ fields.length }}
-          </span>
-        </div>
-        <p class="truncate">{{ field.description }}</p>
 
-        <!-- FullCalendar pour chaque terrain -->
-        <FullCalendar
-          :options="getFieldCalendarOptions(field)"
-          :key="tourney.dateTourney + '-' + field.id"
-        />
-      </div>
+    <!-- Calendrier unique avec les ressources (terrains) -->
+    <div v-if="tourney.dateTourney && fields.length">
+      <FullCalendar :options="calendarOptions" :key="tourney.dateTourney" />
     </div>
 
     <!-- Modal pour configurer le planning du tournoi -->
     <ModalComponent
-      v-if="showScheduleConfigModal"
+      :isVisible="showScheduleConfigModal"
       @close="showScheduleConfigModal = false"
     >
       <template #title>Configurer le planning du tournoi</template>
@@ -105,6 +83,8 @@
         <!-- Formulaire pour configurer le scheduleTourney -->
         <form @submit.prevent="saveScheduleConfig">
           <div class="grid grid-cols-2 gap-4">
+            <!-- Champs du formulaire -->
+            <!-- Ajoutez vos champs ici -->
             <div>
               <label for="startTime" class="block text-sm font-medium">
                 Heure de début
@@ -127,34 +107,35 @@
                 class="mt-1 block w-full border rounded-md shadow-sm"
               />
             </div>
-            <div>
-              <label for="poolDuration" class="block text-sm font-medium">
-                Durée d'une session (minutes)
-              </label>
-              <input
-                type="number"
-                id="poolDuration"
-                v-model.number="scheduleConfig.poolDuration"
-                min="5"
-                step="5"
-                class="mt-1 block w-full border rounded-md shadow-sm"
-              />
-            </div>
-            <div>
-              <label for="transitionPoolTime" class="block text-sm font-medium">
-                Temps de transition (minutes)
-              </label>
-              <input
-                type="number"
-                id="transitionPoolTime"
-                v-model.number="scheduleConfig.transitionPoolTime"
-                min="0"
-                step="5"
-                class="mt-1 block w-full border rounded-md shadow-sm"
-              />
-            </div>
-            <!-- Vous pouvez ajouter d'autres champs pour intro, lunch, outro -->
+            <!-- Ajoutez les autres champs selon vos besoins -->
           </div>
+          <div class="mt-4 flex justify-end">
+            <ButtonComponent type="submit" variant="primary">
+              Enregistrer
+            </ButtonComponent>
+          </div>
+        </form>
+      </template>
+    </ModalComponent>
+
+    <ModalComponent :isVisible="showEditModal" @close="showEditModal = false">
+      <template #title>Modifier l'événement</template>
+      <template #content>
+        <!-- Formulaire pour éditer l'événement -->
+        <form @submit.prevent="saveEventEdits">
+          <!-- Ajoutez des champs pour modifier l'heure de début, de fin, etc. -->
+          <div>
+            <label for="editStartTime" class="block text-sm font-medium">
+              Heure de début
+            </label>
+            <input
+              type="time"
+              id="editStartTime"
+              v-model="eventToEdit.start"
+              class="mt-1 block w-full border rounded-md shadow-sm"
+            />
+          </div>
+          <!-- Ajoutez d'autres champs si nécessaire -->
           <div class="mt-4 flex justify-end">
             <ButtonComponent type="submit" variant="primary">
               Enregistrer
@@ -171,13 +152,13 @@
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
   import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
+  import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
-
   export default {
     components: {
       FullCalendar,
@@ -189,11 +170,11 @@
     },
     data() {
       return {
-        tourneyId: this.$route.params.tourneyId, // ID du tournoi courant
-        tourney: {}, // Détails du tournoi
-        fields: [], // Liste des terrains du tournoi
-        pools: [], // Liste des pools du tournoi
-        poolSchedules: [], // Liste des poolSchedules
+        tourneyId: this.$route.params.tourneyId,
+        tourney: {},
+        fields: [],
+        pools: [],
+        poolSchedules: [],
         poolAssignmentStatusOptions: [
           { value: 'draft', label: 'Édition' },
           { value: 'completed', label: 'Terminé' },
@@ -203,41 +184,94 @@
         scheduleConfig: {
           startTime: '',
           endTime: '',
-          poolDuration: 60,
-          transitionPoolTime: 0,
-          // Ajoutez d'autres champs si nécessaire
+          poolDuration: 105,
+          transitionPoolTime: 15,
         },
+        showEditModal: false,
+        eventToEdit: null,
       };
     },
     computed: {
-      /**
-       * Génère dynamiquement les classes de la grille pour l'affichage responsive
-       * en fonction du nombre de terrains.
-       * @returns {string} Classes CSS à appliquer à la grille
-       */
-      gridClasses() {
-        const fieldCount = this.fields.length;
-        const baseClasses = 'grid-cols-1';
-        const smClasses = 'sm:grid-cols-1';
-        const mdClasses = fieldCount >= 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';
-        const lgClasses = fieldCount >= 3 ? 'lg:grid-cols-3' : '';
-        const xlClasses = fieldCount >= 4 ? 'xl:grid-cols-4' : '';
-        const xxlClasses = fieldCount >= 5 ? '2xl:grid-cols-5' : '';
-
-        return [
-          baseClasses,
-          smClasses,
-          mdClasses,
-          lgClasses,
-          xlClasses,
-          xxlClasses,
-        ].join(' ');
-      },
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
       isEditable() {
         return this.statuses.poolAssignmentStatus !== 'completed';
+      },
+      /**
+       * Options du calendrier FullCalendar avec les ressources (terrains)
+       */
+      /**
+       * Options du calendrier FullCalendar avec les ressources (terrains)
+       */
+      calendarOptions() {
+        console.log('Date du tournoi:', this.tourney.dateTourney);
+        if (!this.tourney.dateTourney) {
+          console.error('La date du tournoi n’est pas disponible');
+          return {};
+        }
+
+        const events = [];
+
+        // Ajouter les poolSchedules en tant qu'événements normaux
+        this.poolSchedules.forEach((schedule) => {
+          events.push({
+            id: schedule.id.toString(),
+            title: schedule.pool.name,
+            start: `${schedule.date}T${schedule.startTime}`,
+            end: `${schedule.date}T${schedule.endTime}`,
+            resourceId: schedule.field.id.toString(),
+            backgroundColor: schedule.sport?.color || '#3B82F6',
+            textColor: '#FFFFFF',
+          });
+        });
+
+        // Ajouter les sportsFields en tant qu'événements de fond
+        this.fields.forEach((field) => {
+          if (field.sportsFields && field.sportsFields.length > 0) {
+            field.sportsFields.forEach((sportsField) => {
+              events.push({
+                id: `bg-${field.id}-${sportsField.sport.id}-${sportsField.startTime}-${sportsField.endTime}`,
+                title: sportsField.sport.name,
+                start: `${this.tourney.dateTourney}T${sportsField.startTime}`,
+                end: `${this.tourney.dateTourney}T${sportsField.endTime}`,
+                resourceId: field.id.toString(),
+                backgroundColor: sportsField.sport.color || '#cccccc',
+                display: 'background', // Utilisez 'display' au lieu de 'rendering'
+              });
+            });
+          }
+        });
+
+        const minTime = this.scheduleConfig.startTime || '07:00:00';
+        const maxTime = this.scheduleConfig.endTime || '23:00:00';
+        console.log('minTime:', minTime, 'maxTime:', maxTime);
+
+        return {
+          plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
+          initialView: 'resourceTimeGridDay',
+          timeZone: 'local',
+          initialDate: this.tourney.dateTourney,
+          editable: this.isEditable,
+          droppable: true,
+          slotMinTime: minTime,
+          slotMaxTime: maxTime,
+          resources: this.fields.map((field) => ({
+            id: field.id.toString(),
+            title: field.name,
+          })),
+          events: events,
+          resourceAreaHeaderContent: 'Terrains',
+          slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          },
+          eventReceive: this.handleEventReceive,
+          eventDrop: this.handleEventDrop,
+          eventResize: this.handleEventResize,
+          eventContent: this.renderEventContent,
+        };
       },
     },
 
@@ -254,65 +288,70 @@
         'clearTournamentName',
       ]),
       /**
-       * Récupère les terrains du tournoi depuis l'API.
-       * Met à jour la liste des terrains et les détails du tournoi.
+       * Récupère les détails du planning du tournoi depuis l'API.
+       * Met à jour les listes de terrains, pools, sports, etc.
        */
-      async fetchTourneyFields() {
+      async fetchPlanningDetails() {
         try {
           // Charger les statuts du tournoi
           await this.fetchTourneyStatuses(this.tourneyId);
 
+          // Récupérer les détails du planning
           const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/fields`
+            `/tourneys/${this.tourneyId}/planning/details`
           );
-          this.fields = response.data;
 
+          const data = response.data;
+
+          this.fields = data.fields || [];
+          this.pools = data.pools || [];
+          this.sports = data.sports || [];
+          this.scheduleConfig = data.scheduleTourney || {};
+
+          // Récupérer les détails du tournoi pour avoir la date
           const tourneyResponse = await apiService.get(
             `/tourneys/${this.tourneyId}`
           );
           this.tourney = tourneyResponse.data;
 
+          // Vérifier que dateTourney est défini
+          if (!this.tourney.dateTourney) {
+            console.warn("La date du tournoi n'est pas définie.");
+          }
+
+          // Transformer les poolSchedules pour correspondre au format attendu
+          this.poolSchedules = [];
+          data.pools.forEach((pool) => {
+            if (pool.schedules && pool.schedules.length > 0) {
+              pool.schedules.forEach((schedule) => {
+                this.poolSchedules.push({
+                  id: schedule.id,
+                  date: schedule.date,
+                  startTime: schedule.startTime,
+                  endTime: schedule.endTime,
+                  field: schedule.field,
+                  pool: {
+                    id: pool.id,
+                    name: pool.name,
+                  },
+                  sport: schedule.sport,
+                });
+              });
+            }
+          });
+
           if (!this.fields.length) {
             console.warn('Aucun terrain trouvé');
           }
-        } catch (error) {
-          console.error(
-            'Erreur lors de la récupération des détails du tournoi:',
-            error
-          );
-        }
-      },
-
-      /**
-       * Récupère la liste de toutes les pools du tournoi depuis l'API.
-       * Met à jour la liste des pools.
-       */
-      async fetchPools() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/pools`
-          );
-          this.pools = response.data;
           if (!this.pools.length) {
             console.warn('Aucune pool trouvée');
           }
-        } catch (error) {
-          console.error('Erreur lors de la récupération des pools:', error);
-        }
-      },
-
-      /**
-       * Récupère les poolSchedules depuis l'API.
-       */
-      async fetchPoolSchedules() {
-        try {
-          const response = await apiService.get(
-            `/tourneys/${this.tourneyId}/pools/schedule`
-          );
-          this.poolSchedules = response.data;
+          if (!this.poolSchedules.length) {
+            console.warn('Aucun planning de pool trouvé');
+          }
         } catch (error) {
           console.error(
-            'Erreur lors de la récupération des plannings des pools:',
+            'Erreur lors de la récupération des détails du planning:',
             error
           );
         }
@@ -332,68 +371,19 @@
         }
 
         const containerEl = document.getElementById('external-events');
-        new Draggable(containerEl, {
+        this.externalDraggableInstance = new Draggable(containerEl, {
           itemSelector: '.external-event',
           eventData(eventEl) {
             return {
               title: eventEl.innerText.trim(),
-              duration: '01:00', // Durée par défaut, modifiable
+              duration: '01:00', // La durée sera définie dans handleEventReceive
+              create: true,
               extendedProps: {
-                poolId: eventEl.getAttribute('data-id'),
+                poolId: eventEl.dataset.id,
               },
             };
           },
         });
-      },
-
-      /**
-       * Génère les options pour FullCalendar en fonction des pools assignées à chaque terrain.
-       * @param {Object} field - Le terrain pour lequel on génère le calendrier.
-       * @returns {Object} Options configurées pour FullCalendar
-       */
-      getFieldCalendarOptions(field) {
-        if (!this.tourney.dateTourney) {
-          console.error('La date du tournoi n’est pas disponible');
-          return {};
-        }
-
-        // Filtrer les poolSchedules pour ce terrain
-        const events = this.poolSchedules
-          .filter((schedule) => schedule.field.id === field.id)
-          .map((schedule) => ({
-            id: schedule.id,
-            title: schedule.pool.name,
-            start: `${schedule.date}T${schedule.startTime}`,
-            end: `${schedule.date}T${schedule.endTime}`,
-            backgroundColor: '#3B82F6', // Couleur par défaut pour les pools
-            extendedProps: {
-              fieldId: field.id,
-              poolId: schedule.pool.id,
-            },
-          }));
-
-        return {
-          plugins: [timeGridPlugin, interactionPlugin],
-          initialView: 'timeGridDay',
-          timeZone: 'local',
-          initialDate: this.tourney.dateTourney,
-          editable: this.isEditable,
-          eventContent: this.renderEventContent,
-          droppable: true,
-          allDaySlot: false,
-          headerToolbar: false,
-          slotDuration: '00:05:00', // Créneaux de 5 minutes
-          height: 400, // Calendriers plus petits
-          slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          },
-          eventReceive: (info) => this.handleEventReceive(info, field.id),
-          eventDrop: (info) => this.handleEventDrop(info, field.id),
-          eventResize: (info) => this.handleEventResize(info, field.id),
-          events: events,
-        };
       },
 
       /**
@@ -419,11 +409,29 @@
 
         headerContainer.appendChild(title);
 
+        // Vérifier si l'événement est un événement de fond
+        if (arg.event.display === 'background') {
+          // Ne pas afficher de contenu pour les événements de fond
+          container.appendChild(headerContainer);
+          return { domNodes: [container] };
+        }
+
         if (this.isEditable) {
+          const editIcon = document.createElement('span');
+          editIcon.innerHTML = '&#9998;'; // Icône d'édition
+          editIcon.classList.add('edit-icon');
+          editIcon.style.color = 'white';
+          editIcon.style.cursor = 'pointer';
+          editIcon.style.padding = '0 5px';
+
+          editIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.openEditModal(arg.event);
+          });
+
           const deleteIcon = document.createElement('span');
           deleteIcon.innerHTML = '&#10060;';
           deleteIcon.classList.add('delete-icon');
-          deleteIcon.style.float = 'right';
           deleteIcon.style.color = 'white';
           deleteIcon.style.cursor = 'pointer';
           deleteIcon.style.padding = '0 5px';
@@ -433,17 +441,7 @@
             this.deleteEvent(arg.event);
           });
 
-          let pressTimer;
-          deleteIcon.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            pressTimer = setTimeout(() => {
-              this.deleteEvent(arg.event);
-            }, 600);
-          });
-          deleteIcon.addEventListener('touchend', () => {
-            clearTimeout(pressTimer);
-          });
-
+          headerContainer.appendChild(editIcon);
           headerContainer.appendChild(deleteIcon);
         }
 
@@ -463,9 +461,8 @@
        * Gestion de l'ajout d'un événement lorsqu'il est glissé depuis les pools externes.
        * Crée ou met à jour l'événement selon qu'il existe déjà.
        * @param {Object} info - Informations sur l'événement reçu
-       * @param {Number} newFieldId - ID du terrain où l'événement est assigné
        */
-      async handleEventReceive(info, newFieldId) {
+      async handleEventReceive(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -473,6 +470,7 @@
         const event = info.event;
         try {
           const poolId = event.extendedProps.poolId;
+          const newFieldId = event.getResources()[0]?.id;
 
           if (!newFieldId) {
             console.error("Problème d'ID : Terrain mal identifié.");
@@ -480,14 +478,14 @@
             return;
           }
 
-          if (!event.end) {
-            const startDate = new Date(event.start);
-            const endDate = new Date(startDate);
-            endDate.setMinutes(
-              endDate.getMinutes() + this.scheduleConfig.poolDuration
-            );
-            event.setEnd(endDate);
-          }
+          // Définir la durée de l'événement selon poolDuration
+          const durationMinutes =
+            parseInt(this.scheduleConfig.poolDuration) || 60;
+          const startDate = new Date(event.start);
+          const endDate = new Date(
+            startDate.getTime() + durationMinutes * 60000
+          );
+          event.setEnd(endDate);
 
           const data = {
             fieldId: newFieldId,
@@ -497,25 +495,25 @@
           };
 
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/pools/${poolId}/schedule`,
+            `/tourneys/${this.tourneyId}/pools/schedule/${poolId}`,
             data
           );
 
           event.setProp('id', response.data.poolSchedule.id);
 
-          await this.fetchPoolSchedules();
+          await this.fetchPlanningDetails();
         } catch (error) {
           console.error("Erreur lors du traitement de l'événement :", error);
           info.revert();
+          // Vous pouvez afficher un message d'erreur à l'utilisateur ici
         }
       },
 
       /**
-       * Gestion du déplacement d'un événement d'un terrain à un autre dans le calendrier.
+       * Gestion du déplacement d'un événement dans le calendrier.
        * @param {Object} info - Informations sur l'événement déplacé
-       * @param {Number} fieldId - ID du terrain où l'événement a été déplacé
        */
-      async handleEventDrop(info, fieldId) {
+      async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -523,8 +521,9 @@
         const event = info.event;
         try {
           const eventId = event.id;
+          const newFieldId = event.getResources()[0]?.id;
 
-          if (!eventId || !fieldId) {
+          if (!eventId || !newFieldId) {
             console.error(
               "Problème d'ID : Terrain ou événement mal identifié."
             );
@@ -533,7 +532,7 @@
           }
 
           const data = {
-            fieldId: fieldId,
+            fieldId: newFieldId,
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
             date: this.tourney.dateTourney,
@@ -543,7 +542,7 @@
             `/tourneys/${this.tourneyId}/pools/schedule/${eventId}`,
             data
           );
-          await this.fetchPoolSchedules();
+          await this.fetchPlanningDetails();
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
@@ -553,9 +552,8 @@
       /**
        * Gestion du redimensionnement d'un événement (changement de durée).
        * @param {Object} info - Informations sur l'événement redimensionné
-       * @param {Number} fieldId - ID du terrain de l'événement
        */
-      async handleEventResize(info, fieldId) {
+      async handleEventResize(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -563,6 +561,7 @@
         const event = info.event;
         try {
           const eventId = event.id;
+          const fieldId = event.getResources()[0]?.id;
 
           if (!eventId || !fieldId) {
             console.error(
@@ -582,7 +581,7 @@
             `/tourneys/${this.tourneyId}/pools/schedule/${eventId}`,
             data
           );
-          await this.fetchPoolSchedules();
+          await this.fetchPlanningDetails();
         } catch (error) {
           console.error(
             "Erreur lors du redimensionnement de l'événement :",
@@ -603,7 +602,7 @@
             `/tourneys/${this.tourneyId}/pools/schedule/${event.id}`
           );
           event.remove();
-          await this.fetchPoolSchedules();
+          await this.fetchPlanningDetails();
         } catch (error) {
           console.error('Erreur lors de la suppression du pool :', error);
         }
@@ -641,6 +640,11 @@
         this.showScheduleConfigModal = true;
         // Charger les données existantes si disponibles
         this.loadScheduleConfig();
+      },
+
+      openEditModal(event) {
+        this.eventToEdit = event;
+        this.showEditModal = true;
       },
 
       /**
@@ -683,22 +687,40 @@
     },
     async mounted() {
       // Méthode appelée lorsque le composant est monté
-      await this.fetchTourneyFields(); // Récupérer les terrains du tournoi
-      await this.fetchPools(); // Récupérer toutes les pools
-      await this.fetchPoolSchedules(); // Récupérer les poolSchedules
+      await this.fetchPlanningDetails(); // Récupérer les détails du planning
 
       // Rendre les éléments de pools externes "draggables"
       this.initializeExternalEvents();
+      console.log('Events:', this.calendarOptions.events);
+      console.log('Resources:', this.calendarOptions.resources);
+    },
+
+    async saveEventEdits() {
+      // Implémentez la logique pour sauvegarder les modifications
+      try {
+        const data = {
+          startTime: this.formatTime(this.eventToEdit.start),
+          endTime: this.formatTime(this.eventToEdit.end),
+          date: this.tourney.dateTourney,
+          fieldId: this.eventToEdit.getResources()[0]?.id,
+        };
+        await apiService.put(
+          `/tourneys/${this.tourneyId}/pools/schedule/${this.eventToEdit.id}`,
+          data
+        );
+        this.showEditModal = false;
+        await this.fetchPlanningDetails();
+      } catch (error) {
+        console.error(
+          'Erreur lors de la sauvegarde des modifications :',
+          error
+        );
+      }
     },
   };
 </script>
 
 <style scoped>
-  .fields-grid {
-    display: grid;
-    gap: 1.5rem;
-  }
-
   .pool-item {
     display: flex;
     justify-content: center;
