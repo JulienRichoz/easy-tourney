@@ -76,72 +76,29 @@
     <!-- Modal pour configurer le planning du tournoi -->
     <ModalComponent
       :isVisible="showScheduleConfigModal"
+      :title="'Configurer le planning du tournoi'"
       @close="showScheduleConfigModal = false"
     >
-      <template #title>Configurer le planning du tournoi</template>
+      <template #title></template>
       <template #content>
-        <!-- Formulaire pour configurer le scheduleTourney -->
-        <form @submit.prevent="saveScheduleConfig">
-          <div class="grid grid-cols-2 gap-4">
-            <!-- Champs du formulaire -->
-            <!-- Ajoutez vos champs ici -->
-            <div>
-              <label for="startTime" class="block text-sm font-medium">
-                Heure de début
-              </label>
-              <input
-                type="time"
-                id="startTime"
-                v-model="scheduleConfig.startTime"
-                class="mt-1 block w-full border rounded-md shadow-sm"
-              />
-            </div>
-            <div>
-              <label for="endTime" class="block text-sm font-medium">
-                Heure de fin
-              </label>
-              <input
-                type="time"
-                id="endTime"
-                v-model="scheduleConfig.endTime"
-                class="mt-1 block w-full border rounded-md shadow-sm"
-              />
-            </div>
-            <!-- Ajoutez les autres champs selon vos besoins -->
-          </div>
-          <div class="mt-4 flex justify-end">
-            <ButtonComponent type="submit" variant="primary">
-              Enregistrer
-            </ButtonComponent>
-          </div>
-        </form>
+        <FormComponent
+          v-model="scheduleConfig"
+          :fields="scheduleFormFields"
+          @form-submit="saveScheduleConfig"
+          @cancel="showScheduleConfigModal = false"
+        />
       </template>
     </ModalComponent>
 
     <ModalComponent :isVisible="showEditModal" @close="showEditModal = false">
       <template #title>Modifier l'événement</template>
       <template #content>
-        <!-- Formulaire pour éditer l'événement -->
-        <form @submit.prevent="saveEventEdits">
-          <!-- Ajoutez des champs pour modifier l'heure de début, de fin, etc. -->
-          <div>
-            <label for="editStartTime" class="block text-sm font-medium">
-              Heure de début
-            </label>
-            <input
-              type="time"
-              id="editStartTime"
-              v-model="eventToEdit.start"
-              class="mt-1 block w-full border rounded-md shadow-sm"
-            />
-          </div>
-          <!-- Ajoutez d'autres champs si nécessaire -->
-          <div class="mt-4 flex justify-end">
-            <ButtonComponent type="submit" variant="primary">
-              Enregistrer
-            </ButtonComponent>
-          </div>
-        </form>
+        <FormComponent
+          v-model="eventFormData"
+          :fields="eventFormFields"
+          @form-submit="saveEventEdits"
+          @cancel="showEditModal = false"
+        />
       </template>
     </ModalComponent>
   </div>
@@ -159,6 +116,8 @@
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
+  import FormComponent from '@/components/FormComponent.vue';
+
   export default {
     components: {
       FullCalendar,
@@ -167,6 +126,7 @@
       StatusSelectorComponent,
       ButtonComponent,
       ModalComponent,
+      FormComponent,
     },
     data() {
       return {
@@ -184,11 +144,102 @@
         scheduleConfig: {
           startTime: '',
           endTime: '',
-          poolDuration: 105,
+          poolDuration: 120,
+          gameDuration: 15,
           transitionPoolTime: 15,
+          transitionGameTime: 5,
+          introStart: '',
+          introEnd: '',
+          lunchStart: '',
+          lunchEnd: '',
+          outroStart: '',
+          outroEnd: '',
         },
+        scheduleFormFields: [
+          {
+            name: 'startTime',
+            type: 'time',
+            label: 'Heure de début',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            type: 'time',
+            label: 'Heure de fin',
+            required: true,
+          },
+          {
+            name: 'introStart',
+            type: 'time',
+            label: "Début de l'introduction",
+          },
+          {
+            name: 'introEnd',
+            type: 'time',
+            label: "Fin de l'introduction",
+          },
+          {
+            name: 'lunchStart',
+            type: 'time',
+            label: 'Début du déjeuner',
+          },
+          {
+            name: 'lunchEnd',
+            type: 'time',
+            label: 'Fin du déjeuner',
+          },
+          {
+            name: 'outroStart',
+            type: 'time',
+            label: 'Début de la conclusion',
+          },
+          {
+            name: 'outroEnd',
+            type: 'time',
+            label: 'Fin de la conclusion',
+          },
+          {
+            name: 'poolDuration',
+            type: 'number',
+            label: 'Durée d’une pool (en minutes)',
+            required: true,
+          },
+          {
+            name: 'gameDuration',
+            type: 'number',
+            label: 'Durée d’un match (en minutes)',
+            required: true,
+          },
+          {
+            name: 'transitionPoolTime',
+            type: 'number',
+            label: 'Temps de transition entre les pools (en minutes)',
+            required: true,
+          },
+          {
+            name: 'transitionGameTime',
+            type: 'number',
+            label: 'Temps de transition entre les matchs (en minutes)',
+            required: true,
+          },
+        ],
         showEditModal: false,
         eventToEdit: null,
+        eventFormData: {},
+        eventFormFields: [
+          {
+            name: 'startTime',
+            type: 'time',
+            label: 'Heure de début',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            type: 'time',
+            label: 'Heure de fin',
+            required: true,
+          },
+        ],
       };
     },
     computed: {
@@ -205,7 +256,6 @@
        * Options du calendrier FullCalendar avec les ressources (terrains)
        */
       calendarOptions() {
-        console.log('Date du tournoi:', this.tourney.dateTourney);
         if (!this.tourney.dateTourney) {
           console.error('La date du tournoi n’est pas disponible');
           return {};
@@ -245,7 +295,6 @@
 
         const minTime = this.scheduleConfig.startTime || '07:00:00';
         const maxTime = this.scheduleConfig.endTime || '23:00:00';
-        console.log('minTime:', minTime, 'maxTime:', maxTime);
 
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
@@ -590,6 +639,27 @@
           info.revert();
         }
       },
+      async saveEventEdits() {
+        try {
+          const data = {
+            startTime: this.eventFormData.startTime,
+            endTime: this.eventFormData.endTime,
+            date: this.tourney.dateTourney,
+            fieldId: this.eventToEdit.getResources()[0]?.id,
+          };
+          await apiService.put(
+            `/tourneys/${this.tourneyId}/pools/schedule/${this.eventToEdit.id}`,
+            data
+          );
+          this.showEditModal = false;
+          await this.fetchPlanningDetails();
+        } catch (error) {
+          console.error(
+            'Erreur lors de la sauvegarde des modifications :',
+            error
+          );
+        }
+      },
 
       /**
        * Supprime un événement du calendrier et de la base de données.
@@ -644,6 +714,10 @@
 
       openEditModal(event) {
         this.eventToEdit = event;
+        this.eventFormData = {
+          startTime: this.formatTime(event.start),
+          endTime: this.formatTime(event.end),
+        };
         this.showEditModal = true;
       },
 
@@ -691,31 +765,6 @@
 
       // Rendre les éléments de pools externes "draggables"
       this.initializeExternalEvents();
-      console.log('Events:', this.calendarOptions.events);
-      console.log('Resources:', this.calendarOptions.resources);
-    },
-
-    async saveEventEdits() {
-      // Implémentez la logique pour sauvegarder les modifications
-      try {
-        const data = {
-          startTime: this.formatTime(this.eventToEdit.start),
-          endTime: this.formatTime(this.eventToEdit.end),
-          date: this.tourney.dateTourney,
-          fieldId: this.eventToEdit.getResources()[0]?.id,
-        };
-        await apiService.put(
-          `/tourneys/${this.tourneyId}/pools/schedule/${this.eventToEdit.id}`,
-          data
-        );
-        this.showEditModal = false;
-        await this.fetchPlanningDetails();
-      } catch (error) {
-        console.error(
-          'Erreur lors de la sauvegarde des modifications :',
-          error
-        );
-      }
     },
   };
 </script>
