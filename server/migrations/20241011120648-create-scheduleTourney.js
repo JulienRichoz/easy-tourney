@@ -1,4 +1,3 @@
-// migrations/create-scheduleTourney.js
 'use strict';
 
 module.exports = {
@@ -13,12 +12,12 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Tourneys', // Nom de la table de référence
+          model: 'Tourneys',
           key: 'id',
         },
-        onUpdate: 'CASCADE', // Si le tournoi est mis à jour, le planning est mis à jour
-        onDelete: 'CASCADE', // Si le tournoi est supprimé, le planning est supprimé
-        unique: true, // Empêche plusieurs configurations pour un même tournoi
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+        unique: true,
       },
       startTime: {
         type: Sequelize.TIME,
@@ -52,13 +51,30 @@ module.exports = {
         type: Sequelize.TIME,
         allowNull: true,
       },
-      timeMatchRotation: {
+      poolDuration: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        defaultValue: 120,
       },
-      timePoolRotation: {
+      gameDuration: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        defaultValue: 15,
+      },
+      transitionPoolTime: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 15,
+      },
+      transitionGameTime: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 5,
+      },
+      useDefaultSettings: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
       },
       createdAt: {
         allowNull: false,

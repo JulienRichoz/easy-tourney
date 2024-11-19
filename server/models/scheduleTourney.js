@@ -1,5 +1,6 @@
-const { Model } = require('sequelize');
+// models/ScheduleTourney.js
 
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class ScheduleTourney extends Model {
@@ -53,13 +54,30 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TIME,
         allowNull: true,
       },
-      timeMatchRotation: {
+      poolDuration: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 120, // Durée par défaut d'une pool en minutes
       },
-      timePoolRotation: {
+      gameDuration: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 15, // Durée par défaut d'une game en minutes
+      },
+      transitionPoolTime: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 15, // Temps de transition par défaut en minutes
+      },
+      transitionGameTime: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 5, // Temps de transition par défaut en minutes
+      },
+      useDefaultSettings: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
       },
     },
     {
@@ -101,7 +119,9 @@ module.exports = (sequelize, DataTypes) => {
           throw new Error(`L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`);
         }
         if (pair.start < startTime || pair.end > endTime) {
-          throw new Error(`Les heures de début et de fin pour ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`);
+          throw new Error(
+            `Les heures de début et de fin pour ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`
+          );
         }
       }
     }
