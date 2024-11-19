@@ -54,7 +54,6 @@
  *
  * ========================================================================
  */
-
 const PlanningStrategy = require('./planningStrategy');
 const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields, Sport } = require('../../../models');
 
@@ -236,6 +235,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     this.poolPlayedSports = new Map(); // Map<poolId, Map<sportId, count>>
     this.poolTotalAssignments = new Map(); // Map<poolId, totalAssignments>
     this.poolsAssignedAtTimeSlot = {}; // Map<timeSlot, Set<poolId>>
+    this.fieldsAssignedAtTimeSlot = {}; // Map<timeSlot, Set<fieldId>>
 
     pools.forEach((pool) => {
       this.poolPlayedSports.set(pool.id, new Map());
@@ -278,64 +278,70 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
   async initialAssignment(pools, planning, fields, scheduleTourney, poolDuration) {
-    const allSports = new Set();
-    fields.forEach((field) => {
-      field.sportsFields.forEach((sf) => {
-        allSports.add(sf.sportId);
-      });
-    });
-
-    // Initialiser les files d'attente des pools pour chaque sport
-    const sportPoolQueue = new Map(); // Map<sportId, Array<pool>>
-    allSports.forEach((sportId) => {
-      sportPoolQueue.set(sportId, [...pools]); // Copier les pools
-    });
+    // Initialiser la file d'attente des pools
+    const poolQueue = [...pools];
 
     // Boucler sur les créneaux horaires
     for (let timeSlot of planning) {
       // Initialiser la liste des pools assignées à ce créneau
       this.poolsAssignedAtTimeSlot[timeSlot] = new Set();
+      this.fieldsAssignedAtTimeSlot[timeSlot] = new Set();
 
-      // Collecter les sports disponibles à ce créneau horaire
-      const sportsAvailable = this.getSportsAvailableAtTimeSlot(timeSlot, fields, poolDuration);
+      // Copier la file d'attente pour éviter de modifier l'original lors du parcours
+      let poolQueueCopy = [...poolQueue];
 
-      // Pour chaque sport disponible, assigner les pools
-      for (const [sportId, fieldsAvailable] of sportsAvailable) {
-        // Récupérer la file d'attente des pools pour ce sport
-        let poolQueue = sportPoolQueue.get(sportId) || [];
+      // Parcourir les pools disponibles
+      while (poolQueueCopy.length > 0) {
+        // Sélectionner la pool avec le moins d'assignations totales
+        poolQueueCopy.sort((a, b) => this.poolTotalAssignments.get(a.id) - this.poolTotalAssignments.get(b.id));
+        const selectedPool = poolQueueCopy.shift(); // Retirer la pool de la copie de la file d'attente
 
-        // Si la file d'attente est vide, réinitialiser
-        if (poolQueue.length === 0) {
-          poolQueue = [...pools];
-          sportPoolQueue.set(sportId, poolQueue);
+        // Vérifier si la pool est déjà assignée à ce créneau horaire
+        if (this.poolsAssignedAtTimeSlot[timeSlot].has(selectedPool.id)) {
+          continue; // Passer à la pool suivante
         }
 
-        // Copier la file d'attente pour éviter de modifier l'original lors du parcours
-        const poolQueueCopy = [...poolQueue];
+        // Rechercher les sports disponibles à ce créneau
+        const sportsAvailable = this.getSportsAvailableAtTimeSlot(timeSlot, fields, poolDuration);
 
-        // Parcourir les pools disponibles
-        while (fieldsAvailable.length > 0 && poolQueueCopy.length > 0) {
-          // Sélectionner la pool avec le moins d'assignations totales parmi la file d'attente
-          poolQueueCopy.sort((a, b) => this.poolTotalAssignments.get(a.id) - this.poolTotalAssignments.get(b.id));
+        // Prioriser les sports les moins joués par la pool
+        const sportsPlayed = this.poolPlayedSports.get(selectedPool.id);
+        const possibleSports = Array.from(sportsAvailable.keys()).sort((a, b) => {
+          const countA = sportsPlayed.get(a) || 0;
+          const countB = sportsPlayed.get(b) || 0;
+          return countA - countB;
+        });
 
-          const selectedPool = poolQueueCopy.shift(); // Retirer la pool de la copie de la file d'attente
+        let assigned = false;
 
-          // Vérifier si la pool est déjà assignée à ce créneau horaire
-          if (this.poolsAssignedAtTimeSlot[timeSlot].has(selectedPool.id)) {
-            continue; // Passer à la pool suivante
+        for (const sportId of possibleSports) {
+          const fieldsAvailable = sportsAvailable.get(sportId);
+
+          while (fieldsAvailable.length > 0) {
+            const fieldAssignment = fieldsAvailable.shift();
+
+            // Vérifier si le terrain est déjà assigné à ce créneau
+            if (this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)) {
+              continue; // Passer au terrain suivant
+            }
+
+            // Assigner la pool au terrain
+            await this.assignPoolToTimeSlot(selectedPool.id, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration);
+
+            assigned = true;
+            break; // Sortir de la boucle des sports
+
           }
 
-          // Trouver un terrain disponible pour ce sport à ce créneau
-          const fieldAssignment = fieldsAvailable.shift();
-          if (!fieldAssignment) {
-            break; // Pas de terrain disponible, sortir de la boucle
+          if (assigned) {
+            break; // Sortir de la boucle des sports
           }
+        }
 
-          await this.assignPoolToTimeSlot(selectedPool.id, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration);
-
-          // Retirer la pool de la file d'attente originale
-          const updatedQueue = sportPoolQueue.get(sportId).filter((pool) => pool.id !== selectedPool.id);
-          sportPoolQueue.set(sportId, updatedQueue);
+        if (!assigned) {
+          // Si la pool n'a pas pu être assignée, on la remet dans la file d'attente
+          poolQueueCopy.push(selectedPool);
+          break; // Passer au créneau horaire suivant
         }
       }
     }
@@ -373,15 +379,31 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
             return countA - countB;
           });
 
-          if (possibleSports.length > 0) {
-            const selectedSport = possibleSports[0];
-            const fieldAssignment = sportsAvailable.get(selectedSport).shift();
+          for (const sportId of possibleSports) {
+            const fieldsAvailable = sportsAvailable.get(sportId);
 
-            if (fieldAssignment) {
-              await this.assignPoolToTimeSlot(pool.id, timeSlot, selectedSport, fieldAssignment, scheduleTourney, poolDuration);
+            while (fieldsAvailable.length > 0) {
+              const fieldAssignment = fieldsAvailable.shift();
+
+              // Vérifier si le terrain est déjà assigné à ce créneau
+              if (this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)) {
+                continue; // Passer au terrain suivant
+              }
+
+              // Assigner la pool au terrain
+              await this.assignPoolToTimeSlot(pool.id, timeSlot, sportId, fieldAssignment, scheduleTourney, poolDuration);
+
               assigned = true;
-              break; // Sortir de la boucle des créneaux
+              break; // Sortir de la boucle des sports
             }
+
+            if (assigned) {
+              break; // Sortir de la boucle des sports
+            }
+          }
+
+          if (assigned) {
+            break; // Sortir de la boucle des créneaux
           }
         }
 
@@ -403,7 +425,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     const sportsAvailable = new Map();
 
     fields.forEach((field) => {
-      const validSportsField = field.sportsFields.find((sf) => {
+      const validSportsFields = field.sportsFields.filter((sf) => {
         const fieldStartMinutes = this.timeToMinutes(sf.startTime);
         const fieldEndMinutes = this.timeToMinutes(sf.endTime);
         return (
@@ -412,16 +434,21 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
         );
       });
 
-      if (validSportsField) {
-        const sportId = validSportsField.sportId;
+      validSportsFields.forEach((sf) => {
+        // Vérifier si le terrain est déjà assigné à ce créneau
+        if (this.fieldsAssignedAtTimeSlot[timeSlot] && this.fieldsAssignedAtTimeSlot[timeSlot].has(field.id)) {
+          return; // Terrain déjà occupé
+        }
+
+        const sportId = sf.sportId;
         if (!sportsAvailable.has(sportId)) {
           sportsAvailable.set(sportId, []);
         }
         sportsAvailable.get(sportId).push({
           field,
-          sportsField: validSportsField,
+          sportsField: sf,
         });
-      }
+      });
     });
 
     return sportsAvailable;
@@ -455,6 +482,12 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
     this.poolTotalAssignments.set(poolId, this.poolTotalAssignments.get(poolId) + 1);
     this.poolsAssignedAtTimeSlot[timeSlot].add(poolId);
+
+    // Marquer le terrain comme occupé à ce créneau
+    if (!this.fieldsAssignedAtTimeSlot[timeSlot]) {
+      this.fieldsAssignedAtTimeSlot[timeSlot] = new Set();
+    }
+    this.fieldsAssignedAtTimeSlot[timeSlot].add(field.id);
   }
 
   /**
