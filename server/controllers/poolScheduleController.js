@@ -1,4 +1,5 @@
-const { Pool, PoolSchedule, Field } = require('../models');
+const { Pool, PoolSchedule, Field, SportsFields } = require('../models');
+const { Op } = require('sequelize');
 
 /**
  * Assigner une pool à un terrain avec des horaires spécifiques
@@ -25,10 +26,26 @@ exports.assignPoolToField = async (req, res) => {
       return res.status(404).json({ message: 'Terrain non trouvé.' });
     }
 
+    // Récupérer le sportId en fonction du terrain et de l'horaire
+    const sportsField = await SportsFields.findOne({
+      where: {
+        fieldId: fieldId,
+        startTime: { [Op.lte]: startTime },
+        endTime: { [Op.gte]: endTime },
+      },
+    });
+
+    if (!sportsField) {
+      return res.status(400).json({ message: 'Aucun sport programmé sur ce terrain à cet horaire.' });
+    }
+
+    const sportId = sportsField.sportId;
+
     // Création du planning
     const poolSchedule = await PoolSchedule.create({
       poolId,
       fieldId,
+      sportId,
       startTime,
       endTime,
       date,
