@@ -285,24 +285,25 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
   async initialAssignment(pools, planning, fields, tourneyDate, poolDuration) {
-    // Initialiser la file d'attente des pools
-    const poolQueue = [...pools];
+    // Copier la liste des pools
+    let poolQueue = [...pools];
 
     // Boucler sur les créneaux horaires
-    for (let timeSlot of planning) {
+    for (let i = 0; i < planning.length; i++) {
+      let timeSlot = planning[i];
+
+      // Faire une rotation de la file d'attente des pools
+      if (i > 0) {
+        // Décaler la première pool à la fin de la queue
+        poolQueue.push(poolQueue.shift());
+      }
+
       // Initialiser la liste des pools assignées à ce créneau
       this.poolsAssignedAtTimeSlot[timeSlot] = new Set();
       this.fieldsAssignedAtTimeSlot[timeSlot] = new Set();
 
-      // Copier la file d'attente pour éviter de modifier l'original lors du parcours
-      let poolQueueCopy = [...poolQueue];
-
       // Parcourir les pools disponibles
-      while (poolQueueCopy.length > 0) {
-        // Sélectionner la pool avec le moins d'assignations totales
-        poolQueueCopy.sort((a, b) => this.poolTotalAssignments.get(a.id) - this.poolTotalAssignments.get(b.id));
-        const selectedPool = poolQueueCopy.shift(); // Retirer la pool de la copie de la file d'attente
-
+      for (const selectedPool of poolQueue) {
         // Vérifier si la pool est déjà assignée à ce créneau horaire
         if (this.poolsAssignedAtTimeSlot[timeSlot].has(selectedPool.id)) {
           continue; // Passer à la pool suivante
@@ -337,18 +338,11 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
             assigned = true;
             break; // Sortir de la boucle des sports
-
           }
 
           if (assigned) {
             break; // Sortir de la boucle des sports
           }
-        }
-
-        if (!assigned) {
-          // Si la pool n'a pas pu être assignée, on la remet dans la file d'attente
-          poolQueueCopy.push(selectedPool);
-          break; // Passer au créneau horaire suivant
         }
       }
     }
