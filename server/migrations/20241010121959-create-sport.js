@@ -8,39 +8,39 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
       },
       rule: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: false,
       },
       scoreSystem: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       image: {
         type: Sequelize.STRING,
-        defaultValue: '/public/images/default-sport.png'
+        defaultValue: '/public/images/default-sport.png',
       },
       color: {
         type: Sequelize.STRING,
-        defaultValue: '#000000'
+        defaultValue: '#000000',
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Sports');
-  }
+  },
 };

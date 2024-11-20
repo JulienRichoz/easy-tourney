@@ -1,7 +1,12 @@
 //server/routes/teamSetup.js
 
 const express = require('express');
-const { createTeamSetup, updateTeamSetup, getTeamSetup, updatePoolTeamLimits } = require('../controllers/teamSetupController');
+const {
+  createTeamSetup,
+  updateTeamSetup,
+  getTeamSetup,
+  updatePoolTeamLimits,
+} = require('../controllers/teamSetupController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId dans les contrôleurs

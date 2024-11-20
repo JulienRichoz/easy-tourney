@@ -9,17 +9,11 @@ const PoolStrategyManager = require('../services/poolStrategies/poolStrategyMana
 exports.createPool = async (req, res) => {
   try {
     const { tourneyId } = req.params;
-    const {
-      name,
-      maxTeamPerPool,
-      minTeamPerPool,
-      stage,
-      startTime,
-      endTime
-    } = req.body;
+    const { name, maxTeamPerPool, minTeamPerPool, stage, startTime, endTime } =
+      req.body;
 
     if (!name) {
-      return res.status(400).json({ message: "Le champ 'name' est requis." });
+      return res.status(400).json({ message: 'Le champ \'name\' est requis.' });
     }
 
     // Vérifier si le tournoi existe
@@ -46,11 +40,11 @@ exports.createPool = async (req, res) => {
     res.status(201).json(pool);
   } catch (error) {
     console.error('Erreur lors de la création de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la création de la pool.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur lors de la création de la pool.', error });
   }
 };
-
-
 
 /**
  * Récupérer toutes les pools d'un tournoi
@@ -73,7 +67,9 @@ exports.getPoolsByTourney = async (req, res) => {
     res.status(200).json(pools);
   } catch (error) {
     console.error('Erreur lors de la récupération des pools :', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération des pools.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur lors de la récupération des pools.', error });
   }
 };
 
@@ -102,7 +98,9 @@ exports.getPoolById = async (req, res) => {
     res.status(200).json(pool);
   } catch (error) {
     console.error('Erreur lors de la récupération de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération de la pool.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur lors de la récupération de la pool.', error });
   }
 };
 
@@ -124,7 +122,9 @@ exports.updatePool = async (req, res) => {
     res.status(200).json(pool);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la mise à jour de la pool.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur lors de la mise à jour de la pool.', error });
   }
 };
 
@@ -145,7 +145,9 @@ exports.deletePool = async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error('Erreur lors de la suppression de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors de la suppression de la pool.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur lors de la suppression de la pool.', error });
   }
 };
 
@@ -158,7 +160,9 @@ exports.assignTeamsToPool = async (req, res) => {
     const { teamIds } = req.body; // Array des IDs des équipes à assigner
 
     if (!teamIds || teamIds.length === 0) {
-      return res.status(400).json({ message: "Aucune équipe spécifiée pour l'assignation." });
+      return res
+        .status(400)
+        .json({ message: 'Aucune équipe spécifiée pour l\'assignation.' });
     }
 
     const pool = await Pool.findByPk(poolId);
@@ -177,37 +181,67 @@ exports.assignTeamsToPool = async (req, res) => {
     });
 
     if (teams.length !== teamIds.length) {
-      return res.status(400).json({ message: 'Certaines équipes spécifiées sont invalides ou n\'appartiennent pas au même tournoi.' });
+      return res
+        .status(400)
+        .json({
+          message:
+            'Certaines équipes spécifiées sont invalides ou n\'appartiennent pas au même tournoi.',
+        });
     }
 
     // Filtrer les équipes de type 'assistant'
-    const validTeams = teams.filter(team => team.type !== 'assistant');
+    const validTeams = teams.filter((team) => team.type !== 'assistant');
 
     if (validTeams.length === 0) {
-      return res.status(400).json({ message: 'Toutes les équipes spécifiées sont de type assistant et ne peuvent pas être assignées.' });
+      return res
+        .status(400)
+        .json({
+          message:
+            'Toutes les équipes spécifiées sont de type assistant et ne peuvent pas être assignées.',
+        });
     }
 
     // Vérifier si l'ajout de ces équipes dépasse la capacité maximale de la pool
     const currentTeamsCount = await Team.count({ where: { poolId: pool.id } });
     const totalTeamsAfterAssignment = currentTeamsCount + validTeams.length;
 
-    if (pool.maxTeamPerPool && totalTeamsAfterAssignment > pool.maxTeamPerPool) {
-      return res.status(400).json({ message: `Impossible d'assigner les équipes : la pool atteindrait sa capacité maximale de ${pool.maxTeamPerPool} équipes.` });
+    if (
+      pool.maxTeamPerPool &&
+      totalTeamsAfterAssignment > pool.maxTeamPerPool
+    ) {
+      return res
+        .status(400)
+        .json({
+          message: `Impossible d'assigner les équipes : la pool atteindrait sa capacité maximale de ${pool.maxTeamPerPool} équipes.`,
+        });
     }
 
     // Assigner les équipes valides à la pool
-    await Team.update({ poolId }, {
-      where: {
-        id: {
-          [Op.in]: validTeams.map(team => team.id),
+    await Team.update(
+      { poolId },
+      {
+        where: {
+          id: {
+            [Op.in]: validTeams.map((team) => team.id),
+          },
         },
-      },
-    });
+      }
+    );
 
-    res.status(200).json({ message: 'Équipes assignées à la pool avec succès.' });
+    res
+      .status(200)
+      .json({ message: 'Équipes assignées à la pool avec succès.' });
   } catch (error) {
-    console.error('Erreur lors de l\'assignation des équipes à la pool :', error);
-    res.status(500).json({ message: 'Erreur lors de l\'assignation des équipes à la pool.', error });
+    console.error(
+      'Erreur lors de l\'assignation des équipes à la pool :',
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: 'Erreur lors de l\'assignation des équipes à la pool.',
+        error,
+      });
   }
 };
 
@@ -220,7 +254,9 @@ exports.removeTeamsFromPool = async (req, res) => {
     const { teamIds } = req.body; // Array des IDs des équipes à retirer
 
     if (!teamIds || teamIds.length === 0) {
-      return res.status(400).json({ message: "Aucune équipe spécifiée pour le retrait." });
+      return res
+        .status(400)
+        .json({ message: 'Aucune équipe spécifiée pour le retrait.' });
     }
 
     const pool = await Pool.findByPk(poolId);
@@ -239,26 +275,42 @@ exports.removeTeamsFromPool = async (req, res) => {
     });
 
     if (assignedTeams.length === 0) {
-      return res.status(400).json({ message: 'Aucune des équipes spécifiées n\'est associée à cette pool.' });
+      return res
+        .status(400)
+        .json({
+          message: 'Aucune des équipes spécifiées n\'est associée à cette pool.',
+        });
     }
 
     // Retirer les équipes de la pool
-    const assignedTeamIds = assignedTeams.map(team => team.id);
-    await Team.update({ poolId: null }, {
-      where: {
-        id: {
-          [Op.in]: assignedTeamIds,
+    const assignedTeamIds = assignedTeams.map((team) => team.id);
+    await Team.update(
+      { poolId: null },
+      {
+        where: {
+          id: {
+            [Op.in]: assignedTeamIds,
+          },
         },
-      },
-    });
+      }
+    );
 
-    res.status(200).json({ message: 'Équipes retirées de la pool avec succès.', removedTeamIds: assignedTeamIds });
+    res
+      .status(200)
+      .json({
+        message: 'Équipes retirées de la pool avec succès.',
+        removedTeamIds: assignedTeamIds,
+      });
   } catch (error) {
     console.error('Erreur lors du retrait des équipes de la pool :', error);
-    res.status(500).json({ message: 'Erreur lors du retrait des équipes de la pool.', error });
+    res
+      .status(500)
+      .json({
+        message: 'Erreur lors du retrait des équipes de la pool.',
+        error,
+      });
   }
 };
-
 
 /**
  * Assigner automatiquement des équipes aux pools de manière équilibrée.
@@ -288,7 +340,9 @@ exports.autoAssignTeamsToPools = async (req, res) => {
     });
 
     if (pools.length === 0) {
-      return res.status(400).json({ message: 'Aucune pool disponible pour l\'assignation.' });
+      return res
+        .status(400)
+        .json({ message: 'Aucune pool disponible pour l\'assignation.' });
     }
 
     // Algorithme pour répartir les équipes de manière équilibrée
@@ -301,7 +355,10 @@ exports.autoAssignTeamsToPools = async (req, res) => {
         const currentPool = pools[poolIndex];
         const teamsInPoolCount = currentPool.teams.length;
 
-        if (!currentPool.maxTeamPerPool || teamsInPoolCount < currentPool.maxTeamPerPool) {
+        if (
+          !currentPool.maxTeamPerPool ||
+          teamsInPoolCount < currentPool.maxTeamPerPool
+        ) {
           // Assign the team to the pool
           await team.update({ poolId: currentPool.id });
 
@@ -316,17 +373,31 @@ exports.autoAssignTeamsToPools = async (req, res) => {
       }
 
       if (!assigned) {
-        return res.status(400).json({ message: 'Impossible d\'assigner toutes les équipes : toutes les pools sont pleines.' });
+        return res
+          .status(400)
+          .json({
+            message:
+              'Impossible d\'assigner toutes les équipes : toutes les pools sont pleines.',
+          });
       }
     }
 
-    res.status(200).json({ message: 'Équipes assignées automatiquement aux pools.' });
+    res
+      .status(200)
+      .json({ message: 'Équipes assignées automatiquement aux pools.' });
   } catch (error) {
-    console.error('Erreur lors de l\'assignation automatique des équipes :', error);
-    res.status(500).json({ message: 'Erreur lors de l\'assignation automatique des équipes.', error });
+    console.error(
+      'Erreur lors de l\'assignation automatique des équipes :',
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: 'Erreur lors de l\'assignation automatique des équipes.',
+        error,
+      });
   }
 };
-
 
 exports.generatePools = async (req, res) => {
   const tourneyId = req.params.tourneyId;
@@ -341,9 +412,12 @@ exports.generatePools = async (req, res) => {
     const strategy = tourney.tourneyType;
 
     const poolStrategyManager = new PoolStrategyManager(tourneyId, strategy);
-    const {pools, teamsWithoutPool} = await poolStrategyManager.generatePools();
+    const { pools, teamsWithoutPool } =
+      await poolStrategyManager.generatePools();
 
-    res.status(200).json({ message: 'Pools générés avec succès.', pools, teamsWithoutPool });
+    res
+      .status(200)
+      .json({ message: 'Pools générés avec succès.', pools, teamsWithoutPool });
   } catch (error) {
     console.error('Erreur lors de la génération des pools :', error);
     res.status(500).json({ message: error.message });
@@ -366,10 +440,13 @@ exports.deleteAllPools = async (req, res) => {
     // Supprimer toutes les pools associées au tournoi
     await Pool.destroy({ where: { tourneyId } });
 
-    res.status(200).json({ message: 'Toutes les pools ont été supprimées avec succès.' });
+    res
+      .status(200)
+      .json({ message: 'Toutes les pools ont été supprimées avec succès.' });
   } catch (error) {
     console.error('Erreur lors de la suppression des pools:', error);
-    return res.status(500).json({ message: 'Erreur lors de la suppression des pools.', error });
+    return res
+      .status(500)
+      .json({ message: 'Erreur lors de la suppression des pools.', error });
   }
 };
-

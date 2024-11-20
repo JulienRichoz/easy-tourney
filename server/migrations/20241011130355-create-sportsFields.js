@@ -13,7 +13,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Fields',
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
@@ -23,7 +23,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Sports',
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
@@ -53,5 +53,5 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('SportsFields');
-  }
+  },
 };

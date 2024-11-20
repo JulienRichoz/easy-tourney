@@ -2,11 +2,14 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "serve": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node app.js",
-    "db:hard-reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node app.js"
+    "db:hard-reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node app.js",
+    "format": "prettier --write .",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
@@ -26,6 +29,8 @@
     "sequelize": "^6.37.5"
   },
   "devDependencies": {
+    "eslint": "^9.15.0",
+    "prettier": "^3.3.3",
     "sequelize-cli": "^6.6.2"
   }
 }

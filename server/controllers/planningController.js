@@ -1,8 +1,17 @@
- // server/controllers/tourneyController.js
-const { Tourney, Field, SportsFields, Sport, ScheduleTourney, Team, Pool, PoolSchedule, Game } = require('../models');
+// server/controllers/tourneyController.js
+const {
+  Tourney,
+  Field,
+  SportsFields,
+  Sport,
+  ScheduleTourney,
+  Team,
+  Pool,
+  PoolSchedule,
+  Game,
+} = require('../models');
 
 const PlanningStrategyManager = require('../services/planningStrategies/pool/planningStrategyManager');
-
 
 exports.getPlanningDetails = async (req, res) => {
   try {
@@ -14,15 +23,19 @@ exports.getPlanningDetails = async (req, res) => {
       include: {
         model: SportsFields,
         as: 'sportsFields',
-        include: { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+        include: {
+          model: Sport,
+          as: 'sport',
+          attributes: ['id', 'name', 'color'],
+        },
       },
     });
 
     // Extraire une liste unique des sports depuis les terrains
     const sports = [];
-    fields.forEach(field => {
-      field.sportsFields.forEach(sportsField => {
-        if (!sports.find(sport => sport.id === sportsField.sport.id)) {
+    fields.forEach((field) => {
+      field.sportsFields.forEach((sportsField) => {
+        if (!sports.find((sport) => sport.id === sportsField.sport.id)) {
           sports.push(sportsField.sport); // Ajouter uniquement les sports uniques
         }
       });
@@ -52,7 +65,14 @@ exports.getPlanningDetails = async (req, res) => {
               attributes: ['id', 'name', 'color'],
             },
           ],
-          attributes: ['id', 'fieldId', 'startTime', 'endTime', 'date', 'sportId'],
+          attributes: [
+            'id',
+            'fieldId',
+            'startTime',
+            'endTime',
+            'date',
+            'sportId',
+          ],
         },
       ],
     });
@@ -80,11 +100,14 @@ exports.getPlanningDetails = async (req, res) => {
       sports,
     });
   } catch (error) {
-    console.error('Erreur lors de la récupération du planning complet :', error);
+    console.error(
+      'Erreur lors de la récupération du planning complet :',
+      error
+    );
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
-  
+
 exports.generatePoolPlanning = async (req, res) => {
   const tourneyId = req.params.tourneyId;
 
@@ -97,8 +120,11 @@ exports.generatePoolPlanning = async (req, res) => {
 
     // Utiliser le tourneyType pour déterminer la stratégie
     const strategy = tourney.tourneyType;
-    
-    const planningStrategyManager = new PlanningStrategyManager(tourneyId, strategy);
+
+    const planningStrategyManager = new PlanningStrategyManager(
+      tourneyId,
+      strategy
+    );
     await planningStrategyManager.generatePlanning();
 
     res.status(200).json({ message: 'Planning généré avec succès.' });
@@ -123,7 +149,7 @@ exports.resetPoolPlanning = async (req, res) => {
       where: { tourneyId },
       attributes: ['id'],
     });
-    const poolIds = pools.map(pool => pool.id);
+    const poolIds = pools.map((pool) => pool.id);
 
     // Supprimer les PoolSchedules associés
     await PoolSchedule.destroy({
@@ -132,11 +158,14 @@ exports.resetPoolPlanning = async (req, res) => {
       },
     });
 
-    res.status(200).json({ message: 'Plannings des Pools réinitialisés avec succès.' });
+    res
+      .status(200)
+      .json({ message: 'Plannings des Pools réinitialisés avec succès.' });
   } catch (error) {
-    console.error('Erreur lors de la réinitialisation des PoolSchedules :', error);
+    console.error(
+      'Erreur lors de la réinitialisation des PoolSchedules :',
+      error
+    );
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
-
-

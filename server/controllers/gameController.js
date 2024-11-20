@@ -1,5 +1,13 @@
 // server/controllers/gameController.js
-const { Game, Team, Field, Tourney, Sport, UsersTourneys, User } = require('../models');
+const {
+  Game,
+  Team,
+  Field,
+  Tourney,
+  Sport,
+  UsersTourneys,
+  User,
+} = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -8,10 +16,24 @@ const { Op } = require('sequelize');
 exports.createGame = async (req, res) => {
   try {
     const { tourneyId } = req.params;
-    const { poolId, teamAId, teamBId, fieldId, sportId, startTime, endTime, assistantId } = req.body;
+    const {
+      poolId,
+      teamAId,
+      teamBId,
+      fieldId,
+      sportId,
+      startTime,
+      endTime,
+      assistantId,
+    } = req.body;
 
     if (!teamAId || !teamBId || !fieldId || !startTime || !endTime) {
-      return res.status(400).json({ message: "Les champs 'teamAId', 'teamBId', 'fieldId', 'startTime', et 'endTime' sont requis." });
+      return res
+        .status(400)
+        .json({
+          message:
+            'Les champs \'teamAId\', \'teamBId\', \'fieldId\', \'startTime\', et \'endTime\' sont requis.',
+        });
     }
 
     // Vérifier si le tournoi, les équipes et le terrain existent
@@ -21,12 +43,16 @@ exports.createGame = async (req, res) => {
     const field = await Field.findByPk(fieldId);
 
     if (!tourney || !teamA || !teamB || !field) {
-      return res.status(404).json({ message: 'Tournoi, équipes ou terrain non trouvés.' });
+      return res
+        .status(404)
+        .json({ message: 'Tournoi, équipes ou terrain non trouvés.' });
     }
 
     // Vérifier si les équipes sont de type "player"
     if (teamA.type !== 'player' || teamB.type !== 'player') {
-      return res.status(400).json({ message: 'Les équipes doivent être de type "player".' });
+      return res
+        .status(400)
+        .json({ message: 'Les équipes doivent être de type "player".' });
     }
 
     // Créer le match
@@ -68,7 +94,7 @@ exports.getGamesByTourney = async (req, res) => {
           model: UsersTourneys,
           as: 'assistant',
           attributes: ['userId', 'tourneyRole'], // Ajoutez les champs nécessaires
-          required: false,          
+          required: false,
           include: [
             {
               model: User,
@@ -102,7 +128,11 @@ exports.getGameById = async (req, res) => {
         { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
         { model: Field, as: 'field', attributes: ['id', 'name'] },
         { model: Sport, as: 'sport', attributes: ['id', 'name'] },
-        { model: UsersTourneys, as: 'assistant', attributes: ['id', 'tourneyRole'] },
+        {
+          model: UsersTourneys,
+          as: 'assistant',
+          attributes: ['id', 'tourneyRole'],
+        },
       ],
     });
 

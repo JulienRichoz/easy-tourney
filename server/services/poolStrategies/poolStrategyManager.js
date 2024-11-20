@@ -13,9 +13,9 @@ class PoolStrategyManager {
     /*
     Implémenter les différents types de stratégies
     */
-      case 'customRoundRobin':
-      default:
-        return new customRoundRobin(this.tourneyId);
+    case 'customRoundRobin':
+    default:
+      return new customRoundRobin(this.tourneyId);
     }
   }
 

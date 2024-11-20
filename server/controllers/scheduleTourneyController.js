@@ -23,13 +23,22 @@ exports.createScheduleTourney = async (req, res) => {
       useDefaultSettings,
     } = req.body;
 
-    const existingSchedule = await ScheduleTourney.findOne({ where: { tourneyId } });
+    const existingSchedule = await ScheduleTourney.findOne({
+      where: { tourneyId },
+    });
     if (existingSchedule) {
-      return res.status(400).json({ message: "Un planning existe déjà pour ce tournoi." });
+      return res
+        .status(400)
+        .json({ message: 'Un planning existe déjà pour ce tournoi.' });
     }
 
     if (!startTime || !endTime || !poolDuration || !gameDuration) {
-      return res.status(400).json({ message: "Les champs 'startTime', 'endTime', 'poolDuration', et 'gameDuration' sont requis." });
+      return res
+        .status(400)
+        .json({
+          message:
+            'Les champs \'startTime\', \'endTime\', \'poolDuration\', et \'gameDuration\' sont requis.',
+        });
     }
 
     const tourney = await Tourney.findByPk(tourneyId);
@@ -73,7 +82,9 @@ exports.getScheduleTourneyByTourney = async (req, res) => {
     });
 
     if (!schedule) {
-      return res.status(404).json({ message: 'Aucun planning trouvé pour ce tournoi.' });
+      return res
+        .status(404)
+        .json({ message: 'Aucun planning trouvé pour ce tournoi.' });
     }
 
     res.status(200).json(schedule);

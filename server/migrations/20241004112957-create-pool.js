@@ -32,8 +32,8 @@ module.exports = {
       },
       // Nombre min de team par pool
       minTeamPerPool: {
-          type: Sequelize.INTEGER,
-          allowNull: true,
+        type: Sequelize.INTEGER,
+        allowNull: true,
       },
       // Stade du tournoi selon type (demi-final, final, etc.)
       stage: {
@@ -46,7 +46,7 @@ module.exports = {
       },
       endTime: {
         type: Sequelize.TIME,
-        allowNull: true
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
@@ -60,5 +60,5 @@ module.exports = {
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Pools');
-  }
+  },
 };

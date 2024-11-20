@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Tourneys',
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
@@ -35,11 +35,11 @@ module.exports = {
       minTeamPerPool: {
         type: Sequelize.INTEGER,
         allowNull: true,
-    },
-    maxTeamPerPool: {
+      },
+      maxTeamPerPool: {
         type: Sequelize.INTEGER,
         allowNull: true,
-    },
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -53,5 +53,5 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('TeamSetups');
-  }
+  },
 };

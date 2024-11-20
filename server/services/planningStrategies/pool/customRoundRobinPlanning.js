@@ -55,7 +55,15 @@
  * ========================================================================
  */
 const PlanningStrategy = require('./planningStrategy');
-const { Pool, PoolSchedule, Field, ScheduleTourney, SportsFields, Sport, Tourney } = require('../../../models');
+const {
+  Pool,
+  PoolSchedule,
+  Field,
+  ScheduleTourney,
+  SportsFields,
+  Sport,
+  Tourney,
+} = require('../../../models');
 
 class CustomRoundRobinPlanning extends PlanningStrategy {
   async generatePlanning() {
@@ -71,7 +79,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     // Récupérer les pools du tournoi
     const pools = await Pool.findAll({ where: { tourneyId: this.tourneyId } });
     if (pools.length === 0) {
-      throw new Error("Aucune pool disponible pour générer le planning.");
+      throw new Error('Aucune pool disponible pour générer le planning.');
     }
 
     // Récupérer les terrains et leurs disponibilités
@@ -89,7 +97,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       },
     });
     if (fields.length === 0) {
-      throw new Error("Aucun terrain disponible pour ce tournoi.");
+      throw new Error('Aucun terrain disponible pour ce tournoi.');
     }
 
     // Récupérer la configuration du planning
@@ -97,7 +105,9 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       where: { tourneyId: this.tourneyId },
     });
     if (!scheduleTourney) {
-      throw new Error("Aucune configuration de planning trouvée pour ce tournoi.");
+      throw new Error(
+        'Aucune configuration de planning trouvée pour ce tournoi.'
+      );
     }
 
     // === 2. Génération des créneaux horaires ===
@@ -210,10 +220,18 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     }
 
     // Soustraire les pauses des intervalles de disponibilité
-    const effectiveIntervals = subtractBreaks(mergedAvailabilityIntervals, breaks);
+    const effectiveIntervals = subtractBreaks(
+      mergedAvailabilityIntervals,
+      breaks
+    );
 
     // Générer les créneaux horaires en fonction des intervalles effectifs
-    const planning = this.generateTimeSlots(effectiveIntervals, startMinutes, endMinutes, totalPoolTime);
+    const planning = this.generateTimeSlots(
+      effectiveIntervals,
+      startMinutes,
+      endMinutes,
+      totalPoolTime
+    );
 
     // === 3. Initialisation des structures de données ===
 
@@ -225,11 +243,23 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
     // === 4. Assignation initiale des pools ===
 
-    await this.initialAssignment(pools, planning, fields, tourneyDate, poolDuration);
+    await this.initialAssignment(
+      pools,
+      planning,
+      fields,
+      tourneyDate,
+      poolDuration
+    );
 
     // === 5. Équilibrage des sessions ===
 
-    await this.balancePoolSessions(pools, planning, fields, tourneyDate, poolDuration);
+    await this.balancePoolSessions(
+      pools,
+      planning,
+      fields,
+      tourneyDate,
+      poolDuration
+    );
 
     return { message: 'Planning généré avec succès.' };
   }
@@ -258,7 +288,12 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {number} totalPoolTime - Durée totale d'un créneau (pool + transition) en minutes.
    * @returns {Array} - Liste des créneaux horaires en minutes.
    */
-  generateTimeSlots(effectiveIntervals, startMinutes, endMinutes, totalPoolTime) {
+  generateTimeSlots(
+    effectiveIntervals,
+    startMinutes,
+    endMinutes,
+    totalPoolTime
+  ) {
     const planning = [];
 
     for (const [intervalStart, intervalEnd] of effectiveIntervals) {
@@ -310,15 +345,21 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
         }
 
         // Rechercher les sports disponibles à ce créneau
-        const sportsAvailable = this.getSportsAvailableAtTimeSlot(timeSlot, fields, poolDuration);
+        const sportsAvailable = this.getSportsAvailableAtTimeSlot(
+          timeSlot,
+          fields,
+          poolDuration
+        );
 
         // Prioriser les sports les moins joués par la pool
         const sportsPlayed = this.poolPlayedSports.get(selectedPool.id);
-        const possibleSports = Array.from(sportsAvailable.keys()).sort((a, b) => {
-          const countA = sportsPlayed.get(a) || 0;
-          const countB = sportsPlayed.get(b) || 0;
-          return countA - countB;
-        });
+        const possibleSports = Array.from(sportsAvailable.keys()).sort(
+          (a, b) => {
+            const countA = sportsPlayed.get(a) || 0;
+            const countB = sportsPlayed.get(b) || 0;
+            return countA - countB;
+          }
+        );
 
         let assigned = false;
 
@@ -329,12 +370,23 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
             const fieldAssignment = fieldsAvailable.shift();
 
             // Vérifier si le terrain est déjà assigné à ce créneau
-            if (this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)) {
+            if (
+              this.fieldsAssignedAtTimeSlot[timeSlot].has(
+                fieldAssignment.field.id
+              )
+            ) {
               continue; // Passer au terrain suivant
             }
 
             // Assigner la pool au terrain
-            await this.assignPoolToTimeSlot(selectedPool.id, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration);
+            await this.assignPoolToTimeSlot(
+              selectedPool.id,
+              timeSlot,
+              sportId,
+              fieldAssignment,
+              tourneyDate,
+              poolDuration
+            );
 
             assigned = true;
             break; // Sortir de la boucle des sports
@@ -356,12 +408,21 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Object} scheduleTourney - Configuration du planning du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
-  async balancePoolSessions(pools, planning, fields, tourneyDate, poolDuration) {
+  async balancePoolSessions(
+    pools,
+    planning,
+    fields,
+    tourneyDate,
+    poolDuration
+  ) {
     const maxSessions = Math.max(...this.poolTotalAssignments.values());
-    const poolsNeedingExtraSessions = pools.filter(pool => this.poolTotalAssignments.get(pool.id) < maxSessions);
+    const poolsNeedingExtraSessions = pools.filter(
+      (pool) => this.poolTotalAssignments.get(pool.id) < maxSessions
+    );
 
     for (const pool of poolsNeedingExtraSessions) {
-      const sessionsNeeded = maxSessions - this.poolTotalAssignments.get(pool.id);
+      const sessionsNeeded =
+        maxSessions - this.poolTotalAssignments.get(pool.id);
 
       for (let i = 0; i < sessionsNeeded; i++) {
         let assigned = false;
@@ -370,15 +431,21 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
           if (this.poolsAssignedAtTimeSlot[timeSlot].has(pool.id)) continue; // Pool déjà assignée à ce créneau
 
           // Rechercher les sports disponibles à ce créneau
-          const sportsAvailable = this.getSportsAvailableAtTimeSlot(timeSlot, fields, poolDuration);
+          const sportsAvailable = this.getSportsAvailableAtTimeSlot(
+            timeSlot,
+            fields,
+            poolDuration
+          );
 
           // Prioriser les sports les moins joués par la pool
           const sportsPlayed = this.poolPlayedSports.get(pool.id);
-          const possibleSports = Array.from(sportsAvailable.keys()).sort((a, b) => {
-            const countA = sportsPlayed.get(a) || 0;
-            const countB = sportsPlayed.get(b) || 0;
-            return countA - countB;
-          });
+          const possibleSports = Array.from(sportsAvailable.keys()).sort(
+            (a, b) => {
+              const countA = sportsPlayed.get(a) || 0;
+              const countB = sportsPlayed.get(b) || 0;
+              return countA - countB;
+            }
+          );
 
           for (const sportId of possibleSports) {
             const fieldsAvailable = sportsAvailable.get(sportId);
@@ -387,12 +454,23 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
               const fieldAssignment = fieldsAvailable.shift();
 
               // Vérifier si le terrain est déjà assigné à ce créneau
-              if (this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)) {
+              if (
+                this.fieldsAssignedAtTimeSlot[timeSlot].has(
+                  fieldAssignment.field.id
+                )
+              ) {
                 continue; // Passer au terrain suivant
               }
 
               // Assigner la pool au terrain
-              await this.assignPoolToTimeSlot(pool.id, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration);
+              await this.assignPoolToTimeSlot(
+                pool.id,
+                timeSlot,
+                sportId,
+                fieldAssignment,
+                tourneyDate,
+                poolDuration
+              );
 
               assigned = true;
               break; // Sortir de la boucle des sports
@@ -409,7 +487,9 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
         }
 
         if (!assigned) {
-          console.warn(`Impossible d'assigner une session supplémentaire à la pool ${pool.id}`);
+          console.warn(
+            `Impossible d'assigner une session supplémentaire à la pool ${pool.id}`
+          );
         }
       }
     }
@@ -437,7 +517,10 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
       validSportsFields.forEach((sf) => {
         // Vérifier si le terrain est déjà assigné à ce créneau
-        if (this.fieldsAssignedAtTimeSlot[timeSlot] && this.fieldsAssignedAtTimeSlot[timeSlot].has(field.id)) {
+        if (
+          this.fieldsAssignedAtTimeSlot[timeSlot] &&
+          this.fieldsAssignedAtTimeSlot[timeSlot].has(field.id)
+        ) {
           return; // Terrain déjà occupé
         }
 
@@ -464,7 +547,14 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Object} scheduleTourney - Configuration du planning du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
-  async assignPoolToTimeSlot(poolId, timeSlot, sportId, fieldAssignment, tourneyDate, poolDuration) {
+  async assignPoolToTimeSlot(
+    poolId,
+    timeSlot,
+    sportId,
+    fieldAssignment,
+    tourneyDate,
+    poolDuration
+  ) {
     const { field } = fieldAssignment;
 
     // Créer le PoolSchedule
@@ -481,7 +571,10 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     const sportsPlayed = this.poolPlayedSports.get(poolId);
     sportsPlayed.set(sportId, (sportsPlayed.get(sportId) || 0) + 1);
 
-    this.poolTotalAssignments.set(poolId, this.poolTotalAssignments.get(poolId) + 1);
+    this.poolTotalAssignments.set(
+      poolId,
+      this.poolTotalAssignments.get(poolId) + 1
+    );
     this.poolsAssignedAtTimeSlot[timeSlot].add(poolId);
 
     // Marquer le terrain comme occupé à ce créneau

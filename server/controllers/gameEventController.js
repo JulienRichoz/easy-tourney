@@ -10,7 +10,9 @@ exports.createGameEvent = async (req, res) => {
     const { teamId, type, description } = req.body;
 
     if (!teamId || !type) {
-      return res.status(400).json({ message: "Les champs 'teamId' et 'type' sont requis." });
+      return res
+        .status(400)
+        .json({ message: 'Les champs \'teamId\' et \'type\' sont requis.' });
     }
 
     const gameEvent = await GameEvent.create({

@@ -13,25 +13,28 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  InviteToken.init({
-    token: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+  InviteToken.init(
+    {
+      token: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      expiresAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      isValid: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+      },
     },
-    expiresAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    isValid: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      allowNull: false,
-    },
-  }, {
-    sequelize,
-    modelName: 'InviteToken',
-  });
+    {
+      sequelize,
+      modelName: 'InviteToken',
+    }
+  );
 
   return InviteToken;
 };

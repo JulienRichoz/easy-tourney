@@ -23,20 +23,20 @@ module.exports = {
         allowNull: false,
         references: {
           model: 'Tourneys',
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      poolId:{
+      poolId: {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
           model: 'Pools',
-          key: 'id'
+          key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL', 
+        onDelete: 'SET NULL',
       },
       createdAt: {
         allowNull: false,
@@ -51,5 +51,5 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Teams');
-  }
+  },
 };

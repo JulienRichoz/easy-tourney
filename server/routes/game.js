@@ -9,7 +9,11 @@ const {
   deleteGame,
   validateGames,
 } = require('../controllers/gameController');
-const { isAuthenticated, isAdmin, authorizeTournamentAccess } = require('../middlewares');
+const {
+  isAuthenticated,
+  isAdmin,
+  authorizeTournamentAccess,
+} = require('../middlewares');
 
 // Base URL: http://localhost:8080/api/tourneys/:tourneyId/games
 router.post('/', isAuthenticated, isAdmin, createGame); // Créer un nouveau match

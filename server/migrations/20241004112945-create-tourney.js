@@ -31,29 +31,29 @@ module.exports = {
       },
       tourneyType: {
         type: Sequelize.ENUM(
-            'knockout',            // Élimination directe : une seule défaite entraîne l'élimination (aussi appelé "bracket" ou "single-elimination")
-            'doubleKnockout',     // Élimination double : deux défaites nécessaires pour être éliminé, généralement avec un "winner's bracket" et un "loser's bracket"
-            'roundRobin',         // Tous les participants jouent les uns contre les autres au moins une fois ; le gagnant est déterminé par le score total
-            'swiss',               // Système suisse : les participants jouent plusieurs rondes contre des adversaires de niveau similaire, sans élimination
-            'groupStage',         // Phase de groupes : les participants sont répartis en groupes pour un mini "round-robin", suivi de phases éliminatoires pour les meilleurs
-            'ladder',              // Tournoi en escalier : les participants défient ceux au-dessus dans un classement ; le gagnant monte dans le classement
-            'customRoundRobin'   // Variante de round-robin où chaque équipe doit jouer un nombre minimal de matchs contre des équipes différentes, à définir par le tourney
+          'knockout', // Élimination directe : une seule défaite entraîne l'élimination (aussi appelé "bracket" ou "single-elimination")
+          'doubleKnockout', // Élimination double : deux défaites nécessaires pour être éliminé, généralement avec un "winner's bracket" et un "loser's bracket"
+          'roundRobin', // Tous les participants jouent les uns contre les autres au moins une fois ; le gagnant est déterminé par le score total
+          'swiss', // Système suisse : les participants jouent plusieurs rondes contre des adversaires de niveau similaire, sans élimination
+          'groupStage', // Phase de groupes : les participants sont répartis en groupes pour un mini "round-robin", suivi de phases éliminatoires pour les meilleurs
+          'ladder', // Tournoi en escalier : les participants défient ceux au-dessus dans un classement ; le gagnant monte dans le classement
+          'customRoundRobin' // Variante de round-robin où chaque équipe doit jouer un nombre minimal de matchs contre des équipes différentes, à définir par le tourney
         ),
         allowNull: false,
-        defaultValue: 'customRoundRobin'
-    },
-    maxNumberOfPools:{
-      type: Sequelize.INTEGER,
-      allowNull: true,
-    },
-    defaultMaxTeamPerPool:{
+        defaultValue: 'customRoundRobin',
+      },
+      maxNumberOfPools: {
         type: Sequelize.INTEGER,
         allowNull: true,
-    },
-    defaultMinTeamPerPool:{
+      },
+      defaultMaxTeamPerPool: {
         type: Sequelize.INTEGER,
         allowNull: true,
-    },
+      },
+      defaultMinTeamPerPool: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
       status: {
         type: Sequelize.ENUM('draft', 'ready', 'active', 'completed'),
         allowNull: false,
@@ -62,17 +62,17 @@ module.exports = {
       fieldAssignmentStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
         allowNull: false,
-        defaultValue: 'notStarted'
-      },      
+        defaultValue: 'notStarted',
+      },
       sportAssignmentStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
         allowNull: false,
-        defaultValue: 'notStarted'
+        defaultValue: 'notStarted',
       },
       registrationStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'active', 'completed'),
         allowNull: false,
-        defaultValue: 'notStarted'
+        defaultValue: 'notStarted',
       },
       poolStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
@@ -82,7 +82,7 @@ module.exports = {
       planningStatus: {
         type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
         allowNull: false,
-        defaultValue: 'notStarted'
+        defaultValue: 'notStarted',
       },
       createdAt: {
         allowNull: false,
@@ -96,5 +96,5 @@ module.exports = {
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Tourneys');
-  }
+  },
 };

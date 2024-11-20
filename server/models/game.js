@@ -4,13 +4,19 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Game extends Model {
     static associate(models) {
-      Game.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
+      Game.belongsTo(models.Tourney, {
+        foreignKey: 'tourneyId',
+        as: 'tourney',
+      });
       Game.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
       Game.belongsTo(models.Team, { foreignKey: 'teamAId', as: 'teamA' });
       Game.belongsTo(models.Team, { foreignKey: 'teamBId', as: 'teamB' });
       Game.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
       Game.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
-      Game.belongsTo(models.UsersTourneys, { foreignKey: 'assistantId', as: 'assistant' });
+      Game.belongsTo(models.UsersTourneys, {
+        foreignKey: 'assistantId',
+        as: 'assistant',
+      });
       Game.hasMany(models.GameEvent, { foreignKey: 'gameId', as: 'events' });
     }
   }

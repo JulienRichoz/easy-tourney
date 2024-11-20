@@ -31,10 +31,12 @@ const { errorHandler, limiter } = require('./middlewares');
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:8080', 'http://192.168.1.42:8080', '*'],
-  credentials: true // gestion cookie authentification
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:8080', 'http://192.168.1.42:8080', '*'],
+    credentials: true, // gestion cookie authentification
+  })
+);
 app.use(express.json());
 app.use(limiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -48,7 +50,7 @@ app.use('/api/roles', roleRoutes);
 
 // Routes centrées sur le tournoi
 app.use('/api/tourneys', tourneyRoutes);
-app.use('/api/tourneys/:tourneyId/teams', teamRoutes)
+app.use('/api/tourneys/:tourneyId/teams', teamRoutes);
 app.use('/api/tourneys/:tourneyId/team-setup', teamSetupRoutes);
 app.use('/api/tourneys/:tourneyId/fields', fieldRoutes);
 app.use('/api/tourneys/:tourneyId/sports-fields', sportsFieldsRoutes);

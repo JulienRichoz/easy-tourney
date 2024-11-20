@@ -20,13 +20,12 @@ router.get('/', isAuthenticated, getPoolSchedulesByTourney); // Récupérer tous
 // Gestion des plannings d'une pool spécifique
 router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // Récupérer les plannings d'une pool spécifique
 
-
 module.exports = router;
 
 /**
- * TODO: 
+ * TODO:
  * Regler probleme titre ajout pool aux terrains
  * Probleme algorithme high tourney -> 9 terrains 4 sessions 9 pools (une pool a doublon)
  * REFLECHIR a la vue planning pool <-> game => final
- * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ? 
+ * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
  */

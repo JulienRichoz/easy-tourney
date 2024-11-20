@@ -9,9 +9,9 @@ class PlanningStrategyManager {
 
   getStrategy(strategyName) {
     switch (strategyName) {
-      case 'customRoundRobin':
-      default:
-        return new CustomRoundRobinPlanning(this.tourneyId);
+    case 'customRoundRobin':
+    default:
+      return new CustomRoundRobinPlanning(this.tourneyId);
     }
   }
 

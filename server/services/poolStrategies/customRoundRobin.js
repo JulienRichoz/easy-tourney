@@ -28,7 +28,10 @@ class CustomRoundRobin extends PoolStrategy {
     }
 
     const tourney = await Tourney.findByPk(this.tourneyId);
-    const maxPools = Math.min(tourney?.maxNumberOfPools || fieldCount, fieldCount); // Limiter au nombre de terrains
+    const maxPools = Math.min(
+      tourney?.maxNumberOfPools || fieldCount,
+      fieldCount
+    ); // Limiter au nombre de terrains
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
     const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 6;
 
@@ -82,7 +85,7 @@ class CustomRoundRobin extends PoolStrategy {
     if (teamsWithoutPool.length > 0) {
       console.warn(
         `${teamsWithoutPool.length} équipes n'ont pas pu être assignées aux pools. ` +
-        `Considérez d'augmenter le nombre de terrains ou de réduire la taille minimale des équipes par pool.`
+          'Considérez d\'augmenter le nombre de terrains ou de réduire la taille minimale des équipes par pool.'
       );
     }
 

@@ -1,19 +1,24 @@
 // server/routes/team.js
 const express = require('express');
 const {
-    createTeam,
-    getTeamsByTourney,
-    updateTeam,
-    deleteTeam,
-    generateTeams,
-    getTeamById,
-    assignUserToTeam,
-    removeUserFromTeam,
-    resetTeamsAndReassignUsers,
-    autoFillTeams,
-    getUnassignedTeams
+  createTeam,
+  getTeamsByTourney,
+  updateTeam,
+  deleteTeam,
+  generateTeams,
+  getTeamById,
+  assignUserToTeam,
+  removeUserFromTeam,
+  resetTeamsAndReassignUsers,
+  autoFillTeams,
+  getUnassignedTeams,
 } = require('../controllers/teamController');
-const { isAuthenticated, isAdmin, authorizeTournamentAccess, authorizeUserOrAdmin } = require('../middlewares');
+const {
+  isAuthenticated,
+  isAdmin,
+  authorizeTournamentAccess,
+  authorizeUserOrAdmin,
+} = require('../middlewares');
 
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId
 
@@ -22,11 +27,22 @@ const router = express.Router({ mergeParams: true }); // mergeParams pour accéd
 
 // Routes les plus spécifiques en premières
 router.post('/generate-teams', isAuthenticated, isAdmin, generateTeams); // Générer des équipes automatiquement pour un tournoi
-router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers);  // Réinitialiser les équipes et les utilisateurs
+router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers); // Réinitialiser les équipes et les utilisateurs
 
 // Routes pour les opérations sur des équipes spécifiques
-router.post('/:teamId/users', isAuthenticated, authorizeTournamentAccess, assignUserToTeam); // Assigner un utilisateur à une équipe
-router.delete('/:teamId/users/:userId', isAuthenticated, authorizeTournamentAccess,authorizeUserOrAdmin, removeUserFromTeam); // Supprimer un utilisateur d'une équipe
+router.post(
+  '/:teamId/users',
+  isAuthenticated,
+  authorizeTournamentAccess,
+  assignUserToTeam
+); // Assigner un utilisateur à une équipe
+router.delete(
+  '/:teamId/users/:userId',
+  isAuthenticated,
+  authorizeTournamentAccess,
+  authorizeUserOrAdmin,
+  removeUserFromTeam
+); // Supprimer un utilisateur d'une équipe
 router.get('/unassigned', isAuthenticated, isAdmin, getUnassignedTeams); // Route pour récupérer les équipes non assignées à une pool
 router.get('/:teamId', isAuthenticated, authorizeTournamentAccess, getTeamById); // Récupérer les détails d'une équipe (admin uniquement)
 router.put('/:teamId', isAuthenticated, isAdmin, updateTeam); // Mettre à jour une équipe d'un tournoi (admin uniquement)

@@ -1,7 +1,11 @@
 // routes/planning.js
 const express = require('express');
 const router = express.Router({ mergeParams: true });
-const { generatePoolPlanning, getPlanningDetails, resetPoolPlanning } = require('../controllers/planningController');
+const {
+  generatePoolPlanning,
+  getPlanningDetails,
+  resetPoolPlanning,
+} = require('../controllers/planningController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 // Base URL: /api/tourneys/:tourneyId/planning

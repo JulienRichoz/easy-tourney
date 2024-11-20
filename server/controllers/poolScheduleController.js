@@ -11,13 +11,20 @@ exports.assignPoolToField = async (req, res) => {
 
     // Validation des champs obligatoires
     if (!fieldId || !startTime || !endTime || !date) {
-      return res.status(400).json({ message: 'Les champs fieldId, startTime, endTime et date sont requis.' });
+      return res
+        .status(400)
+        .json({
+          message:
+            'Les champs fieldId, startTime, endTime et date sont requis.',
+        });
     }
 
     // Vérification de l'existence de la pool
     const pool = await Pool.findOne({ where: { id: poolId, tourneyId } });
     if (!pool) {
-      return res.status(404).json({ message: 'Pool non trouvée pour ce tournoi.' });
+      return res
+        .status(404)
+        .json({ message: 'Pool non trouvée pour ce tournoi.' });
     }
 
     // Vérification de l'existence du terrain
@@ -72,7 +79,10 @@ exports.assignPoolToField = async (req, res) => {
       poolSchedule: updatedPoolSchedule,
     });
   } catch (error) {
-    console.error('Erreur lors de l\'assignation de la pool au terrain :', error);
+    console.error(
+      'Erreur lors de l\'assignation de la pool au terrain :',
+      error
+    );
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
@@ -87,7 +97,11 @@ exports.updatePoolSchedule = async (req, res) => {
 
     // Validation des champs obligatoires
     if (!startTime || !endTime || !date) {
-      return res.status(400).json({ message: 'Les champs startTime, endTime et date sont requis.' });
+      return res
+        .status(400)
+        .json({
+          message: 'Les champs startTime, endTime et date sont requis.',
+        });
     }
 
     // Vérification de l'existence du PoolSchedule
@@ -148,7 +162,6 @@ exports.updatePoolSchedule = async (req, res) => {
   }
 };
 
-
 /**
  * Supprimer une assignation de pool à un terrain
  */
@@ -197,7 +210,10 @@ exports.getPoolSchedulesByTourney = async (req, res) => {
 
     res.status(200).json(poolSchedules);
   } catch (error) {
-    console.error('Erreur lors de la récupération des plannings des pools :', error);
+    console.error(
+      'Erreur lors de la récupération des plannings des pools :',
+      error
+    );
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
@@ -219,7 +235,10 @@ exports.getPoolSchedulesByPool = async (req, res) => {
 
     res.status(200).json(poolSchedules);
   } catch (error) {
-    console.error('Erreur lors de la récupération des plannings de la pool :', error);
+    console.error(
+      'Erreur lors de la récupération des plannings de la pool :',
+      error
+    );
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };

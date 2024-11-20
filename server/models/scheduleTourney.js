@@ -5,7 +5,10 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class ScheduleTourney extends Model {
     static associate(models) {
-      ScheduleTourney.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney' });
+      ScheduleTourney.belongsTo(models.Tourney, {
+        foreignKey: 'tourneyId',
+        as: 'tourney',
+      });
     }
   }
 
@@ -98,11 +101,22 @@ module.exports = (sequelize, DataTypes) => {
    * Valider les plages horaires
    */
   function validateTimes(schedule) {
-    const { startTime, endTime, introStart, introEnd, lunchStart, lunchEnd, outroStart, outroEnd } = schedule;
+    const {
+      startTime,
+      endTime,
+      introStart,
+      introEnd,
+      lunchStart,
+      lunchEnd,
+      outroStart,
+      outroEnd,
+    } = schedule;
 
     // Validation globale des horaires de début et de fin
     if (startTime >= endTime) {
-      throw new Error("L'heure de fin doit être supérieure à l'heure de début.");
+      throw new Error(
+        'L\'heure de fin doit être supérieure à l\'heure de début.'
+      );
     }
 
     // Tableau des périodes optionnelles pour validation
@@ -116,7 +130,9 @@ module.exports = (sequelize, DataTypes) => {
     for (const pair of timePairs) {
       if (pair.start && pair.end) {
         if (pair.start >= pair.end) {
-          throw new Error(`L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`);
+          throw new Error(
+            `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`
+          );
         }
         if (pair.start < startTime || pair.end > endTime) {
           throw new Error(
