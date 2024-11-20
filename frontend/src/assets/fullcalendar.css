@@ -2,47 +2,46 @@
 
 /* Styles par défaut */
 .fc {
-    @apply bg-white text-gray-800;
-  }
-  
-  .fc .fc-toolbar {
-    @apply bg-white text-gray-800;
-  }
-  
-  .fc .fc-col-header-cell {
-    @apply bg-gray-100 text-gray-800;
-  }
-  
-  .fc .fc-timegrid-slot {
-    @apply bg-white;
-  }
-  
-  .fc .fc-event {
-    /* Styles pour les événements */
-  }
-  
-  /* Styles pour le mode sombre */
-  .dark .fc {
-    @apply bg-gray-900 text-gray-100;
-  }
-  
-  .dark .fc .fc-toolbar {
-    @apply bg-gray-900 text-gray-100;
-  }
-  
-  .dark .fc .fc-col-header-cell {
-    @apply bg-gray-800 text-gray-100;
-  }
-  
-  .dark .fc .fc-timegrid-slot {
-    @apply bg-gray-900;
-  }
+  @apply bg-white text-gray-800;
+}
 
-  .dark .fc .fc-border-color{
-    @apply bg-gray-900;
-  }
-  
-  .dark .fc .fc-event {
-    /* Vos styles pour les événements en mode sombre */
-  }
-  
+.fc .fc-toolbar {
+  @apply bg-white text-gray-800;
+}
+
+.fc .fc-col-header-cell {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.fc .fc-timegrid-slot {
+  @apply bg-white;
+}
+
+.fc .fc-event {
+  /* Styles pour les événements */
+}
+
+/* Styles pour le mode sombre */
+.dark .fc {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark .fc .fc-toolbar {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark .fc .fc-col-header-cell {
+  @apply bg-gray-800 text-gray-100;
+}
+
+.dark .fc .fc-timegrid-slot {
+  @apply bg-gray-900;
+}
+
+.dark .fc .fc-border-color {
+  @apply bg-gray-900;
+}
+
+.dark .fc .fc-event {
+  /* Vos styles pour les événements en mode sombre */
+}

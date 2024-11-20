@@ -8,13 +8,19 @@ export function requireAuth(to, from, next, store) {
 
   // Vérifie si la route nécessite une authentification
   if (to.meta.requiresAuth && !isAuthenticated) {
-    store.commit('SET_ALERT_MESSAGE', 'Vous devez être connecté pour accéder à cette page.');
+    store.commit(
+      'SET_ALERT_MESSAGE',
+      'Vous devez être connecté pour accéder à cette page.'
+    );
     return next('/login');
   }
 
   // Vérifie si la route nécessite une permission particulière
   if (to.meta.permission) {
-    if (!permissions[userRole] || !permissions[userRole].includes(to.meta.permission)) {
+    if (
+      !permissions[userRole] ||
+      !permissions[userRole].includes(to.meta.permission)
+    ) {
       return next('/');
     }
   }

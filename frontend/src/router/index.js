@@ -2,7 +2,12 @@
 
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store';
-import { refreshToken, hasPermission, isTokenExpired, handleTokenExpiration } from '@/services/authService';
+import {
+  refreshToken,
+  hasPermission,
+  isTokenExpired,
+  handleTokenExpiration,
+} from '@/services/authService';
 import { jwtDecode } from 'jwt-decode';
 import apiService from '@/services/apiService';
 
@@ -12,11 +17,7 @@ import adminRoutes from './adminRoutes';
 import userRoutes from './userRoutes';
 
 // Définition des routes de l'application
-const routes = [
-  ...authRoutes,
-  ...adminRoutes,
-  ...userRoutes,
-];
+const routes = [...authRoutes, ...adminRoutes, ...userRoutes];
 
 // Configuration du routeur Vue
 const router = createRouter({
@@ -78,7 +79,9 @@ router.beforeEach(async (to, from, next) => {
     try {
       const newToken = await refreshToken();
       localStorage.setItem('token', newToken);
-      apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      apiService.defaults.headers.common[
+        'Authorization'
+      ] = `Bearer ${newToken}`;
 
       // Récupère les informations utilisateur et les enregistre dans le store
       const userResponse = await apiService.get('/users/me');
@@ -100,10 +103,10 @@ router.beforeEach(async (to, from, next) => {
       }
 
       // 6. Gestion des routes spécifiques aux tournois
-      const isTournamentRoute = (
-        (to.path.startsWith('/tourneys/') || to.path.startsWith('/admin/tourneys/'))
-        && to.params.tourneyId
-      );
+      const isTournamentRoute =
+        (to.path.startsWith('/tourneys/') ||
+          to.path.startsWith('/admin/tourneys/')) &&
+        to.params.tourneyId;
 
       if (isTournamentRoute) {
         // Récupération des statuts et informations du tournoi
