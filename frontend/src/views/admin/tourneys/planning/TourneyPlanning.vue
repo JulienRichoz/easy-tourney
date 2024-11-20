@@ -446,7 +446,7 @@
 
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
-          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial
+          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial (https://fullcalendar.io/license)
           initialView: 'resourceTimeGridDay',
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
