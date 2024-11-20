@@ -2,11 +2,15 @@
 <template>
   <div>
     <p class="mb-4 text-gray-600">
-      Cet algorithme va générer le planning des Pools automatiquement en
-      respectant la configuration du tournoi.
-      <br />
-      <strong>Attention :</strong> Les plannings existants seront supprimés. Il
-      est préférable d'effectuer cette action une fois les Pools générées.
+      <span class="text-red-500 dark:text-red-600 font-bold">
+        <strong>Attention :</strong> Le planning existant sera supprimé et
+        remplacé. <br /><br />
+      </span>
+      L'algorithme 'Custom Round Robin' va répartir équitablement les Pools sur
+      les terrains pour que chaque Pool participe au plus de sports différents
+      possibles, selon les réglages définis dans le planning. Pour une
+      répartition équilibrée, assurez-vous d'avoir suffisamment de terrains et
+      de créneaux horaires.
     </p>
   </div>
 </template>
@@ -23,25 +27,22 @@
       },
       pools: {
         type: Array,
-        required: true,
+        required: false,
       },
       fields: {
         type: Array,
-        required: true,
+        required: false,
       },
       planningTourney: {
         type: Object,
-        required: true,
+        required: false,
       },
     },
     methods: {
       async generatePlanning() {
         try {
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/planning/generate`,
-            {
-              strategy: 'customRoundRobin',
-            }
+            `/tourneys/${this.tourneyId}/planning/pools/generate`
           );
           console.log('Response', response);
           toast.success('Planning généré avec succès !', {

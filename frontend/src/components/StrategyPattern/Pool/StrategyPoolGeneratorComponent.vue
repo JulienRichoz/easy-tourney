@@ -44,19 +44,19 @@
       },
       tourneyType: {
         type: String,
-        required: true,
+        required: false,
       },
       teams: {
         type: Array,
-        required: true,
+        required: false,
       },
       pools: {
         type: Array,
-        required: true,
+        required: false,
       },
       availableFields: {
         type: Number,
-        required: true,
+        required: false,
       },
       isVisible: {
         type: Boolean,

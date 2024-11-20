@@ -48,15 +48,15 @@
       },
       pools: {
         type: Array,
-        required: true,
+        required: false,
       },
       fields: {
         type: Array,
-        required: true,
+        required: false,
       },
       planningTourney: {
         type: Object,
-        required: true,
+        required: false,
       },
       isVisible: {
         type: Boolean,

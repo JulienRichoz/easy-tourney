@@ -1,3 +1,4 @@
+<!-- components/StrategyPattern/Pool/strategies/CustomRoundRobinStrategy.vue -->
 <template>
   <div>
     <p class="mb-4 text-gray-600">
@@ -38,10 +39,7 @@
       async generatePools() {
         try {
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/pools/generate`,
-            {
-              strategy: 'customRoundRobin',
-            }
+            `/tourneys/${this.tourneyId}/pools/generate`
           );
 
           const { pools, teamsWithoutPool } = response.data;
