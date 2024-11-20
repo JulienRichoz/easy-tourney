@@ -105,3 +105,32 @@ exports.generatePoolPlanning = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.resetPoolPlanning = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    // Vérifier si le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Supprimer uniquement les PoolSchedules liés au tournoi
+    await PoolSchedule.destroy({
+      where: {
+        poolId: {
+          [Sequelize.Op.in]: Sequelize.literal(
+            `(SELECT id FROM Pools WHERE tourneyId = ${tourneyId})`
+          ),
+        },
+      },
+    });
+
+    res.status(200).json({ message: 'Plannings des Pools réinitialisés avec succès.' });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation des PoolSchedules :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+

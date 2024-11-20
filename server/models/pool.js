@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'SET NULL', // Mettre poolId à null lors de la suppression d'une Pool
         hooks: true, // Nécessaire pour que 'onDelete' soit appliqué
       });
-      Pool.hasMany(models.PoolSchedule, { foreignKey: 'poolId', as: 'schedules' });
+      Pool.hasMany(models.PoolSchedule, { foreignKey: 'poolId', as: 'schedules', onDelete: 'SET NULL' });
     }
   }
 
