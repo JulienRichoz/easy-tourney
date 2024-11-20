@@ -70,6 +70,32 @@
       ></ErrorMessageComponent>
     </div>
 
+    <!-- Bouton Actions -->
+    <div class="flex items-center space-x-4 my-4">
+      <!-- Boutons supplémentaires -->
+      <ButtonComponent
+        fontAwesomeIcon="cog"
+        @click="openScheduleConfigModal"
+        variant="secondary"
+      >
+        Configurer le planning
+      </ButtonComponent>
+      <ButtonComponent
+        fontAwesomeIcon="trash"
+        @click="clearPlanning"
+        variant="danger"
+      >
+        Supprimer le planning
+      </ButtonComponent>
+      <ButtonComponent
+        fontAwesomeIcon="cog"
+        @click="generatePlanning"
+        variant="primary"
+      >
+        Générer le planning
+      </ButtonComponent>
+    </div>
+
     <!-- Calendrier unique avec les ressources (terrains) -->
     <div v-if="tourney.dateTourney && fields.length">
       <FullCalendar :options="calendarOptions" :key="tourney.dateTourney" />
@@ -759,6 +785,25 @@
             'Erreur lors de la récupération de la configuration du planning :',
             error
           );
+        }
+      },
+      async clearPlanning() {
+        try {
+          await apiService.delete(`/tourneys/${this.tourneyId}/pools/reset`);
+          await this.fetchPlanningDetails();
+        } catch (error) {
+          console.error('Erreur lors de la suppression du planning :', error);
+        }
+      },
+
+      async generatePlanning() {
+        try {
+          await apiService.post(
+            `/tourneys/${this.tourneyId}/planning/pools/generate`
+          );
+          await this.fetchPlanningDetails();
+        } catch (error) {
+          console.error('Erreur lors de la génération du planning :', error);
         }
       },
 
