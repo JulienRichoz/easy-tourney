@@ -45,15 +45,39 @@
         </div>
       </div>
 
-      <!-- Sélecteur de statut aligné à droite -->
-      <StatusSelectorComponent
-        :tourneyId="tourneyId"
-        statusKey="planningStatus"
-        :statusOptions="planningStatusOptions"
-        v-model="currentStatus"
-      />
+      <!-- Conteneur pour le sélecteur de statut et le toggle des couleurs -->
+      <div v-if="fields.length" class="flex items-center space-x-4">
+        <!-- Toggle pour les couleurs des pools -->
+        <label class="flex items-center cursor-pointer">
+          <div class="relative">
+            <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
+            <div
+              class="block bg-gray-600 w-14 h-8 rounded-full"
+              :class="{ 'bg-blue-500': useUnifiedColors }"
+            ></div>
+            <div
+              class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"
+              :class="{ 'transform translate-x-full': useUnifiedColors }"
+            ></div>
+          </div>
+          <span class="ml-3 text-gray-700">
+            {{ useUnifiedColors ? 'Couleurs par pool' : 'Couleurs par sport' }}
+          </span>
+        </label>
+
+        <!-- Sélecteur de statut aligné à droite -->
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="planningStatus"
+          :statusOptions="planningStatusOptions"
+          v-model="currentStatus"
+          label="Étape :"
+          :hideWhenNotStarted="false"
+        />
+      </div>
     </div>
-    <!-- Si aucun terrain n'est trouvé, afficher un message d'avertissement -->
+
+    <!-- Messages d'avertissement -->
     <div v-if="!fields.length">
       <ErrorMessageComponent
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des pools."
@@ -80,6 +104,7 @@
       </button>
     </div>
 
+    <!-- Boutons d'action -->
     <div class="flex items-center space-x-4 my-4">
       <ButtonComponent
         fontAwesomeIcon="cog"
@@ -105,20 +130,6 @@
       >
         Générer le planning
       </ButtonComponent>
-      <!-- Toggle pour les couleurs des pools -->
-      <div class="flex items-center space-x-4 my-4">
-        <label class="flex items-center cursor-pointer">
-          <div class="relative">
-            <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
-            <div class="w-10 h-4 bg-gray-400 rounded-full shadow-inner"></div>
-            <div
-              class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
-              :class="{ 'translate-x-full bg-blue-500': useUnifiedColors }"
-            ></div>
-          </div>
-          <span class="ml-3 text-gray-700">Couleurs unies</span>
-        </label>
-      </div>
     </div>
 
     <!-- Modal de Confirmation pour la Génération du Planning -->
@@ -140,7 +151,7 @@
       @confirm="clearPlanning"
     />
 
-    <!-- Calendrier unique avec les ressources (terrains) -->
+    <!-- Calendrier avec les ressources (terrains) -->
     <div v-if="tourney.dateTourney && fields.length">
       <FullCalendar
         ref="fullCalendar"
@@ -154,18 +165,22 @@
       :isVisible="showScheduleConfigModal"
       :title="'Configurer le planning du tournoi'"
       @close="showScheduleConfigModal = false"
+      size="lg"
     >
-      <template #title></template>
       <template #content>
         <FormComponent
           v-model="scheduleConfig"
           :fields="scheduleFormFields"
           @form-submit="saveScheduleConfig"
           @cancel="showScheduleConfigModal = false"
+          :columns="2"
+          :customValidation="validateForm"
+          :formErrors="formErrors"
         />
       </template>
     </ModalComponent>
 
+    <!-- Modal pour éditer un événement -->
     <ModalComponent :isVisible="showEditModal" @close="showEditModal = false">
       <template #title>Modifier l'événement</template>
       <template #content>
@@ -181,6 +196,7 @@
 </template>
 
 <script>
+  // Importations nécessaires
   import { mapState, mapActions } from 'vuex';
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
@@ -216,26 +232,29 @@
         fields: [],
         pools: [],
         poolSchedules: [],
+        formErrors: {}, // Pour stocker les erreurs du formulaire
         planningStatusOptions: [
-          { value: 'draft', label: 'Édition' },
+          { value: 'draft', label: 'Pools' },
+          { value: 'games', label: 'Matchs' },
           { value: 'completed', label: 'Terminé' },
         ],
         warnings: [],
         externalDraggableInstance: null,
         showScheduleConfigModal: false,
+        // Configuration du planning avec valeurs par défaut
         scheduleConfig: {
-          startTime: '',
-          endTime: '',
-          poolDuration: 120,
+          startTime: '07:30:00',
+          endTime: '17:30:00',
+          poolDuration: 105,
           gameDuration: 15,
           transitionPoolTime: 15,
           transitionGameTime: 5,
-          introStart: '',
-          introEnd: '',
-          lunchStart: '',
-          lunchEnd: '',
-          outroStart: '',
-          outroEnd: '',
+          introStart: '07:30:00',
+          introEnd: '08:00:00',
+          lunchStart: '12:00:00',
+          lunchEnd: '13:00:00',
+          outroStart: '17:00:00',
+          outroEnd: '17:30:00',
         },
         scheduleFormFields: [
           {
@@ -334,9 +353,15 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+      /**
+       * Indique si le planning est éditable en fonction du statut
+       */
       isEditable() {
         return this.statuses.planningStatus !== 'completed';
       },
+      /**
+       * Vérifie s'il y a des PoolSchedules
+       */
       hasPoolSchedules() {
         return this.poolSchedules.length > 0;
       },
@@ -395,6 +420,10 @@
               ? this.generateUniqueColor(schedule.pool.id)
               : schedule.sport?.color || '#3B82F6',
             textColor: '#FFFFFF',
+            extendedProps: {
+              sport: schedule.sport,
+              poolId: schedule.pool.id,
+            },
           });
         });
 
@@ -415,9 +444,6 @@
           }
         });
 
-        // const minTime = this.scheduleConfig.startTime || '07:00:00';
-        // const maxTime = this.scheduleConfig.endTime || '23:00:00';
-
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial
@@ -429,7 +455,7 @@
           height: 'auto',
           slotMinTime: this.adjustedSlotMinTime,
           slotMaxTime: this.adjustedSlotMaxTime,
-          allDaySlot: false, // 1) Supprimer la section all-day
+          allDaySlot: false,
           resources: this.sortedFields.map((field) => ({
             id: field.id.toString(),
             title: field.name,
@@ -441,29 +467,49 @@
             minute: '2-digit',
             hour12: false,
           },
-          headerToolbar: false, // 5) Supprimer les boutons du calendrier
+          headerToolbar: false,
           eventReceive: this.handleEventReceive,
           eventDrop: this.handleEventDrop,
           eventResize: this.handleEventResize,
           eventContent: this.renderEventContent,
         };
       },
+      /**
+       * Ajuste le slotMinTime pour l'affichage du calendrier
+       */
       adjustedSlotMinTime() {
         const startTime = this.scheduleConfig.startTime || '07:00:00';
         return this.subtractOneHour(startTime);
       },
+      /**
+       * Ajuste le slotMaxTime pour l'affichage du calendrier
+       */
       adjustedSlotMaxTime() {
         const endTime = this.scheduleConfig.endTime || '23:00:00';
         return this.addOneHour(endTime);
       },
     },
     watch: {
+      /**
+       * Observe les changements du toggle des couleurs unies
+       */
       useUnifiedColors() {
-        // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
-        this.$refs.fullCalendar.getApi().refetchEvents();
+        if (this.$refs.fullCalendar) {
+          // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
+          this.$refs.fullCalendar.getApi().refetchEvents();
+        }
       },
-    },
 
+      /**
+       * Observe les verifications du formulaire en 'temps réel'
+       */
+      /* scheduleConfig: {
+        handler() {
+          this.validateForm();
+        },
+        deep: true,
+      },*/
+    },
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
@@ -498,7 +544,7 @@
           this.fields = data.fields || [];
           this.pools = data.pools || [];
           this.sports = data.sports || [];
-          this.scheduleConfig = data.scheduleTourney || {};
+          this.scheduleConfig = data.scheduleTourney || this.scheduleConfig;
 
           // Récupérer les détails du tournoi pour avoir la date
           const tourneyResponse = await apiService.get(
@@ -580,7 +626,7 @@
 
       /**
        * Contenu personnalisé pour chaque événement dans FullCalendar,
-       * avec un bouton de suppression.
+       * avec des icônes d'édition et de suppression.
        * @param {Object} arg - Détails de l'événement
        * @returns {Object} Contenu DOM pour l'événement
        */
@@ -596,9 +642,7 @@
         );
 
         const title = document.createElement('span');
-        const sportName = arg.event.title || 'Sport non défini';
-        title.innerText = `${sportName}`;
-        //title.innerText = arg.event.title;
+        title.innerText = arg.event.title;
         title.classList.add('font-semibold', 'text-white');
 
         headerContainer.appendChild(title);
@@ -724,6 +768,7 @@
           info.revert();
         }
       },
+
       /**
        * Gestion du déplacement d'un événement dans le calendrier.
        * @param {Object} info - Informations sur l'événement déplacé
@@ -787,6 +832,7 @@
           info.revert();
         }
       },
+
       /**
        * Gestion du redimensionnement d'un événement (changement de durée).
        * @param {Object} info - Informations sur l'événement redimensionné
@@ -810,7 +856,7 @@
           }
 
           const data = {
-            fieldId: fieldId, // Inclure fieldId au cas où le terrain aurait changé
+            fieldId: fieldId,
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
             date: this.tourney.dateTourney,
@@ -854,6 +900,10 @@
           info.revert();
         }
       },
+
+      /**
+       * Enregistre les modifications apportées à un événement via le modal d'édition.
+       */
       async saveEventEdits() {
         try {
           const data = {
@@ -862,12 +912,38 @@
             date: this.tourney.dateTourney,
             fieldId: this.eventToEdit.getResources()[0]?.id,
           };
-          await apiService.put(
+          const response = await apiService.put(
             `/tourneys/${this.tourneyId}/pools/schedule/${this.eventToEdit.id}`,
             data
           );
+
+          // Mettre à jour localement le poolSchedule
+          const index = this.poolSchedules.findIndex(
+            (ps) => ps.id.toString() === this.eventToEdit.id.toString()
+          );
+          if (index !== -1) {
+            this.poolSchedules[index].startTime = data.startTime;
+            this.poolSchedules[index].endTime = data.endTime;
+            this.poolSchedules[index].sport = response.data.poolSchedule.sport;
+          }
+
+          // Mettre à jour les propriétés de l'événement
+          const event = this.eventToEdit;
+          event.setExtendedProp('sport', response.data.poolSchedule.sport);
+
+          // Mettre à jour le titre de l'événement
+          const sportName = response.data.poolSchedule.sport
+            ? ` - ${response.data.poolSchedule.sport.name}`
+            : '';
+          event.setProp('title', `${event.title.split(' - ')[0]}${sportName}`);
+
+          // Mettre à jour la couleur de l'événement
+          const backgroundColor = this.useUnifiedColors
+            ? this.generateUniqueColor(event.extendedProps.poolId)
+            : response.data.poolSchedule.sport?.color || '#3B82F6';
+          event.setProp('backgroundColor', backgroundColor);
+
           this.showEditModal = false;
-          await this.fetchPlanningDetails();
         } catch (error) {
           console.error(
             'Erreur lors de la sauvegarde des modifications :',
@@ -887,7 +963,10 @@
             `/tourneys/${this.tourneyId}/pools/schedule/${event.id}`
           );
           event.remove();
-          await this.fetchPlanningDetails();
+          // Supprimer le poolSchedule de la liste locale
+          this.poolSchedules = this.poolSchedules.filter(
+            (ps) => ps.id.toString() !== event.id.toString()
+          );
         } catch (error) {
           console.error('Erreur lors de la suppression du pool :', error);
         }
@@ -927,6 +1006,10 @@
         this.loadScheduleConfig();
       },
 
+      /**
+       * Ouvre le modal d'édition d'un événement
+       * @param {Object} event - Événement à éditer
+       */
       openEditModal(event) {
         this.eventToEdit = event;
         this.eventFormData = {
@@ -948,10 +1031,17 @@
             this.scheduleConfig = response.data;
           }
         } catch (error) {
-          console.error(
-            'Erreur lors de la récupération de la configuration du planning :',
-            error
-          );
+          if (error.response && error.response.status === 404) {
+            console.warn(
+              'Aucune configuration existante du planning trouvée. Utilisation des valeurs par défaut.'
+            );
+            // La configuration n'existe pas encore, on conserve les valeurs par défaut
+          } else {
+            console.error(
+              'Erreur lors de la récupération de la configuration du planning :',
+              error
+            );
+          }
         }
       },
 
@@ -1013,30 +1103,57 @@
        */
       async saveScheduleConfig() {
         try {
-          await apiService.post(
-            `/tourneys/${this.tourneyId}/schedule`,
-            this.scheduleConfig
-          );
+          let successMessage = '';
+          if (this.scheduleConfig.id) {
+            // Si un planning existe déjà, on le met à jour avec une requête PUT
+            await apiService.put(
+              `/tourneys/${this.tourneyId}/schedule/${this.scheduleConfig.id}`,
+              this.scheduleConfig
+            );
+            successMessage =
+              'Configuration du planning mise à jour avec succès !';
+          } else {
+            // Sinon, on crée un nouveau planning avec une requête POST
+            await apiService.post(
+              `/tourneys/${this.tourneyId}/schedule`,
+              this.scheduleConfig
+            );
+            successMessage =
+              'Configuration du planning enregistrée avec succès !';
+          }
           this.showScheduleConfigModal = false;
-          // Vous pouvez déclencher une mise à jour du planning ici si nécessaire
+          // Mettre à jour les détails du planning
           await this.fetchPlanningDetails();
           this.initializeExternalEvents(); // Ré-initialiser les événements externes si nécessaire
+          toast.success(successMessage);
         } catch (error) {
           console.error(
             'Erreur lors de la sauvegarde de la configuration du planning :',
             error
           );
+          toast.error(
+            'Erreur lors de la sauvegarde de la configuration du planning.'
+          );
         }
       },
 
-      // Reduce startTime by one hour for better UI display
+      /**
+       * Soustrait une heure à une heure donnée pour l'affichage du calendrier
+       * @param {string} timeStr - Heure au format HH:MM:SS
+       * @returns {string} Heure ajustée au format HH:MM:SS
+       */
       subtractOneHour(timeStr) {
         const [hours, minutes, seconds] = timeStr.split(':').map(Number);
         const date = new Date();
         date.setHours(hours - 1, minutes, seconds || 0);
         return date.toTimeString().slice(0, 8);
       },
-      // Add one hour for better UI display
+
+      /**
+       * Ajoute une heure à une heure donnée pour l'affichage du calendrier
+       * @param {string} timeStr - Heure au format HH:MM:SS
+       * @returns {string} Heure ajustée au format HH:MM:SS
+       */
       addOneHour(timeStr) {
         const [hours, minutes, seconds] = timeStr.split(':').map(Number);
         const date = new Date();
@@ -1044,6 +1161,9 @@
         return date.toTimeString().slice(0, 8);
       },
 
+      /**
+       * Vérifie et ajoute des avertissements si nécessaire
+       */
       checkWarnings() {
         // Vérifier si le nombre de pools est supérieur au nombre de terrains
         if (this.pools.length > this.fields.length) {
@@ -1051,6 +1171,107 @@
             "Le nombre de pools est supérieur au nombre de terrains disponibles. Cela peut entraîner des temps d'attente pour certaines pools."
           );
         }
+      },
+
+      /**
+       * Valide le formulaire de configuration du planning.
+       * @returns {Object} Erreurs de validation
+       */
+      validateForm() {
+        const errors = {};
+
+        const schedule = this.scheduleConfig;
+        const {
+          startTime,
+          endTime,
+          introStart,
+          introEnd,
+          lunchStart,
+          lunchEnd,
+          outroStart,
+          outroEnd,
+        } = schedule;
+
+        // Fonction pour convertir une heure au format "HH:MM:SS" en nombre de secondes
+        const timeStringToNumber = (timeStr) => {
+          const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+          return hours * 3600 + minutes * 60 + (seconds || 0);
+        };
+
+        // Convertir les heures en nombres pour la comparaison
+        const startTimeNum = timeStringToNumber(startTime);
+        const endTimeNum = timeStringToNumber(endTime);
+
+        // Validation globale des horaires de début et de fin
+        if (startTimeNum >= endTimeNum) {
+          errors.startTime =
+            "L'heure de début doit être inférieure à l'heure de fin.";
+          errors.endTime =
+            "L'heure de fin doit être supérieure à l'heure de début.";
+        }
+
+        // Tableau des périodes optionnelles pour validation
+        const timePairs = [
+          {
+            start: introStart,
+            end: introEnd,
+            label: 'Introduction',
+            startField: 'introStart',
+            endField: 'introEnd',
+          },
+          {
+            start: lunchStart,
+            end: lunchEnd,
+            label: 'Déjeuner',
+            startField: 'lunchStart',
+            endField: 'lunchEnd',
+          },
+          {
+            start: outroStart,
+            end: outroEnd,
+            label: 'Conclusion',
+            startField: 'outroStart',
+            endField: 'outroEnd',
+          },
+        ];
+
+        // Validation des plages horaires par rapport à la période globale
+        for (const pair of timePairs) {
+          if (pair.start && pair.end) {
+            const pairStartNum = timeStringToNumber(pair.start);
+            const pairEndNum = timeStringToNumber(pair.end);
+
+            if (pairStartNum >= pairEndNum) {
+              errors[
+                pair.startField
+              ] = `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
+              errors[
+                pair.endField
+              ] = `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
+            }
+            if (pairStartNum < startTimeNum || pairEndNum > endTimeNum) {
+              errors[
+                pair.startField
+              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              errors[
+                pair.endField
+              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+            }
+          } else if ((pair.start && !pair.end) || (!pair.start && pair.end)) {
+            errors[
+              pair.startField
+            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+            errors[
+              pair.endField
+            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+          }
+        }
+
+        // Mettre à jour les erreurs du formulaire
+        this.formErrors = errors;
+
+        // Retourner l'objet errors
+        return errors;
       },
     },
     async mounted() {
@@ -1073,6 +1294,22 @@
     text-align: center;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Styles pour le toggle */
+  .toggle-bg {
+    background-color: #ccc;
+  }
+  .toggle-bg-active {
+    background-color: #3b82f6;
+  }
+  .toggle-dot {
+    top: 0.25rem;
+    left: 0.25rem;
+    transition: transform 0.2s;
+  }
+  .toggle-dot-active {
+    transform: translateX(1.5rem);
   }
 
   @import '@/assets/fullcalendar.css';
