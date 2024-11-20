@@ -1,6 +1,5 @@
 // services/planningStrategies/pool/planningStrategyManager.js
 const CustomRoundRobinPlanning = require('./customRoundRobinPlanning');
-// Importez d'autres stratégies si nécessaire
 
 class PlanningStrategyManager {
   constructor(tourneyId, strategyName) {

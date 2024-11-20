@@ -22,3 +22,13 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // RÃ
 
 
 module.exports = router;
+
+/**
+ * TODO: Implement method reset pool planning (it deletes now the pools aswell)
+ * Better information message with UI (button.. modal popup informative, etc) => implement vue strategy IMPORTANT
+ * Check if element appearing buggy is fixable
+ * REFLECHIR a la vue planning pool <-> game => final
+ * Implementer algorithme generation game avec les plannings (strategy pattern)
+ * regler la hauteur calendrier et tester si plus de terrains
+ * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ? 
+ */
