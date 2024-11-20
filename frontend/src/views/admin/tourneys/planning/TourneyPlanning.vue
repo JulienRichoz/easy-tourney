@@ -45,15 +45,6 @@
         </div>
       </div>
 
-      <!-- Bouton pour configurer le scheduleTourney -->
-      <ButtonComponent
-        fontAwesomeIcon="cog"
-        @click="openScheduleConfigModal"
-        variant="secondary"
-      >
-        Configurer le planning
-      </ButtonComponent>
-
       <!-- Sélecteur de statut aligné à droite -->
       <StatusSelectorComponent
         :tourneyId="tourneyId"
@@ -62,17 +53,34 @@
         v-model="currentStatus"
       />
     </div>
-
     <!-- Si aucun terrain n'est trouvé, afficher un message d'avertissement -->
     <div v-if="!fields.length">
       <ErrorMessageComponent
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des pools."
       ></ErrorMessageComponent>
     </div>
+    <div
+      v-if="warnings.length"
+      class="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4"
+    >
+      <ul>
+        <li
+          v-for="(warning, index) in warnings"
+          :key="index"
+          class="text-yellow-700"
+        >
+          {{ warning }}
+        </li>
+      </ul>
+      <button
+        @click="warnings = []"
+        class="mt-2 text-sm text-blue-600 underline"
+      >
+        Fermer
+      </button>
+    </div>
 
-    <!-- Bouton Actions -->
     <div class="flex items-center space-x-4 my-4">
-      <!-- Boutons supplémentaires -->
       <ButtonComponent
         fontAwesomeIcon="cog"
         @click="openScheduleConfigModal"
@@ -81,24 +89,64 @@
         Configurer le planning
       </ButtonComponent>
       <ButtonComponent
+        v-if="hasPoolSchedules && isEditable"
         fontAwesomeIcon="trash"
-        @click="clearPlanning"
+        @click="confirmClearPlanning"
         variant="danger"
+        :disabled="!pools.length"
       >
         Supprimer le planning
       </ButtonComponent>
       <ButtonComponent
         fontAwesomeIcon="cog"
-        @click="generatePlanning"
-        variant="primary"
+        @click="openGeneratePlanningModal"
+        variant="algo"
+        :disabled="!isEditable || !pools.length"
       >
         Générer le planning
       </ButtonComponent>
+      <!-- Toggle pour les couleurs des pools -->
+      <div class="flex items-center space-x-4 my-4">
+        <label class="flex items-center cursor-pointer">
+          <div class="relative">
+            <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
+            <div class="w-10 h-4 bg-gray-400 rounded-full shadow-inner"></div>
+            <div
+              class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+              :class="{ 'translate-x-full bg-blue-500': useUnifiedColors }"
+            ></div>
+          </div>
+          <span class="ml-3 text-gray-700">Couleurs unies</span>
+        </label>
+      </div>
     </div>
+
+    <!-- Modal de Confirmation pour la Génération du Planning -->
+    <StrategyPlanningGeneratorComponent
+      :isVisible="showGeneratePlanningConfirmation"
+      :tourneyId="tourneyId"
+      :tourneyType="tourneyType"
+      @close="closeGeneratePlanningConfirmation"
+      @planningGenerated="handlePlanningGenerated"
+    />
+
+    <!-- Modal de Confirmation pour la Suppression du Planning -->
+    <DeleteConfirmationModal
+      :isVisible="showClearPlanningConfirmation"
+      :isHardDelete="false"
+      :title="'Suppression du Planning'"
+      :message="'Êtes-vous sûr de vouloir supprimer le planning ?'"
+      @cancel="closeClearPlanningConfirmation"
+      @confirm="clearPlanning"
+    />
 
     <!-- Calendrier unique avec les ressources (terrains) -->
     <div v-if="tourney.dateTourney && fields.length">
-      <FullCalendar :options="calendarOptions" :key="tourney.dateTourney" />
+      <FullCalendar
+        ref="fullCalendar"
+        :options="calendarOptions"
+        :key="tourney.dateTourney"
+      />
     </div>
 
     <!-- Modal pour configurer le planning du tournoi -->
@@ -145,6 +193,9 @@
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
   import FormComponent from '@/components/FormComponent.vue';
+  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import { toast } from 'vue3-toastify';
+  import StrategyPlanningGeneratorComponent from '@/components/StrategyPattern/Planning/StrategyPlanningGeneratorComponent.vue';
 
   export default {
     components: {
@@ -155,6 +206,8 @@
       ButtonComponent,
       ModalComponent,
       FormComponent,
+      DeleteConfirmationModal,
+      StrategyPlanningGeneratorComponent,
     },
     data() {
       return {
@@ -167,6 +220,7 @@
           { value: 'draft', label: 'Édition' },
           { value: 'completed', label: 'Terminé' },
         ],
+        warnings: [],
         externalDraggableInstance: null,
         showScheduleConfigModal: false,
         scheduleConfig: {
@@ -268,15 +322,38 @@
             required: true,
           },
         ],
-        currentStatus: null, // Ajouté pour gérer le statut actuel
+        showGeneratePlanningConfirmation: false,
+        showClearPlanningConfirmation: false,
+        currentStatus: null,
+        useUnifiedColors: false,
+        colorMap: {}, // Pour stocker les couleurs unies par Pool ID
       };
     },
     computed: {
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
+        tourneyType: (state) => state.tourneyType,
       }),
       isEditable() {
         return this.statuses.planningStatus !== 'completed';
+      },
+      hasPoolSchedules() {
+        return this.poolSchedules.length > 0;
+      },
+      /**
+       * Génère une couleur unique basée sur l'ID de la pool
+       */
+      generateUniqueColor() {
+        return (poolId) => {
+          if (this.colorMap[poolId]) {
+            return this.colorMap[poolId];
+          }
+          // Générer une couleur unique
+          const hue = (poolId * 137.508) % 360;
+          const color = `hsl(${hue}, 70%, 60%)`;
+          this.colorMap[poolId] = color;
+          return color;
+        };
       },
       /**
        * Terrains triés par nom (ordre alphabétique ou numérique)
@@ -314,7 +391,9 @@
             start: `${schedule.date}T${schedule.startTime}`,
             end: `${schedule.date}T${schedule.endTime}`,
             resourceId: schedule.field.id.toString(),
-            backgroundColor: schedule.sport?.color || '#3B82F6',
+            backgroundColor: this.useUnifiedColors
+              ? this.generateUniqueColor(schedule.pool.id)
+              : schedule.sport?.color || '#3B82F6',
             textColor: '#FFFFFF',
           });
         });
@@ -330,24 +409,26 @@
                 end: `${this.tourney.dateTourney}T${sportsField.endTime}`,
                 resourceId: field.id.toString(),
                 backgroundColor: sportsField.sport.color || '#cccccc',
-                display: 'background', // Utilisez 'display' au lieu de 'rendering'
+                display: 'background',
               });
             });
           }
         });
 
-        const minTime = this.scheduleConfig.startTime || '07:00:00';
-        const maxTime = this.scheduleConfig.endTime || '23:00:00';
+        // const minTime = this.scheduleConfig.startTime || '07:00:00';
+        // const maxTime = this.scheduleConfig.endTime || '23:00:00';
 
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
+          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial
           initialView: 'resourceTimeGridDay',
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
           droppable: true,
-          slotMinTime: minTime,
-          slotMaxTime: maxTime,
+          height: 'auto',
+          slotMinTime: this.adjustedSlotMinTime,
+          slotMaxTime: this.adjustedSlotMaxTime,
           allDaySlot: false, // 1) Supprimer la section all-day
           resources: this.sortedFields.map((field) => ({
             id: field.id.toString(),
@@ -366,6 +447,20 @@
           eventResize: this.handleEventResize,
           eventContent: this.renderEventContent,
         };
+      },
+      adjustedSlotMinTime() {
+        const startTime = this.scheduleConfig.startTime || '07:00:00';
+        return this.subtractOneHour(startTime);
+      },
+      adjustedSlotMaxTime() {
+        const endTime = this.scheduleConfig.endTime || '23:00:00';
+        return this.addOneHour(endTime);
+      },
+    },
+    watch: {
+      useUnifiedColors() {
+        // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
+        this.$refs.fullCalendar.getApi().refetchEvents();
       },
     },
 
@@ -787,23 +882,57 @@
           );
         }
       },
+
+      /**
+       * Ouvre le modal de confirmation pour générer le planning
+       */
+      openGeneratePlanningModal() {
+        this.showGeneratePlanningConfirmation = true;
+      },
+
+      /**
+       * Ferme le modal de confirmation pour générer le planning
+       */
+      closeGeneratePlanningConfirmation() {
+        this.showGeneratePlanningConfirmation = false;
+      },
+
+      /**
+       * Ouvre le modal de confirmation pour supprimer le planning
+       */
+      confirmClearPlanning() {
+        this.showClearPlanningConfirmation = true;
+      },
+
+      /**
+       * Ferme le modal de confirmation pour supprimer le planning
+       */
+      closeClearPlanningConfirmation() {
+        this.showClearPlanningConfirmation = false;
+      },
+
+      /**
+       * Génère le planning après confirmation
+       */
+      async handlePlanningGenerated() {
+        this.fetchPlanningDetails();
+        this.closeGeneratePlanningConfirmation();
+      },
+
+      /**
+       * Supprime le planning après confirmation
+       */
       async clearPlanning() {
         try {
-          await apiService.delete(`/tourneys/${this.tourneyId}/pools/reset`);
+          await apiService.delete(
+            `/tourneys/${this.tourneyId}/planning/pools/reset`
+          );
+          toast.success('Planning supprimé avec succès !');
+          this.showClearPlanningConfirmation = false;
           await this.fetchPlanningDetails();
         } catch (error) {
           console.error('Erreur lors de la suppression du planning :', error);
-        }
-      },
-
-      async generatePlanning() {
-        try {
-          await apiService.post(
-            `/tourneys/${this.tourneyId}/planning/pools/generate`
-          );
-          await this.fetchPlanningDetails();
-        } catch (error) {
-          console.error('Erreur lors de la génération du planning :', error);
+          toast.error('Erreur lors de la suppression du planning.');
         }
       },
 
@@ -827,6 +956,30 @@
           );
         }
       },
+
+      // Reduce startTime by one hour for better UI display
+      subtractOneHour(timeStr) {
+        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours - 1, minutes, seconds || 0);
+        return date.toTimeString().slice(0, 8);
+      },
+      // Add one hour for better UI display
+      addOneHour(timeStr) {
+        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours + 1, minutes, seconds || 0);
+        return date.toTimeString().slice(0, 8);
+      },
+
+      checkWarnings() {
+        // Vérifier si le nombre de pools est supérieur au nombre de terrains
+        if (this.pools.length > this.fields.length) {
+          this.warnings.push(
+            "Le nombre de pools est supérieur au nombre de terrains disponibles. Cela peut entraîner des temps d'attente pour certaines pools."
+          );
+        }
+      },
     },
     async mounted() {
       // Méthode appelée lorsque le composant est monté
@@ -834,6 +987,8 @@
 
       // Rendre les éléments de pools externes "draggables"
       this.initializeExternalEvents();
+
+      this.checkWarnings();
     },
   };
 </script>
