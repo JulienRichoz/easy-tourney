@@ -175,7 +175,7 @@
           @cancel="showScheduleConfigModal = false"
           :columns="2"
           :customValidation="validateForm"
-          :formErrors="formErrors"
+          :isEditing="this.scheduleConfig ? true : false"
         />
       </template>
     </ModalComponent>
@@ -306,21 +306,21 @@
             required: true,
           },
           {
+            name: 'transitionPoolTime',
+            type: 'number',
+            label: 'Transition entre les pools (en minutes)',
+            required: true,
+          },
+          {
             name: 'gameDuration',
             type: 'number',
             label: 'Durée d’un match (en minutes)',
             required: true,
           },
           {
-            name: 'transitionPoolTime',
-            type: 'number',
-            label: 'Temps de transition entre les pools (en minutes)',
-            required: true,
-          },
-          {
             name: 'transitionGameTime',
             type: 'number',
-            label: 'Temps de transition entre les matchs (en minutes)',
+            label: 'Transition entre les matchs (en minutes)',
             required: true,
           },
         ],
@@ -499,16 +499,6 @@
           this.$refs.fullCalendar.getApi().refetchEvents();
         }
       },
-
-      /**
-       * Observe les verifications du formulaire en 'temps réel'
-       */
-      /* scheduleConfig: {
-        handler() {
-          this.validateForm();
-        },
-        deep: true,
-      },*/
     },
     beforeUnmount() {
       if (this.externalDraggableInstance) {
@@ -658,7 +648,7 @@
           const editIcon = document.createElement('span');
           editIcon.innerHTML = '&#9998;'; // Icône d'édition
           editIcon.classList.add('edit-icon');
-          editIcon.style.color = 'white';
+          editIcon.style.color = 'yellow';
           editIcon.style.cursor = 'pointer';
           editIcon.style.padding = '0 5px';
 
@@ -693,6 +683,14 @@
         container.appendChild(timeRange);
 
         return { domNodes: [container] };
+      },
+
+      isSchedule() {
+        if (this.scheduleConfig) {
+          return true;
+        } else {
+          return false;
+        }
       },
 
       /**
@@ -1266,9 +1264,6 @@
             ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
           }
         }
-
-        // Mettre à jour les erreurs du formulaire
-        this.formErrors = errors;
 
         // Retourner l'objet errors
         return errors;

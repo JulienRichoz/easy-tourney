@@ -24,12 +24,9 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // RÃ
 module.exports = router;
 
 /**
- * TODO: Implement method reset pool planning (it deletes now the pools aswell)
- * Better information message with UI (button.. modal popup informative, etc) => implement vue strategy IMPORTANT
- * Check if element appearing buggy is fixable
+ * TODO: 
+ * Regler probleme titre ajout pool aux terrains
+ * Probleme algorithme high tourney -> 9 terrains 4 sessions 9 pools (une pool a doublon)
  * REFLECHIR a la vue planning pool <-> game => final
- * MODIDIFER UPDATE DRAG AND DROP (sport pas mis a jour) ET FIX ALGORITHM !! ><
- * Implementer algorithme generation game avec les plannings (strategy pattern)
- * regler la hauteur calendrier et tester si plus de terrains
  * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ? 
  */

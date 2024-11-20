@@ -231,7 +231,7 @@
             return {
               title: eventEl.innerText.trim(),
               backgroundColor: eventEl.style.backgroundColor,
-              duration: '02:00',
+              duration: '04:00',
               extendedProps: {
                 sportId: eventEl.getAttribute('data-id'),
               },
@@ -273,7 +273,7 @@
           droppable: true,
           allDaySlot: false,
           headerToolbar: false,
-          defaultTimedEventDuration: '02:00',
+          defaultTimedEventDuration: '04:00',
           height: 600,
           slotLabelFormat: {
             hour: '2-digit',
