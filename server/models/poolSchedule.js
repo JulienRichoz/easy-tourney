@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     sportId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     startTime: {
       type: DataTypes.TIME,

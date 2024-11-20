@@ -29,7 +29,7 @@ module.exports = {
       },
       sportId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'Sports',
           key: 'id',

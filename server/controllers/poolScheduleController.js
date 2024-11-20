@@ -26,22 +26,33 @@ exports.assignPoolToField = async (req, res) => {
       return res.status(404).json({ message: 'Terrain non trouvé.' });
     }
 
-    // Récupérer le sportId en fonction du terrain et de l'horaire
+    // Rechercher le sport programmé qui chevauche le startTime
     const sportsField = await SportsFields.findOne({
       where: {
         fieldId: fieldId,
         startTime: { [Op.lte]: startTime },
-        endTime: { [Op.gte]: endTime },
+        endTime: { [Op.gt]: startTime },
       },
     });
 
-    if (!sportsField) {
-      return res.status(400).json({ message: 'Aucun sport programmé sur ce terrain à cet horaire.' });
+    // Si aucun sport n'est trouvé au startTime, rechercher au endTime
+    let sportId = null;
+    if (sportsField) {
+      sportId = sportsField.sportId;
+    } else {
+      const sportsFieldAtEndTime = await SportsFields.findOne({
+        where: {
+          fieldId: fieldId,
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gte]: endTime },
+        },
+      });
+      if (sportsFieldAtEndTime) {
+        sportId = sportsFieldAtEndTime.sportId;
+      }
     }
 
-    const sportId = sportsField.sportId;
-
-    // Création du planning
+    // Création du planning avec sportId pouvant être null
     const poolSchedule = await PoolSchedule.create({
       poolId,
       fieldId,
@@ -78,7 +89,41 @@ exports.updatePoolSchedule = async (req, res) => {
     }
 
     // Mise à jour des informations
-    await poolSchedule.update({ fieldId, startTime, endTime, date });
+    if (fieldId) {
+      poolSchedule.fieldId = fieldId;
+    }
+    poolSchedule.startTime = startTime;
+    poolSchedule.endTime = endTime;
+    poolSchedule.date = date;
+
+    // Recalculer le sportId en fonction du nouveau fieldId et horaires
+    const sportsField = await SportsFields.findOne({
+      where: {
+        fieldId: poolSchedule.fieldId,
+        startTime: { [Op.lte]: startTime },
+        endTime: { [Op.gt]: startTime },
+      },
+    });
+
+    let sportId = null;
+    if (sportsField) {
+      sportId = sportsField.sportId;
+    } else {
+      const sportsFieldAtEndTime = await SportsFields.findOne({
+        where: {
+          fieldId: poolSchedule.fieldId,
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gte]: endTime },
+        },
+      });
+      if (sportsFieldAtEndTime) {
+        sportId = sportsFieldAtEndTime.sportId;
+      }
+    }
+
+    poolSchedule.sportId = sportId;
+
+    await poolSchedule.save();
 
     res.status(200).json({ message: 'PoolSchedule mis à jour avec succès.', poolSchedule });
   } catch (error) {
@@ -86,6 +131,7 @@ exports.updatePoolSchedule = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
+
 
 /**
  * Supprimer une assignation de pool à un terrain

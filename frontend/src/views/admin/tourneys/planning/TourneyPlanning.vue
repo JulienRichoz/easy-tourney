@@ -596,7 +596,9 @@
         );
 
         const title = document.createElement('span');
-        title.innerText = arg.event.title;
+        const sportName = arg.event.title || 'Sport non défini';
+        title.innerText = `${sportName}`;
+        //title.innerText = arg.event.title;
         title.classList.add('font-semibold', 'text-white');
 
         headerContainer.appendChild(title);
