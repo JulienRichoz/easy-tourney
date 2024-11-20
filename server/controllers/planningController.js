@@ -116,14 +116,17 @@ exports.resetPoolPlanning = async (req, res) => {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
     }
 
-    // Supprimer uniquement les PoolSchedules liés au tournoi
+    // Récupérer les IDs des Pools associés au tournoi
+    const pools = await Pool.findAll({
+      where: { tourneyId },
+      attributes: ['id'],
+    });
+    const poolIds = pools.map(pool => pool.id);
+
+    // Supprimer les PoolSchedules associés
     await PoolSchedule.destroy({
       where: {
-        poolId: {
-          [Sequelize.Op.in]: Sequelize.literal(
-            `(SELECT id FROM Pools WHERE tourneyId = ${tourneyId})`
-          ),
-        },
+        poolId: poolIds,
       },
     });
 
@@ -133,4 +136,5 @@ exports.resetPoolPlanning = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
+
 
