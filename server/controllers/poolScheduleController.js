@@ -1,4 +1,4 @@
-const { Pool, PoolSchedule, Field, SportsFields } = require('../models');
+const { Pool, PoolSchedule, Field, SportsFields, Sport } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -62,7 +62,15 @@ exports.assignPoolToField = async (req, res) => {
       date,
     });
 
-    res.status(201).json({ message: 'Pool assignée au terrain avec succès.', poolSchedule });
+    // Récupérer le poolSchedule avec le sport associé
+    const updatedPoolSchedule = await PoolSchedule.findByPk(poolSchedule.id, {
+      include: [{ model: Sport, as: 'sport' }],
+    });
+
+    res.status(201).json({
+      message: 'Pool assignée au terrain avec succès.',
+      poolSchedule: updatedPoolSchedule,
+    });
   } catch (error) {
     console.error('Erreur lors de l\'assignation de la pool au terrain :', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
@@ -125,7 +133,15 @@ exports.updatePoolSchedule = async (req, res) => {
 
     await poolSchedule.save();
 
-    res.status(200).json({ message: 'PoolSchedule mis à jour avec succès.', poolSchedule });
+    // Récupérer le poolSchedule avec le sport associé
+    const updatedPoolSchedule = await PoolSchedule.findByPk(poolSchedule.id, {
+      include: [{ model: Sport, as: 'sport' }],
+    });
+
+    res.status(200).json({
+      message: 'PoolSchedule mis à jour avec succès.',
+      poolSchedule: updatedPoolSchedule,
+    });
   } catch (error) {
     console.error('Erreur lors de la mise à jour du PoolSchedule :', error);
     res.status(500).json({ message: 'Erreur serveur.', error });

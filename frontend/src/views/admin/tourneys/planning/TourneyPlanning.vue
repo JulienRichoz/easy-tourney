@@ -693,16 +693,37 @@
             data
           );
 
+          // Mettre à jour l'événement avec les nouvelles informations
           event.setProp('id', response.data.poolSchedule.id);
+          event.setExtendedProp('sport', response.data.poolSchedule.sport);
 
-          await this.fetchPlanningDetails();
+          // Mettre à jour le titre de l'événement
+          const sportName = response.data.poolSchedule.sport
+            ? ` - ${response.data.poolSchedule.sport.name}`
+            : '';
+          event.setProp('title', `${event.title}${sportName}`);
+
+          // Mettre à jour la couleur de l'événement
+          const backgroundColor = this.useUnifiedColors
+            ? this.generateUniqueColor(poolId)
+            : response.data.poolSchedule.sport?.color || '#3B82F6';
+          event.setProp('backgroundColor', backgroundColor);
+
+          // Ajouter le nouveau poolSchedule à this.poolSchedules
+          this.poolSchedules.push({
+            id: response.data.poolSchedule.id,
+            date: data.date,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            field: { id: data.fieldId },
+            pool: { id: poolId, name: event.title },
+            sport: response.data.poolSchedule.sport,
+          });
         } catch (error) {
           console.error("Erreur lors du traitement de l'événement :", error);
           info.revert();
-          // Vous pouvez afficher un message d'erreur à l'utilisateur ici
         }
       },
-
       /**
        * Gestion du déplacement d'un événement dans le calendrier.
        * @param {Object} info - Informations sur l'événement déplacé
@@ -732,17 +753,40 @@
             date: this.tourney.dateTourney,
           };
 
-          await apiService.put(
+          const response = await apiService.put(
             `/tourneys/${this.tourneyId}/pools/schedule/${eventId}`,
             data
           );
-          await this.fetchPlanningDetails();
+
+          // Mettre à jour localement le poolSchedule
+          const index = this.poolSchedules.findIndex(
+            (ps) => ps.id.toString() === eventId.toString()
+          );
+          if (index !== -1) {
+            this.poolSchedules[index].field.id = data.fieldId;
+            this.poolSchedules[index].startTime = data.startTime;
+            this.poolSchedules[index].endTime = data.endTime;
+            this.poolSchedules[index].sport = response.data.poolSchedule.sport;
+          }
+
+          // Mettre à jour les propriétés de l'événement
+          event.setExtendedProp('sport', response.data.poolSchedule.sport);
+          // Mettre à jour le titre de l'événement
+          const sportName = response.data.poolSchedule.sport
+            ? ` - ${response.data.poolSchedule.sport.name}`
+            : '';
+          event.setProp('title', `${event.title.split(' - ')[0]}${sportName}`);
+
+          // Mettre à jour la couleur de l'événement
+          const backgroundColor = this.useUnifiedColors
+            ? this.generateUniqueColor(event.extendedProps.poolId)
+            : response.data.poolSchedule.sport?.color || '#3B82F6';
+          event.setProp('backgroundColor', backgroundColor);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
       },
-
       /**
        * Gestion du redimensionnement d'un événement (changement de durée).
        * @param {Object} info - Informations sur l'événement redimensionné
@@ -766,16 +810,42 @@
           }
 
           const data = {
+            fieldId: fieldId, // Inclure fieldId au cas où le terrain aurait changé
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
             date: this.tourney.dateTourney,
           };
 
-          await apiService.put(
+          const response = await apiService.put(
             `/tourneys/${this.tourneyId}/pools/schedule/${eventId}`,
             data
           );
-          await this.fetchPlanningDetails();
+
+          // Mettre à jour localement le poolSchedule
+          const index = this.poolSchedules.findIndex(
+            (ps) => ps.id.toString() === eventId.toString()
+          );
+          if (index !== -1) {
+            this.poolSchedules[index].startTime = data.startTime;
+            this.poolSchedules[index].endTime = data.endTime;
+            this.poolSchedules[index].field.id = fieldId;
+            this.poolSchedules[index].sport = response.data.poolSchedule.sport;
+          }
+
+          // Mettre à jour les propriétés de l'événement
+          event.setExtendedProp('sport', response.data.poolSchedule.sport);
+
+          // Mettre à jour le titre de l'événement
+          const sportName = response.data.poolSchedule.sport
+            ? ` - ${response.data.poolSchedule.sport.name}`
+            : '';
+          event.setProp('title', `${event.title.split(' - ')[0]}${sportName}`);
+
+          // Mettre à jour la couleur de l'événement
+          const backgroundColor = this.useUnifiedColors
+            ? this.generateUniqueColor(event.extendedProps.poolId)
+            : response.data.poolSchedule.sport?.color || '#3B82F6';
+          event.setProp('backgroundColor', backgroundColor);
         } catch (error) {
           console.error(
             "Erreur lors du redimensionnement de l'événement :",
