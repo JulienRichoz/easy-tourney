@@ -330,7 +330,6 @@ exports.autoAssignTeamsToPools = async (req, res) => {
 
 exports.generatePools = async (req, res) => {
   const tourneyId = req.params.tourneyId;
-  const { strategy } = req.body;
 
   try {
     // Vérifier si le tournoi existe
@@ -338,6 +337,8 @@ exports.generatePools = async (req, res) => {
     if (!tourney) {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
     }
+    // Utiliser le tourneyType pour déterminer la stratégie
+    const strategy = tourney.tourneyType;
 
     const poolStrategyManager = new PoolStrategyManager(tourneyId, strategy);
     const {pools, teamsWithoutPool} = await poolStrategyManager.generatePools();

@@ -87,7 +87,6 @@ exports.getPlanningDetails = async (req, res) => {
   
 exports.generatePoolPlanning = async (req, res) => {
   const tourneyId = req.params.tourneyId;
-  const { strategy } = req.body;
 
   try {
     // Vérifier si le tournoi existe
@@ -96,6 +95,9 @@ exports.generatePoolPlanning = async (req, res) => {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
     }
 
+    // Utiliser le tourneyType pour déterminer la stratégie
+    const strategy = tourney.tourneyType;
+    
     const planningStrategyManager = new PlanningStrategyManager(tourneyId, strategy);
     await planningStrategyManager.generatePlanning();
 
