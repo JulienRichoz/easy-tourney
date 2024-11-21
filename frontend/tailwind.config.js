@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   darkMode: 'class', // Utilise la classe 'dark' pour activer le mode sombre
   theme: {
     extend: {
@@ -26,10 +23,16 @@ module.exports = {
             default: '#ef4444', // red-500
             hover: '#dc2626', // red-700
           },
+          warning: {
+            bg: '#fef3c7', // bg-yellow-100
+            border: '#fde68a', // border-yellow-200
+            text: '#b45309', // text-yellow-700
+            closeText: '#854d0e', // text-yellow-800
+          },
           pool: {
             infoBg: '#dbeafe', // blue-100
             infoBorder: '#bfdbfe', // blue-200
-            infoText: '#1e40af',// blue-800
+            infoText: '#1e40af', // blue-800
             text: '#6b7280', // gray-500
             infoError: '#dc2626', // red-600
             infoWarning: '#ea580c', // orange-600
@@ -54,27 +57,27 @@ module.exports = {
           buttonVariants: {
             primary: {
               default: '#16a34a', // green-600
-              hover: '#15803d',   // green-700
+              hover: '#15803d', // green-700
             },
             secondary: {
               default: '#6b7280', // gray-500
-              hover: '#4b5563',   // gray-600
+              hover: '#4b5563', // gray-600
             },
             danger: {
               default: '#ef4444', // red-500
-              hover: '#dc2626',   // red-600
+              hover: '#dc2626', // red-600
             },
             warning: {
               default: '#eab308', // yellow-500
-              hover: '#ca8a04',   // yellow-600
+              hover: '#ca8a04', // yellow-600
             },
             info: {
               default: '#3b82f6', // blue-500
-              hover: '#2563eb',   // blue-600
+              hover: '#2563eb', // blue-600
             },
             algo: {
               default: '#9333ea', // purple-600
-              hover: '#7e22ce',   // purple-700
+              hover: '#7e22ce', // purple-700
             },
             disabled: {
               default: '#9ca3af', // gray-400
@@ -91,7 +94,7 @@ module.exports = {
             },
             border: {
               default: '#d1d5db', // border-gray-300
-              error: '#ef4444',    // border-red-500
+              error: '#ef4444', // border-red-500
             },
           },
           modal: {
@@ -115,14 +118,20 @@ module.exports = {
           profileHoverText: '#2f855a', // green-700
           logoutButton: {
             default: '#dc2626', // red-600 (adoucissement de la couleur rouge)
-            hover: '#b91c1c',   // red-700 (rouge plus sombre)
+            hover: '#b91c1c', // red-700 (rouge plus sombre)
+          },
+          warning: {
+            bg: '#44403c', // bg-gray-700
+            border: '#a16207', // border-yellow-600
+            text: '#fcd34d', // text-yellow-300
+            closeText: '#facc15', // text-yellow-400
           },
           pool: {
-            infoBg: '#1f2937',      // gray-800
-            infoBorder: '#64748b',  // gray-950
-            infoText: '#cbd5e1',    // slate-300
-            text: '#cbd5e1',  // gray-500
-            infoError: '#f87171',   // red-400
+            infoBg: '#1f2937', // gray-800
+            infoBorder: '#64748b', // gray-950
+            infoText: '#cbd5e1', // slate-300
+            text: '#cbd5e1', // gray-500
+            infoError: '#f87171', // red-400
             infoWarning: '#fbbf24', // yellow-500
           },
           poolDetails: {
@@ -145,27 +154,27 @@ module.exports = {
           buttonVariants: {
             primary: {
               default: '#15803d', // green-700 (plus sombre que le green-600)
-              hover: '#166534',   // green-800 (vert plus sombre pour hover)
+              hover: '#166534', // green-800 (vert plus sombre pour hover)
             },
             secondary: {
               default: '#4b5563', // gray-600
-              hover: '#374151',   // gray-700
+              hover: '#374151', // gray-700
             },
             danger: {
               default: '#b91c1c', // red-700 (adoucissement du rouge)
-              hover: '#991b1b',   // red-800 (rouge plus sombre pour hover)
+              hover: '#991b1b', // red-800 (rouge plus sombre pour hover)
             },
             warning: {
               default: '#ca8a04', // yellow-600 (jaune plus ocre)
-              hover: '#a16207',   // yellow-700
+              hover: '#a16207', // yellow-700
             },
             info: {
               default: '#2563eb', // blue-600
-              hover: '#1d4ed8'   // blue-700
+              hover: '#1d4ed8', // blue-700
             },
             algo: {
               default: '#7e22ce', // purple-700
-              hover: '#6b21a8',   // purple-800
+              hover: '#6b21a8', // purple-800
             },
             disabled: {
               default: '#6b7280', // gray-500
@@ -182,7 +191,7 @@ module.exports = {
             },
             border: {
               default: '#374151', // border-gray-600
-              error: '#ef4444',    // border-red-500
+              error: '#ef4444', // border-red-500
             },
           },
           modal: {
