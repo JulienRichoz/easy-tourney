@@ -653,138 +653,165 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       .padStart(2, '0')}:00`;
   }
 
+  formatTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':');
+    return `${hours}h${minutes}`;
+  }
+
   /**
    * Valide le planning selon les règles spécifiées.
    * @returns {Object} Résultats de la validation avec différents niveaux d'erreurs.
    */
   async validatePlanning() {
+    const tourneyId = this.tourneyId;
+
     const errors = {
       high: [],
       mid: [],
       low: [],
     };
 
-    // Récupérer les poolSchedules générés
-    const poolSchedules = await PoolSchedule.findAll({
-      where: { tourneyId: this.tourneyId },
-      include: [{ model: Sport, as: 'sport' }, { model: Field, as: 'field' }],
-    });
+    try {
+      // Récupérer les poolSchedules générés en filtrant par tourneyId via l'association avec Pool
+      const poolSchedules = await PoolSchedule.findAll({
+        include: [
+          {
+            model: Pool,
+            as: 'pool',
+            where: { tourneyId },
+            attributes: ['id', 'name'], // Inclure 'name' pour pouvoir l'utiliser dans les messages
+          },
+          {
+            model: Sport,
+            as: 'sport',
+            attributes: ['id', 'name'],
+          },
+          {
+            model: Field,
+            as: 'field',
+            attributes: ['id', 'name'], // Ajouter cette partie
+          },
+        ],
+      });
 
-    // 1. ERREUR GRAVE (high): Pools en conflit ou durant les pauses
-    // a. Vérifier les chevauchements sur le même terrain
-    const scheduleMap = {};
-    poolSchedules.forEach((schedule) => {
-      const key = `${schedule.fieldId}-${schedule.date}`;
-      if (!scheduleMap[key]) {
-        scheduleMap[key] = [];
-      }
-      scheduleMap[key].push(schedule);
-    });
+      // 1. ERREUR GRAVE (high): Pools en conflit ou durant les pauses
+      // a. Vérifier les chevauchements sur le même terrain
+      const scheduleMap = {};
+      poolSchedules.forEach((schedule) => {
+        const key = `${schedule.fieldId}-${schedule.date}`;
+        if (!scheduleMap[key]) {
+          scheduleMap[key] = [];
+        }
+        scheduleMap[key].push(schedule);
+      });
 
-    for (const key in scheduleMap) {
-      const schedules = scheduleMap[key];
-      // Trier par startTime
-      schedules.sort((a, b) => a.startTime.localeCompare(b.startTime));
-      for (let i = 0; i < schedules.length - 1; i++) {
-        const currentEnd = schedules[i].endTime;
-        const nextStart = schedules[i + 1].startTime;
-        if (currentEnd > nextStart) {
-          errors.high.push(
-            `Conflit sur le terrain ${schedules[i].field.name} le ${schedules[i].date} entre les pools ${schedules[i].poolId} et ${schedules[i + 1].poolId}.`
-          );
+      for (const key in scheduleMap) {
+        const schedules = scheduleMap[key];
+        // Trier par startTime
+        schedules.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        for (let i = 0; i < schedules.length - 1; i++) {
+          const currentEnd = schedules[i].endTime;
+          const nextStart = schedules[i + 1].startTime;
+          if (currentEnd > nextStart) {
+            errors.high.push(
+              `Conflit sur le terrain ${schedules[i].field.name} vers ${this.formatTime(schedules[i].startTime)} entre les pools ${schedules[i].pool.name} et ${schedules[i + 1].pool.name}.`
+            );
+          }
         }
       }
-    }
 
-    // b. Vérifier les pools pendant les pauses
-    const scheduleTourney = await ScheduleTourney.findOne({
-      where: { tourneyId: this.tourneyId },
-    });
+      // b. Vérifier les pools pendant les pauses
+      const scheduleTourney = await ScheduleTourney.findOne({
+        where: { tourneyId },
+      });
 
-    poolSchedules.forEach((schedule) => {
-      const { introStart, introEnd, lunchStart, lunchEnd, outroStart, outroEnd, startTime, endTime } = scheduleTourney;
+      poolSchedules.forEach((schedule) => {
+        const { introStart, introEnd, lunchStart, lunchEnd, outroStart, outroEnd, startTime, endTime } = scheduleTourney;
 
-      // Vérifier si le scheduling est en dehors des heures globales
-      if (schedule.startTime < startTime || schedule.endTime > endTime) {
-        errors.high.push(`La pool ${schedule.poolId} est programmée en dehors des heures globales.`);
+        // Vérifier si le scheduling est en dehors des heures globales
+        if (schedule.startTime < startTime || schedule.endTime > endTime) {
+          errors.high.push(`La pool ${schedule.pool.name} est programmée en dehors des heures globales.`);
+        }
+
+        // Vérifier si la pool est durant les pauses
+        const pauses = [
+          { start: introStart, end: introEnd },
+          { start: lunchStart, end: lunchEnd },
+          { start: outroStart, end: outroEnd },
+        ];
+
+        pauses.forEach((pause) => {
+          if (
+            (schedule.startTime >= pause.start && schedule.startTime < pause.end) ||
+            (schedule.endTime > pause.start && schedule.endTime <= pause.end)
+          ) {
+            errors.high.push(`La pool ${schedule.pool.name} est programmée pendant une pause (${this.formatTime(pause.start)} - ${this.formatTime(pause.end)}).`);
+          }
+        });
+      });
+
+      // 2. ERREUR MOYENNE (mid): Différence de 2 ou plus dans les sessions
+      const sessionCounts = {};
+      poolSchedules.forEach((schedule) => {
+        const poolId = schedule.pool.id;
+        if (!sessionCounts[poolId]) {
+          sessionCounts[poolId] = 0;
+        }
+        sessionCounts[poolId]++;
+      });
+
+      const sessionValues = Object.values(sessionCounts);
+      const maxSessions = Math.max(...sessionValues);
+      const minSessions = Math.min(...sessionValues);
+
+      if (maxSessions - minSessions >= 2) {
+        errors.mid.push(`Différence de 2 sessions ou plus entre les pools.`);
       }
 
-      // Vérifier si la pool est durant les pauses
-      const pauses = [
-        { start: introStart, end: introEnd },
-        { start: lunchStart, end: lunchEnd },
-        { start: outroStart, end: outroEnd },
-      ];
+      // 3. ERREUR FAIBLE (low): Différence de 1 dans les sessions et participation multiple au même sport
+      if (maxSessions - minSessions === 1) {
+        errors.low.push(`Différence de 1 session entre les pools.`);
+      }
 
-      pauses.forEach((pause) => {
-        if (
-          (schedule.startTime >= pause.start && schedule.startTime < pause.end) ||
-          (schedule.endTime > pause.start && schedule.endTime <= pause.end)
-        ) {
-          errors.high.push(`La pool ${schedule.poolId} est programmée pendant une pause (${pause.start} - ${pause.end}).`);
+      // Vérifier si une pool participe à plusieurs fois au même sport
+      const poolSportMap = {};
+      poolSchedules.forEach((schedule) => {
+        const poolName = schedule.pool.name; // Utiliser le nom de la pool
+        const sportName = schedule.sport?.name || 'Sport inconnu';
+
+        if (!poolSportMap[poolName]) {
+          poolSportMap[poolName] = {};
+        }
+        if (!poolSportMap[poolName][sportName]) {
+          poolSportMap[poolName][sportName] = 1;
+        } else {
+          poolSportMap[poolName][sportName]++;
         }
       });
-    });
 
-    // 2. ERREUR MOYENNE (mid): Différence de 2 ou plus dans les sessions
-    const sessionCounts = {};
-    poolSchedules.forEach((schedule) => {
-      const poolId = schedule.poolId;
-      if (!sessionCounts[poolId]) {
-        sessionCounts[poolId] = 0;
-      }
-      sessionCounts[poolId]++;
-    });
-
-    const sessionValues = Object.values(sessionCounts);
-    const maxSessions = Math.max(...sessionValues);
-    const minSessions = Math.min(...sessionValues);
-
-    if (maxSessions - minSessions >= 2) {
-      errors.mid.push(`Différence de 2 sessions ou plus entre les pools.`);
-    }
-
-    // 3. ERREUR FAIBLE (low): Différence de 1 dans les sessions et participation multiple au même sport
-    if (maxSessions - minSessions === 1) {
-      errors.low.push(`Différence de 1 session entre les pools.`);
-    }
-
-    // Vérifier si une pool participe à plusieurs fois au même sport
-    const poolSportMap = {};
-    poolSchedules.forEach((schedule) => {
-      const poolId = schedule.poolId;
-      const sportName = schedule.sport?.name || 'Sport inconnu';
-      if (!poolSportMap[poolId]) {
-        poolSportMap[poolId] = {};
-      }
-      if (!poolSportMap[poolId][sportName]) {
-        poolSportMap[poolId][sportName] = 1;
-      } else {
-        poolSportMap[poolId][sportName]++;
-      }
-    });
-
-    for (const poolId in poolSportMap) {
-      const sports = poolSportMap[poolId];
-      for (const sport in sports) {
-        if (sports[sport] > 1) {
-          errors.low.push(`La pool ${poolId} participe plusieurs fois au sport ${sport}.`);
+      for (const poolName in poolSportMap) {
+        const sports = poolSportMap[poolName];
+        for (const sport in sports) {
+          if (sports[sport] > 1) {
+            errors.low.push(`La pool ${poolName} participe plusieurs fois au sport ${sport}.`);
+          }
         }
       }
+
+      // Déterminer s'il y a des erreurs
+      const hasErrors = Object.values(errors).some(
+        (levelErrors) => levelErrors.length > 0
+      );
+
+      return {
+        hasErrors,
+        errors,
+      };
+    } catch (error) {
+      console.error('Erreur lors de la validation du planning :', error);
+      throw error; // Propager l'erreur pour qu'elle soit gérée par le contrôleur
     }
-
-    // Déterminer s'il y a des erreurs
-    const hasErrors = Object.values(errors).some(
-      (levelErrors) => levelErrors.length > 0
-    );
-
-    return {
-      hasErrors,
-      errors,
-    };
   }
 }
-
-
 
 module.exports = CustomRoundRobinPlanning;
