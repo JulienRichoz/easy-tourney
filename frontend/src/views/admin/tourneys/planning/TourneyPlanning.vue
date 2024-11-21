@@ -17,6 +17,8 @@
           v-for="pool in pools"
           :key="pool.id"
           :data-id="pool.id"
+          :data-pool-name="pool.name"
+          :data-sport-name="pool.sport?.name || ''"
           :class="[
             'pool-item',
             'p-3',
@@ -60,7 +62,7 @@
               :class="{ 'transform translate-x-full': useUnifiedColors }"
             ></div>
           </div>
-          <span class="ml-3 text-gray-700">
+          <span class="ml-3">
             {{ useUnifiedColors ? 'Couleurs par pool' : 'Couleurs par sport' }}
           </span>
         </label>
@@ -130,6 +132,42 @@
       >
         Générer le planning
       </ButtonComponent>
+
+      <!-- Sélecteur de pool -->
+      <v-select
+        :options="poolOptions"
+        v-model="selectedPoolId"
+        placeholder="Sélectionnez une pool"
+        :clearable="true"
+        :searchable="true"
+        label="name"
+        :reduce="(pool) => pool.id"
+        class="w-64"
+      />
+    </div>
+
+    <!-- Messages d'erreur pour les pools avec sports dupliqués -->
+    <div
+      v-if="poolsWithDuplicateSports.length && showDuplicateSportsWarning"
+      class="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4 relative flex flex-col"
+    >
+      <!-- Bouton Fermer positionné en haut à droite -->
+      <button
+        @click="closeDuplicateSportsWarning"
+        class="absolute top-2 right-2 text-sm text-blue-600 underline"
+      >
+        Fermer
+      </button>
+
+      <p class="text-yellow-700 font-semibold mb-2">
+        Attention : Certaines pools jouent plusieurs fois le même sport.
+      </p>
+      <ul class="list-disc list-inside text-yellow-700">
+        <li v-for="(pool, index) in poolsWithDuplicateSports" :key="index">
+          Pool {{ pool.poolName }} joue plusieurs fois :
+          {{ pool.sports.join(', ') }}
+        </li>
+      </ul>
     </div>
 
     <!-- Modal de Confirmation pour la Génération du Planning -->
@@ -212,6 +250,8 @@
   import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
   import { toast } from 'vue3-toastify';
   import StrategyPlanningGeneratorComponent from '@/components/StrategyPattern/Planning/StrategyPlanningGeneratorComponent.vue';
+  import vSelect from 'vue-select';
+  import 'vue-select/dist/vue-select.css';
 
   export default {
     components: {
@@ -224,6 +264,7 @@
       FormComponent,
       DeleteConfirmationModal,
       StrategyPlanningGeneratorComponent,
+      vSelect,
     },
     data() {
       return {
@@ -233,6 +274,8 @@
         pools: [],
         poolSchedules: [],
         formErrors: {}, // Pour stocker les erreurs du formulaire
+        selectedPoolId: null, // ID de la pool sélectionnée pour les filtres
+        showDuplicateSportsWarning: true,
         planningStatusOptions: [
           { value: 'draft', label: 'Pools' },
           { value: 'games', label: 'Matchs' },
@@ -395,6 +438,9 @@
           return a.name.localeCompare(b.name);
         });
       },
+      poolOptions() {
+        return [{ id: null, name: 'Toutes les pools' }, ...this.pools];
+      },
       /**
        * Options du calendrier FullCalendar avec les ressources (terrains)
        */
@@ -408,6 +454,10 @@
 
         // Ajouter les poolSchedules en tant qu'événements normaux
         this.poolSchedules.forEach((schedule) => {
+          // Si une pool est sélectionnée et que l'ID ne correspond pas, on saute cet événement
+          if (this.selectedPoolId && schedule.pool.id !== this.selectedPoolId) {
+            return;
+          }
           events.push({
             id: schedule.id.toString(),
             title:
@@ -488,6 +538,49 @@
         const endTime = this.scheduleConfig.endTime || '23:00:00';
         return this.addOneHour(endTime);
       },
+      poolsWithDuplicateSports() {
+        const poolSportMap = {};
+
+        this.poolSchedules.forEach((schedule) => {
+          const poolId = schedule.pool.id;
+          const sportName = schedule.sport?.name || 'Sport inconnu';
+
+          if (!poolId || !sportName) return;
+
+          if (!poolSportMap[poolId]) {
+            poolSportMap[poolId] = {
+              poolName: schedule.pool.name,
+              sports: {},
+            };
+          }
+
+          if (!poolSportMap[poolId].sports[sportName]) {
+            poolSportMap[poolId].sports[sportName] = 1;
+          } else {
+            poolSportMap[poolId].sports[sportName] += 1;
+          }
+        });
+
+        // Filtrer les pools ayant joué le même sport plus d'une fois
+        const poolsWithDuplicates = [];
+
+        for (const poolId in poolSportMap) {
+          const sports = poolSportMap[poolId].sports;
+          const duplicates = Object.keys(sports).filter(
+            (sport) => sports[sport] > 1
+          );
+
+          if (duplicates.length > 0) {
+            poolsWithDuplicates.push({
+              poolId,
+              poolName: poolSportMap[poolId].poolName,
+              sports: duplicates,
+            });
+          }
+        }
+
+        return poolsWithDuplicates;
+      },
     },
     watch: {
       /**
@@ -497,6 +590,13 @@
         if (this.$refs.fullCalendar) {
           // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
           this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+      },
+
+      // Message d'avertissement pour les pools avec sports dupliqués réapparait si les données changent
+      poolsWithDuplicateSports(newVal) {
+        if (newVal.length > 0) {
+          this.showDuplicateSportsWarning = true;
         }
       },
     },
@@ -603,11 +703,13 @@
           itemSelector: '.external-event',
           eventData(eventEl) {
             return {
-              title: eventEl.innerText.trim(),
+              title: eventEl.dataset.poolName,
               duration: '01:00', // La durée sera définie dans handleEventReceive
               create: true,
               extendedProps: {
                 poolId: eventEl.dataset.id,
+                poolName: eventEl.dataset.poolName,
+                sportName: eventEl.dataset.sportName,
               },
             };
           },
@@ -739,11 +841,11 @@
           event.setProp('id', response.data.poolSchedule.id);
           event.setExtendedProp('sport', response.data.poolSchedule.sport);
 
-          // Mettre à jour le titre de l'événement
+          // Mettre à jour le titre de l'événement sans duplication
           const sportName = response.data.poolSchedule.sport
             ? ` - ${response.data.poolSchedule.sport.name}`
             : '';
-          event.setProp('title', `${event.title}${sportName}`);
+          event.setProp('title', `${event.extendedProps.poolName}${sportName}`);
 
           // Mettre à jour la couleur de l'événement
           const backgroundColor = this.useUnifiedColors
@@ -758,7 +860,7 @@
             startTime: data.startTime,
             endTime: data.endTime,
             field: { id: data.fieldId },
-            pool: { id: poolId, name: event.title },
+            pool: { id: poolId, name: event.extendedProps.poolName },
             sport: response.data.poolSchedule.sport,
           });
         } catch (error) {
@@ -1240,33 +1342,30 @@
             const pairEndNum = timeStringToNumber(pair.end);
 
             if (pairStartNum >= pairEndNum) {
-              errors[
-                pair.startField
-              ] = `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
-              errors[
-                pair.endField
-              ] = `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
+              errors[pair.startField] =
+                `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
+              errors[pair.endField] =
+                `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
             }
             if (pairStartNum < startTimeNum || pairEndNum > endTimeNum) {
-              errors[
-                pair.startField
-              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
-              errors[
-                pair.endField
-              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              errors[pair.startField] =
+                `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              errors[pair.endField] =
+                `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
             }
           } else if ((pair.start && !pair.end) || (!pair.start && pair.end)) {
-            errors[
-              pair.startField
-            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
-            errors[
-              pair.endField
-            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+            errors[pair.startField] =
+              `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+            errors[pair.endField] =
+              `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
           }
         }
 
         // Retourner l'objet errors
         return errors;
+      },
+      closeDuplicateSportsWarning() {
+        this.showDuplicateSportsWarning = false;
       },
     },
     async mounted() {
