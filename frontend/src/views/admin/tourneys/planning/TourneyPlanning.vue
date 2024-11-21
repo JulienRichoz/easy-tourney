@@ -45,37 +45,6 @@
           <span v-if="pool.sport"> - {{ pool.sport.name }}</span>
         </div>
       </div>
-
-      <!-- Conteneur pour le sélecteur de statut et le toggle des couleurs -->
-      <div v-if="fields.length" class="flex items-center space-x-4">
-        <!-- Toggle pour les couleurs des pools -->
-        <label class="flex items-center cursor-pointer">
-          <div class="relative">
-            <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
-            <div
-              class="block bg-gray-600 w-14 h-8 rounded-full transition-colors duration-300"
-              :class="{ 'bg-blue-500': useUnifiedColors }"
-            ></div>
-            <div
-              class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"
-              :class="{ 'translate-x-full': useUnifiedColors }"
-            ></div>
-          </div>
-          <span class="ml-3 text-gray-700 dark:text-gray-300">
-            {{ useUnifiedColors ? 'Couleurs par pool' : 'Couleurs par sport' }}
-          </span>
-        </label>
-
-        <!-- Sélecteur de statut aligné à droite -->
-        <StatusSelectorComponent
-          :tourneyId="tourneyId"
-          statusKey="planningStatus"
-          :statusOptions="planningStatusOptions"
-          v-model="currentStatus"
-          label="Étape :"
-          :hideWhenNotStarted="false"
-        />
-      </div>
     </div>
 
     <!-- Messages d'avertissement -->
@@ -109,55 +78,135 @@
       </ul>
     </div>
 
-    <!-- Boutons d'action -->
-    <div class="flex items-center space-x-4 my-4">
-      <ButtonComponent
-        fontAwesomeIcon="cog"
-        @click="openScheduleConfigModal"
-        variant="secondary"
-      >
-        Configurer le planning
-      </ButtonComponent>
-      <ButtonComponent
-        v-if="hasPoolSchedules && isEditable"
-        fontAwesomeIcon="trash"
-        @click="confirmClearPlanning"
-        variant="danger"
-        :disabled="!pools.length"
-      >
-        Supprimer le planning
-      </ButtonComponent>
+    <div class="flex flex-wrap gap-4 my-2 px-4">
+      <!-- Première ligne -->
+      <div class="flex flex-wrap w-full items-center gap-4">
+        <!-- Boutons d'action -->
+        <div class="flex items-center gap-4 flex-grow">
+          <ButtonComponent
+            fontAwesomeIcon="cog"
+            @click="openScheduleConfigModal"
+            variant="secondary"
+            class="w-auto flex-shrink-0"
+          >
+            <span class="hidden md:inline">Config Planning</span>
+            <span class="md:hidden">Conf.</span>
+          </ButtonComponent>
 
-      <ButtonComponent
-        fontAwesomeIcon="cog"
-        @click="openGeneratePlanningModal"
-        variant="algo"
-        :disabled="!isEditable || !pools.length"
-      >
-        Générer le planning
-      </ButtonComponent>
+          <ButtonComponent
+            v-if="hasPoolSchedules && isEditable"
+            fontAwesomeIcon="trash"
+            @click="confirmClearPlanning"
+            variant="danger"
+            :disabled="!pools.length"
+            class="w-auto flex-shrink-0"
+          >
+            <span class="hidden md:inline">Del Planning</span>
+            <span class="md:hidden">Del</span>
+          </ButtonComponent>
 
-      <!-- Valider le Planning -->
-      <ButtonComponent
-        fontAwesomeIcon="check"
-        @click="validatePlanning"
-        variant="primary"
-        :disabled="!isEditable || !hasPoolSchedules"
-      >
-        Valider le planning
-      </ButtonComponent>
+          <ButtonComponent
+            fontAwesomeIcon="cog"
+            @click="openGeneratePlanningModal"
+            variant="algo"
+            :disabled="!isEditable || !pools.length"
+            class="w-auto flex-shrink-0"
+          >
+            <span class="hidden md:inline">Générer Planning</span>
+            <span class="md:hidden">Gen.</span>
+          </ButtonComponent>
 
-      <!-- Sélecteur de pool -->
-      <v-select
-        :options="poolOptions"
-        v-model="selectedPoolId"
-        placeholder="Sélectionnez une pool"
-        :clearable="true"
-        :searchable="true"
-        label="name"
-        :reduce="(pool) => pool.id"
-        class="w-64"
-      />
+          <ButtonComponent
+            fontAwesomeIcon="check"
+            @click="validatePlanning"
+            variant="primary"
+            :disabled="!isEditable || !hasPoolSchedules"
+            class="w-auto flex-shrink-0"
+          >
+            <span class="hidden md:inline">Check Planning</span>
+            <span class="md:hidden">Check</span>
+          </ButtonComponent>
+        </div>
+
+        <!-- Sélecteur "Étape" et bouton Étape -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <StatusSelectorComponent
+            :tourneyId="tourneyId"
+            statusKey="planningStatus"
+            :statusOptions="planningStatusOptions"
+            v-model="currentStatus"
+            label="Etape"
+            :hideWhenNotStarted="false"
+          />
+        </div>
+      </div>
+
+      <!-- Deuxième ligne -->
+      <div class="flex flex-wrap w-full items-center gap-2">
+        <!-- Filtre des Pools -->
+        <v-select
+          :options="poolOptions"
+          v-model="selectedPoolId"
+          placeholder="All Pools"
+          :clearable="true"
+          :searchable="true"
+          label="name"
+          :reduce="(pool) => pool.id"
+          class="w-36 flex-shrink-0"
+        />
+
+        <!-- Toggle pour les couleurs -->
+        <label class="flex items-center cursor-pointer flex-shrink-0">
+          <div class="relative">
+            <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
+            <div
+              class="block bg-gray-600 w-14 h-8 rounded-full transition-colors duration-300"
+              :class="{ 'bg-blue-500': useUnifiedColors }"
+            ></div>
+            <div
+              class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"
+              :class="{ 'translate-x-full': useUnifiedColors }"
+            ></div>
+          </div>
+          <span class="ml-2 hidden md:block text-gray-700 dark:text-gray-300">
+            {{ useUnifiedColors ? 'Pool' : 'Sport' }}
+          </span>
+        </label>
+
+        <!-- Pagination alignée à droite -->
+        <div class="flex items-center gap-2 ml-auto">
+          <button
+            v-if="currentPage > 1"
+            @click="currentPage--"
+            class="text-gray-700 text-2xl px-2 py-1 rounded hover:bg-gray-200 navigation-button"
+          >
+            &lt;
+          </button>
+          <select v-model="currentPage" class="px-2 py-1 border rounded">
+            <option v-for="page in totalPages" :key="page" :value="page">
+              Page {{ page }} / {{ totalPages }}
+            </option>
+          </select>
+          <button
+            v-if="currentPage < totalPages"
+            @click="currentPage++"
+            class="text-gray-700 text-2xl px-2 py-1 rounded hover:bg-gray-200 navigation-button"
+          >
+            &gt;
+          </button>
+
+          <!-- Bouton Show All Fields -->
+          <button
+            @click="
+              showAllTerrains = !showAllTerrains;
+              currentPage = 1;
+            "
+            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            {{ showAllTerrains ? 'Réduire' : 'Show All Fields' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Modal de Confirmation pour la Génération du Planning -->
@@ -275,6 +324,15 @@
         showScheduleConfigModal: false,
         showWarningsModal: false,
 
+        isSmallScreen: false, // Détecte si l'écran est petit
+        currentPage: 1, // Page actuelle pour la pagination
+        terrainsPerPage: 10, // Nombre de terrains visibles par page
+        showAllTerrains: false, // Permet d'afficher tous les terrains
+        breakpoints: {
+          large: 1150,
+          medium: 640,
+        },
+
         // Configuration du planning avec valeurs par défaut
         scheduleConfig: {
           startTime: '07:30:00',
@@ -387,6 +445,20 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+      totalPages() {
+        if (this.showAllTerrains) {
+          return 1; // Si tous les terrains sont affichés, une seule "page"
+        }
+        return Math.ceil(this.fields.length / this.terrainsPerPage);
+      },
+      paginatedFields() {
+        if (this.showAllTerrains) {
+          return this.fields; // Affiche tous les terrains si l'option est activée
+        }
+        const start = (this.currentPage - 1) * this.terrainsPerPage;
+        const end = start + this.terrainsPerPage;
+        return this.fields.slice(start, end);
+      },
       /**
        * Indique si le planning est éditable en fonction du statut
        */
@@ -430,7 +502,7 @@
         });
       },
       poolOptions() {
-        return [{ id: null, name: 'Toutes les pools' }, ...this.pools];
+        return [{ id: null, name: 'All Pools' }, ...this.pools];
       },
       /**
        * Options du calendrier FullCalendar avec les ressources (terrains)
@@ -497,10 +569,29 @@
           slotMinTime: this.adjustedSlotMinTime,
           slotMaxTime: this.adjustedSlotMaxTime,
           allDaySlot: false,
-          resources: this.sortedFields.map((field) => ({
+          resources: this.paginatedFields.map((field) => ({
             id: field.id.toString(),
             title: field.name,
           })),
+          customButtons: {
+            prevPage: {
+              text: 'Précédent',
+              click: () => {
+                if (this.currentPage > 1) this.currentPage--;
+              },
+            },
+            nextPage: {
+              text: 'Suivant',
+              click: () => {
+                if (this.currentPage < this.totalPages) this.currentPage++;
+              },
+            },
+          },
+          /*headerToolbar: {
+            left: 'prevPage,nextPage', // Boutons personnalisés
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          },*/
           events: events,
           resourceAreaHeaderContent: 'Terrains',
           slotLabelFormat: {
@@ -540,10 +631,20 @@
           this.$refs.fullCalendar.getApi().refetchEvents();
         }
       },
+      /**
+       * recharger FullCalendar à chaque changement de page
+       */
+      currentPage() {
+        if (this.$refs.fullCalendar) {
+          const calendarApi = this.$refs.fullCalendar.getApi();
+          calendarApi.refetchResources(); // Recharge les ressources (terrains visibles)
+        }
+      },
     },
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
+        window.removeEventListener('resize', this.checkScreenSize);
       }
     },
     methods: {
@@ -1274,8 +1375,7 @@
        */
       subtractOneHour(timeStr) {
         let [hours] = timeStr.split(':').map(Number);
-        // Soustraire une heure
-        hours -= 1;
+
         if (hours < 0) hours = 0;
         // Arrondir à l'heure inférieure
         return `${hours.toString().padStart(2, '0')}:00:00`;
@@ -1288,8 +1388,6 @@
        */
       addOneHour(timeStr) {
         let [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        // Ajouter une heure
-        hours += 1;
         // Si les minutes ou secondes sont non nulles, on ajoute une heure supplémentaire
         if (minutes > 0 || seconds > 0) {
           hours += 1;
@@ -1412,14 +1510,35 @@
         // Retourner l'objet errors
         return errors;
       },
+
+      checkScreenSize() {
+        this.isSmallScreen = window.innerWidth < 768; // Par exemple, pour les écrans de largeur < 768px
+        this.terrainsPerPage = this.isSmallScreen ? 2 : 10; // Ajustez selon vos besoins
+      },
+      adjustTerrainsPerPage() {
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth >= 1200) {
+          this.terrainsPerPage = 10; // 1200px et plus : 10 terrains
+        } else if (screenWidth >= 1000) {
+          this.terrainsPerPage = 8; // 1000px - 1200px : 8 terrains
+        } else if (screenWidth >= 800) {
+          this.terrainsPerPage = 7; // 800px - 1000px : 7 terrains
+        } else if (screenWidth >= 600) {
+          this.terrainsPerPage = 5; // 600px - 800px : 5 terrains
+        } else {
+          this.terrainsPerPage = 3; // Moins de 600px : 3 terrains
+        }
+      },
     },
+
     async mounted() {
+      this.adjustTerrainsPerPage();
+      window.addEventListener('resize', this.adjustTerrainsPerPage);
       // Méthode appelée lorsque le composant est monté
       await this.fetchPlanningDetails(); // Récupérer les détails du planning
-
       // Rendre les éléments de pools externes "draggables"
       this.initializeExternalEvents();
-
       this.checkWarnings();
     },
   };
@@ -1451,5 +1570,19 @@
     transform: translateX(1.5rem);
   }
 
+  .navigation-button {
+    transition: transform 0.2s;
+  }
+
+  .navigation-button:hover {
+    transform: scale(1.2);
+  }
+
+  select {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
   @import '@/assets/fullcalendar.css';
 </style>
