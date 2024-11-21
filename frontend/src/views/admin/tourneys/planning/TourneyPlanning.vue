@@ -85,28 +85,26 @@
       ></ErrorMessageComponent>
     </div>
 
-    <!-- Messages d'erreur pour les pools avec sports dupliqués -->
+    <!-- Messages d'avertissement de validation -->
     <div
-      v-if="poolsWithDuplicateSports.length && showDuplicateSportsWarning"
-      class="p-4 rounded mb-4 relative flex flex-col bg-light-warning-bg border-light-warning-border text-light-warning-text dark:bg-dark-warning-bg dark:border-dark-warning-border dark:text-dark-warning-text"
+      v-if="warnings.length && showWarningsModal"
+      class="p-4 rounded mb-4 relative flex flex-col bg-yellow-100 border border-yellow-400 text-yellow-700"
     >
       <!-- Bouton Fermer positionné en haut à droite -->
       <button
-        @click="closeDuplicateSportsWarning"
-        class="absolute top-2 right-2 flex items-center text-light-warning-text dark:text-dark-warning-text hover:text-light-warning-closeText dark:hover:text-dark-warning-closeText"
+        @click="closeWarningsModal"
+        class="absolute top-2 right-2 flex items-center text-yellow-700 hover:text-yellow-900"
       >
         Fermer
         <span class="ml-1">&#10006;</span>
-        <!-- Petite croix -->
       </button>
 
-      <p class="font-semibold mb-2">
-        Attention : Certaines pools jouent plusieurs fois le même sport.
-      </p>
+      <p class="font-semibold mb-2">Avertissements de Validation :</p>
       <ul class="list-disc list-inside">
-        <li v-for="(pool, index) in poolsWithDuplicateSports" :key="index">
-          Pool {{ pool.poolName }} joue plusieurs fois :
-          {{ pool.sports.join(', ') }}
+        <li v-for="(warning, index) in warnings" :key="index">
+          <span :class="warningClass(warning.type)">
+            {{ warning.message }}
+          </span>
         </li>
       </ul>
     </div>
@@ -267,7 +265,6 @@
         poolSchedules: [],
         formErrors: {}, // Pour stocker les erreurs du formulaire
         selectedPoolId: null, // ID de la pool sélectionnée pour les filtres
-        showDuplicateSportsWarning: true,
         planningStatusOptions: [
           { value: 'draft', label: 'Pools' },
           { value: 'games', label: 'Matchs' },
@@ -382,7 +379,6 @@
         showClearPlanningConfirmation: false,
         currentStatus: null,
         useUnifiedColors: false,
-        randomMode: false, // Nouvelle propriété pour le mode aléatoire
         colorMap: {}, // Pour stocker les couleurs unies par Pool ID
       };
     },
@@ -533,49 +529,6 @@
         const endTime = this.scheduleConfig.endTime || '23:00:00';
         return this.addOneHour(endTime);
       },
-      poolsWithDuplicateSports() {
-        const poolSportMap = {};
-
-        this.poolSchedules.forEach((schedule) => {
-          const poolId = schedule.pool.id;
-          const sportName = schedule.sport?.name || 'Sport inconnu';
-
-          if (!poolId || !sportName) return;
-
-          if (!poolSportMap[poolId]) {
-            poolSportMap[poolId] = {
-              poolName: schedule.pool.name,
-              sports: {},
-            };
-          }
-
-          if (!poolSportMap[poolId].sports[sportName]) {
-            poolSportMap[poolId].sports[sportName] = 1;
-          } else {
-            poolSportMap[poolId].sports[sportName] += 1;
-          }
-        });
-
-        // Filtrer les pools ayant joué le même sport plus d'une fois
-        const poolsWithDuplicates = [];
-
-        for (const poolId in poolSportMap) {
-          const sports = poolSportMap[poolId].sports;
-          const duplicates = Object.keys(sports).filter(
-            (sport) => sports[sport] > 1
-          );
-
-          if (duplicates.length > 0) {
-            poolsWithDuplicates.push({
-              poolId,
-              poolName: poolSportMap[poolId].poolName,
-              sports: duplicates,
-            });
-          }
-        }
-
-        return poolsWithDuplicates;
-      },
     },
     watch: {
       /**
@@ -585,13 +538,6 @@
         if (this.$refs.fullCalendar) {
           // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
           this.$refs.fullCalendar.getApi().refetchEvents();
-        }
-      },
-
-      // Message d'avertissement pour les pools avec sports dupliqués réapparait si les données changent
-      poolsWithDuplicateSports(newVal) {
-        if (newVal.length > 0) {
-          this.showDuplicateSportsWarning = true;
         }
       },
     },
@@ -677,6 +623,16 @@
             'Erreur lors de la récupération des détails du planning:',
             error
           );
+        }
+      },
+
+      /**
+       * Rafraîchir les événements du calendrier
+       */
+      refreshCalendarEvents() {
+        if (this.$refs.fullCalendar) {
+          const calendarApi = this.$refs.fullCalendar.getApi();
+          calendarApi.refetchEvents();
         }
       },
 
@@ -781,6 +737,23 @@
 
         return { domNodes: [container] };
       },
+      /**
+       * Retourne la classe CSS appropriée en fonction du type d'avertissement.
+       * @param {string} type - Le type d'avertissement ('grave', 'moyenne', 'faible').
+       * @returns {string} La ou les classes CSS à appliquer.
+       */
+      warningClass(type) {
+        switch (type) {
+          case 'grave':
+            return 'text-red-600 font-bold';
+          case 'moyenne':
+            return 'text-orange-600 font-semibold';
+          case 'faible':
+            return 'text-yellow-600';
+          default:
+            return '';
+        }
+      },
 
       isSchedule() {
         if (this.scheduleConfig) {
@@ -836,7 +809,7 @@
           event.setProp('id', response.data.poolSchedule.id);
           event.setExtendedProp('sport', response.data.poolSchedule.sport);
 
-          // Mettre à jour le titre de l'événement sans duplication
+          // Mettre à jour le titre de l'événement
           const sportName = response.data.poolSchedule.sport
             ? ` - ${response.data.poolSchedule.sport.name}`
             : '';
@@ -1172,7 +1145,7 @@
        * Génère le planning après confirmation
        */
       async handlePlanningGenerated() {
-        this.fetchPlanningDetails();
+        await this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();
       },
@@ -1227,6 +1200,8 @@
             this.showWarningsModal = true;
           } else {
             toast.success('Le planning est valide sans erreurs.');
+            this.warnings = [];
+            this.showWarningsModal = false;
           }
         } catch (error) {
           console.error('Erreur lors de la validation du planning :', error);
@@ -1274,15 +1249,25 @@
       },
 
       /**
+       * Ferme la modal des avertissements de validation
+       */
+      closeWarningsModal() {
+        this.showWarningsModal = false;
+        this.warnings = [];
+      },
+
+      /**
        * Soustrait une heure à une heure donnée pour l'affichage du calendrier
        * @param {string} timeStr - Heure au format HH:MM:SS
        * @returns {string} Heure ajustée au format HH:MM:SS
        */
       subtractOneHour(timeStr) {
-        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hours - 1, minutes, seconds || 0);
-        return date.toTimeString().slice(0, 8);
+        let [hours] = timeStr.split(':').map(Number);
+        // Soustraire une heure
+        hours -= 1;
+        if (hours < 0) hours = 0;
+        // Arrondir à l'heure inférieure
+        return `${hours.toString().padStart(2, '0')}:00:00`;
       },
 
       /**
@@ -1291,21 +1276,37 @@
        * @returns {string} Heure ajustée au format HH:MM:SS
        */
       addOneHour(timeStr) {
-        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hours + 1, minutes, seconds || 0);
-        return date.toTimeString().slice(0, 8);
+        let [hours, minutes, seconds] = timeStr.split(':').map(Number);
+        // Ajouter une heure
+        hours += 1;
+        // Si les minutes ou secondes sont non nulles, on ajoute une heure supplémentaire
+        if (minutes > 0 || seconds > 0) {
+          hours += 1;
+        }
+        if (hours >= 24) hours = 23; // Pour éviter de dépasser 23h
+        // Arrondir à l'heure supérieure
+        minutes = 0;
+        seconds = 0;
+        return `${hours.toString().padStart(2, '0')}:00:00`;
       },
 
       /**
        * Vérifie et ajoute des avertissements si nécessaire
        */
       checkWarnings() {
+        // Réinitialiser les warnings
+        this.warnings = [];
+
         // Vérifier si le nombre de pools est supérieur au nombre de terrains
         if (this.pools.length > this.fields.length) {
-          this.warnings.push(
-            "Le nombre de pools est supérieur au nombre de terrains disponibles. Cela peut entraîner des temps d'attente pour certaines pools."
-          );
+          this.warnings.push({
+            type: 'faible',
+            message:
+              "Le nombre de pools est supérieur au nombre de terrains disponibles. Cela peut entraîner des temps d'attente pour certaines pools.",
+          });
+          this.showWarningsModal = true;
+        } else {
+          this.showWarningsModal = false;
         }
       },
 
@@ -1400,9 +1401,6 @@
         // Retourner l'objet errors
         return errors;
       },
-      closeDuplicateSportsWarning() {
-        this.showDuplicateSportsWarning = false;
-      },
     },
     async mounted() {
       // Méthode appelée lorsque le composant est monté
@@ -1443,4 +1441,60 @@
   }
 
   @import '@/assets/fullcalendar.css';
+
+  /* Styles pour les avertissements de validation */
+  .bg-yellow-100 {
+    background-color: #fef3c7;
+  }
+  .border-yellow-400 {
+    border-color: #facc15;
+  }
+  .text-yellow-700 {
+    color: #92400e;
+  }
+  .p-4 {
+    padding: 1rem;
+  }
+  .rounded {
+    border-radius: 0.25rem;
+  }
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+  .relative {
+    position: relative;
+  }
+  .flex-col {
+    flex-direction: column;
+  }
+  .space-y-1 {
+    gap: 0.25rem;
+  }
+  .font-semibold {
+    font-weight: 600;
+  }
+  .mb-2 {
+    margin-bottom: 0.5rem;
+  }
+  .list-disc {
+    list-style-type: disc;
+  }
+  .list-inside {
+    list-style-position: inside;
+  }
+  .absolute {
+    position: absolute;
+  }
+  .top-2 {
+    top: 0.5rem;
+  }
+  .right-2 {
+    right: 0.5rem;
+  }
+  .text-yellow-900:hover {
+    color: #7f1d1d;
+  }
+  .text-yellow-700:hover {
+    color: #9333ea;
+  }
 </style>
