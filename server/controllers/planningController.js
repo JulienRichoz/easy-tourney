@@ -136,6 +136,37 @@ exports.generatePoolPlanning = async (req, res) => {
   }
 };
 
+exports.validatePoolPlanning = async (req, res) => {
+  const tourneyId = req.params.tourneyId;
+
+  try {
+    // Vérifier si le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Utiliser le tourneyType pour déterminer la stratégie
+    const strategy = tourney.tourneyType;
+
+    const planningStrategyManager = new PlanningStrategyManager(
+      tourneyId,
+      strategy
+    );
+
+    // Appeler la méthode de validation
+    const validationResults = await planningStrategyManager.validatePlanning();
+
+    res.status(200).json({
+      message: 'Validation du planning effectuée avec succès.',
+      validation: validationResults,
+    });
+  } catch (error) {
+    console.error('Erreur lors de la validation du planning :', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.resetPoolPlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -169,36 +200,5 @@ exports.resetPoolPlanning = async (req, res) => {
       error
     );
     res.status(500).json({ message: 'Erreur serveur.', error });
-  }
-};
-
-exports.validatePoolPlanning = async (req, res) => {
-  const tourneyId = req.params.tourneyId;
-
-  try {
-    // Vérifier si le tournoi existe
-    const tourney = await Tourney.findByPk(tourneyId);
-    if (!tourney) {
-      return res.status(404).json({ message: 'Tournoi non trouvé.' });
-    }
-
-    // Utiliser le tourneyType pour déterminer la stratégie
-    const strategy = tourney.tourneyType;
-
-    const planningStrategyManager = new PlanningStrategyManager(
-      tourneyId,
-      strategy
-    );
-
-    // Appeler la méthode de validation
-    const validationResults = await planningStrategyManager.validatePlanning();
-
-    res.status(200).json({
-      message: 'Validation du planning effectuée avec succès.',
-      validation: validationResults,
-    });
-  } catch (error) {
-    console.error('Erreur lors de la validation du planning :', error);
-    res.status(500).json({ message: error.message });
   }
 };
