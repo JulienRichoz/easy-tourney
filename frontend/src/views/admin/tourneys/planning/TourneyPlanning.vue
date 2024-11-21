@@ -80,14 +80,14 @@
 
     <div class="flex flex-wrap gap-4 my-2 px-4">
       <!-- Première ligne -->
-      <div class="flex flex-wrap w-full items-center gap-4">
+      <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
         <!-- Boutons d'action -->
-        <div class="flex items-center gap-4 flex-grow">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4 flex-grow">
           <ButtonComponent
             fontAwesomeIcon="cog"
             @click="openScheduleConfigModal"
             variant="secondary"
-            class="w-auto flex-shrink-0"
+            class="w-auto"
           >
             <span class="hidden md:inline">Config Planning</span>
             <span class="md:hidden">Conf.</span>
@@ -99,9 +99,9 @@
             @click="confirmClearPlanning"
             variant="danger"
             :disabled="!pools.length"
-            class="w-auto flex-shrink-0"
+            class="w-auto"
           >
-            <span class="hidden md:inline">Del Planning</span>
+            <span class="hidden md:inline">Reset</span>
             <span class="md:hidden">Del</span>
           </ButtonComponent>
 
@@ -110,9 +110,9 @@
             @click="openGeneratePlanningModal"
             variant="algo"
             :disabled="!isEditable || !pools.length"
-            class="w-auto flex-shrink-0"
+            class="w-auto"
           >
-            <span class="hidden md:inline">Générer Planning</span>
+            <span class="hidden md:inline">Générer</span>
             <span class="md:hidden">Gen.</span>
           </ButtonComponent>
 
@@ -121,15 +121,15 @@
             @click="validatePlanning"
             variant="primary"
             :disabled="!isEditable || !hasPoolSchedules"
-            class="w-auto flex-shrink-0"
+            class="w-auto"
           >
-            <span class="hidden md:inline">Check Planning</span>
+            <span class="hidden md:inline">Vérifier</span>
             <span class="md:hidden">Check</span>
           </ButtonComponent>
         </div>
 
         <!-- Sélecteur "Étape" et bouton Étape -->
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex items-center gap-2 order-last">
           <StatusSelectorComponent
             :tourneyId="tourneyId"
             statusKey="planningStatus"
@@ -142,7 +142,7 @@
       </div>
 
       <!-- Deuxième ligne -->
-      <div class="flex flex-wrap w-full items-center gap-2">
+      <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
         <!-- Filtre des Pools -->
         <v-select
           :options="poolOptions"
