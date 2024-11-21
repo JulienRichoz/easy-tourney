@@ -37,12 +37,23 @@
         type: Object,
         required: false,
       },
+      randomMode: {
+        // Déclaration de la prop
+        type: Boolean,
+        default: false,
+      },
     },
     methods: {
       async generatePlanning() {
         try {
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/planning/pools/generate`
+            `/tourneys/${this.tourneyId}/planning/pools/generate`,
+            {},
+            {
+              params: {
+                randomMode: this.randomMode, // Inclusion du paramètre randomMode
+              },
+            }
           );
           console.log('Response', response);
           toast.success('Planning généré avec succès !', {
@@ -63,3 +74,5 @@
     },
   };
 </script>
+
+<style scoped></style>

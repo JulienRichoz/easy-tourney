@@ -1,5 +1,4 @@
-<!-- views/admin/TourneyPoolSchedule.vue -->
-
+<!-- views/admin/TourneyPlanning.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -54,15 +53,15 @@
           <div class="relative">
             <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
             <div
-              class="block bg-gray-600 w-14 h-8 rounded-full"
+              class="block bg-gray-600 w-14 h-8 rounded-full transition-colors duration-300"
               :class="{ 'bg-blue-500': useUnifiedColors }"
             ></div>
             <div
-              class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"
-              :class="{ 'transform translate-x-full': useUnifiedColors }"
+              class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"
+              :class="{ 'translate-x-full': useUnifiedColors }"
             ></div>
           </div>
-          <span class="ml-3">
+          <span class="ml-3 text-gray-700 dark:text-gray-300">
             {{ useUnifiedColors ? 'Couleurs par pool' : 'Couleurs par sport' }}
           </span>
         </label>
@@ -85,25 +84,31 @@
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des pools."
       ></ErrorMessageComponent>
     </div>
+
+    <!-- Messages d'erreur pour les pools avec sports dupliqués -->
     <div
-      v-if="warnings.length"
-      class="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4"
+      v-if="poolsWithDuplicateSports.length && showDuplicateSportsWarning"
+      class="p-4 rounded mb-4 relative flex flex-col bg-light-warning-bg border-light-warning-border text-light-warning-text dark:bg-dark-warning-bg dark:border-dark-warning-border dark:text-dark-warning-text"
     >
-      <ul>
-        <li
-          v-for="(warning, index) in warnings"
-          :key="index"
-          class="text-yellow-700"
-        >
-          {{ warning }}
-        </li>
-      </ul>
+      <!-- Bouton Fermer positionné en haut à droite -->
       <button
-        @click="warnings = []"
-        class="mt-2 text-sm text-blue-600 underline"
+        @click="closeDuplicateSportsWarning"
+        class="absolute top-2 right-2 flex items-center text-light-warning-text dark:text-dark-warning-text hover:text-light-warning-closeText dark:hover:text-dark-warning-closeText"
       >
         Fermer
+        <span class="ml-1">&#10006;</span>
+        <!-- Petite croix -->
       </button>
+
+      <p class="font-semibold mb-2">
+        Attention : Certaines pools jouent plusieurs fois le même sport.
+      </p>
+      <ul class="list-disc list-inside">
+        <li v-for="(pool, index) in poolsWithDuplicateSports" :key="index">
+          Pool {{ pool.poolName }} joue plusieurs fois :
+          {{ pool.sports.join(', ') }}
+        </li>
+      </ul>
     </div>
 
     <!-- Boutons d'action -->
@@ -124,6 +129,7 @@
       >
         Supprimer le planning
       </ButtonComponent>
+
       <ButtonComponent
         fontAwesomeIcon="cog"
         @click="openGeneratePlanningModal"
@@ -131,6 +137,16 @@
         :disabled="!isEditable || !pools.length"
       >
         Générer le planning
+      </ButtonComponent>
+
+      <!-- Valider le Planning -->
+      <ButtonComponent
+        fontAwesomeIcon="check"
+        @click="validatePlanning"
+        variant="primary"
+        :disabled="!isEditable || !hasPoolSchedules"
+      >
+        Valider le planning
       </ButtonComponent>
 
       <!-- Sélecteur de pool -->
@@ -144,30 +160,6 @@
         :reduce="(pool) => pool.id"
         class="w-64"
       />
-    </div>
-
-    <!-- Messages d'erreur pour les pools avec sports dupliqués -->
-    <div
-      v-if="poolsWithDuplicateSports.length && showDuplicateSportsWarning"
-      class="p-4 bg-yellow-100 border border-yellow-400 rounded mb-4 relative flex flex-col"
-    >
-      <!-- Bouton Fermer positionné en haut à droite -->
-      <button
-        @click="closeDuplicateSportsWarning"
-        class="absolute top-2 right-2 text-sm text-blue-600 underline"
-      >
-        Fermer
-      </button>
-
-      <p class="text-yellow-700 font-semibold mb-2">
-        Attention : Certaines pools jouent plusieurs fois le même sport.
-      </p>
-      <ul class="list-disc list-inside text-yellow-700">
-        <li v-for="(pool, index) in poolsWithDuplicateSports" :key="index">
-          Pool {{ pool.poolName }} joue plusieurs fois :
-          {{ pool.sports.join(', ') }}
-        </li>
-      </ul>
     </div>
 
     <!-- Modal de Confirmation pour la Génération du Planning -->
@@ -284,6 +276,8 @@
         warnings: [],
         externalDraggableInstance: null,
         showScheduleConfigModal: false,
+        showWarningsModal: false,
+
         // Configuration du planning avec valeurs par défaut
         scheduleConfig: {
           startTime: '07:30:00',
@@ -388,6 +382,7 @@
         showClearPlanningConfirmation: false,
         currentStatus: null,
         useUnifiedColors: false,
+        randomMode: false, // Nouvelle propriété pour le mode aléatoire
         colorMap: {}, // Pour stocker les couleurs unies par Pool ID
       };
     },
@@ -1179,6 +1174,7 @@
       async handlePlanningGenerated() {
         this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
+        this.validatePlanning();
       },
 
       /**
@@ -1195,6 +1191,46 @@
         } catch (error) {
           console.error('Erreur lors de la suppression du planning :', error);
           toast.error('Erreur lors de la suppression du planning.');
+        }
+      },
+
+      /**
+       * Appelle l'API pour valider le planning actuel.
+       */
+      async validatePlanning() {
+        try {
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/planning/pools/validate`
+          );
+
+          const validationResults = response.data.validation;
+
+          if (validationResults.hasErrors) {
+            // Traiter les différentes erreurs en fonction des niveaux
+            const newWarnings = [];
+            if (validationResults.errors.high.length > 0) {
+              validationResults.errors.high.forEach((err) => {
+                newWarnings.push({ type: 'grave', message: err });
+              });
+            }
+            if (validationResults.errors.mid.length > 0) {
+              validationResults.errors.mid.forEach((err) => {
+                newWarnings.push({ type: 'moyenne', message: err });
+              });
+            }
+            if (validationResults.errors.low.length > 0) {
+              validationResults.errors.low.forEach((err) => {
+                newWarnings.push({ type: 'faible', message: err });
+              });
+            }
+            this.warnings = newWarnings;
+            this.showWarningsModal = true;
+          } else {
+            toast.success('Le planning est valide sans erreurs.');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la validation du planning :', error);
+          toast.error('Erreur lors de la validation du planning.');
         }
       },
 

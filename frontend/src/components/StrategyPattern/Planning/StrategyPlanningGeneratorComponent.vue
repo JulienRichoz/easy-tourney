@@ -6,6 +6,22 @@
     @close="handleClose"
   >
     <template #content>
+      <div class="mb-4">
+        <label class="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            v-model="localRandomMode"
+            class="form-checkbox h-5 w-5 text-blue-600"
+          />
+          <span class="text-gray-700 dark:text-gray-300"
+            >Génération aléatoire</span
+          >
+        </label>
+      </div>
+      <p>
+        Mode sélectionné :
+        <strong>{{ localRandomMode ? 'Aléatoire' : 'Standard' }}</strong>
+      </p>
       <component
         :is="currentStrategyComponent"
         ref="strategyComponent"
@@ -13,6 +29,7 @@
         :pools="pools"
         :fields="fields"
         :planningTourney="planningTourney"
+        :randomMode="localRandomMode"
       ></component>
     </template>
     <template #footer>
@@ -62,13 +79,21 @@
         type: Boolean,
         default: true,
       },
+      randomMode: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    data() {
+      return {
+        localRandomMode: this.randomMode,
+      };
     },
     computed: {
       currentStrategyComponent() {
         switch (this.tourneyType) {
           case 'customRoundRobin':
             return 'CustomRoundRobinPlanningStrategy';
-          // Ajoutez d'autres cas pour chaque stratégie
           default:
             return 'CustomRoundRobinPlanningStrategy';
         }
@@ -79,7 +104,6 @@
         this.$emit('close');
       },
       async generatePlanning() {
-        // Appeler la méthode generatePlanning du composant enfant
         const result = await this.$refs.strategyComponent.generatePlanning();
         if (result) {
           this.$emit('planningGenerated');
@@ -89,3 +113,5 @@
     },
   };
 </script>
+
+<style scoped></style>
