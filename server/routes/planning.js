@@ -5,16 +5,16 @@ const {
   generatePoolPlanning,
   getPlanningDetails,
   resetPoolPlanning,
+  validatePoolPlanning
 } = require('../controllers/planningController');
 const { isAuthenticated, isAdmin } = require('../middlewares');
 
 // Base URL: /api/tourneys/:tourneyId/planning
 
-// Générer un planning pour les pools
-router.post('/pools/generate', isAuthenticated, isAdmin, generatePoolPlanning);
-router.delete('/pools/reset', isAuthenticated, isAdmin, resetPoolPlanning);
+router.post('/pools/generate', isAuthenticated, isAdmin, generatePoolPlanning); // Générer un planning pour les pools
+router.post('/:tourneyId/planning/pools/validate', validatePoolPlanning); // Valider un planning pour les pools
+router.delete('/pools/reset', isAuthenticated, isAdmin, resetPoolPlanning); // reset pool planning
 
-// Récupérer les détails complets du planning (pools + matchs)
-router.get('/details', isAuthenticated, getPlanningDetails);
+router.get('/details', isAuthenticated, getPlanningDetails); // Récupérer les détails complets du planning (pools + matchs)
 
 module.exports = router;

@@ -28,32 +28,9 @@
  * 6. **Gestion des contraintes** : Évitement des conflits d'horaires, respect des disponibilités
  *    des terrains et des pools, maintien de la diversité des sports.
  *
- * Complexité :
- * ------------
- * - **Temps** :
- *   - La complexité globale est principalement déterminée par les boucles imbriquées sur les
- *     créneaux horaires, les terrains, et les pools.
- *   - Si `n` est le nombre de pools, `t` le nombre de créneaux horaires, et `f` le nombre de
- *     terrains, la complexité est approximativement O(t * f * n).
- * - **Espace** :
- *   - L'algorithme utilise des structures de données proportionnelles au nombre de pools,
- *     de créneaux horaires, et de terrains.
- *
- * Contraintes et Points à Considérer :
- * ------------------------------------
- * - **Disponibilité des Terrains** : Les terrains peuvent avoir des plages horaires différentes.
- * - **Pauses Globales** : Les périodes d'introduction, de déjeuner et de conclusion doivent être
- *   respectées et aucun match ne doit être programmé pendant ces pauses.
- * - **Équité entre les Pools** : Chaque pool doit participer au même nombre de sessions, même si
- *   cela implique de jouer certains sports plus d'une fois.
- * - **Diversité des Sports** : L'algorithme tente de maximiser la diversité des sports joués par
- *   chaque pool, en évitant de jouer trop souvent le même sport.
- * - **Conflits d'Horaires** : Une pool ne peut pas être assignée à plusieurs sessions en même temps.
- * - **Disponibilité des Pools** : Les pools doivent être disponibles pour les créneaux horaires
- *   assignés, en tenant compte des sessions déjà planifiées.
- *
  * ========================================================================
  */
+
 const PlanningStrategy = require('./planningStrategy');
 const {
   Pool,
@@ -66,6 +43,23 @@ const {
 } = require('../../../models');
 
 class CustomRoundRobinPlanning extends PlanningStrategy {
+  constructor(tourneyId, options = {}) {
+    super(tourneyId);
+    // Ajout de la variable randomMode avec une valeur par défaut false
+    this.randomMode = options.randomMode || false;
+  }
+
+  /**
+   * Mélange un tableau en place en utilisant l'algorithme de Fisher-Yates.
+   * @param {Array} array - Le tableau à mélanger.
+   */
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
   async generatePlanning() {
     // === 1. Récupération des données ===
     // Récupérer le tournoi
@@ -233,6 +227,11 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       totalPoolTime
     );
 
+    // Si randomMode est activé, mélanger les créneaux horaires
+    if (this.randomMode) {
+      this.shuffleArray(planning);
+    }
+
     // === 3. Initialisation des structures de données ===
 
     // Supprimer les PoolSchedules existants
@@ -316,12 +315,17 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Array} pools - Liste des pools.
    * @param {Array} planning - Liste des créneaux horaires.
    * @param {Array} fields - Liste des terrains disponibles.
-   * @param {Object} scheduleTourney - Configuration du planning du tournoi.
+   * @param {Object} tourneyDate - Date du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
   async initialAssignment(pools, planning, fields, tourneyDate, poolDuration) {
     // Copier la liste des pools
     let poolQueue = [...pools];
+
+    // Si randomMode est activé, mélanger l'ordre des pools
+    if (this.randomMode) {
+      this.shuffleArray(poolQueue);
+    }
 
     // Boucler sur les créneaux horaires
     for (let i = 0; i < planning.length; i++) {
@@ -353,27 +357,38 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
         // Prioriser les sports les moins joués par la pool
         const sportsPlayed = this.poolPlayedSports.get(selectedPool.id);
-        const possibleSports = Array.from(sportsAvailable.keys()).sort(
-          (a, b) => {
-            const countA = sportsPlayed.get(a) || 0;
-            const countB = sportsPlayed.get(b) || 0;
+        const possibleSports = Array.from(sportsAvailable.keys());
+
+        // Trier les sports en fonction du nombre de fois qu'ils ont été joués
+        // Si randomMode est activé, injecter de la randomisation lors du tri
+        possibleSports.sort((a, b) => {
+          const countA = sportsPlayed.get(a) || 0;
+          const countB = sportsPlayed.get(b) || 0;
+          if (countA !== countB) {
             return countA - countB;
+          } else if (this.randomMode) {
+            return Math.random() - 0.5; // Randomiser l'ordre si les counts sont égaux
+          } else {
+            return 0; // Garder l'ordre actuel si randomMode est désactivé
           }
-        );
+        });
 
         let assigned = false;
 
         for (const sportId of possibleSports) {
-          const fieldsAvailable = sportsAvailable.get(sportId);
+          let fieldsAvailable = sportsAvailable.get(sportId);
+
+          // Si randomMode est activé, mélanger les terrains disponibles
+          if (this.randomMode) {
+            this.shuffleArray(fieldsAvailable);
+          }
 
           while (fieldsAvailable.length > 0) {
             const fieldAssignment = fieldsAvailable.shift();
 
             // Vérifier si le terrain est déjà assigné à ce créneau
             if (
-              this.fieldsAssignedAtTimeSlot[timeSlot].has(
-                fieldAssignment.field.id
-              )
+              this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)
             ) {
               continue; // Passer au terrain suivant
             }
@@ -389,7 +404,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
             );
 
             assigned = true;
-            break; // Sortir de la boucle des sports
+            break; // Sortir de la boucle des terrains
           }
 
           if (assigned) {
@@ -405,7 +420,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {Array} pools - Liste des pools.
    * @param {Array} planning - Liste des créneaux horaires.
    * @param {Array} fields - Liste des terrains disponibles.
-   * @param {Object} scheduleTourney - Configuration du planning du tournoi.
+   * @param {Object} tourneyDate - Date du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
   async balancePoolSessions(
@@ -420,6 +435,11 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       (pool) => this.poolTotalAssignments.get(pool.id) < maxSessions
     );
 
+    // Si randomMode est activé, mélanger l'ordre des pools nécessitant des sessions supplémentaires
+    if (this.randomMode) {
+      this.shuffleArray(poolsNeedingExtraSessions);
+    }
+
     for (const pool of poolsNeedingExtraSessions) {
       const sessionsNeeded =
         maxSessions - this.poolTotalAssignments.get(pool.id);
@@ -427,7 +447,15 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       for (let i = 0; i < sessionsNeeded; i++) {
         let assigned = false;
 
-        for (const timeSlot of planning) {
+        // Copier la liste des créneaux horaires
+        let timeSlotsToTry = [...planning];
+
+        // Si randomMode est activé, mélanger l'ordre des time slots
+        if (this.randomMode) {
+          this.shuffleArray(timeSlotsToTry);
+        }
+
+        for (const timeSlot of timeSlotsToTry) {
           if (this.poolsAssignedAtTimeSlot[timeSlot].has(pool.id)) continue; // Pool déjà assignée à ce créneau
 
           // Rechercher les sports disponibles à ce créneau
@@ -439,25 +467,36 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
           // Prioriser les sports les moins joués par la pool
           const sportsPlayed = this.poolPlayedSports.get(pool.id);
-          const possibleSports = Array.from(sportsAvailable.keys()).sort(
-            (a, b) => {
-              const countA = sportsPlayed.get(a) || 0;
-              const countB = sportsPlayed.get(b) || 0;
+          const possibleSports = Array.from(sportsAvailable.keys());
+
+          // Trier les sports en fonction du nombre de fois qu'ils ont été joués
+          // Si randomMode est activé, injecter de la randomisation lors du tri
+          possibleSports.sort((a, b) => {
+            const countA = sportsPlayed.get(a) || 0;
+            const countB = sportsPlayed.get(b) || 0;
+            if (countA !== countB) {
               return countA - countB;
+            } else if (this.randomMode) {
+              return Math.random() - 0.5; // Randomiser l'ordre si les counts sont égaux
+            } else {
+              return 0; // Garder l'ordre actuel si randomMode est désactivé
             }
-          );
+          });
 
           for (const sportId of possibleSports) {
-            const fieldsAvailable = sportsAvailable.get(sportId);
+            let fieldsAvailable = sportsAvailable.get(sportId);
+
+            // Si randomMode est activé, mélanger les terrains disponibles
+            if (this.randomMode) {
+              this.shuffleArray(fieldsAvailable);
+            }
 
             while (fieldsAvailable.length > 0) {
               const fieldAssignment = fieldsAvailable.shift();
 
               // Vérifier si le terrain est déjà assigné à ce créneau
               if (
-                this.fieldsAssignedAtTimeSlot[timeSlot].has(
-                  fieldAssignment.field.id
-                )
+                this.fieldsAssignedAtTimeSlot[timeSlot].has(fieldAssignment.field.id)
               ) {
                 continue; // Passer au terrain suivant
               }
@@ -473,7 +512,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
               );
 
               assigned = true;
-              break; // Sortir de la boucle des sports
+              break; // Sortir de la boucle des terrains
             }
 
             if (assigned) {
@@ -535,6 +574,13 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       });
     });
 
+    // Si randomMode est activé, mélanger les terrains disponibles pour chaque sport
+    if (this.randomMode) {
+      for (const fieldsList of sportsAvailable.values()) {
+        this.shuffleArray(fieldsList);
+      }
+    }
+
     return sportsAvailable;
   }
 
@@ -544,7 +590,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
    * @param {number} timeSlot - Créneau horaire en minutes.
    * @param {number} sportId - Identifiant du sport.
    * @param {Object} fieldAssignment - Terrain assigné.
-   * @param {Object} scheduleTourney - Configuration du planning du tournoi.
+   * @param {Object} tourneyDate - Date du tournoi.
    * @param {number} poolDuration - Durée d'une session de pool en minutes.
    */
   async assignPoolToTimeSlot(
@@ -606,6 +652,139 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       .toString()
       .padStart(2, '0')}:00`;
   }
+
+  /**
+   * Valide le planning selon les règles spécifiées.
+   * @returns {Object} Résultats de la validation avec différents niveaux d'erreurs.
+   */
+  async validatePlanning() {
+    const errors = {
+      high: [],
+      mid: [],
+      low: [],
+    };
+
+    // Récupérer les poolSchedules générés
+    const poolSchedules = await PoolSchedule.findAll({
+      where: { tourneyId: this.tourneyId },
+      include: [{ model: Sport, as: 'sport' }, { model: Field, as: 'field' }],
+    });
+
+    // 1. ERREUR GRAVE (high): Pools en conflit ou durant les pauses
+    // a. Vérifier les chevauchements sur le même terrain
+    const scheduleMap = {};
+    poolSchedules.forEach((schedule) => {
+      const key = `${schedule.fieldId}-${schedule.date}`;
+      if (!scheduleMap[key]) {
+        scheduleMap[key] = [];
+      }
+      scheduleMap[key].push(schedule);
+    });
+
+    for (const key in scheduleMap) {
+      const schedules = scheduleMap[key];
+      // Trier par startTime
+      schedules.sort((a, b) => a.startTime.localeCompare(b.startTime));
+      for (let i = 0; i < schedules.length - 1; i++) {
+        const currentEnd = schedules[i].endTime;
+        const nextStart = schedules[i + 1].startTime;
+        if (currentEnd > nextStart) {
+          errors.high.push(
+            `Conflit sur le terrain ${schedules[i].field.name} le ${schedules[i].date} entre les pools ${schedules[i].poolId} et ${schedules[i + 1].poolId}.`
+          );
+        }
+      }
+    }
+
+    // b. Vérifier les pools pendant les pauses
+    const scheduleTourney = await ScheduleTourney.findOne({
+      where: { tourneyId: this.tourneyId },
+    });
+
+    poolSchedules.forEach((schedule) => {
+      const { introStart, introEnd, lunchStart, lunchEnd, outroStart, outroEnd, startTime, endTime } = scheduleTourney;
+
+      // Vérifier si le scheduling est en dehors des heures globales
+      if (schedule.startTime < startTime || schedule.endTime > endTime) {
+        errors.high.push(`La pool ${schedule.poolId} est programmée en dehors des heures globales.`);
+      }
+
+      // Vérifier si la pool est durant les pauses
+      const pauses = [
+        { start: introStart, end: introEnd },
+        { start: lunchStart, end: lunchEnd },
+        { start: outroStart, end: outroEnd },
+      ];
+
+      pauses.forEach((pause) => {
+        if (
+          (schedule.startTime >= pause.start && schedule.startTime < pause.end) ||
+          (schedule.endTime > pause.start && schedule.endTime <= pause.end)
+        ) {
+          errors.high.push(`La pool ${schedule.poolId} est programmée pendant une pause (${pause.start} - ${pause.end}).`);
+        }
+      });
+    });
+
+    // 2. ERREUR MOYENNE (mid): Différence de 2 ou plus dans les sessions
+    const sessionCounts = {};
+    poolSchedules.forEach((schedule) => {
+      const poolId = schedule.poolId;
+      if (!sessionCounts[poolId]) {
+        sessionCounts[poolId] = 0;
+      }
+      sessionCounts[poolId]++;
+    });
+
+    const sessionValues = Object.values(sessionCounts);
+    const maxSessions = Math.max(...sessionValues);
+    const minSessions = Math.min(...sessionValues);
+
+    if (maxSessions - minSessions >= 2) {
+      errors.mid.push(`Différence de 2 sessions ou plus entre les pools.`);
+    }
+
+    // 3. ERREUR FAIBLE (low): Différence de 1 dans les sessions et participation multiple au même sport
+    if (maxSessions - minSessions === 1) {
+      errors.low.push(`Différence de 1 session entre les pools.`);
+    }
+
+    // Vérifier si une pool participe à plusieurs fois au même sport
+    const poolSportMap = {};
+    poolSchedules.forEach((schedule) => {
+      const poolId = schedule.poolId;
+      const sportName = schedule.sport?.name || 'Sport inconnu';
+      if (!poolSportMap[poolId]) {
+        poolSportMap[poolId] = {};
+      }
+      if (!poolSportMap[poolId][sportName]) {
+        poolSportMap[poolId][sportName] = 1;
+      } else {
+        poolSportMap[poolId][sportName]++;
+      }
+    });
+
+    for (const poolId in poolSportMap) {
+      const sports = poolSportMap[poolId];
+      for (const sport in sports) {
+        if (sports[sport] > 1) {
+          errors.low.push(`La pool ${poolId} participe plusieurs fois au sport ${sport}.`);
+        }
+      }
+    }
+
+    // Déterminer s'il y a des erreurs
+    const hasErrors = Object.values(errors).some(
+      (levelErrors) => levelErrors.length > 0
+    );
+
+    return {
+      hasErrors,
+      errors,
+    };
+  }
 }
+
+
 
 module.exports = CustomRoundRobinPlanning;
