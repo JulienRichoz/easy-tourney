@@ -723,6 +723,17 @@
           });
 
           headerContainer.appendChild(editIcon);
+
+          let pressTimer;
+          deleteIcon.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            pressTimer = setTimeout(() => {
+              this.deleteEvent(arg.event);
+            }, 600);
+          });
+          deleteIcon.addEventListener('touchend', () => {
+            clearTimeout(pressTimer);
+          });
           headerContainer.appendChild(deleteIcon);
         }
 
@@ -1441,60 +1452,4 @@
   }
 
   @import '@/assets/fullcalendar.css';
-
-  /* Styles pour les avertissements de validation */
-  .bg-yellow-100 {
-    background-color: #fef3c7;
-  }
-  .border-yellow-400 {
-    border-color: #facc15;
-  }
-  .text-yellow-700 {
-    color: #92400e;
-  }
-  .p-4 {
-    padding: 1rem;
-  }
-  .rounded {
-    border-radius: 0.25rem;
-  }
-  .mb-4 {
-    margin-bottom: 1rem;
-  }
-  .relative {
-    position: relative;
-  }
-  .flex-col {
-    flex-direction: column;
-  }
-  .space-y-1 {
-    gap: 0.25rem;
-  }
-  .font-semibold {
-    font-weight: 600;
-  }
-  .mb-2 {
-    margin-bottom: 0.5rem;
-  }
-  .list-disc {
-    list-style-type: disc;
-  }
-  .list-inside {
-    list-style-position: inside;
-  }
-  .absolute {
-    position: absolute;
-  }
-  .top-2 {
-    top: 0.5rem;
-  }
-  .right-2 {
-    right: 0.5rem;
-  }
-  .text-yellow-900:hover {
-    color: #7f1d1d;
-  }
-  .text-yellow-700:hover {
-    color: #9333ea;
-  }
 </style>
