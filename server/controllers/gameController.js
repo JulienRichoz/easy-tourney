@@ -9,6 +9,8 @@ const {
   User,
 } = require('../models');
 const { Op } = require('sequelize');
+const tourneyTypes = require('../config/tourneyTypes');
+
 
 /**
  * Créer un nouveau match
@@ -17,7 +19,7 @@ exports.createGame = async (req, res) => {
   try {
     const { tourneyId } = req.params;
     const {
-      poolId,
+      poolScheduleId,
       teamAId,
       teamBId,
       fieldId,
@@ -55,10 +57,40 @@ exports.createGame = async (req, res) => {
         .json({ message: 'Les équipes doivent être de type "player".' });
     }
 
+    const tourneyType = tourneyTypes[tourney.tourneyType];
+    // Si le tournoi utilise des pools (certains types de tournoi nécessitent des pools alors que d'autres non)
+    if (tourneyType && tourneyType.requiresPool) {
+      if (!poolScheduleId) {
+        return res
+          .status(400)
+          .json({ message: "'poolScheduleId' est requis pour ce type de tournoi." });
+      }
+
+      const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
+      if (!poolSchedule) {
+        return res
+          .status(404)
+          .json({ message: 'PoolSchedule non trouvée.' });
+      }
+
+      const teams = await Team.findAll({
+        where: { id: [teamAId, teamBId], poolId: poolSchedule.poolId },
+      });
+      if (teams.length !== 2) {
+        return res
+          .status(400)
+          .json({ message: 'Les équipes doivent appartenir à la même Pool.' });
+      }
+    } else {
+      // Pour les tournois sans poolss à configurer par la suite
+      console.log('Tournoi sans pool');
+    }
+
     // Créer le match
     const game = await Game.create({
       tourneyId,
-      poolId,
+      poolId: poolScheduleId ? poolSchedule.poolId : null,
+      poolScheduleId: poolScheduleId || null,
       teamAId,
       teamBId,
       fieldId,

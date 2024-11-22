@@ -21,6 +21,12 @@ module.exports = {
         references: { model: 'Pools', key: 'id' },
         onDelete: 'SET NULL',
       },
+      poolScheduleId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: { model: 'PoolSchedules', key: 'id' },
+        onDelete: 'SET NULL',
+      },
       teamAId: {
         type: Sequelize.INTEGER,
         allowNull: false,

@@ -1,5 +1,7 @@
 // models/game.js
 const { Model } = require('sequelize');
+const tourneyTypes = require('../config/tourneyTypes');
+const { Team, Tourney } = require('./');
 
 module.exports = (sequelize, DataTypes) => {
   class Game extends Model {
@@ -33,6 +35,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: { model: 'Pools', key: 'id' },
+        onDelete: 'SET NULL',
+      },
+      poolScheduleId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'PoolSchedules', key: 'id' },
         onDelete: 'SET NULL',
       },
       teamAId: {
@@ -78,6 +86,29 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Game',
+      validate: {
+        async teamsBelongToSamePool() {
+          const tourney = await Tourney.findByPk(this.tourneyId);
+          const tourneyType = tourneyTypes[tourney.tourneyType];
+
+          // Vérifie si ce type de tournoi nécessite des pools
+          if (tourneyType && tourneyType.requiresPool) {
+            if (!this.poolId) {
+              throw new Error(
+                "Un 'poolId' est requis pour les tournois nécessitant des pools."
+              );
+            }
+            // Vérifiez que les équipes appartiennent à la même pool
+            const teamA = await Team.findByPk(this.teamAId);
+            const teamB = await Team.findByPk(this.teamBId);
+            if (teamA.poolId !== this.poolId || teamB.poolId !== this.poolId) {
+              throw new Error(
+                "Les équipes doivent appartenir à la Pool associée au match."
+              );
+            }
+          }
+        },
+      },
     }
   );
 

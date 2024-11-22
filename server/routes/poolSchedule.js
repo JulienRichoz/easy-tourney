@@ -24,8 +24,7 @@ module.exports = router;
 
 /**
  * TODO:
- * Regler probleme titre ajout pool aux terrains
- * Probleme algorithme high tourney -> 9 terrains 4 sessions 9 pools (une pool a doublon)
+ * Planing/pool : je dois recharger la page pour utiliser les filtres de pools après l'ajout dun pool sur la page. 
  * REFLECHIR a la vue planning pool <-> game => final
  * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
  */
