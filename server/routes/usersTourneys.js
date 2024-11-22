@@ -20,18 +20,8 @@ const {
 router.post('/', isAuthenticated, isAdmin, addUserToTourney); // Ajouter un utilisateur à un tournoi
 router.post('/:userId/teams', isAuthenticated, isAdmin, assignTeamToUser); // Assigner une équipe à un utilisateur
 router.get('/', isAuthenticated, getUsersByTourney); // Récupérer tous les utilisateurs du tournoi (hors admin)
-router.get(
-  '/unassigned-users',
-  isAuthenticated,
-  isAdmin,
-  getUnassignedUsersByTourney
-); // Récupérer les utilisateurs sans team pour un tournoi donné
-router.get(
-  '/:userId',
-  isAuthenticated,
-  authorizeUserOrAdmin,
-  getUserInfoByTourney
-); // Récupérer les informations d'un utilisateur pour un tournoi donné
+router.get('/unassigned-users', isAuthenticated, isAdmin, getUnassignedUsersByTourney); // Récupérer les utilisateurs sans team pour un tournoi donné
+router.get('/:userId', isAuthenticated, authorizeUserOrAdmin, getUserInfoByTourney); // Récupérer les informations d'un utilisateur pour un tournoi donné
 router.delete('/:userId', isAuthenticated, isAdmin, removeUserFromTourney); // Supprimer un utilisateur d'un tournoi
 
 module.exports = router;

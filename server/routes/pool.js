@@ -10,8 +10,6 @@ const {
   assignTeamsToPool,
   removeTeamsFromPool,
   autoAssignTeamsToPools,
-  createPoolSchedule,
-  getPoolSchedules,
   generatePools,
   deleteAllPools,
 } = require('../controllers/poolController');
@@ -28,58 +26,15 @@ const {
 router.post('/', isAuthenticated, isAdmin, createPool);
 router.get('/', isAuthenticated, authorizeTournamentAccess, getPoolsByTourney);
 router.get('/:poolId', isAuthenticated, authorizeTournamentAccess, getPoolById);
-router.put(
-  '/:poolId',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  updatePool
-);
-router.delete(
-  '/reset',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  deleteAllPools
-); // Placer avant poolId pour ordre des requetes
-router.delete(
-  '/:poolId',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  deletePool
-);
-
+router.put('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, updatePool);
+router.delete('/reset', isAuthenticated, isAdmin, verifyPoolStatusDraft, deleteAllPools); // Placer avant poolId pour ordre des requetes
+router.delete('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, deletePool);
 // Routes pour assigner et retirer des équipes de pools
-router.post(
-  '/:poolId/assign-teams',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  assignTeamsToPool
-);
-router.post(
-  '/:poolId/remove-teams',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  removeTeamsFromPool
-);
-router.post(
-  '/auto-assign',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  autoAssignTeamsToPools
-);
+router.post('/:poolId/assign-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, assignTeamsToPool);
+router.post('/:poolId/remove-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, removeTeamsFromPool);
+router.post('/auto-assign', isAuthenticated, isAdmin, verifyPoolStatusDraft, autoAssignTeamsToPools);
 
 // Strategy Pattern to generate Pools with teams depending on the strategy pattern used
-router.post(
-  '/generate',
-  isAuthenticated,
-  isAdmin,
-  verifyPoolStatusDraft,
-  generatePools
-);
+router.post('/generate', isAuthenticated, isAdmin, verifyPoolStatusDraft, generatePools);
 
 module.exports = router;

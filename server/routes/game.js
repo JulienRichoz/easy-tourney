@@ -8,6 +8,8 @@ const {
   updateGame,
   deleteGame,
   validateGames,
+  getGamesByPoolSchedule,
+  getGamesByPool,
 } = require('../controllers/gameController');
 const {
   isAuthenticated,

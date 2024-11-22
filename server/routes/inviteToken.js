@@ -19,25 +19,10 @@ router.post('/', isAuthenticated, isAdmin, generateInviteToken); // Route pour g
 router.get('/', isAuthenticated, isAdmin, getAllInviteTokens); // Route pour obtenir tous les tokens d'invitation d'un tournoi
 router.get('/:tokenId', isAuthenticated, isAdmin, getInviteToken); // Route pour obtenir tous les tokens d'invitation d'un tournoi
 
-router.patch(
-  '/:tokenId/invalidate',
-  isAuthenticated,
-  isAdmin,
-  invalidateInviteToken
-); // invalider un token spécifique
-router.patch(
-  '/:tokenId/validate',
-  isAuthenticated,
-  isAdmin,
-  validateInviteToken
-); // invalider un token spécifique
+router.patch('/:tokenId/invalidate', isAuthenticated, isAdmin, invalidateInviteToken); // invalider un token spécifique
+router.patch('/:tokenId/validate', isAuthenticated, isAdmin, validateInviteToken); // invalider un token spécifique
 
-router.put(
-  '/invalidate-all',
-  isAuthenticated,
-  isAdmin,
-  invalidateAllInviteTokens
-); // Invalider tous les tokens d'un tournoi
+router.put('/invalidate-all', isAuthenticated, isAdmin, invalidateAllInviteTokens); // Invalider tous les tokens d'un tournoi
 router.put('/validate-all', isAuthenticated, isAdmin, validateAllInviteTokens); // Invalider tous les tokens d'un tournoi
 
 module.exports = router;
