@@ -912,6 +912,7 @@
             date: this.tourney.dateTourney,
           };
 
+          // Creation d'un poolSchedule
           const response = await apiService.post(
             `/tourneys/${this.tourneyId}/pools/schedule/${poolId}`,
             data
@@ -940,7 +941,7 @@
             startTime: data.startTime,
             endTime: data.endTime,
             field: { id: data.fieldId },
-            pool: { id: poolId, name: event.extendedProps.poolName },
+            pool: { id: Number(poolId), name: event.extendedProps.poolName },
             sport: response.data.poolSchedule.sport,
           });
         } catch (error) {
@@ -1488,22 +1489,28 @@
             const pairEndNum = timeStringToNumber(pair.end);
 
             if (pairStartNum >= pairEndNum) {
-              errors[pair.startField] =
-                `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
-              errors[pair.endField] =
-                `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
+              errors[
+                pair.startField
+              ] = `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
+              errors[
+                pair.endField
+              ] = `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
             }
             if (pairStartNum < startTimeNum || pairEndNum > endTimeNum) {
-              errors[pair.startField] =
-                `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
-              errors[pair.endField] =
-                `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              errors[
+                pair.startField
+              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              errors[
+                pair.endField
+              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
             }
           } else if ((pair.start && !pair.end) || (!pair.start && pair.end)) {
-            errors[pair.startField] =
-              `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
-            errors[pair.endField] =
-              `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+            errors[
+              pair.startField
+            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
+            errors[
+              pair.endField
+            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
           }
         }
 
