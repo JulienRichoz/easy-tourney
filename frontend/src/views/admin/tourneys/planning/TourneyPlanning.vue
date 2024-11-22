@@ -89,7 +89,7 @@
             variant="secondary"
             class="w-auto"
           >
-            <span class="hidden md:inline">Config Planning</span>
+            <span class="hidden md:inline">Config Horaires</span>
             <span class="md:hidden">Conf.</span>
           </ButtonComponent>
 
