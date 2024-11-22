@@ -16,7 +16,7 @@ module.exports = {
         registrationStatus: 'draft',
         poolStatus: 'draft',
         planningStatus: 'notStarted',
-        maxNumberOfPools: 5,
+        maxNumberOfPools: 9,
         defaultMinTeamPerPool: 4,
         defaultMaxTeamPerPool: 6,
         createdAt: new Date(),

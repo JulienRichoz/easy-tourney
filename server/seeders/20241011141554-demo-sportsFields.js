@@ -33,6 +33,21 @@ module.exports = {
         sportIndex = (sportIndex + 1) % sports.length;
       }
 
+      for (const field of fields) {
+        sportsFields.push({
+          fieldId: field.id,
+          sportId: sports[sportIndex].id, // Associer un sport
+          startTime: '13:00',
+          endTime: '17:00',
+          information: `Événement sur ${field.name}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Alterner les sports pour la prochaine insertion
+        sportIndex = (sportIndex + 1) % sports.length;
+      }
+
       // Insérer les données dans sportsFields
       await queryInterface.bulkInsert('sportsFields', sportsFields);
     }

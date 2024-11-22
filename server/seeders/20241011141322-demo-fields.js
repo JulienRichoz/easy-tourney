@@ -5,7 +5,7 @@ module.exports = {
     const fields = [];
 
     // Fields for High Tournament
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 9; i++) {
       fields.push({
         name: `Terrain ${i}`,
         tourneyId: 1,
