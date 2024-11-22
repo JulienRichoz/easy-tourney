@@ -1,7 +1,6 @@
 // models/game.js
 const { Model } = require('sequelize');
 const tourneyTypes = require('../config/tourneyTypes');
-const { Team, Tourney } = require('./');
 
 module.exports = (sequelize, DataTypes) => {
   class Game extends Model {
@@ -86,63 +85,64 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Game',
-    },
-
-    // Hook de validation avant la création ou la mise à jour
-    Game.addHook('beforeValidate', async (game, options) => {
-      const { Team, Tourney, PoolSchedule } = sequelize.models;
-      const tourney = await Tourney.findByPk(game.tourneyId);
-
-      if (!tourney) {
-        throw new Error("Le tournoi associé n'existe pas.");
-      }
-
-      const tourneyType = tourneyTypes[tourney.tourneyType];
-
-      if (tourneyType && tourneyType.requiresPool) {
-        if (!game.poolId) {
-          throw new Error(
-            "Un 'poolId' est requis pour les tournois nécessitant des pools."
-          );
-        }
-
-        // Vérifier que les équipes appartiennent à la même Pool
-        const teamA = await Team.findByPk(game.teamAId);
-        const teamB = await Team.findByPk(game.teamBId);
-
-        if (!teamA || !teamB) {
-          throw new Error("Les équipes spécifiées n'existent pas.");
-        }
-
-        if (
-          teamA.poolId !== game.poolId ||
-          teamB.poolId !== game.poolId ||
-          teamA.poolId !== teamB.poolId
-        ) {
-          throw new Error(
-            "Les équipes doivent appartenir à la même Pool associée au match."
-          );
-        }
-
-        // Si 'poolScheduleId' est fourni, vérifier qu'il correspond à 'poolId'
-        if (game.poolScheduleId) {
-          const poolSchedule = await PoolSchedule.findByPk(game.poolScheduleId);
-          if (!poolSchedule) {
-            throw new Error("La PoolSchedule spécifiée n'existe pas.");
-          }
-          if (poolSchedule.poolId !== game.poolId) {
-            throw new Error(
-              "La PoolSchedule doit appartenir à la même Pool que les équipes."
-            );
-          }
-        }
-      } else {
-        // Pour les tournois sans pools, s'assurer que 'poolId' et 'poolScheduleId' sont nuls
-        game.poolId = null;
-        game.poolScheduleId = null;
-      }
-    })
+    }
   );
+
+  // Ajout du hook après l'initialisation
+  // Vérifie qu'un 'poolId' est requis pour les tournois nécessitant des pools
+  Game.addHook('beforeValidate', async (game, options) => {
+    const { Team, Tourney, PoolSchedule } = sequelize.models;
+    const tourney = await Tourney.findByPk(game.tourneyId);
+
+    if (!tourney) {
+      throw new Error("Le tournoi associé n'existe pas.");
+    }
+
+    const tourneyType = tourneyTypes[tourney.tourneyType];
+
+    if (tourneyType && tourneyType.requiresPool) {
+      if (!game.poolId) {
+        throw new Error(
+          "Un 'poolId' est requis pour les tournois nécessitant des pools."
+        );
+      }
+
+      // Vérifier que les équipes appartiennent à la même Pool
+      const teamA = await Team.findByPk(game.teamAId);
+      const teamB = await Team.findByPk(game.teamBId);
+
+      if (!teamA || !teamB) {
+        throw new Error("Les équipes spécifiées n'existent pas.");
+      }
+
+      if (
+        teamA.poolId !== game.poolId ||
+        teamB.poolId !== game.poolId ||
+        teamA.poolId !== teamB.poolId
+      ) {
+        throw new Error(
+          "Les équipes doivent appartenir à la même Pool associée au match."
+        );
+      }
+
+      // Si 'poolScheduleId' est fourni, vérifier qu'il correspond à 'poolId'
+      if (game.poolScheduleId) {
+        const poolSchedule = await PoolSchedule.findByPk(game.poolScheduleId);
+        if (!poolSchedule) {
+          throw new Error("La PoolSchedule spécifiée n'existe pas.");
+        }
+        if (poolSchedule.poolId !== game.poolId) {
+          throw new Error(
+            "La PoolSchedule doit appartenir à la même Pool que les équipes."
+          );
+        }
+      }
+    } else {
+      // Pour les tournois sans pools, s'assurer que 'poolId' et 'poolScheduleId' sont nuls
+      game.poolId = null;
+      game.poolScheduleId = null;
+    }
+  });
 
   return Game;
 };

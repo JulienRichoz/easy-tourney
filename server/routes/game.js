@@ -18,6 +18,9 @@ const {
 } = require('../middlewares');
 
 // Base URL: http://localhost:8080/api/tourneys/:tourneyId/games
+router.get('/by-pool-schedule/:poolScheduleId', isAuthenticated, authorizeTournamentAccess, getGamesByPoolSchedule);
+router.get('/by-pool/:poolId', isAuthenticated, authorizeTournamentAccess, getGamesByPool);
+
 router.post('/', isAuthenticated, isAdmin, createGame); // Créer un nouveau match
 router.get('/', isAuthenticated, authorizeTournamentAccess, getGamesByTourney); // Récupérer tous les matchs du tournoi
 router.get('/:gameId', isAuthenticated, authorizeTournamentAccess, getGameById); // Récupérer un match par ID

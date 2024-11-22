@@ -217,6 +217,68 @@ exports.getGameById = async (req, res) => {
   }
 };
 
+exports.getGamesByPoolSchedule = async (req, res) => {
+  try {
+    const { tourneyId, poolScheduleId } = req.params;
+
+    const games = await Game.findAll({
+      where: { tourneyId, poolScheduleId },
+      include: [
+        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+        {
+          model: UsersTourneys,
+          as: 'assistant',
+          attributes: ['userId', 'tourneyRole'],
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(games);
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des matchs pour la PoolSchedule :',
+      error
+    );
+    res
+      .status(500)
+      .json({ message: 'Erreur serveur.', error: error.message });
+  }
+};
+
+exports.getGamesByPool = async (req, res) => {
+  try {
+    const { tourneyId, poolId } = req.params;
+
+    const games = await Game.findAll({
+      where: { tourneyId, poolId },
+      include: [
+        // ... mêmes inclusions que précédemment ...
+      ],
+    });
+
+    res.status(200).json(games);
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des matchs pour la Pool :',
+      error
+    );
+    res
+      .status(500)
+      .json({ message: 'Erreur serveur.', error: error.message });
+  }
+};
+
+
 /**
  * Mettre à jour un match
  */
@@ -278,18 +340,24 @@ exports.validateGames = async (req, res) => {
   try {
     const { tourneyId } = req.params;
 
-    const games = await Game.findAll({ where: { tourneyId } });
+    const games = await Game.findAll({
+      where: { tourneyId },
+      attributes: ['id', 'fieldId', 'startTime', 'endTime'],
+      order: [['fieldId'], ['startTime']],
+    });
 
-    // Exemple de validation : deux matchs ne doivent pas avoir lieu en même temps sur le même terrain
     const conflicts = [];
-    for (let i = 0; i < games.length; i++) {
-      for (let j = i + 1; j < games.length; j++) {
-        if (
-          games[i].fieldId === games[j].fieldId &&
-          games[i].startTime < games[j].endTime &&
-          games[i].endTime > games[j].startTime
-        ) {
-          conflicts.push({ game1: games[i], game2: games[j] });
+
+    for (let i = 0; i < games.length - 1; i++) {
+      const currentGame = games[i];
+      const nextGame = games[i + 1];
+
+      if (currentGame.fieldId === nextGame.fieldId) {
+        if (currentGame.endTime > nextGame.startTime) {
+          conflicts.push({
+            game1: currentGame,
+            game2: nextGame,
+          });
         }
       }
     }
@@ -301,6 +369,9 @@ exports.validateGames = async (req, res) => {
     res.status(200).json({ message: 'Aucun conflit détecté.' });
   } catch (error) {
     console.error('Erreur lors de la validation des matchs :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    res
+      .status(500)
+      .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
+
