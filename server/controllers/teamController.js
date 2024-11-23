@@ -539,41 +539,6 @@ exports.autoFillTeams = async (req, res) => {
   }
 };
 
-/* TODO: DELETE IF NOT USED (16 nov 2024)
-// Créer une nouvelle configuration de team
-exports.createTeamSetup = async (req, res) => {
-    const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body;
-    const { tourneyId } = req.params;
-
-    try {
-        const tourney = await Tourney.findByPk(tourneyId);
-        if (!tourney) {
-            return res.status(404).json({ message: 'Tournoi non trouvé' });
-        }
-
-        // Vérifier que le nombre de joueurs par équipe est valide
-        if (playerPerTeam < minPlayerPerTeam) {
-            return res.status(400).json({
-                message: 'Le nombre de joueurs par équipe doit être supérieur ou égal au nombre minimum de joueurs par équipe.',
-            });
-        }
-
-        const teamSetup = await TeamSetup.create({
-            tourneyId,
-            maxTeamNumber,
-            playerPerTeam,
-            minPlayerPerTeam,
-        });
-
-        await checkAndUpdateStatuses(tourneyId);
-
-        res.status(201).json(teamSetup);
-    } catch (error) {
-        console.error('Erreur lors de la création de la configuration de team:', error);
-        res.status(500).json({ message: 'Erreur serveur', error });
-    }
-}; */
-
 // Mettre à jour une configuration de team existante
 exports.updateTeamSetup = async (req, res) => {
   const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body;
