@@ -12,6 +12,9 @@ const {
   autoAssignTeamsToPools,
   generatePools,
   deleteAllPools,
+  removeAllTeamsFromPools,
+  generateMissingPools,
+  populateMissingPools,
 } = require('../controllers/poolController');
 const {
   isAuthenticated,
@@ -23,18 +26,27 @@ const {
 // Routes pour gérer les pools liées à un tournoi
 // Base URL: /api/tourneys/:tourneyId/pools
 
-router.post('/', isAuthenticated, isAdmin, createPool);
-router.get('/', isAuthenticated, authorizeTournamentAccess, getPoolsByTourney);
-router.get('/:poolId', isAuthenticated, authorizeTournamentAccess, getPoolById);
-router.put('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, updatePool);
-router.delete('/reset', isAuthenticated, isAdmin, verifyPoolStatusDraft, deleteAllPools); // Placer avant poolId pour ordre des requetes
-router.delete('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, deletePool);
+// Routes les plus spécifiques en premières
+router.post('/generate', isAuthenticated, isAdmin, verifyPoolStatusDraft, generatePools); // Générer des pools automatiquement sans supprimer les existants
+router.post('/populate', isAuthenticated, isAdmin, verifyPoolStatusDraft, autoAssignTeamsToPools); // Assigner les équipes non assignées aux pools existantes
+router.post('/generate-missing', isAuthenticated, isAdmin, verifyPoolStatusDraft, generateMissingPools); // Générer les pools manquantes
+router.post('/populate-missing', isAuthenticated, isAdmin, verifyPoolStatusDraft, populateMissingPools); // Assigner les équipes non assignées aux pools manquantes
+
+router.delete('/reset', isAuthenticated, isAdmin, verifyPoolStatusDraft, deleteAllPools); // Supprimer toutes les pools (hard delete)
+router.delete('/remove-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, removeAllTeamsFromPools); // Retirer toutes les équipes des pools sans supprimer les pools
+
+router.delete('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, deletePool); // Supprimer un pool spécifique
+router.put('/:poolId', isAuthenticated, isAdmin, verifyPoolStatusDraft, updatePool); // Mettre à jour un pool spécifique
+
 // Routes pour assigner et retirer des équipes de pools
 router.post('/:poolId/assign-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, assignTeamsToPool);
 router.post('/:poolId/remove-teams', isAuthenticated, isAdmin, verifyPoolStatusDraft, removeTeamsFromPool);
-router.post('/auto-assign', isAuthenticated, isAdmin, verifyPoolStatusDraft, autoAssignTeamsToPools);
 
-// Strategy Pattern to generate Pools with teams depending on the strategy pattern used
-router.post('/generate', isAuthenticated, isAdmin, verifyPoolStatusDraft, generatePools);
+// Routes pour les opérations globales sur les pools
+router.post('/', isAuthenticated, isAdmin, createPool); // Créer un pool manuellement
+router.get('/', isAuthenticated, authorizeTournamentAccess, getPoolsByTourney); // Obtenir tous les pools d'un tournoi
+router.get('/:poolId', isAuthenticated, authorizeTournamentAccess, getPoolById); // Obtenir une pool spécifique
+
+
 
 module.exports = router;

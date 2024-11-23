@@ -84,8 +84,8 @@
         </p>
       </div>
 
-      <!-- Filtre pour les pools -->
       <div class="flex items-center space-x-2 w-full md:w-auto">
+        <!-- Filtre pour les pools -->
         <FilterComponent
           :filters="filters"
           @filter-change="handleFilterChange"
@@ -101,6 +101,40 @@
           <span class="hidden sm:inline">
             Assigner Équipes ({{ unassignedTeams.length }})
           </span>
+        </ButtonComponent>
+
+        <!-- Bouton pour générer les pools manquantes -->
+        <ButtonComponent
+          v-if="isEditable && canAddMorePools"
+          @click="generateMissingPools"
+          variant="algo"
+          fontAwesomeIcon="plus"
+          class="ml-2"
+        >
+          <span class="hidden sm:inline">Générer Pools manquantes</span>
+        </ButtonComponent>
+
+        <!-- Bouton pour peupler les pools avec les équipes non assignées -->
+        <ButtonComponent
+          v-if="isEditable && unassignedTeams.length > 0"
+          @click="populatePoolsWithUnassignedTeams"
+          variant="algo"
+          fontAwesomeIcon="users"
+          class="ml-2"
+        >
+          <span class="hidden sm:inline">Peupler Pools manquantes</span>
+        </ButtonComponent>
+        <!-- Bouton pour retirer toutes les équipes des pools -->
+        <ButtonComponent
+          v-if="isEditable && teamsAssignedToPools.length > 0"
+          @click="confirmRemoveAllTeamsFromPools"
+          variant="danger"
+          fontAwesomeIcon="users-slash"
+          class="ml-2"
+        >
+          <span class="hidden sm:inline"
+            >Retirer toutes les équipes des Pools</span
+          >
         </ButtonComponent>
       </div>
       <!-- Grille d'affichage des pools -->
@@ -202,6 +236,19 @@
         </template>
       </ModalComponent>
 
+      <!-- TourneyPools.vue -->
+      <DeleteConfirmationModal
+        :isVisible="showRemoveTeamsConfirmation"
+        :isHardDelete="false"
+        @cancel="closeRemoveTeamsConfirmation"
+        @confirm="removeAllTeamsFromPools"
+      >
+        <template #message>
+          Êtes-vous sûr de vouloir retirer toutes les équipes des pools ? Cette
+          action est irréversible.
+        </template>
+      </DeleteConfirmationModal>
+
       <!-- Modale pour générer des pools selon le DP strategy-->
       <StrategyPoolGeneratorComponent
         v-if="showGeneratePoolsModal"
@@ -283,6 +330,7 @@
           maxTeamPerPool: null,
         },
         showGeneratePoolsModal: false,
+        showRemoveTeamsConfirmation: false,
         availableFields: 0,
         desiredPoolCount: null,
         tourneySetup: {
@@ -350,6 +398,7 @@
               { label: 'Valides', value: 'valid' },
               { label: 'Invalides', value: 'partial' },
               { label: 'Vides', value: 'empty' },
+              { label: 'Non planifiées', value: 'unscheduled' },
             ],
           },
         ],
@@ -374,6 +423,9 @@
         const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
         return this.pools.length < maxNumberOfPools;
       },
+      teamsAssignedToPools() {
+        return this.teams.filter((team) => team.poolId);
+      },
       filteredPools() {
         return this.pools.filter((pool) => {
           const minTeams =
@@ -389,6 +441,9 @@
           }
           if (this.filters[0].value === 'empty') {
             return pool.teams.length === 0;
+          }
+          if (this.filters[0].value === 'unscheduled') {
+            return !pool.isScheduled; // Nouveau filtre
           }
           return true;
         });
@@ -407,6 +462,7 @@
           this.pools = pools.map((pool) => ({
             ...pool,
             schedulesCount: pool.schedules ? pool.schedules.length : 0,
+            isScheduled: pool.schedules && pool.schedules.length > 0,
           }));
           this.teams = teams;
           this.tourneySetup = tourneySetup;
@@ -445,6 +501,43 @@
           }
         }
       },
+      async generateMissingPools() {
+        try {
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/generate-missing`
+          );
+          const { newPools } = response.data;
+          toast.success(
+            `${newPools.length} Pools manquantes générées avec succès !`
+          );
+          this.fetchTourneyPoolsDetails(); // Rafraîchir les données
+        } catch (error) {
+          console.error(
+            'Erreur lors de la génération des pools manquantes :',
+            error
+          );
+          toast.error('Erreur lors de la génération des pools manquantes.');
+        }
+      },
+
+      async populatePoolsWithUnassignedTeams() {
+        try {
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/pools/populate-missing`
+          );
+          const { assignedTeams } = response.data;
+          toast.success(
+            `${assignedTeams.length} équipes assignées aux pools avec succès !`
+          );
+          this.fetchTourneyPoolsDetails(); // Rafraîchir les données
+        } catch (error) {
+          console.error(
+            'Erreur lors du peuplement des pools manquantes :',
+            error
+          );
+          toast.error('Erreur lors du peuplement des pools manquantes.');
+        }
+      },
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
@@ -462,7 +555,7 @@
         this.showModal = true;
       },
       openPoolDetails(pool) {
-        // Rediriger vers la page d'une pool pour assigner les équipes (à implémenter)
+        // Rediriger vers la page d'une pool pour assigner les équipes
         this.$router.push(`/admin/tourneys/${this.tourneyId}/pools/${pool.id}`);
       },
       confirmDeletePool(id) {
@@ -519,6 +612,30 @@
         } finally {
           this.isSubmitting = false;
           this.closeModal();
+        }
+      },
+      confirmRemoveAllTeamsFromPools() {
+        this.showRemoveTeamsConfirmation = true;
+      },
+
+      closeRemoveTeamsConfirmation() {
+        this.showRemoveTeamsConfirmation = false;
+      },
+
+      async removeAllTeamsFromPools() {
+        try {
+          await apiService.delete(
+            `/tourneys/${this.tourneyId}/pools/remove-teams`
+          );
+          toast.success(
+            'Toutes les équipes ont été retirées des pools avec succès !'
+          );
+          this.fetchTourneyPoolsDetails();
+        } catch (error) {
+          console.error('Erreur lors du retrait des équipes des pools:', error);
+          toast.error('Erreur lors du retrait des équipes des pools.');
+        } finally {
+          this.closeRemoveTeamsConfirmation();
         }
       },
 
