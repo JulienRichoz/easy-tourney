@@ -37,7 +37,7 @@ class CustomRoundRobin extends PoolStrategy {
       fieldCount
     ); // Limiter au nombre de terrains
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
-    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 6;
+    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 5;
 
     // Calculer le nombre initial de pools
     let poolCount = Math.min(maxPools, Math.floor(teamCount / minTeamPerPool));
@@ -110,6 +110,11 @@ class CustomRoundRobin extends PoolStrategy {
     // Récupérer les configurations du tournoi
     const tourney = await Tourney.findByPk(this.tourneyId);
     const maxPools = tourney?.maxNumberOfPools || 0;
+    const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3; // Valeur par défaut
+    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 5; // Valeur par défaut
+
+    console.log('minTeamPerPool', minTeamPerPool);
+    console.log('maxTeamPerPool', maxTeamPerPool);
 
     if (existingPoolCount >= maxPools) {
       throw new Error('Nombre maximal de pools déjà atteint.');
@@ -124,8 +129,8 @@ class CustomRoundRobin extends PoolStrategy {
       const pool = await Pool.create({
         name: poolName,
         tourneyId: this.tourneyId,
-        maxTeamPerPool: tourney.defaultMaxTeamPerPool || null,
-        minTeamPerPool: tourney.defaultMinTeamPerPool || null,
+        maxTeamPerPool: maxTeamPerPool,
+        minTeamPerPool: minTeamPerPool,
       });
       newPools.push(pool);
     }
@@ -165,7 +170,7 @@ class CustomRoundRobin extends PoolStrategy {
     // Récupérer les réglages globaux
     const tourney = await Tourney.findByPk(this.tourneyId);
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
-    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 6;
+    const maxTeamPerPool = tourney?.defa
 
     let teamsToAssign = [...unassignedTeams];
 
