@@ -52,53 +52,44 @@
         </div>
       </div>
 
-      <!-- Conteneur pour les informations générales -->
+      <!-- Messages d'avertissement -->
       <div
-        class="mb-4 p-4 bg-light-pool-infoBg border border-light-pool-infoBorder rounded-lg dark:bg-dark-pool-infoBg dark:border-dark-pool-infoBorder"
+        v-if="showWarnings && warningMessages.length > 0"
+        class="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-lg text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-300"
       >
-        <p
-          class="text-base text-light-pool-infoText dark:text-dark-pool-infoText"
-        >
-          <strong>Total d'équipes :</strong> {{ teams.length }} &emsp;
-          <strong>Terrains disponibles :</strong> {{ availableFields }} &emsp;
-          <strong>Nombre de Pools :</strong> {{ pools.length }}
-        </p>
-        <!-- Message d'avertissement conditionnel pour customRoundRobin -->
-        <p
-          v-if="tourneyType === 'customRoundRobin' && warningMessage"
-          class="mt-4 text-sm text-light-pool-infoError dark:text-dark-pool-infoError"
-        >
-          {{ warningMessage }}
-        </p>
-        <p
-          v-if="invalidPools.length > 0"
-          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
-        >
-          Attention : {{ invalidPools.length }} pool(s) ne respectent pas les
-          contraintes de taille minimale ou maximale. Veuillez vérifier leur
-          configuration.
-        </p>
-        <p
-          v-if="pools.length > availableFields"
-          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
-        >
-          Attention : Le nombre actuel de pools ({{ pools.length }}) dépasse le
-          nombre de terrains disponibles ({{ availableFields }}). Cela risque de
-          causer des retards dans le déroulement des matchs. Pensez à réduire le
-          nombre de pools ou à ajouter des terrains.
-        </p>
-        <p
-          v-if="
-            tourneySetup &&
-            tourneyType === 'customRoundRobin' &&
-            shouldShowFieldWarning
-          "
-          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
-        >
-          Vous avez {{ availableFields }} terrains disponibles, mais le nombre
-          maximum de pools est configuré à {{ tourneySetup.maxNumberOfPools }}.
-          Assurez-vous que c'est bien ce que vous souhaitez.
-        </p>
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-lg">Informations importantes</span>
+          <button
+            class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+            @click="dismissWarnings"
+          >
+            Fermer
+          </button>
+        </div>
+        <ul class="mt-2 space-y-2">
+          <li
+            v-for="message in warningMessages"
+            :key="message.id"
+            class="flex items-start space-x-2 text-sm"
+          >
+            <span
+              :class="{
+                'text-red-600': message.type === 'error',
+                'text-yellow-600': message.type === 'warning',
+                'text-green-600': message.type === 'info',
+              }"
+            >
+              •
+            </span>
+            <div>
+              <span class="font-semibold">{{ message.title }} :</span>
+              <span>{{ message.description }}</span>
+              <span class="block mt-1 text-gray-500 dark:text-gray-300">{{
+                message.recommendation
+              }}</span>
+            </div>
+          </li>
+        </ul>
       </div>
 
       <div class="flex items-center space-x-2 w-full md:w-auto">
@@ -138,6 +129,7 @@
           variant="algo"
           fontAwesomeIcon="users"
           class="ml-2"
+          :disabled="allPoolsComplete || unassignedTeams.length === 0"
         >
           <span class="hidden sm:inline">Peupler Pools manquantes</span>
         </ButtonComponent>
@@ -170,7 +162,9 @@
           v-for="pool in filteredPools"
           :key="pool.id"
           :title="pool.name"
-          :cornerCount="`${pool.teams.length} Équipes`"
+          :cornerCount="`${pool.teams.length}/${
+            pool.maxTeamPerPool || tourneySetup.defaultMaxTeamPerPool || '∞'
+          } Équipes`"
           :titleColor="getPoolStatusColor(pool)"
           :showDeleteButton="isEditable"
           :showEditButton="isEditable"
@@ -230,6 +224,8 @@
       <DeleteConfirmationModal
         :isVisible="showDeleteConfirmation"
         :isHardDelete="false"
+        :title="'Supprimer Pool'"
+        :message="'Êtes-vous sûr de vouloir supprimer cette pool ?'"
         @cancel="closeDeleteConfirmation"
         @confirm="deletePool(confirmedDeletePoolId)"
       />
@@ -253,17 +249,15 @@
         </template>
       </ModalComponent>
 
-      <!-- TourneyPools.vue -->
+      <!-- Modale de confirmation pour retirer toutes les équipes des pools -->
       <DeleteConfirmationModal
         :isVisible="showRemoveTeamsConfirmation"
         :isHardDelete="false"
+        :title="'Retirer toutes les équipes des Pools'"
+        :message="'Êtes-vous sûr de vouloir retirer toutes les équipes des pools ?'"
         @cancel="closeRemoveTeamsConfirmation"
         @confirm="removeAllTeamsFromPools"
       >
-        <template #message>
-          Êtes-vous sûr de vouloir retirer toutes les équipes des pools ? Cette
-          action est irréversible.
-        </template>
       </DeleteConfirmationModal>
 
       <!-- Modale pour générer des pools selon le DP strategy-->
@@ -281,7 +275,9 @@
       <!-- Modale de confirmation pour supprimer toutes les pools -->
       <DeleteConfirmationModal
         :isVisible="showDeleteAllConfirmation"
-        :isHardDelete="false"
+        :isHardDelete="true"
+        :title="'Supprimer toutes les Pools'"
+        :message="'Êtes-vous sûr de vouloir supprimer toutes les pools ? Cette action est irréversible.'"
         @cancel="closeDeleteAllConfirmation"
         @confirm="deleteAllPools"
       >
@@ -329,7 +325,6 @@
         tourneyId: this.$route.params.tourneyId, // Récupération du tourneyId depuis les params
         pools: [], // Liste des pools
         teams: [], // Liste des équipes du tournoi
-        warningMessage: '',
         selectedStatus: this.currentStatus,
         showModal: false,
         showDeleteConfirmation: false,
@@ -419,6 +414,7 @@
             ],
           },
         ],
+        showWarnings: true, // Ajouté pour gérer l'affichage des avertissements
       };
     },
     computed: {
@@ -428,6 +424,13 @@
       }),
       isEditable() {
         return this.statuses.poolStatus !== 'completed';
+      },
+      allPoolsComplete() {
+        return this.pools.every((pool) => {
+          const maxTeams =
+            pool.maxTeamPerPool || this.tourneySetup.defaultMaxTeamPerPool || 0;
+          return pool.teams.length >= maxTeams;
+        });
       },
       invalidPools() {
         return this.pools.filter((pool) => {
@@ -486,6 +489,54 @@
           return true;
         });
       },
+      warningMessages() {
+        const messages = [];
+
+        if (this.invalidPools.length > 0) {
+          messages.push({
+            id: 1,
+            type: 'warning',
+            title: 'Pools invalides',
+            description: `Il y a ${this.invalidPools.length} pools invalides.`,
+            recommendation:
+              'Veuillez vérifier les pools et corriger les erreurs.',
+          });
+        }
+
+        if (this.unassignedTeams.length > 0) {
+          messages.push({
+            id: 2,
+            type: 'info',
+            title: 'Équipes non assignées',
+            description: `Il y a ${this.unassignedTeams.length} équipes non assignées.`,
+            recommendation: 'Veuillez assigner les équipes aux pools.',
+          });
+        }
+
+        if (this.isPoolCountExceedingFields) {
+          messages.push({
+            id: 3,
+            type: 'warning',
+            title: 'Nombre de pools excède les terrains disponibles',
+            description: `${this.pools.length} Pools pour ${this.availableFields} terrains. Risque de temps d'attente élevée pour les joueurs.`,
+            recommendation:
+              'Veuillez ajouter des terrains pour garantir un tournus fluide.',
+          });
+        }
+
+        if (this.shouldShowFieldWarning) {
+          messages.push({
+            id: 4,
+            type: 'info',
+            title: 'Terrains disponibles',
+            description: `Vous avez plus de terrains disponibles (${this.availableFields}) que le nombre maximum de pools (${this.tourneySetup.maxNumberOfPools}).`,
+            recommendation:
+              'Vous pouvez augmenter le nombre de pools pour optimiser l’utilisation des terrains.',
+          });
+        }
+
+        return messages;
+      },
     },
     methods: {
       // Mapper les actions du module `tourney`
@@ -504,7 +555,6 @@
           }));
           this.teams = teams;
           this.tourneySetup = tourneySetup;
-          this.calculateWarningMessage();
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails des pools:',
@@ -525,20 +575,7 @@
           toast.error('Erreur lors de la récupération des terrains.');
         }
       },
-      // Calculer le message d'avertissement si nécessaire
-      calculateWarningMessage() {
-        if (this.tourneyType === 'customRoundRobin') {
-          const maxTeamsPerPool = this.tourneySetup.defaultMaxTeamPerPool || 6;
-          const optimalPools = Math.ceil(this.teams.length / maxTeamsPerPool);
 
-          if (this.availableFields < optimalPools) {
-            const neededFields = optimalPools - this.availableFields;
-            this.warningMessage = `Avec ${this.availableFields} terrains disponibles et ${this.teams.length} équipes: risque de temps d'attente. Nous vous recommandons d'ajouter ${neededFields} terrain(s) supplémentaire(s) pour améliorer la fluidité du tournoi, ou de réduire les équipes (plus complexes si les joueurs sont déjà inscrits).`;
-          } else {
-            this.warningMessage = '';
-          }
-        }
-      },
       async generateMissingPools() {
         try {
           const response = await apiService.post(
@@ -575,6 +612,10 @@
           );
           toast.error('Erreur lors du peuplement des pools manquantes.');
         }
+      },
+      // Fermer les messages d'avertissement
+      dismissWarnings() {
+        this.showWarnings = false;
       },
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
@@ -729,10 +770,11 @@
 
       customPoolSetupValidation() {
         const errors = {};
-        const { minTeamPerPool, maxTeamPerPool } = this.localPoolSetup;
+        const { defaultMinTeamPerPool, defaultMaxTeamPerPool } =
+          this.localPoolSetup;
 
-        if (minTeamPerPool > maxTeamPerPool) {
-          errors.minTeamPerPool =
+        if (defaultMinTeamPerPool > defaultMaxTeamPerPool) {
+          errors.defaultMinTeamPerPool =
             'Le nombre minimum doit être inférieur ou égal au nombre maximum.';
         }
 
@@ -784,7 +826,7 @@
         }
       },
 
-      // rafraîchit les données des pools en appelant fetchTourneyPoolsDetails() et ferme la modale en appelant closeGeneratePoolsModal().
+      // Rafraîchir les données après la génération des pools
       handlePoolsGenerated() {
         this.fetchTourneyPoolsDetails();
         this.closeGeneratePoolsModal();
