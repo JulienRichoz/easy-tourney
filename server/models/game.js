@@ -14,11 +14,9 @@ module.exports = (sequelize, DataTypes) => {
       Game.belongsTo(models.Team, { foreignKey: 'teamBId', as: 'teamB' });
       Game.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
       Game.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
-      Game.belongsTo(models.UsersTourneys, {
-        foreignKey: 'assistantId',
-        as: 'assistant',
-      });
+      Game.belongsTo(models.UsersTourneys, { foreignKey: 'assistantId', as: 'assistant' });
       Game.hasMany(models.GameEvent, { foreignKey: 'gameId', as: 'events' });
+      Game.belongsTo(models.PoolSchedule, { foreignKey: 'poolScheduleId', as: 'poolSchedule' });
     }
   }
 

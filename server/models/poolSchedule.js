@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'sportId',
         as: 'sport',
       });
+
+      // Association inverse vers Game
+      PoolSchedule.hasMany(models.Game, { foreignKey: 'poolScheduleId', as: 'games' });
     }
   }
 
