@@ -646,3 +646,75 @@ exports.getUnassignedTeams = async (req, res) => {
       });
   }
 };
+
+// Supprimer toutes les équipes invalides d'un tournoi et réassigner leurs utilisateurs à "Guest"
+exports.deleteInvalidTeams = async (req, res) => {
+  const { tourneyId } = req.params;
+
+  // Démarrer une transaction pour assurer l'atomicité
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Récupérer la configuration des équipes pour le tournoi
+    const teamSetup = await TeamSetup.findOne({ where: { tourneyId }, transaction });
+    if (!teamSetup) {
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Configuration de team non trouvée' });
+    }
+
+    const minPlayers = teamSetup.minPlayerPerTeam;
+
+    // Trouver toutes les équipes de type 'player' qui ont moins de minPlayers
+    const invalidTeams = await Team.findAll({
+      where: {
+        tourneyId,
+        type: 'player',
+      },
+      include: [
+        {
+          model: UsersTourneys,
+          as: 'usersTourneys',
+        },
+      ],
+      transaction,
+    });
+
+    const teamsToDelete = invalidTeams.filter(team => team.usersTourneys.length < minPlayers);
+
+    if (teamsToDelete.length === 0) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Aucune équipe invalide à supprimer.' });
+    }
+
+    // Supprimer chaque équipe invalide et réassigner les utilisateurs
+    for (const team of teamsToDelete) {
+      // Réassigner les utilisateurs de cette équipe à "Guest"
+      if (team.usersTourneys.length > 0) {
+        for (const userTourney of team.usersTourneys) {
+          userTourney.teamId = null;
+          userTourney.tourneyRole = 'guest';
+          await userTourney.save({ transaction });
+        }
+      }
+
+      // Supprimer l'équipe
+      await team.destroy({ transaction });
+    }
+
+    // Commit de la transaction
+    await transaction.commit();
+
+    res.status(200).json({
+      message: 'Toutes les équipes invalides ont été supprimées avec succès.',
+      deletedTeams: teamsToDelete.map(team => team.id),
+    });
+  } catch (error) {
+    // Rollback de la transaction en cas d'erreur
+    await transaction.rollback();
+    console.error("Erreur lors de la suppression des équipes invalides:", error);
+    res.status(500).json({
+      message: 'Erreur serveur lors de la suppression des équipes invalides.',
+      error: error.message,
+    });
+  }
+}

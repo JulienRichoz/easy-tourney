@@ -12,6 +12,7 @@ const {
   resetTeamsAndReassignUsers,
   autoFillTeams,
   getUnassignedTeams,
+  deleteInvalidTeams,
 } = require('../controllers/teamController');
 const {
   isAuthenticated,
@@ -22,12 +23,14 @@ const {
 
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId
 
+
 // Routes pour gérer les équipes d'un tournoi
 // Base URL: http://localhost:3000/api/tourneys/:tourneyId/teams
 
 // Routes les plus spécifiques en premières
 router.post('/generate-teams', isAuthenticated, isAdmin, generateTeams); // Générer des équipes automatiquement pour un tournoi
 router.delete('/reset', isAuthenticated, isAdmin, resetTeamsAndReassignUsers); // Réinitialiser les équipes et les utilisateurs
+router.delete('/invalid', isAuthenticated, isAdmin, deleteInvalidTeams); // Supprimer les équipes invalides
 
 // Routes pour les opérations sur des équipes spécifiques
 router.post('/:teamId/users', isAuthenticated, authorizeTournamentAccess, assignUserToTeam); // Assigner un utilisateur à une équipe
