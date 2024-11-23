@@ -44,6 +44,12 @@ const {
     ScheduleTourney,
 } = require('../../../models');
 
+const {
+    timeDifferenceInMinutes,
+    addMinutesToTime,
+    combineDateAndTime,
+} = require('../../../utils/dateUtils');
+
 class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
     constructor(tourneyId) {
         super(tourneyId);
@@ -138,7 +144,7 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
         // Calculer le nombre total de matchs disponibles dans les créneaux horaires
         let totalAvailableTime = 0;
         for (const poolSchedule of poolSchedules) {
-            totalAvailableTime += this.timeDifferenceInMinutes(
+            totalAvailableTime += timeDifferenceInMinutes(
                 poolSchedule.startTime,
                 poolSchedule.endTime
             );
@@ -199,7 +205,7 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
             );
 
             // Mettre à jour le compteur global en fonction du nombre de matchs planifiés dans ce créneau
-            const slotAvailableTime = this.timeDifferenceInMinutes(
+            const slotAvailableTime = timeDifferenceInMinutes(
                 poolSchedule.startTime,
                 poolSchedule.endTime
             );
@@ -255,7 +261,7 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
         const matchDuration = scheduleTourney.gameDuration; // en minutes
         const transitionTime = scheduleTourney.transitionGameTime; // en minutes
 
-        const totalAvailableTime = this.timeDifferenceInMinutes(
+        const totalAvailableTime = timeDifferenceInMinutes(
             poolSchedule.startTime,
             poolSchedule.endTime
         );
@@ -324,10 +330,10 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                         poolScheduleId: poolSchedule.id,
                         fieldId: poolSchedule.fieldId,
                         sportId: poolSchedule.sportId,
-                        startTime: this.combineDateAndTime(matchDate, matchStartTime),
-                        endTime: this.combineDateAndTime(
+                        startTime: combineDateAndTime(matchDate, matchStartTime),
+                        endTime: combineDateAndTime(
                             matchDate,
-                            this.addMinutesToTime(matchStartTime, matchDuration)
+                            addMinutesToTime(matchStartTime, matchDuration)
                         ),
                     });
 
@@ -346,8 +352,8 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                     lastTeamsPlayed = new Set([teamA.id, teamB.id]);
 
                     // Mettre à jour l'heure de début pour le prochain match
-                    matchStartTime = this.addMinutesToTime(
-                        this.addMinutesToTime(matchStartTime, matchDuration),
+                    matchStartTime = addMinutesToTime(
+                        addMinutesToTime(matchStartTime, matchDuration),
                         transitionTime
                     );
 
@@ -376,53 +382,6 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
      */
     getMatchKey(teamAId, teamBId) {
         return [teamAId, teamBId].sort().join('-');
-    }
-
-    /**
-     * Calcule la différence en minutes entre deux heures.
-     * @param {string} startTime - Heure de début au format "HH:MM:SS".
-     * @param {string} endTime - Heure de fin au format "HH:MM:SS".
-     * @returns {number} - Différence en minutes.
-     */
-    timeDifferenceInMinutes(startTime, endTime) {
-        const startMinutes = this.timeToMinutes(startTime);
-        const endMinutes = this.timeToMinutes(endTime);
-        return endMinutes - startMinutes;
-    }
-
-    /**
-     * Convertit une heure au format "HH:MM:SS" en minutes.
-     * @param {string} timeStr - Heure au format "HH:MM:SS".
-     * @returns {number} - Heure en minutes.
-     */
-    timeToMinutes(timeStr) {
-        const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
-
-    /**
-     * Ajoute des minutes à une heure donnée.
-     * @param {string} timeStr - Heure au format "HH:MM:SS".
-     * @param {number} minutesToAdd - Minutes à ajouter.
-     * @returns {string} - Nouvelle heure au format "HH:MM:SS".
-     */
-    addMinutesToTime(timeStr, minutesToAdd) {
-        const totalMinutes = this.timeToMinutes(timeStr) + minutesToAdd;
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return `${hours.toString().padStart(2, '0')}:${minutes
-            .toString()
-            .padStart(2, '0')}:00`;
-    }
-
-    /**
-     * Combine une date et une heure en un objet Date.
-     * @param {string} dateStr - Date au format "YYYY-MM-DD".
-     * @param {string} timeStr - Heure au format "HH:MM:SS".
-     * @returns {Date} - Un objet Date combiné.
-     */
-    combineDateAndTime(dateStr, timeStr) {
-        return new Date(`${dateStr}T${timeStr}`);
     }
 }
 

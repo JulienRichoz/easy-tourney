@@ -1,4 +1,5 @@
-// server/controllers/tourneyController.js
+// server/controllers/planningController.js
+
 const {
   Tourney,
   Field,
@@ -14,6 +15,9 @@ const {
 const PlanningStrategyManager = require('../services/planningStrategies/pool/planningStrategyManager');
 const GameStrategyManager = require('../services/planningStrategies/game/gameStrategyManager');
 
+const {
+  timeDifferenceInMinutes,
+} = require('../utils/dateUtils');
 
 exports.getPlanningDetails = async (req, res) => {
   try {
@@ -338,15 +342,3 @@ exports.getPlanningAdvice = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
-
-// Fonction utilitaire pour calculer la différence en minutes entre deux heures
-function timeDifferenceInMinutes(startTime, endTime) {
-  const startMinutes = timeToMinutes(startTime);
-  const endMinutes = timeToMinutes(endTime);
-  return endMinutes - startMinutes;
-}
-
-function timeToMinutes(timeStr) {
-  const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-  return hours * 60 + minutes;
-}

@@ -42,6 +42,12 @@ const {
   Tourney,
 } = require('../../../models');
 
+const {
+  timeToMinutes,
+  minutesToTime,
+  formatTime,
+} = require('../../../utils/dateUtils');
+
 class CustomRoundRobinPlanning extends PlanningStrategy {
   constructor(tourneyId, options = {}) {
     super(tourneyId);
@@ -120,8 +126,8 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       outroEnd,
     } = scheduleTourney;
 
-    const startMinutes = this.timeToMinutes(startTime);
-    const endMinutes = this.timeToMinutes(endTime);
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
 
     // Convertir les pauses en minutes
     const breaks = [];
@@ -134,8 +140,8 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     for (const pause of pauseLabels) {
       if (pause.start && pause.end) {
         breaks.push({
-          start: this.timeToMinutes(pause.start),
-          end: this.timeToMinutes(pause.end),
+          start: timeToMinutes(pause.start),
+          end: timeToMinutes(pause.end),
           label: pause.label,
         });
       }
@@ -149,8 +155,8 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
     fields.forEach((field) => {
       field.sportsFields.forEach((sf) => {
-        const fieldStartMinutes = this.timeToMinutes(sf.startTime);
-        const fieldEndMinutes = this.timeToMinutes(sf.endTime);
+        const fieldStartMinutes = timeToMinutes(sf.startTime);
+        const fieldEndMinutes = timeToMinutes(sf.endTime);
         availabilityIntervals.push([fieldStartMinutes, fieldEndMinutes]);
       });
     });
@@ -546,8 +552,8 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
 
     fields.forEach((field) => {
       const validSportsFields = field.sportsFields.filter((sf) => {
-        const fieldStartMinutes = this.timeToMinutes(sf.startTime);
-        const fieldEndMinutes = this.timeToMinutes(sf.endTime);
+        const fieldStartMinutes = timeToMinutes(sf.startTime);
+        const fieldEndMinutes = timeToMinutes(sf.endTime);
         return (
           timeSlot >= fieldStartMinutes &&
           timeSlot + poolDuration <= fieldEndMinutes
@@ -607,8 +613,8 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
     await PoolSchedule.create({
       poolId,
       fieldId: field.id,
-      startTime: this.minutesToTime(timeSlot),
-      endTime: this.minutesToTime(timeSlot + poolDuration),
+      startTime: minutesToTime(timeSlot),
+      endTime: minutesToTime(timeSlot + poolDuration),
       date: tourneyDate || new Date(),
       sportId: sportId,
     });
@@ -628,34 +634,6 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
       this.fieldsAssignedAtTimeSlot[timeSlot] = new Set();
     }
     this.fieldsAssignedAtTimeSlot[timeSlot].add(field.id);
-  }
-
-  /**
-   * Convertit une heure au format "HH:MM" en minutes.
-   * @param {string} timeStr - Heure au format "HH:MM".
-   * @returns {number} - Heure en minutes.
-   */
-  timeToMinutes(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  }
-
-  /**
-   * Convertit des minutes en heure au format "HH:MM:SS".
-   * @param {number} totalMinutes - Nombre total de minutes.
-   * @returns {string} - Heure au format "HH:MM:SS".
-   */
-  minutesToTime(totalMinutes) {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:00`;
-  }
-
-  formatTime(timeStr) {
-    const [hours, minutes] = timeStr.split(':');
-    return `${hours}h${minutes}`;
   }
 
   /**
@@ -714,7 +692,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
           const nextStart = schedules[i + 1].startTime;
           if (currentEnd > nextStart) {
             errors.high.push(
-              `Conflit sur le terrain ${schedules[i].field.name} vers ${this.formatTime(schedules[i].startTime)} entre les pools ${schedules[i].pool.name} et ${schedules[i + 1].pool.name}.`
+              `Conflit sur le terrain ${schedules[i].field.name} vers ${formatTime(schedules[i].startTime)} entre les pools ${schedules[i].pool.name} et ${schedules[i + 1].pool.name}.`
             );
           }
         }
@@ -745,7 +723,7 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
             (schedule.startTime >= pause.start && schedule.startTime < pause.end) ||
             (schedule.endTime > pause.start && schedule.endTime <= pause.end)
           ) {
-            errors.high.push(`La pool ${schedule.pool.name} est programmée pendant une pause (${this.formatTime(pause.start)} - ${this.formatTime(pause.end)}).`);
+            errors.high.push(`La pool ${schedule.pool.name} est programmée pendant une pause (${formatTime(pause.start)} - ${formatTime(pause.end)}).`);
           }
         });
       });
