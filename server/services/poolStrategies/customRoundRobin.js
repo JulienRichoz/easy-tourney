@@ -1,5 +1,6 @@
 const PoolStrategy = require('./poolStrategy');
 const { Pool, Team, Field, Tourney } = require('../../models');
+const { Op } = require('sequelize');
 
 class CustomRoundRobin extends PoolStrategy {
   /**
@@ -129,8 +130,8 @@ class CustomRoundRobin extends PoolStrategy {
       const pool = await Pool.create({
         name: poolName,
         tourneyId: this.tourneyId,
-        maxTeamPerPool: maxTeamPerPool,
-        minTeamPerPool: minTeamPerPool,
+        maxTeamPerPool: maxTeamPerPool || 5,
+        minTeamPerPool: minTeamPerPool || 3,
       });
       newPools.push(pool);
     }
@@ -139,12 +140,12 @@ class CustomRoundRobin extends PoolStrategy {
   }
 
   /**
-   * Méthode pour assigner les équipes non assignées aux pools manquantes
-   * @returns {Promise<Team[]>}
-   */
+     * Méthode pour assigner les équipes non assignées aux pools manquantes
+     * @returns {Promise<Team[]>}
+     */
   async populateMissingPools() {
     // Récupérer les équipes non assignées
-    const unassignedTeams = await Team.findAll({
+    let teamsToAssign = await Team.findAll({
       where: {
         tourneyId: this.tourneyId,
         type: 'player',
@@ -153,12 +154,12 @@ class CustomRoundRobin extends PoolStrategy {
       order: [['id', 'ASC']],
     });
 
-    if (unassignedTeams.length === 0) {
+    if (teamsToAssign.length === 0) {
       throw new Error('Aucune équipe non assignée disponible.');
     }
 
     // Récupérer les pools existantes avec leurs équipes
-    const pools = await Pool.findAll({
+    let pools = await Pool.findAll({
       where: { tourneyId: this.tourneyId },
       include: [{ model: Team, as: 'teams' }],
     });
@@ -170,44 +171,71 @@ class CustomRoundRobin extends PoolStrategy {
     // Récupérer les réglages globaux
     const tourney = await Tourney.findByPk(this.tourneyId);
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3;
-    const maxTeamPerPool = tourney?.defa
+    const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 5;
 
-    let teamsToAssign = [...unassignedTeams];
+    // Créer un tableau des pools avec le compte actuel des équipes
+    const poolData = pools.map((pool) => ({
+      pool: pool,
+      currentTeamCount: pool.teams.length,
+    }));
 
-    // Étape 1 : Remplir les pools jusqu'au minTeamPerPool
-    for (const pool of pools) {
-      const currentTeamCount = pool.teams.length;
-      const teamsNeeded = minTeamPerPool - currentTeamCount;
+    // Fonction pour obtenir la différence maximale entre les pools
+    const getMaxDifference = () => {
+      const counts = poolData.map((p) => p.currentTeamCount);
+      return Math.max(...counts) - Math.min(...counts);
+    };
 
-      if (teamsNeeded > 0) {
-        const teamsForPool = teamsToAssign.splice(0, teamsNeeded);
-        for (const team of teamsForPool) {
-          await team.update({ poolId: pool.id });
+    // Tant qu'il y a des équipes à assigner
+    while (teamsToAssign.length > 0) {
+      // Trier les pools par nombre actuel d'équipes (ascendant)
+      poolData.sort((a, b) => a.currentTeamCount - b.currentTeamCount);
+
+      let assigned = false;
+
+      for (const poolInfo of poolData) {
+        if (teamsToAssign.length === 0) break;
+
+        // Vérifier si la pool n'a pas atteint le maximum d'équipes
+        if (poolInfo.currentTeamCount < maxTeamPerPool) {
+          // Vérifier la différence maximale après l'ajout
+          poolInfo.currentTeamCount += 1;
+          const maxDiff = getMaxDifference();
+
+          if (maxDiff <= 2) {
+            // Assigner l'équipe à la pool
+            const team = teamsToAssign.shift();
+            await team.update({ poolId: poolInfo.pool.id });
+            assigned = true;
+            break; // Recommencer le tri des pools
+          } else {
+            // Si la différence dépasse 2, annuler l'ajout
+            poolInfo.currentTeamCount -= 1;
+          }
         }
       }
 
-      // Mettre à jour les équipes de la pool
-      pool.teams = await pool.getTeams();
-    }
-
-    // Étape 2 : Remplir les pools valides jusqu'au maxTeamPerPool
-    for (const pool of pools) {
-      const currentTeamCount = pool.teams.length;
-      const additionalTeamsAllowed = maxTeamPerPool - currentTeamCount;
-
-      if (additionalTeamsAllowed > 0) {
-        const teamsForPool = teamsToAssign.splice(0, additionalTeamsAllowed);
-        for (const team of teamsForPool) {
-          await team.update({ poolId: pool.id });
-        }
+      // Si aucune équipe n'a pu être assignée, sortir de la boucle
+      if (!assigned) {
+        break;
       }
-
-      // Mettre à jour les équipes de la pool
-      pool.teams = await pool.getTeams();
     }
 
     // Les équipes restantes sont non assignées
-    const assignedTeams = unassignedTeams.filter((team) => team.poolId);
+    const assignedTeams = await Team.findAll({
+      where: {
+        tourneyId: this.tourneyId,
+        type: 'player',
+        poolId: { [Op.ne]: null },
+      },
+    });
+
+    // Afficher un avertissement si des équipes n'ont pas pu être assignées
+    if (teamsToAssign.length > 0) {
+      console.warn(
+        `${teamsToAssign.length} équipes n'ont pas pu être assignées aux pools. ` +
+        "Considérez d'augmenter le nombre de terrains ou de modifier les paramètres des pools."
+      );
+    }
 
     return assignedTeams;
   }
