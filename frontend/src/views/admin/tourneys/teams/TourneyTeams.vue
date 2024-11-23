@@ -39,7 +39,28 @@
         <div class="flex items-center ml-auto">
           <!-- Sélecteur de statut et bouton Reset -->
           <ButtonComponent
-            v-if="isEditable && playerTeams.length > 0 && !isRegistrationActive"
+            v-if="
+              isEditable &&
+              invalidTeams.length > 0 &&
+              !isRegistrationActive &&
+              filters[0].value === 'invalid'
+            "
+            @click="openDeleteInvalidTeamsModal"
+            variant="danger"
+            fontAwesomeIcon="trash"
+            class="ml-2"
+          >
+            <span class="hidden sm:inline"
+              >Supprimer les équipes invalides</span
+            >
+          </ButtonComponent>
+          <ButtonComponent
+            v-if="
+              isEditable &&
+              playerTeams.length > 0 &&
+              !isRegistrationActive &&
+              filters[0].value !== 'invalid'
+            "
             @click="openModalResetTeams"
             variant="danger"
             fontAwesomeIcon="trash"
@@ -388,6 +409,14 @@
         :isHardDelete="true"
         hardDeleteMessage="Toutes les équipes seront supprimées et les utilisateurs n'auront plus d'équipe (reset complet). Il ne sera pas possible de revenir en arrière. Êtes-vous sûr de vouloir continuer ?"
       />
+      <!-- Modale pour confirmer la suppression des équipes invalides -->
+      <DeleteConfirmationModal
+        :isVisible="showDeleteInvalidTeamsModal"
+        @cancel="closeDeleteInvalidTeamsModal"
+        @confirm="deleteInvalidTeams"
+        :isHardDelete="false"
+        message="Êtes-vous sûr de vouloir supprimer toutes les équipes invalides ? Cette action est irréversible."
+      />
     </div>
   </div>
 </template>
@@ -439,6 +468,7 @@
         showTeamSetupModal: false,
         showModalResetTeams: false,
         confirmedDeleteTeamId: null,
+        showDeleteInvalidTeamsModal: false,
         newTeam: {
           teamName: '',
           type: 'player',
@@ -454,8 +484,8 @@
             options: [
               { label: 'Toutes les équipes', value: '' },
               { label: 'Valides', value: 'valid' },
-              { label: 'Invalides', value: 'partial' },
-              { label: 'Vide', value: 'empty' },
+              { label: 'Non valides', value: 'invalid' },
+              { label: 'Sans pool', value: 'noPool' },
             ],
           },
         ],
@@ -524,7 +554,18 @@
       assistantTeams() {
         return this.teams.filter((team) => team.type === 'assistant');
       },
-      // Filtre les équipes "player" selon les critères
+      // Computed property pour obtenir les équipes non valides
+      invalidTeams() {
+        if (!this.teamSetupConfigured) return [];
+
+        return this.playerTeams.filter(
+          (team) => team.usersTourneys.length < this.teamSetup.minPlayerPerTeam
+        );
+      },
+
+      /**
+       * Computed property pour obtenir les équipes filtrées selon le filtre sélectionné.
+       */
       filteredPlayerTeams() {
         if (!this.teamSetupConfigured) return [];
 
@@ -534,16 +575,13 @@
           if (this.filters[0].value === 'valid') {
             return team.usersTourneys.length >= minPlayers;
           }
-          if (this.filters[0].value === 'partial') {
-            return (
-              team.usersTourneys.length > 0 &&
-              team.usersTourneys.length < minPlayers
-            );
+          if (this.filters[0].value === 'invalid') {
+            return team.usersTourneys.length < minPlayers;
           }
-          if (this.filters[0].value === 'empty') {
-            return team.usersTourneys.length === 0;
+          if (this.filters[0].value === 'noPool') {
+            return team.poolId === null;
           }
-          return true;
+          return true; // 'Toutes les équipes'
         });
 
         // Appliquer le filtre de recherche par nom de joueur
@@ -814,6 +852,39 @@
       closeModalResetTeams() {
         this.showModalResetTeams = false;
       },
+      // Ouvrir le modal de confirmation pour la suppression des équipes invalides
+      openDeleteInvalidTeamsModal() {
+        this.showDeleteInvalidTeamsModal = true;
+      },
+
+      // Fermer le modal de confirmation
+      closeDeleteInvalidTeamsModal() {
+        this.showDeleteInvalidTeamsModal = false;
+      },
+
+      // Méthode pour supprimer les équipes invalides
+      async deleteInvalidTeams() {
+        try {
+          await apiService.delete(`/tourneys/${this.tourneyId}/teams/invalid`);
+          toast.success(
+            'Les équipes invalides ont été supprimées avec succès !'
+          );
+          this.fetchTourneyDetails(); // Récupérer les données mises à jour
+          this.closeDeleteInvalidTeamsModal();
+        } catch (error) {
+          console.error(
+            'Erreur lors de la suppression des équipes invalides:',
+            error
+          );
+          toast.error('Erreur lors de la suppression des équipes invalides.');
+          this.closeDeleteInvalidTeamsModal();
+        }
+      },
+
+      /**
+       * Méthode appelée lors de la soumission du formulaire de suppression de toutes les équipes.
+       * Supprime toutes les équipes et réinitialise les utilisateurs.
+       */
       async handleResetAllTeamsSubmit() {
         await this.resetTeams();
         this.closeModalResetTeams();
