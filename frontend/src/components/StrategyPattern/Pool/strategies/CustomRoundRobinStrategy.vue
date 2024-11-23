@@ -2,12 +2,14 @@
 <template>
   <div>
     <p class="mb-4 text-gray-600">
+      <span class="text-red-500 dark:text-red-600 font-bold">
+        <strong>Attention :</strong> Les pools existantes et les plannings
+        associés seront supprimés. Il est préférable d'effectuer cette action
+        une fois les inscriptions terminées. </span
+      ><br />
       Cet algorithme (custom round robin) va générer des pools et assigner les
       équipes du tournoi aux pools automatiquement en fonction des réglages dans
       "Global Config Pool".<br />
-      <strong>Attention :</strong> Les pools existantes seront supprimées. Il
-      est préférable d'effectuer cette action une fois les inscriptions
-      terminées. Vous pourrez ensuite ajuster manuellement si nécessaire.
     </p>
   </div>
 </template>
