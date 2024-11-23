@@ -57,12 +57,12 @@
     <!-- Messages d'avertissement de validation -->
     <div
       v-if="warnings.length && showWarningsModal"
-      class="p-4 rounded mb-4 relative flex flex-col bg-yellow-100 border border-yellow-400 text-yellow-700"
+      class="p-4 rounded mb-4 relative flex flex-col bg-light-warning-bg border border-light-warning-border text-light-warning-text dark:bg-dark-warning-bg dark:border-yellow-600 dark:text-dark-warning-text"
     >
       <!-- Bouton Fermer positionné en haut à droite -->
       <button
         @click="closeWarningsModal"
-        class="absolute top-2 right-2 flex items-center text-yellow-700 hover:text-yellow-900"
+        class="absolute top-2 right-2 flex items-center text-light-warning-text hover:text-light-warning-closeText"
       >
         Fermer
         <span class="ml-1">&#10006;</span>
