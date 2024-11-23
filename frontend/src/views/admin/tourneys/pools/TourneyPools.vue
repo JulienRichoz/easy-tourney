@@ -60,8 +60,8 @@
           class="text-base text-light-pool-infoText dark:text-dark-pool-infoText"
         >
           <strong>Total d'équipes :</strong> {{ teams.length }} &emsp;
-          <strong>Terrains disponibles :</strong>
-          {{ availableFields }}
+          <strong>Terrains disponibles :</strong> {{ availableFields }} &emsp;
+          <strong>Nombre de Pools :</strong> {{ pools.length }}
         </p>
         <!-- Message d'avertissement conditionnel pour customRoundRobin -->
         <p
@@ -69,6 +69,23 @@
           class="mt-4 text-sm text-light-pool-infoError dark:text-dark-pool-infoError"
         >
           {{ warningMessage }}
+        </p>
+        <p
+          v-if="invalidPools.length > 0"
+          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
+        >
+          Attention : {{ invalidPools.length }} pool(s) ne respectent pas les
+          contraintes de taille minimale ou maximale. Veuillez vérifier leur
+          configuration.
+        </p>
+        <p
+          v-if="pools.length > availableFields"
+          class="mt-4 text-sm text-light-pool-infoWarning dark:text-dark-pool-infoWarning"
+        >
+          Attention : Le nombre actuel de pools ({{ pools.length }}) dépasse le
+          nombre de terrains disponibles ({{ availableFields }}). Cela risque de
+          causer des retards dans le déroulement des matchs. Pensez à réduire le
+          nombre de pools ou à ajouter des terrains.
         </p>
         <p
           v-if="
@@ -412,8 +429,29 @@
       isEditable() {
         return this.statuses.poolStatus !== 'completed';
       },
+      invalidPools() {
+        return this.pools.filter((pool) => {
+          const minTeams =
+            pool.minTeamPerPool ||
+            this.tourneySetup?.defaultMinTeamPerPool ||
+            0;
+          const maxTeams =
+            pool.maxTeamPerPool ||
+            this.tourneySetup?.defaultMaxTeamPerPool ||
+            Infinity;
+
+          return pool.teams.length < minTeams || pool.teams.length > maxTeams;
+        });
+      },
       unassignedTeams() {
         return this.teams.filter((team) => !team.poolId);
+      },
+      recommendedPools() {
+        // Le nombre recommandé de pools est le nombre de terrains disponibles
+        return this.availableFields;
+      },
+      isPoolCountExceedingFields() {
+        return this.pools.length > this.availableFields;
       },
       shouldShowFieldWarning() {
         const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
