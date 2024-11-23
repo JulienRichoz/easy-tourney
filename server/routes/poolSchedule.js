@@ -24,7 +24,9 @@ module.exports = router;
 
 /**
  * TODO:
- * Planing/pool : je dois recharger la page pour utiliser les filtres de pools après l'ajout dun pool sur la page. 
+ * 1) AJUSTER ALGORITHME GENERATION POOL - DIFFERENCES DE SESSIONS :( (osef?)
+ * 2) Verifier si toute l'implémentation est correcte en créant un nouveau tournoi + test intégrations
+ * 3) Implémentation et reflexion page Games (vue)
  * REFLECHIR a la vue planning pool <-> game => final
  * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
  */
