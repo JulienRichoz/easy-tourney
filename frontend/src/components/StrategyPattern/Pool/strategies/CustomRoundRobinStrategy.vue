@@ -8,8 +8,11 @@
         une fois les inscriptions terminées. </span
       ><br />
       Cet algorithme (custom round robin) va générer des pools et assigner les
-      équipes du tournoi aux pools automatiquement en fonction des réglages dans
-      "Global Config Pool".<br />
+      équipes du tournoi aux pools de manière optimisée, en prenant en compte le
+      nombre de terrains disponibles ainsi que les réglages.
+      <strong
+        >Il ne va jamais générer plus de Pools qu'il n'y a de terrains</strong
+      >.<br />
     </p>
   </div>
 </template>
