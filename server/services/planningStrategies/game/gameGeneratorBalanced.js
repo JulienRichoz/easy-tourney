@@ -1,37 +1,5 @@
 // server/services/planningStrategies/game/customRoundRobinBalancedGameStrategy.js
 
-/**
- * Custom Round Robin Balanced Game Strategy
- *
- * Ce module implémente une stratégie de génération de matchs pour un tournoi en utilisant un algorithme
- * de round-robin équilibré. L'objectif est de planifier les matchs de manière à ce que :
- * - Chaque équipe joue le même nombre de matchs (ou avec une différence maximale d'un match).
- * - Le nombre de confrontations entre chaque paire d'équipes soit équilibré.
- * - Les équipes évitent de jouer deux matchs consécutifs, sauf si c'est inévitable.
- * - Tous les créneaux horaires disponibles soient remplis.
- *
- * Algorithme :
- * 1. Calculer le nombre total de matchs possibles en fonction du temps disponible et de la durée des matchs.
- * 2. Déterminer le nombre idéal de matchs par équipe pour assurer l'équité.
- * 3. Générer toutes les combinaisons possibles de matchs entre les équipes.
- * 4. Planifier les matchs en respectant les contraintes d'équilibrage et de repos.
- *
- * Formules utilisées :
- * - totalMatchesPossible = floor(totalAvailableTime / totalMatchTime)
- * - matchesPerTeam = floor((totalMatchesPossible * 2) / totalTeams)
- * - totalMatchesBetweenTeams = floor((totalMatchesPossible * 2) / (totalTeams * (totalTeams - 1)))
- *
- * Contraintes :
- * - Chaque équipe ne doit pas dépasser le nombre maximal de matchs (matchesPerTeam).
- * - Chaque paire d'équipes ne doit pas dépasser le nombre maximal de confrontations (totalMatchesBetweenTeams).
- * - Éviter que les équipes jouent deux matchs consécutifs.
- *
- * Difficultés rencontrées :
- * - Assurer l'équilibre parfait des matchs par équipe et des confrontations entre paires d'équipes.
- * - Gérer les pools avec un nombre impair d'équipes.
- * - Remplir tous les créneaux horaires tout en respectant les contraintes.
- */
-
 const GameStrategy = require('./gameStrategy');
 const {
     Game,
@@ -135,76 +103,41 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
             return;
         }
 
-        // Calculer le nombre total de matchs disponibles dans les créneaux horaires
-        let totalAvailableTime = 0;
-        for (const poolSchedule of poolSchedules) {
-            totalAvailableTime += this.timeDifferenceInMinutes(
-                poolSchedule.startTime,
-                poolSchedule.endTime
-            );
-        }
-
-        const matchDuration = scheduleTourney.gameDuration; // en minutes
-        const transitionTime = scheduleTourney.transitionGameTime; // en minutes
-        const totalMatchTime = matchDuration + transitionTime;
-
-        // Nombre total de matchs possibles
-        const totalMatchesPossible = Math.floor(totalAvailableTime / totalMatchTime);
-
-        // Calculer le nombre idéal de matchs par équipe
-        const totalTeams = teams.length;
-        const totalTeamAppearances = totalMatchesPossible * 2; // Chaque match implique 2 équipes
-        const matchesPerTeam = Math.floor(totalTeamAppearances / totalTeams);
-
-        // Calculer le nombre maximal de confrontations entre paires d'équipes
-        const totalPossiblePairings = (totalTeams * (totalTeams - 1)) / 2;
-        const totalMatchesBetweenTeams = Math.floor(
-            (matchesPerTeam * totalTeams) / totalPossiblePairings
-        );
-
-        // Initialiser les compteurs de matchs par équipe
-        const teamTotalMatchCounts = new Map();
-        teams.forEach((team) => {
-            teamTotalMatchCounts.set(team.id, 0);
-        });
-
         // Générer toutes les combinaisons possibles de matchs entre les équipes
-        const allPossibleMatchups = [];
+        const allPossibleMatches = [];
+        const matchCounts = new Map(); // Compte le nombre de matchs entre chaque paire d'équipes
+
         for (let i = 0; i < teams.length; i++) {
             for (let j = i + 1; j < teams.length; j++) {
                 const teamA = teams[i];
                 const teamB = teams[j];
                 const key = this.getMatchKey(teamA.id, teamB.id);
-                allPossibleMatchups.push({ teamA, teamB, key, matchCount: 0 });
+                matchCounts.set(key, 0);
+                allPossibleMatches.push({ teamA, teamB, key });
             }
         }
 
+        // Initialiser le compteur de matchs pour chaque équipe
+        const teamTotalMatchCounts = new Map();
+        teams.forEach((team) => {
+            teamTotalMatchCounts.set(team.id, 0);
+        });
+
         // Planifier les matchs dans les créneaux horaires disponibles
         const matchesScheduled = [];
-        let globalRound = 0; // Compteur global pour suivre les tours
 
         for (const poolSchedule of poolSchedules) {
             await this.generateMatchesForPoolSchedule(
                 pool,
                 teams,
                 poolSchedule,
-                allPossibleMatchups,
+                allPossibleMatches,
+                matchCounts,
                 teamTotalMatchCounts,
                 scheduleTourney,
                 matchesScheduled,
-                tourney,
-                globalRound,
-                matchesPerTeam,
-                totalMatchesBetweenTeams
+                tourney
             );
-
-            // Mettre à jour le compteur global en fonction du nombre de matchs planifiés dans ce créneau
-            const slotAvailableTime = this.timeDifferenceInMinutes(
-                poolSchedule.startTime,
-                poolSchedule.endTime
-            );
-            const numMatchesInSlot = Math.floor(slotAvailableTime / totalMatchTime);
-            globalRound += numMatchesInSlot;
         }
 
         // Enregistrer les matchs planifiés dans la base de données
@@ -229,27 +162,23 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
      * @param {Object} pool - La pool concernée.
      * @param {Array} teams - Les équipes de la pool.
      * @param {Object} poolSchedule - Le créneau horaire de la pool.
-     * @param {Array} allPossibleMatchups - Toutes les combinaisons de matchs possibles.
+     * @param {Array} allPossibleMatches - Toutes les combinaisons de matchs possibles.
+     * @param {Map} matchCounts - Compteur de matchs par paire d'équipes.
      * @param {Map} teamTotalMatchCounts - Compteur total de matchs par équipe.
      * @param {Object} scheduleTourney - La configuration du planning.
      * @param {Array} matchesScheduled - Liste des matchs déjà planifiés.
      * @param {Object} tourney - Le tournoi en cours.
-     * @param {number} globalRound - Compteur global des matchs planifiés.
-     * @param {number} matchesPerTeam - Nombre maximal de matchs par équipe.
-     * @param {number} totalMatchesBetweenTeams - Nombre maximal de confrontations entre paires d'équipes.
      */
     async generateMatchesForPoolSchedule(
         pool,
         teams,
         poolSchedule,
-        allPossibleMatchups,
+        allPossibleMatches,
+        matchCounts,
         teamTotalMatchCounts,
         scheduleTourney,
         matchesScheduled,
-        tourney,
-        globalRound,
-        matchesPerTeam,
-        totalMatchesBetweenTeams
+        tourney
     ) {
         // Calculer le nombre de matchs possibles dans ce créneau
         const matchDuration = scheduleTourney.gameDuration; // en minutes
@@ -274,28 +203,18 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
         // Déterminer la date du match
         const matchDate = poolSchedule.date || tourney.dateTourney;
 
-        // Initialiser les équipes ayant joué le dernier match
-        let lastTeamsPlayed = new Set();
+        // Suivre les équipes déjà planifiées dans ce créneau pour éviter les doublons
+        const teamsPlayingInSlot = new Set();
 
         // Planifier les matchs dans le créneau horaire
-        for (let m = 0; m < numMatchesInSlot; m++) {
-            // Générer une liste des matchs possibles en excluant les équipes ayant atteint le maximum de matchs
-            const availableMatchups = allPossibleMatchups.filter(
-                ({ teamA, teamB, matchCount }) =>
-                    teamTotalMatchCounts.get(teamA.id) < matchesPerTeam &&
-                    teamTotalMatchCounts.get(teamB.id) < matchesPerTeam &&
-                    matchCount < totalMatchesBetweenTeams
-            );
-
-            if (availableMatchups.length === 0) {
-                // Toutes les équipes ont atteint le nombre maximal de matchs
-                break;
-            }
-
+        for (let m = 0; m < numMatchesInSlot && allPossibleMatches.length > 0;) {
             // Trier les matchs possibles en priorisant les paires avec le moins de confrontations
-            availableMatchups.sort((a, b) => {
-                if (a.matchCount !== b.matchCount) {
-                    return a.matchCount - b.matchCount;
+            allPossibleMatches.sort((a, b) => {
+                const aCount = matchCounts.get(a.key);
+                const bCount = matchCounts.get(b.key);
+
+                if (aCount !== bCount) {
+                    return aCount - bCount;
                 } else {
                     // Si égalité, prioriser les équipes ayant joué le moins de matchs au total
                     const aTotal =
@@ -309,13 +228,14 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
             });
 
             let matchScheduled = false;
-            for (const matchup of availableMatchups) {
-                const { teamA, teamB } = matchup;
+            for (let i = 0; i < allPossibleMatches.length; i++) {
+                const matchup = allPossibleMatches[i];
+                const { teamA, teamB, key } = matchup;
 
-                // Vérifier si les équipes ne jouent pas déjà dans le dernier match
+                // Vérifier si les équipes ne jouent pas déjà dans ce créneau
                 if (
-                    !lastTeamsPlayed.has(teamA.id) &&
-                    !lastTeamsPlayed.has(teamB.id)
+                    !teamsPlayingInSlot.has(teamA.id) &&
+                    !teamsPlayingInSlot.has(teamB.id)
                 ) {
                     // Planifier le match
                     matchesScheduled.push({
@@ -332,7 +252,7 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                     });
 
                     // Mettre à jour les compteurs
-                    matchup.matchCount += 1;
+                    matchCounts.set(key, matchCounts.get(key) + 1);
                     teamTotalMatchCounts.set(
                         teamA.id,
                         teamTotalMatchCounts.get(teamA.id) + 1
@@ -342,8 +262,14 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                         teamTotalMatchCounts.get(teamB.id) + 1
                     );
 
-                    // Mettre à jour les équipes ayant joué le dernier match
-                    lastTeamsPlayed = new Set([teamA.id, teamB.id]);
+                    // Retirer le match de la liste s'il a atteint le nombre maximal de confrontations
+                    // (par exemple, si on veut limiter le nombre de fois que deux équipes s'affrontent)
+                    // Ici, on le retire une fois planifié pour éviter les doublons
+                    allPossibleMatches.splice(i, 1);
+
+                    // Ajouter les équipes à l'ensemble des équipes jouant dans ce créneau
+                    teamsPlayingInSlot.add(teamA.id);
+                    teamsPlayingInSlot.add(teamB.id);
 
                     // Mettre à jour l'heure de début pour le prochain match
                     matchStartTime = this.addMinutesToTime(
@@ -351,8 +277,8 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                         transitionTime
                     );
 
-                    // Incrémenter le compteur global des matchs planifiés
-                    globalRound++;
+                    // Incrémenter le compteur de matchs planifiés
+                    m++;
 
                     matchScheduled = true;
 
@@ -377,6 +303,8 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
     getMatchKey(teamAId, teamBId) {
         return [teamAId, teamBId].sort().join('-');
     }
+
+    // Les autres méthodes restent les mêmes (timeDifferenceInMinutes, timeToMinutes, etc.)
 
     /**
      * Calcule la différence en minutes entre deux heures.

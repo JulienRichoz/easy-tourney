@@ -12,6 +12,8 @@ const {
 } = require('../models');
 
 const PlanningStrategyManager = require('../services/planningStrategies/pool/planningStrategyManager');
+const GameStrategyManager = require('../services/planningStrategies/game/gameStrategyManager');
+
 
 exports.getPlanningDetails = async (req, res) => {
   try {
@@ -77,14 +79,18 @@ exports.getPlanningDetails = async (req, res) => {
       ],
     });
 
-    // Récupérer les matchs planifiés
+    // Récupérer les matchs planifiés avec toutes les associations nécessaires
     const games = await Game.findAll({
       where: { tourneyId },
       include: [
         { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
         { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name', 'description'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+        { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+        { model: PoolSchedule, as: 'poolSchedule', attributes: ['id', 'startTime', 'endTime', 'date'] },
       ],
-      attributes: ['id', 'fieldId', 'poolId', 'startTime', 'endTime'],
+      attributes: ['id', 'startTime', 'endTime', 'status', 'poolScheduleId'],
     });
 
     // Récupérer la configuration du planning
@@ -202,3 +208,145 @@ exports.resetPoolPlanning = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
+
+/**
+ * GESTION DES GAMES (MATCHS)
+ */
+exports.generateGamePlanning = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    // Récupérer le type de tournoi
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    const strategyManager = new GameStrategyManager(tourneyId, tourney.tourneyType);
+    const result = await strategyManager.generateGames();
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Erreur lors de la génération des matchs :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+exports.validateGamePlanning = async (req, res) => {
+  try {
+    // Implémentez la logique de validation si nécessaire
+    res.status(200).json({ message: 'Validation des matchs non implémentée.' });
+  } catch (error) {
+    console.error('Erreur lors de la validation des matchs :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+exports.resetGamePlanning = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    // Supprimer tous les matchs du tournoi
+    await Game.destroy({ where: { tourneyId } });
+
+    res.status(200).json({ message: 'Tous les matchs ont été supprimés.' });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation des matchs :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+// server/controllers/planningController.js
+
+exports.getPlanningAdvice = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+    // Récupérer le tournoi
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Récupérer la configuration du planning
+    const scheduleTourney = await ScheduleTourney.findOne({
+      where: { tourneyId },
+    });
+    if (!scheduleTourney) {
+      return res.status(404).json({ message: 'Configuration du planning non trouvée.' });
+    }
+
+    // Récupérer les pools avec leurs équipes et leurs plannings
+    const pools = await Pool.findAll({
+      where: { tourneyId },
+      include: [
+        {
+          model: Team,
+          as: 'teams',
+          attributes: ['id'],
+        },
+        {
+          model: PoolSchedule,
+          as: 'schedules',
+          attributes: ['startTime', 'endTime'],
+        },
+      ],
+    });
+
+    const advice = [];
+
+    for (const pool of pools) {
+      const numTeams = pool.teams.length;
+      const numMatchesNeeded = (numTeams * (numTeams - 1)) / 2;
+
+      let totalAvailableTime = 0;
+      for (const schedule of pool.schedules) {
+        const slotDuration = timeDifferenceInMinutes(
+          schedule.startTime,
+          schedule.endTime
+        );
+        totalAvailableTime += slotDuration;
+      }
+
+      const matchDuration = scheduleTourney.gameDuration;
+      const transitionTime = scheduleTourney.transitionGameTime;
+      const totalMatchTime = matchDuration + transitionTime;
+
+      const numMatchesPossible = Math.floor(totalAvailableTime / totalMatchTime);
+
+      if (numMatchesPossible < numMatchesNeeded) {
+        advice.push({
+          pool: pool.name,
+          message: `Le nombre de matchs possibles (${numMatchesPossible}) est insuffisant pour que chaque équipe joue contre toutes les autres (${numMatchesNeeded}).`,
+          suggestions: [
+            'Réduire la durée des matchs ou le temps de transition.',
+            'Augmenter la durée des créneaux horaires.',
+            'Réduire le nombre d\'équipes dans la pool.',
+          ],
+        });
+      } else {
+        advice.push({
+          pool: pool.name,
+          message: 'La configuration actuelle permet à chaque équipe de jouer contre toutes les autres.',
+        });
+      }
+    }
+
+    res.status(200).json({ advice });
+  } catch (error) {
+    console.error('Erreur lors de la génération des conseils :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
+  }
+};
+
+// Fonction utilitaire pour calculer la différence en minutes entre deux heures
+function timeDifferenceInMinutes(startTime, endTime) {
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+  return endMinutes - startMinutes;
+}
+
+function timeToMinutes(timeStr) {
+  const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+}

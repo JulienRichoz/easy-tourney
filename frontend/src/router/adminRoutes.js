@@ -14,6 +14,7 @@ import TourneyPools from '@/views/admin/tourneys/pools/TourneyPools.vue';
 import TourneyPoolDetails from '@/views/admin/tourneys/pools/TourneyPoolDetails.vue';
 import TourneyUnassignedTeams from '@/views/admin/tourneys/pools/TourneyUnassignedTeams.vue';
 import TourneyPlanning from '@/views/admin/tourneys/planning/TourneyPlanning.vue';
+import TourneyPlanningGames from '@/views/admin/tourneys/planning/TourneyPlanningGames.vue';
 
 export default [
   {
@@ -104,6 +105,12 @@ export default [
     path: '/admin/tourneys/:tourneyId/planning',
     name: 'AdminTourneyPlanning',
     component: TourneyPlanning,
+    meta: { requiresAuth: true, permission: 'viewAdminPage' },
+  },
+  {
+    path: '/admin/tourneys/:tourneyId/planning/games',
+    name: 'TourneyPlanningGames',
+    component: TourneyPlanningGames,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
 ];

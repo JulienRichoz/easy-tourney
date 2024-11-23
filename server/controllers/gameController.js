@@ -126,6 +126,8 @@ exports.createGame = async (req, res) => {
       // Créer le match
       const game = await Game.create({
         tourneyId,
+        poolId,
+        poolScheduleId,
         teamAId,
         teamBId,
         fieldId,
