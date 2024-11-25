@@ -9,9 +9,8 @@ const {
   User,
   PoolSchedule,
 } = require('../models');
-const { Op } = require('sequelize');
-const tourneyTypes = require('../config/tourneyTypes');
 
+const tourneyTypes = require('../config/tourneyTypes');
 
 /**
  * Créer un nouveau match
@@ -37,6 +36,7 @@ exports.createGame = async (req, res) => {
       });
     }
 
+    // Vérifier que le tournoi existe
     const tourney = await Tourney.findByPk(tourneyId);
     if (!tourney) {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
@@ -99,6 +99,12 @@ exports.createGame = async (req, res) => {
         return res.status(404).json({ message: 'Terrain non trouvé.' });
       }
 
+      // Vérifier que le sport existe
+      const sport = await Sport.findByPk(finalSportId);
+      if (!sport) {
+        return res.status(404).json({ message: 'Sport non trouvé.' });
+      }
+
       // Créer le match
       const game = await Game.create({
         tourneyId,
@@ -117,17 +123,31 @@ exports.createGame = async (req, res) => {
       res.status(201).json(game);
     } else {
       // Pour les tournois sans pools
+
+      if (!fieldId || !sportId) {
+        return res.status(400).json({
+          message:
+            "'fieldId' et 'sportId' sont requis pour ce type de tournoi.",
+        });
+      }
+
       // Vérifier que le terrain existe
       const field = await Field.findByPk(fieldId);
       if (!field) {
         return res.status(404).json({ message: 'Terrain non trouvé.' });
       }
 
+      // Vérifier que le sport existe
+      const sport = await Sport.findByPk(sportId);
+      if (!sport) {
+        return res.status(404).json({ message: 'Sport non trouvé.' });
+      }
+
       // Créer le match
       const game = await Game.create({
         tourneyId,
-        poolId,
-        poolScheduleId,
+        poolId: null,
+        poolScheduleId: null,
         teamAId,
         teamBId,
         fieldId,
@@ -155,6 +175,12 @@ exports.getGamesByTourney = async (req, res) => {
   try {
     const { tourneyId } = req.params;
 
+    // Vérifier que le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
     const games = await Game.findAll({
       where: { tourneyId },
       include: [
@@ -165,7 +191,7 @@ exports.getGamesByTourney = async (req, res) => {
         {
           model: UsersTourneys,
           as: 'assistant',
-          attributes: ['userId', 'tourneyRole'], // Ajoutez les champs nécessaires
+          attributes: ['userId', 'tourneyRole'],
           required: false,
           include: [
             {
@@ -177,7 +203,6 @@ exports.getGamesByTourney = async (req, res) => {
           ],
         },
       ],
-      logging: console.log,
     });
 
     res.status(200).json(games);
@@ -203,7 +228,15 @@ exports.getGameById = async (req, res) => {
         {
           model: UsersTourneys,
           as: 'assistant',
-          attributes: ['id', 'tourneyRole'],
+          attributes: ['userId', 'tourneyRole'],
+          required: false,
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+            },
+          ],
         },
       ],
     });
@@ -215,13 +248,28 @@ exports.getGameById = async (req, res) => {
     res.status(200).json(game);
   } catch (error) {
     console.error('Erreur lors de la récupération du match :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
 
+/**
+ * Récupérer les matchs par PoolSchedule
+ */
 exports.getGamesByPoolSchedule = async (req, res) => {
   try {
     const { tourneyId, poolScheduleId } = req.params;
+
+    // Vérifier que le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Vérifier que la PoolSchedule existe
+    const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
+    if (!poolSchedule) {
+      return res.status(404).json({ message: 'PoolSchedule non trouvée.' });
+    }
 
     const games = await Game.findAll({
       where: { tourneyId, poolScheduleId },
@@ -257,14 +305,38 @@ exports.getGamesByPoolSchedule = async (req, res) => {
   }
 };
 
+/**
+ * Récupérer les matchs par Pool
+ */
 exports.getGamesByPool = async (req, res) => {
   try {
     const { tourneyId, poolId } = req.params;
 
+    // Vérifier que le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
     const games = await Game.findAll({
       where: { tourneyId, poolId },
       include: [
-        // ... mêmes inclusions que précédemment ...
+        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+        {
+          model: UsersTourneys,
+          as: 'assistant',
+          attributes: ['userId', 'tourneyRole'],
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+            },
+          ],
+        },
       ],
     });
 
@@ -279,7 +351,6 @@ exports.getGamesByPool = async (req, res) => {
       .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
-
 
 /**
  * Mettre à jour un match
@@ -298,7 +369,7 @@ exports.updateGame = async (req, res) => {
     // Mettre à jour les champs du match
     Object.assign(game, updates);
 
-    // Valider les données mises à jour (le hook 'beforeValidate' sera déclenché)
+    // Valider les données mises à jour
     await game.validate();
 
     // Sauvegarder les modifications
@@ -312,7 +383,6 @@ exports.updateGame = async (req, res) => {
       .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
-
 
 /**
  * Supprimer un match
@@ -331,7 +401,7 @@ exports.deleteGame = async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error('Erreur lors de la suppression du match :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
 
@@ -341,6 +411,12 @@ exports.deleteGame = async (req, res) => {
 exports.validateGames = async (req, res) => {
   try {
     const { tourneyId } = req.params;
+
+    // Vérifier que le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
 
     const games = await Game.findAll({
       where: { tourneyId },
@@ -376,4 +452,3 @@ exports.validateGames = async (req, res) => {
       .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
-
