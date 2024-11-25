@@ -59,7 +59,7 @@
 
     <!-- PLANNING -->
     <router-link
-      :to="`/admin/tourneys/${tourneyId}/planning`"
+      :to="`/admin/tourneys/${tourneyId}/planning/pools`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'AdminTourneyPlanningPools' }"
     >
