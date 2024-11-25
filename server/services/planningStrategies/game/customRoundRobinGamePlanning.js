@@ -1,4 +1,4 @@
-// server/services/planningStrategies/game/customRoundRobinBalancedGameStrategy.js
+// server/services/planningStrategies/game/customRoundRobinGamePlanning.js
 
 /**
  * Custom Round Robin Balanced Game Strategy
@@ -50,7 +50,7 @@ const {
     combineDateAndTime,
 } = require('../../../utils/dateUtils');
 
-class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
+class CustomRoundRobinGamePlanning extends GameStrategy {
     constructor(tourneyId) {
         super(tourneyId);
     }
@@ -213,6 +213,10 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
             globalRound += numMatchesInSlot;
         }
 
+        if (!pool || !pool.id) {
+            throw new Error('Pool invalide lors de la génération du match.');
+        }
+
         // Enregistrer les matchs planifiés dans la base de données
         for (const match of matchesScheduled) {
             await Game.create({
@@ -310,9 +314,11 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
                     const bTotal =
                         teamTotalMatchCounts.get(b.teamA.id) +
                         teamTotalMatchCounts.get(b.teamB.id);
-                    return aTotal - bTotal;
+                    return aTotal - bTotal
                 }
             });
+
+
 
             let matchScheduled = false;
             for (const matchup of availableMatchups) {
@@ -385,4 +391,4 @@ class CustomRoundRobinBalancedGameStrategy extends GameStrategy {
     }
 }
 
-module.exports = CustomRoundRobinBalancedGameStrategy;
+module.exports = CustomRoundRobinGamePlanning;

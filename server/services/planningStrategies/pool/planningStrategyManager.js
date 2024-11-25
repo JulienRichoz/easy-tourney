@@ -1,5 +1,5 @@
 // services/planningStrategies/pool/planningStrategyManager.js
-const CustomRoundRobinPlanning = require('./customRoundRobinPlanning');
+const CustomRoundRobinPoolPlanning = require('./customRoundRobinPoolPlanning');
 
 class PlanningStrategyManager {
   constructor(tourneyId, strategyName, options = {}) {
@@ -11,7 +11,7 @@ class PlanningStrategyManager {
     switch (strategyName) {
       case 'customRoundRobin':
       default:
-        return new CustomRoundRobinPlanning(this.tourneyId, options);
+        return new CustomRoundRobinPoolPlanning(this.tourneyId, options);
     }
   }
 

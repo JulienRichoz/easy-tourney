@@ -1,6 +1,6 @@
 // services/gameStrategies/gameStrategyManager.js
 
-const CustomRoundRobinGameGeneration = require('./customRoundRobinGameGeneration');
+const CustomRoundRobinGamePlanning = require('./customRoundRobinGamePlanning');
 
 class GameStrategyManager {
     constructor(tourneyId, strategyName, options = {}) {
@@ -12,7 +12,7 @@ class GameStrategyManager {
         switch (strategyName) {
             case 'customRoundRobin':
             default:
-                return new CustomRoundRobinGameGeneration(this.tourneyId, options);
+                return new CustomRoundRobinGamePlanning(this.tourneyId, options);
         }
     }
 

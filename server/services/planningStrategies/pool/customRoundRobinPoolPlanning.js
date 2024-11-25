@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * CustomRoundRobinPlanning - Générateur de planning personnalisé en Round Robin
+ * CustomRoundRobinPoolPlanning - Générateur de planning personnalisé en Round Robin
  * ========================================================================
  *
  * Description :
@@ -48,7 +48,7 @@ const {
   formatTime,
 } = require('../../../utils/dateUtils');
 
-class CustomRoundRobinPlanning extends PlanningStrategy {
+class CustomRoundRobinPoolPlanning extends PlanningStrategy {
   constructor(tourneyId, options = {}) {
     super(tourneyId);
     // Ajout de la variable randomMode avec une valeur par défaut false
@@ -792,4 +792,4 @@ class CustomRoundRobinPlanning extends PlanningStrategy {
   }
 }
 
-module.exports = CustomRoundRobinPlanning;
+module.exports = CustomRoundRobinPoolPlanning;
