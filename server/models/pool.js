@@ -13,13 +13,20 @@ module.exports = (sequelize, DataTypes) => {
       Pool.hasMany(models.Team, {
         foreignKey: 'poolId',
         as: 'teams',
-        onDelete: 'SET NULL', // Mettre poolId à null lors de la suppression d'une Pool
+        onDelete: 'SET NULL', // Si une Pool est supprimée, les équipes associées ne sont pas supprimées
         hooks: true, // Nécessaire pour que 'onDelete' soit appliqué
       });
       Pool.hasMany(models.PoolSchedule, {
         foreignKey: 'poolId',
         as: 'schedules',
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE', // Si une Pool est supprimée, les horaires associés sont supprimés
+        hooks: true,
+      });
+      Pool.hasMany(models.Game, {
+        foreignKey: 'poolId',
+        as: 'games',
+        onDelete: 'CASCADE',
+        hooks: true, // Nécessaire pour que 'onDelete' soit appliqué
       });
     }
   }

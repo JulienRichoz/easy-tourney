@@ -5,10 +5,7 @@ const tourneyTypes = require('../config/tourneyTypes');
 module.exports = (sequelize, DataTypes) => {
   class Game extends Model {
     static associate(models) {
-      Game.belongsTo(models.Tourney, {
-        foreignKey: 'tourneyId',
-        as: 'tourney',
-      });
+      Game.belongsTo(models.Tourney, { foreignKey: 'tourneyId', as: 'tourney', });
       Game.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
       Game.belongsTo(models.Team, { foreignKey: 'teamAId', as: 'teamA' });
       Game.belongsTo(models.Team, { foreignKey: 'teamBId', as: 'teamB' });
@@ -32,37 +29,37 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: { model: 'Pools', key: 'id' },
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE', // If a Pool is deleted, delete all associated Games
       },
       poolScheduleId: {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: { model: 'PoolSchedules', key: 'id' },
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE', // If a PoolSchedule is deleted, delete all associated Games
       },
       teamAId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'Teams', key: 'id' },
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE', // If a Team is deleted, delete all associated Games
       },
       teamBId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'Teams', key: 'id' },
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE', // If a Team is deleted, delete all associated Games
       },
       fieldId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'Fields', key: 'id' },
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE', // If a Field is deleted, delete all associated Games
       },
       sportId: {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: { model: 'Sports', key: 'id' },
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE', // If a Sport is deleted, delete all associated Games
       },
       startTime: { type: DataTypes.DATE, allowNull: false },
       endTime: { type: DataTypes.DATE, allowNull: false },

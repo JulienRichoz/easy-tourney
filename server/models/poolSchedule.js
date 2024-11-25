@@ -5,17 +5,15 @@ module.exports = (sequelize, DataTypes) => {
   class PoolSchedule extends Model {
     static associate(models) {
       PoolSchedule.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
-      PoolSchedule.belongsTo(models.Field, {
-        foreignKey: 'fieldId',
-        as: 'field',
-      });
-      PoolSchedule.belongsTo(models.Sport, {
-        foreignKey: 'sportId',
-        as: 'sport',
-      });
-
+      PoolSchedule.belongsTo(models.Field, { foreignKey: 'fieldId', as: 'field' });
+      PoolSchedule.belongsTo(models.Sport, { foreignKey: 'sportId', as: 'sport' });
       // Association inverse vers Game
-      PoolSchedule.hasMany(models.Game, { foreignKey: 'poolScheduleId', as: 'games' });
+      PoolSchedule.hasMany(models.Game, {
+        foreignKey: 'poolScheduleId',
+        as: 'games',
+        onDelete: 'CASCADE', // Si un PoolSchedule est supprimé, les matchs associés sont supprimés
+        hooks: true, // Nécessaire pour que 'onDelete' soit appliqué
+      });
     }
   }
 
