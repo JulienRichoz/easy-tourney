@@ -115,10 +115,10 @@ const checkAndUpdateStatuses = async (tourneyId) => {
   // planningStatus: notStarted <-> draft/active
   const schedule = await ScheduleTourney.findOne({ where: { tourneyId } });
   if (schedule && tourney.planningStatus === 'notStarted') {
-    tourney.planningStatus = 'draft';
+    tourney.planningStatus = 'pools';
   } else if (
     !schedule &&
-    (tourney.planningStatus === 'draft' || tourney.planningStatus === 'active')
+    (tourney.planningStatus === 'pools' || tourney.planningStatus === 'active')
   ) {
     tourney.planningStatus = 'notStarted';
   }

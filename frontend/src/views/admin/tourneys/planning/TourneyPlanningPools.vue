@@ -315,7 +315,7 @@
         formErrors: {}, // Pour stocker les erreurs du formulaire
         selectedPoolId: null, // ID de la pool sélectionnée pour les filtres
         planningStatusOptions: [
-          { value: 'draft', label: 'Pools' },
+          { value: 'pools', label: 'Pools' },
           { value: 'games', label: 'Matchs' },
           { value: 'completed', label: 'Terminé' },
         ],
@@ -629,6 +629,18 @@
         if (this.$refs.fullCalendar) {
           // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
           this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+      },
+      /**
+       * Redirige vers la page des matchs si le statut est 'games'
+       * @param newStatus
+       */
+      currentStatus(newStatus) {
+        if (newStatus === 'games') {
+          this.$router.push({
+            name: 'TourneyPlanningGames',
+            params: { tourneyId: this.tourneyId },
+          });
         }
       },
       /**
