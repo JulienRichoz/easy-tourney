@@ -64,17 +64,27 @@
               :class="getRowClass(game)"
             >
               <td class="border px-4 py-2">{{ index + 1 }}</td>
-              <td class="border px-4 py-2">{{ game.teamA.teamName }}</td>
-              <td class="border px-4 py-2">{{ game.teamB.teamName }}</td>
+              <td class="border px-4 py-2">
+                {{ game.teamA?.teamName || 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.teamB?.teamName || 'N/A' }}
+              </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.startTime) }}
               </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.endTime) }}
               </td>
-              <td class="border px-4 py-2">{{ game.field.name }}</td>
-              <td class="border px-4 py-2">{{ game.sport.name }}</td>
-              <td class="border px-4 py-2">{{ game.pool.name }}</td>
+              <td class="border px-4 py-2">
+                {{ game.field ? game.field.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.sport ? game.sport.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.pool ? game.pool.name : 'N/A' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -95,17 +105,27 @@
             >
               <!-- ... colonnes du tableau ... -->
               <td class="border px-4 py-2">{{ index + 1 }}</td>
-              <td class="border px-4 py-2">{{ game.teamA.teamName }}</td>
-              <td class="border px-4 py-2">{{ game.teamB.teamName }}</td>
+              <td class="border px-4 py-2">
+                {{ game.teamA?.teamName || 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.teamB?.teamName || 'N/A' }}
+              </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.startTime) }}
               </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.endTime) }}
               </td>
-              <td class="border px-4 py-2">{{ game.field.name }}</td>
-              <td class="border px-4 py-2">{{ game.sport.name }}</td>
-              <td class="border px-4 py-2">{{ game.pool.name }}</td>
+              <td class="border px-4 py-2">
+                {{ game.field ? game.field.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.sport ? game.sport.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.pool ? game.pool.name : 'N/A' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -127,17 +147,27 @@
             >
               <!-- ... colonnes du tableau ... -->
               <td class="border px-4 py-2">{{ index + 1 }}</td>
-              <td class="border px-4 py-2">{{ game.teamA.teamName }}</td>
-              <td class="border px-4 py-2">{{ game.teamB.teamName }}</td>
+              <td class="border px-4 py-2">
+                {{ game.teamA?.teamName || 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.teamB?.teamName || 'N/A' }}
+              </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.startTime) }}
               </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.endTime) }}
               </td>
-              <td class="border px-4 py-2">{{ game.field.name }}</td>
-              <td class="border px-4 py-2">{{ game.sport.name }}</td>
-              <td class="border px-4 py-2">{{ game.pool.name }}</td>
+              <td class="border px-4 py-2">
+                {{ game.field ? game.field.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.sport ? game.sport.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.pool ? game.pool.name : 'N/A' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -171,17 +201,27 @@
               :class="getRowClass(game)"
             >
               <td class="border px-4 py-2">{{ index + 1 }}</td>
-              <td class="border px-4 py-2">{{ game.teamA.teamName }}</td>
-              <td class="border px-4 py-2">{{ game.teamB.teamName }}</td>
+              <td class="border px-4 py-2">
+                {{ game.teamA?.teamName || 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.teamB?.teamName || 'N/A' }}
+              </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.startTime) }}
               </td>
               <td class="border px-4 py-2">
                 {{ formatDateTime(game.endTime) }}
               </td>
-              <td class="border px-4 py-2">{{ game.field.name }}</td>
-              <td class="border px-4 py-2">{{ game.sport.name }}</td>
-              <td class="border px-4 py-2">{{ game.pool.name }}</td>
+              <td class="border px-4 py-2">
+                {{ game.field ? game.field.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.sport ? game.sport.name : 'N/A' }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ game.pool ? game.pool.name : 'N/A' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -219,6 +259,8 @@
             `/tourneys/${this.tourneyId}/planning/details`
           );
           this.games = response.data.games;
+          console.log('Jeux récupérés:', this.games); // Ajoutez cette ligne
+
           // Préparer les données pour l'affichage par équipe
           this.prepareTeamsData();
           // Préparer les données pour l'affichage par pool
@@ -254,6 +296,9 @@
         const poolsMap = {};
 
         this.games.forEach((game) => {
+          if (!game.pool) {
+            return;
+          }
           const pool = game.pool;
           if (!poolsMap[pool.id]) {
             poolsMap[pool.id] = {
@@ -269,13 +314,19 @@
       },
       preparePoolSchedulesData() {
         const poolSchedulesMap = {};
-
         this.games.forEach((game) => {
           console.log('Game ID:', game.id);
           console.log('PoolScheduleId:', game.poolScheduleId);
           console.log('PoolSchedule:', game.poolSchedule);
           const poolScheduleId = game.poolScheduleId;
           const poolSchedule = game.poolSchedule; // Assurez-vous que cette information est disponible
+
+          if (!poolScheduleId || !poolSchedule) {
+            console.warn(
+              `Le jeu ID ${game.id} n'a pas de PoolSchedule assigné.`
+            );
+            return; // Ignorer ce jeu
+          }
 
           if (!poolSchedulesMap[poolScheduleId]) {
             poolSchedulesMap[poolScheduleId] = {
@@ -307,6 +358,10 @@
         return moment(dateTime).format('HH:mm');
       },
       getRowClass(game) {
+        // Vérifier si game.pool existe
+        if (!game.pool || !game.pool.name) {
+          return '';
+        }
         // Retourne une classe CSS en fonction de la pool
         const poolColors = {
           'Pool A': 'bg-blue-100',
