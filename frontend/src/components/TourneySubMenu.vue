@@ -61,7 +61,7 @@
     <router-link
       :to="`/admin/tourneys/${tourneyId}/planning`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
-      :class="{ active: $route.name === 'AdminTourneyPlanning' }"
+      :class="{ active: $route.name === 'AdminTourneyPlanningPools' }"
     >
       <font-awesome-icon :icon="['fas', 'calendar-alt']" />
       <span class="hidden sm:inline"> Planning</span>

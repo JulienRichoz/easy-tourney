@@ -1,4 +1,4 @@
-<!-- views/admin/TourneyPlanning.vue -->
+<!-- views/admin/TourneyPlanningPools.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
