@@ -48,6 +48,7 @@ const {
     timeDifferenceInMinutes,
     addMinutesToTime,
     combineDateAndTime,
+    formatTime,
 } = require('../../../utils/dateUtils');
 
 class CustomRoundRobinGamePlanning extends GameStrategy {
@@ -380,6 +381,210 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
         }
     }
 
+    /**
+   * Valide les matchs planifiés selon les règles spécifiées.
+   * @returns {Object} Résultats de la validation avec différents niveaux d'erreurs.
+   */
+    async validateGames() {
+        const errors = {
+            high: [], // Conflit sur le meme terrain ou match planifié pendant une pause
+            mid: [], // Différence de matchs par équipe, nombre de confrontations entre paires d'équipes
+            low: [], // Nombre moyen de matchs par équipe pour chaque pool
+        };
+
+        try {
+            // Récupérer le tournoi
+            const tourney = await Tourney.findByPk(this.tourneyId);
+            if (!tourney) {
+                throw new Error('Tournoi introuvable.');
+            }
+
+            // Récupérer la configuration du planning
+            const scheduleTourney = await ScheduleTourney.findOne({
+                where: { tourneyId: this.tourneyId },
+            });
+            if (!scheduleTourney) {
+                throw new Error(
+                    'Aucune configuration de planning trouvée pour ce tournoi.'
+                );
+            }
+
+            // Récupérer tous les matchs du tournoi
+            const games = await Game.findAll({
+                where: { tourneyId: this.tourneyId },
+                include: [
+                    { model: Team, as: 'teamA', attributes: ['id', 'teamName', 'poolId'] },
+                    { model: Team, as: 'teamB', attributes: ['id', 'teamName', 'poolId'] },
+                    { model: Field, as: 'field', attributes: ['id', 'name'] },
+                    { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+                    { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+                    { model: PoolSchedule, as: 'poolSchedule', attributes: ['id', 'startTime', 'endTime', 'date'] },
+                ],
+                order: [['startTime', 'ASC']],
+            });
+
+            if (!games.length) {
+                errors.high.push('Aucun match n\'a été planifié.');
+                return { hasErrors: true, errors };
+            }
+
+            // Récupérer les pauses du tournoi
+            const { introStart, introEnd, lunchStart, lunchEnd, outroStart, outroEnd } = scheduleTourney;
+
+            // High level errors
+            // 1. Vérifier les conflits de temps entre les matchs sur le même terrain
+            const fieldGamesMap = {};
+            games.forEach((game) => {
+                const key = game.fieldId;
+                if (!fieldGamesMap[key]) {
+                    fieldGamesMap[key] = [];
+                }
+                fieldGamesMap[key].push(game);
+            });
+
+            for (const fieldId in fieldGamesMap) {
+                const fieldGames = fieldGamesMap[fieldId];
+                // Trier les matchs par heure de début
+                fieldGames.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+                for (let i = 0; i < fieldGames.length - 1; i++) {
+                    const currentGame = fieldGames[i];
+                    const nextGame = fieldGames[i + 1];
+
+                    if (new Date(currentGame.endTime) > new Date(nextGame.startTime)) {
+                        errors.high.push(`Conflit de temps sur le terrain ${currentGame.field.name} entre les matchs ${currentGame.id} (${currentGame.teamA.teamName} vs ${currentGame.teamB.teamName}) et ${nextGame.id} (${nextGame.teamA.teamName} vs ${nextGame.teamB.teamName}).`);
+                    }
+                }
+            }
+
+            // 2. Vérifier si les matchs sont planifiés pendant les pauses
+            games.forEach((game) => {
+                const gameStartTime = new Date(game.startTime);
+                const gameEndTime = new Date(game.endTime);
+
+                const pauses = [
+                    { start: scheduleTourney.introStart, end: scheduleTourney.introEnd, label: 'Introduction' },
+                    { start: scheduleTourney.lunchStart, end: scheduleTourney.lunchEnd, label: 'Déjeuner' },
+                    { start: scheduleTourney.outroStart, end: scheduleTourney.outroEnd, label: 'Conclusion' },
+                ];
+
+                pauses.forEach((pause) => {
+                    if (pause.start && pause.end) {
+                        const pauseStart = combineDateAndTime(gameStartTime, pause.start);
+                        const pauseEnd = combineDateAndTime(gameStartTime, pause.end);
+
+                        if (
+                            (gameStartTime >= pauseStart && gameStartTime < pauseEnd) ||
+                            (gameEndTime > pauseStart && gameEndTime <= pauseEnd) ||
+                            (gameStartTime <= pauseStart && gameEndTime >= pauseEnd) // Game spans the entire pause
+                        ) {
+                            errors.high.push(`Le match ${game.id} (${game.teamA.teamName} vs ${game.teamB.teamName}) est planifié pendant la pause ${pause.label}.`);
+                        }
+                    }
+                });
+            });
+
+            // Mid level errors
+            // Vérifier la différence du nombre de matchs par équipe, en tenant compte de la taille des pools
+            // Récupérer toutes les équipes du tournoi
+            const teams = await Team.findAll({
+                where: { tourneyId: this.tourneyId },
+                attributes: ['id', 'teamName', 'poolId'],
+            });
+
+            // Calculer le nombre de matchs par équipe, par pool
+            const poolTeamMatchCounts = {};
+            const poolTeamCounts = {};
+            teams.forEach((team) => {
+                const poolId = team.poolId || 'No Pool';
+                if (!poolTeamMatchCounts[poolId]) {
+                    poolTeamMatchCounts[poolId] = {};
+                    poolTeamCounts[poolId] = 0;
+                }
+                poolTeamMatchCounts[poolId][team.id] = 0;
+                poolTeamCounts[poolId]++;
+            });
+
+            games.forEach((game) => {
+                const poolId = game.poolId || 'No Pool';
+                if (!poolTeamMatchCounts[poolId]) {
+                    poolTeamMatchCounts[poolId] = {};
+                }
+                poolTeamMatchCounts[poolId][game.teamAId]++;
+                poolTeamMatchCounts[poolId][game.teamBId]++;
+            });
+
+            // Vérifier la différence de matchs par équipe dans chaque pool
+            for (const poolId in poolTeamMatchCounts) {
+                const teamMatchCounts = poolTeamMatchCounts[poolId];
+                const matchCounts = Object.values(teamMatchCounts);
+                const maxMatches = Math.max(...matchCounts);
+                const minMatches = Math.min(...matchCounts);
+                const maxDifference = maxMatches - minMatches;
+
+                const poolSize = poolTeamCounts[poolId];
+
+                // Autoriser une différence maximale de 2 si la taille de la pool est différente
+                let allowedDifference = 1;
+                if (poolSize !== teams.length / Object.keys(poolTeamCounts).length) {
+                    allowedDifference = 2;
+                }
+
+                if (maxDifference >= allowedDifference + 1) {
+                    errors.mid.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}. Certaines équipes ont joué ${maxMatches} matchs tandis que d'autres ont joué ${minMatches} matchs.`);
+                } else if (maxDifference === allowedDifference) {
+                    errors.low.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}.`);
+                }
+
+                // Calculer et ajouter le nombre moyen de matchs par équipe pour la pool
+                const numTeams = poolTeamCounts[poolId];
+                const totalMatches = matchCounts.reduce((a, b) => a + b, 0) / 2; // Diviser par 2 car chaque match est compté deux fois
+                const avgMatches = totalMatches / numTeams;
+                const poolName = poolId === 'No Pool' ? 'Sans Pool' : `Pool ${poolId}`;
+                errors.low.push(`Nombre moyen de matchs par équipe pour ${poolName} : ${avgMatches.toFixed(2)}`);
+            }
+
+            // Vérifier si des équipes ont joué le même adversaire plus que le nombre autorisé
+            // On suppose que le nombre maximum de confrontations est 1 pour un round-robin
+            const teamPairCounts = {};
+            const teamIdNameMap = {};
+            teams.forEach((team) => {
+                teamIdNameMap[team.id] = team.teamName;
+            });
+
+            games.forEach((game) => {
+                const key = this.getMatchKey(game.teamAId, game.teamBId);
+                if (!teamPairCounts[key]) {
+                    teamPairCounts[key] = 0;
+                }
+                teamPairCounts[key]++;
+            });
+
+            for (const key in teamPairCounts) {
+                const count = teamPairCounts[key];
+                if (count > 1) {
+                    const [teamAId, teamBId] = key.split('-');
+                    const teamAName = teamIdNameMap[teamAId];
+                    const teamBName = teamIdNameMap[teamBId];
+                    errors.mid.push(`Les équipes ${teamAName} et ${teamBName} se sont affrontées ${count} fois.`);
+                }
+            }
+
+            // Retourner les erreurs
+            const hasErrors = Object.values(errors).some(
+                (levelErrors) => levelErrors.length > 0
+            );
+
+            return {
+                hasErrors,
+                errors,
+            };
+
+        } catch (error) {
+            console.error('Erreur lors de la validation des matchs :', error);
+            throw error; // Propager l'erreur pour qu'elle soit gérée par le contrôleur
+        }
+    }
     /**
      * Génère une clé unique pour une paire d'équipes.
      * @param {number} teamAId - ID de l'équipe A.

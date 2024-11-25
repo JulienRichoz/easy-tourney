@@ -238,8 +238,24 @@ exports.generateGamePlanning = async (req, res) => {
 
 exports.validateGamePlanning = async (req, res) => {
   try {
-    // Implémentez la logique de validation si nécessaire
-    res.status(200).json({ message: 'Validation des matchs non implémentée.' });
+    const { tourneyId } = req.params;
+
+    // Récupérer le tournoi
+    const tourney = await Tourney.findByPk(tourneyId);
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Utiliser le tourneyType pour déterminer la stratégie
+    const strategyManager = new GameStrategyManager(tourneyId, tourney.tourneyType);
+
+    // Appeler la méthode de validation
+    const validationResults = await strategyManager.validateGames();
+
+    res.status(200).json({
+      message: 'Validation des matchs effectuée avec succès.',
+      validation: validationResults,
+    });
   } catch (error) {
     console.error('Erreur lors de la validation des matchs :', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
