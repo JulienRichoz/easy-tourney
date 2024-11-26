@@ -105,12 +105,12 @@
         <v-select
           :options="poolOptions"
           v-model="selectedPoolId"
-          placeholder="Tous les Pools"
+          placeholder="Toutes les Pools"
           :clearable="true"
           :searchable="true"
           label="name"
           :reduce="(pool) => pool.id"
-          class="w-36 flex-shrink-0"
+          class="w-auto flex-shrink-0 whitespace-nowrap"
         />
         <!-- Team Filter -->
         <v-select
@@ -228,13 +228,10 @@
 
     <!-- Create Game Modal -->
     <ModalComponent
+      :title="createModalTitle"
       :isVisible="showCreateModal"
       @close="showCreateModal = false"
     >
-      <!-- Dynamically set the title to include Pool Name and Sport -->
-      <template #title>
-        {{ createModalTitle }}
-      </template>
       <template #content>
         <FormComponent
           v-model="createFormData"
@@ -246,8 +243,11 @@
     </ModalComponent>
 
     <!-- Edit Game Modal -->
-    <ModalComponent :isVisible="showEditModal" @close="showEditModal = false">
-      <template #title>Modifier le Match</template>
+    <ModalComponent
+      :isVisible="showEditModal"
+      @close="showEditModal = false"
+      :title="'Modifier le match'"
+    >
       <template #content>
         <FormComponent
           v-model="eventFormData"
@@ -310,6 +310,74 @@
           { value: 'pools', label: 'Pools' },
           { value: 'games', label: 'Matchs' },
           { value: 'completed', label: 'Terminé' },
+        ],
+        scheduleFormFields: [
+          {
+            name: 'startTime',
+            type: 'time',
+            label: 'Heure de début',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            type: 'time',
+            label: 'Heure de fin',
+            required: true,
+          },
+          {
+            name: 'introStart',
+            type: 'time',
+            label: "Début de l'introduction",
+          },
+          {
+            name: 'introEnd',
+            type: 'time',
+            label: "Fin de l'introduction",
+          },
+          {
+            name: 'lunchStart',
+            type: 'time',
+            label: 'Début du déjeuner',
+          },
+          {
+            name: 'lunchEnd',
+            type: 'time',
+            label: 'Fin du déjeuner',
+          },
+          {
+            name: 'outroStart',
+            type: 'time',
+            label: 'Début de la conclusion',
+          },
+          {
+            name: 'outroEnd',
+            type: 'time',
+            label: 'Fin de la conclusion',
+          },
+          {
+            name: 'poolDuration',
+            type: 'number',
+            label: 'Durée d’une pool (en minutes)',
+            required: true,
+          },
+          {
+            name: 'transitionPoolTime',
+            type: 'number',
+            label: 'Transition entre les pools (en minutes)',
+            required: true,
+          },
+          {
+            name: 'gameDuration',
+            type: 'number',
+            label: 'Durée d’un match (en minutes)',
+            required: true,
+          },
+          {
+            name: 'transitionGameTime',
+            type: 'number',
+            label: 'Transition entre les matchs (en minutes)',
+            required: true,
+          },
         ],
         warnings: [],
         showScheduleConfigModal: false,
@@ -403,7 +471,7 @@
         };
       },
       poolOptions() {
-        return [{ id: null, name: 'Tous les Pools' }, ...this.pools];
+        return [{ id: null, name: 'Toutes les Pools' }, ...this.pools];
       },
       teamOptions() {
         return this.teams.map((team) => ({
@@ -1037,30 +1105,18 @@
           info.revert();
           return;
         }
+
         const event = info.event;
         try {
           const eventId = event.id;
           const newFieldId = event.getResources()[0]?.id;
 
-          if (!eventId || !newFieldId) {
-            console.error(
-              "Problème d'ID : Terrain ou événement mal identifié."
-            );
-            info.revert();
-            return;
-          }
-
-          const game = event.extendedProps.game;
-
-          // Check if the new position is within the same pool schedule
+          // Trouver le poolSchedule correspondant
           const poolSchedule = this.findPoolScheduleForEvent(event);
 
-          if (
-            (game.poolScheduleId && !poolSchedule) ||
-            (poolSchedule && game.poolScheduleId !== poolSchedule.id)
-          ) {
-            // Prevent moving games outside of their pool schedule
-            toast.error(
+          if (!poolSchedule || poolSchedule.fieldId.toString() !== newFieldId) {
+            // Revert l'opération si l'événement est déplacé en dehors du poolSchedule
+            toast.warning(
               'Vous ne pouvez pas déplacer ce match en dehors de son pool schedule.'
             );
             info.revert();
@@ -1072,18 +1128,15 @@
             endTime: this.formatTime(event.end),
             date: this.tourney.dateTourney,
             fieldId: newFieldId,
+            poolScheduleId: poolSchedule.id,
           };
-
-          if (poolSchedule) {
-            data.poolScheduleId = poolSchedule.id;
-          }
 
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${eventId}`,
             data
           );
 
-          // Update the game locally
+          // Mettre à jour localement
           const index = this.games.findIndex(
             (g) => g.id.toString() === eventId.toString()
           );
@@ -1091,13 +1144,14 @@
             this.games[index] = response.data;
           }
 
-          // Update event properties
+          // Met à jour les propriétés de l'événement
           event.setExtendedProp('game', response.data);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
       },
+
       /**
        * Finds the poolSchedule for a given event.
        * @param {Object} event - The event object from FullCalendar.
@@ -1108,7 +1162,6 @@
         const eventEnd = event.end;
         const resourceId = event.getResources()[0]?.id;
 
-        // Iterate over all poolSchedules
         for (const pool of this.pools) {
           for (const schedule of pool.schedules) {
             if (schedule.fieldId.toString() === resourceId) {
@@ -1118,7 +1171,6 @@
               const scheduleEnd = new Date(
                 `${schedule.date}T${schedule.endTime}`
               );
-
               if (eventStart >= scheduleStart && eventEnd <= scheduleEnd) {
                 return schedule;
               }
@@ -1127,6 +1179,7 @@
         }
         return null;
       },
+
       /**
        * Handles event resizing on the calendar.
        * @param {Object} info - Event resize info from FullCalendar.
