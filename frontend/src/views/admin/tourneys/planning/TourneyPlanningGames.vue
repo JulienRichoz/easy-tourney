@@ -1362,6 +1362,9 @@
        * Handles the planning generation.
        */
       async handlePlanningGenerated() {
+        await apiService.post(
+          `/tourneys/${this.tourneyId}/planning/games/generate`
+        );
         await this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();
@@ -1568,15 +1571,15 @@
         const screenWidth = window.innerWidth;
 
         if (screenWidth >= 1200) {
-          this.terrainsPerPage = 10;
+          this.terrainsPerPage = 6;
         } else if (screenWidth >= 1000) {
-          this.terrainsPerPage = 8;
+          this.terrainsPerPage = 4;
         } else if (screenWidth >= 800) {
-          this.terrainsPerPage = 7;
-        } else if (screenWidth >= 600) {
-          this.terrainsPerPage = 5;
-        } else {
           this.terrainsPerPage = 3;
+        } else if (screenWidth >= 600) {
+          this.terrainsPerPage = 2;
+        } else {
+          this.terrainsPerPage = 2;
         }
       },
     },
