@@ -112,17 +112,6 @@
           :reduce="(pool) => pool.id"
           class="w-auto flex-shrink-0 whitespace-nowrap"
         />
-        <!-- Team Filter -->
-        <v-select
-          :options="teamOptions"
-          v-model="selectedTeamId"
-          placeholder="Toutes les Équipes"
-          :clearable="true"
-          :searchable="true"
-          label="label"
-          :reduce="(team) => team.value"
-          class="w-36 flex-shrink-0"
-        />
 
         <!-- Color Toggle -->
         <label class="flex items-center cursor-pointer flex-shrink-0">
@@ -305,7 +294,6 @@
         scheduleConfig: {},
         formErrors: {},
         selectedPoolId: null,
-        selectedTeamId: null,
         planningStatusOptions: [
           { value: 'pools', label: 'Pools' },
           { value: 'games', label: 'Matchs' },
@@ -441,6 +429,19 @@
         const end = start + this.terrainsPerPage;
         return this.filteredFields.slice(start, end);
       },
+      editTeamOptions() {
+        if (this.eventToEdit && this.eventToEdit.extendedProps.game.pool) {
+          const poolId = this.eventToEdit.extendedProps.game.pool.id;
+          return this.teams
+            .filter((team) => team.poolId === poolId)
+            .map((team) => ({
+              value: team.id,
+              label: team.teamName,
+            }));
+        }
+        // Si pas de pool associée, retourner toutes les équipes
+        return this.teamOptions;
+      },
       /**
        * Determines if the planning is editable based on the current status.
        */
@@ -519,13 +520,6 @@
           if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
             return;
           }
-          if (
-            this.selectedTeamId &&
-            game.teamAId !== this.selectedTeamId &&
-            game.teamBId !== this.selectedTeamId
-          ) {
-            return;
-          }
           events.push({
             id: game.id.toString(),
             resourceId: game.field.id.toString(), // Assure que le terrain est défini
@@ -577,7 +571,7 @@
           slotMinTime: this.adjustedSlotMinTime,
           slotMaxTime: this.adjustedSlotMaxTime,
           slotDuration: '00:05:00',
-          slotLabelInterval: '00:30:00',
+          slotLabelInterval: '00:15:00',
           allDaySlot: false,
           resources: this.paginatedFields.map((field) => ({
             id: field.id.toString(),
@@ -616,23 +610,17 @@
             name: 'teamAId',
             type: 'select',
             label: 'Équipe A',
-            options: this.teamOptions,
+            options: this.editTeamOptions,
             required: true,
           },
           {
             name: 'teamBId',
             type: 'select',
             label: 'Équipe B',
-            options: this.teamOptions,
+            options: this.editTeamOptions,
             required: true,
           },
-          {
-            name: 'fieldId',
-            type: 'select',
-            label: 'Terrain',
-            options: this.fieldOptions,
-            required: true,
-          },
+
           {
             name: 'startTime',
             type: 'datetime-local',
@@ -677,10 +665,11 @@
             type: 'datetime-local',
             label: 'Heure de fin',
             required: true,
-            disabled: this.autoCalculateEndTime,
+            // disabled: this.autoCalculateEndTime,
           },
         ];
 
+        // Ajouter les champs 'fieldId' et 'sportId' si 'poolScheduleId' n'est pas défini
         if (!this.createFormData.poolScheduleId) {
           fields.push(
             {
@@ -702,6 +691,7 @@
 
         return fields;
       },
+
       /**
        * Determines if end time should be auto-calculated.
        */
@@ -978,15 +968,17 @@
             fieldId: null,
             sportId: null,
           };
-        } else {
-          // If no poolSchedule is found, show an error message
-          toast.error(
-            "Vous ne pouvez créer un match qu'à l'intérieur d'une plage horaire de pool."
-          );
-          return;
-        }
-
-        this.showCreateModal = true;
+        } // Si aucun poolSchedule n'est trouvé, permettre la création sans poolScheduleId
+        (this.createFormData = {
+          startTime: this.formatDateTime(selectionInfo.start),
+          endTime: this.formatDateTime(selectionInfo.end),
+          poolScheduleId: null,
+          fieldId: selectionInfo.resource.id, // Champ de terrain sélectionné
+          sportId: null, // Vous pouvez éventuellement demander le sport
+          teamAId: null,
+          teamBId: null,
+        }),
+          (this.showCreateModal = true);
       },
       /**
        * Finds the pool schedule for a given selection.
@@ -1095,6 +1087,7 @@
           toast.error('Erreur lors de la création du match.');
         }
       },
+
       /**
        * Handles the drag and drop of events on the calendar.
        * Allows moving within the same pool schedule.
@@ -1666,6 +1659,10 @@
 
   .navigation-button:hover {
     transform: scale(1.2);
+  }
+
+  .fc-timegrid-slot:hover {
+    cursor: crosshair;
   }
 
   select {
