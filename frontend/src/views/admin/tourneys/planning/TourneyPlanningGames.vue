@@ -528,17 +528,15 @@
           }
           events.push({
             id: game.id.toString(),
+            resourceId: game.field.id.toString(), // Assure que le terrain est défini
             title: `${game.teamA.teamName} vs ${game.teamB.teamName}`,
             start: game.startTime,
             end: game.endTime,
-            resourceId: game.field.id.toString(),
             backgroundColor: this.useUnifiedColors
               ? this.generateUniqueColor(game.pool?.id)
               : game.sport?.color || '#3B82F6',
             textColor: '#FFFFFF',
-            extendedProps: {
-              game,
-            },
+            extendedProps: { game },
           });
         });
 
@@ -552,13 +550,11 @@
               }
               events.push({
                 id: `pool-${pool.id}-schedule-${schedule.id}`,
-                title: `Pool ${pool.name}`,
                 start: `${schedule.date}T${schedule.startTime}`,
                 end: `${schedule.date}T${schedule.endTime}`,
                 resourceId: schedule.fieldId.toString(),
                 display: 'background',
                 backgroundColor: this.generateUniqueColor(pool.id),
-                overlap: false,
               });
             });
           }
@@ -571,8 +567,12 @@
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
+          droppable: true, // Permet de déposer les éléments
+          eventStartEditable: true, // Autorise le déplacement des événements
+          eventDurationEditable: true, // Autorise les ajustements de durée
           selectable: this.isEditable,
           select: this.handleSelect,
+          eventOverlap: true,
           height: 'auto',
           slotMinTime: this.adjustedSlotMinTime,
           slotMaxTime: this.adjustedSlotMaxTime,
@@ -1103,6 +1103,7 @@
       async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
+          console.log('Not editable');
           return;
         }
 
@@ -1136,9 +1137,9 @@
             data
           );
 
-          // Mettre à jour localement
+          // Met à jour localement
           const index = this.games.findIndex(
-            (g) => g.id.toString() === eventId.toString()
+            (g) => g.id.toString() === event.id
           );
           if (index !== -1) {
             this.games[index] = response.data;
@@ -1421,6 +1422,20 @@
         await this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();
+      },
+      validateEventDrop(event, resourceId) {
+        // Récupérer l'événement déplacé
+        const game = event.extendedProps.game;
+
+        // Vérifiez que le champ (terrain) appartient toujours au même poolSchedule
+        const poolSchedule = this.poolSchedules.find(
+          (ps) =>
+            ps.id === game.poolScheduleId &&
+            ps.field.id.toString() === resourceId
+        );
+
+        // Si aucune correspondance n'est trouvée, l'action est invalide
+        return !!poolSchedule;
       },
       /**
        * Clears the planning.
