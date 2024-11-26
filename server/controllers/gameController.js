@@ -8,6 +8,7 @@ const {
   UsersTourneys,
   User,
   PoolSchedule,
+  Pool,
 } = require('../models');
 
 const tourneyTypes = require('../config/tourneyTypes');
@@ -120,7 +121,17 @@ exports.createGame = async (req, res) => {
         status: 'scheduled',
       });
 
-      res.status(201).json(game);
+      const newGame = await Game.findByPk(game.id, {
+        include: [
+          { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+          { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+          { model: Field, as: 'field', attributes: ['id', 'name'] },
+          { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+          { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+        ],
+      });
+
+      res.status(201).json(newGame);
     } else {
       // Pour les tournois sans pools
 
@@ -374,8 +385,17 @@ exports.updateGame = async (req, res) => {
 
     // Sauvegarder les modifications
     await game.save();
+    const updatedGame = await Game.findByPk(gameId, {
+      include: [
+        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+        { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+      ],
+    });
 
-    res.status(200).json(game);
+    res.status(200).json(updatedGame);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du match :', error);
     res
