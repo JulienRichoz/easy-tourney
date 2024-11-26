@@ -1,64 +1,22 @@
-<!-- views/admin/TourneyPlanningGames.vue -->
+<!-- TourneyPlanningGames.vue -->
 <template>
   <div>
-    <!-- Sous-menu du tournoi -->
+    <!-- Tournament Sub-Menu -->
     <TourneySubMenu :tourneyId="tourneyId" />
 
-    <!-- Liste des équipes en haut, sticky sans fond gris -->
-    <div
-      id="external-events"
-      class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex items-center justify-between bg-white dark:bg-dark-background"
-    >
-      <!-- Conteneur pour les équipes -->
-      <div class="flex space-x-4">
-        <!-- Équipes que l'on peut glisser -->
-        <div
-          v-for="team in filteredTeams"
-          :key="team.id"
-          :data-id="team.id"
-          :data-team-name="team.teamName"
-          :class="[
-            'team-item',
-            'p-3',
-            'mb-3',
-            'external-event',
-            'rounded-lg',
-            'text-center',
-            'font-semibold',
-            'transform',
-            'transition',
-            'duration-100',
-            'w-28',
-            'shadow-md',
-            'flex',
-            'items-center',
-            'justify-center',
-            isEditable
-              ? 'cursor-pointer external-event hover:scale-110 active:scale-95'
-              : 'opacity-50',
-            'bg-green-500',
-            'text-white',
-          ]"
-        >
-          {{ team.teamName }}
-          <span v-if="team.pool"> - {{ team.pool.name }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Messages d'avertissement -->
+    <!-- Warning Messages -->
     <div v-if="!fields.length">
       <ErrorMessageComponent
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des matchs."
       ></ErrorMessageComponent>
     </div>
 
-    <!-- Messages d'avertissement de validation -->
+    <!-- Validation Warning Messages -->
     <div
       v-if="warnings.length && showWarningsModal"
       class="p-4 rounded mb-4 relative flex flex-col bg-light-warning-bg border border-light-warning-border text-light-warning-text dark:bg-dark-warning-bg dark:border-yellow-600 dark:text-dark-warning-text"
     >
-      <!-- Bouton Fermer positionné en haut à droite -->
+      <!-- Close Button -->
       <button
         @click="closeWarningsModal"
         class="absolute top-2 right-2 flex items-center text-light-warning-text hover:text-light-warning-closeText"
@@ -77,10 +35,11 @@
       </ul>
     </div>
 
+    <!-- Action Buttons and Filters -->
     <div class="flex flex-wrap gap-4 my-2 px-4">
-      <!-- Première ligne -->
+      <!-- First Row -->
       <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
-        <!-- Boutons d'action -->
+        <!-- Action Buttons -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-4 flex-grow">
           <ButtonComponent
             fontAwesomeIcon="cog"
@@ -127,45 +86,45 @@
           </ButtonComponent>
         </div>
 
-        <!-- Sélecteur "Étape" et bouton Étape -->
+        <!-- Status Selector -->
         <div class="flex items-center gap-2 order-last">
           <StatusSelectorComponent
             :tourneyId="tourneyId"
             statusKey="planningStatus"
             :statusOptions="planningStatusOptions"
             v-model="currentStatus"
-            label="Etape"
+            label="Étape"
             :hideWhenNotStarted="false"
           />
         </div>
       </div>
 
-      <!-- Deuxième ligne -->
+      <!-- Second Row -->
       <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
-        <!-- Filtre des Pools -->
+        <!-- Pool Filter -->
         <v-select
           :options="poolOptions"
           v-model="selectedPoolId"
-          placeholder="All Pools"
+          placeholder="Tous les Pools"
           :clearable="true"
           :searchable="true"
           label="name"
           :reduce="(pool) => pool.id"
           class="w-36 flex-shrink-0"
         />
-        <!-- Filtre des Équipes -->
+        <!-- Team Filter -->
         <v-select
           :options="teamOptions"
           v-model="selectedTeamId"
-          placeholder="All Teams"
+          placeholder="Toutes les Équipes"
           :clearable="true"
           :searchable="true"
-          label="teamName"
-          :reduce="(team) => team.id"
+          label="label"
+          :reduce="(team) => team.value"
           class="w-36 flex-shrink-0"
         />
 
-        <!-- Toggle pour les couleurs -->
+        <!-- Color Toggle -->
         <label class="flex items-center cursor-pointer flex-shrink-0">
           <div class="relative">
             <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
@@ -183,7 +142,7 @@
           </span>
         </label>
 
-        <!-- Pagination alignée à droite -->
+        <!-- Pagination -->
         <div class="flex items-center gap-2 ml-auto">
           <button
             v-if="currentPage > 1"
@@ -205,7 +164,7 @@
             &gt;
           </button>
 
-          <!-- Bouton Show All Fields -->
+          <!-- Show All Fields Button -->
           <button
             @click="
               showAllTerrains = !showAllTerrains;
@@ -213,13 +172,13 @@
             "
             class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            {{ showAllTerrains ? 'Réduire' : 'Show All Fields' }}
+            {{ showAllTerrains ? 'Réduire' : 'Afficher Tous les Terrains' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Modal de Confirmation pour la Génération du Planning -->
+    <!-- Generate Planning Confirmation Modal -->
     <StrategyPlanningGeneratorComponent
       :isVisible="showGeneratePlanningConfirmation"
       :tourneyId="tourneyId"
@@ -228,7 +187,7 @@
       @planningGenerated="handlePlanningGenerated"
     />
 
-    <!-- Modal de Confirmation pour la Suppression du Planning -->
+    <!-- Clear Planning Confirmation Modal -->
     <DeleteConfirmationModal
       :isVisible="showClearPlanningConfirmation"
       :isHardDelete="false"
@@ -238,7 +197,7 @@
       @confirm="clearPlanning"
     />
 
-    <!-- Calendrier avec les ressources (terrains) -->
+    <!-- Calendar with Fields as Resources -->
     <div v-if="tourney.dateTourney && fields.length">
       <FullCalendar
         ref="fullCalendar"
@@ -247,7 +206,7 @@
       />
     </div>
 
-    <!-- Modal pour configurer le planning du tournoi -->
+    <!-- Schedule Configuration Modal -->
     <ModalComponent
       :isVisible="showScheduleConfigModal"
       :title="'Configurer le planning des matchs'"
@@ -267,7 +226,26 @@
       </template>
     </ModalComponent>
 
-    <!-- Modal pour éditer un match -->
+    <!-- Create Game Modal -->
+    <ModalComponent
+      :isVisible="showCreateModal"
+      @close="showCreateModal = false"
+    >
+      <!-- Dynamically set the title to include Pool Name and Sport -->
+      <template #title>
+        {{ createModalTitle }}
+      </template>
+      <template #content>
+        <FormComponent
+          v-model="createFormData"
+          :fields="createFormFields"
+          @form-submit="saveNewEvent"
+          @cancel="showCreateModal = false"
+        />
+      </template>
+    </ModalComponent>
+
+    <!-- Edit Game Modal -->
     <ModalComponent :isVisible="showEditModal" @close="showEditModal = false">
       <template #title>Modifier le Match</template>
       <template #content>
@@ -283,10 +261,11 @@
 </template>
 
 <script>
+  // Import necessary components and plugins
   import { mapState, mapActions } from 'vuex';
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
-  import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
+  import interactionPlugin from '@fullcalendar/interaction';
   import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
@@ -322,6 +301,8 @@
         teams: [],
         games: [],
         pools: [],
+        sports: [],
+        scheduleConfig: {},
         formErrors: {},
         selectedPoolId: null,
         selectedTeamId: null,
@@ -331,110 +312,27 @@
           { value: 'completed', label: 'Terminé' },
         ],
         warnings: [],
-        externalDraggableInstance: null,
         showScheduleConfigModal: false,
         showWarningsModal: false,
 
         isSmallScreen: false,
         currentPage: 1,
-        terrainsPerPage: 10,
+        terrainsPerPage: 6,
         showAllTerrains: false,
-        breakpoints: {
-          large: 1150,
-          medium: 640,
-        },
 
-        // Configuration du planning avec valeurs par défaut
-        scheduleConfig: {
-          startTime: '07:30:00',
-          endTime: '17:30:00',
-          gameDuration: 15,
-          transitionGameTime: 5,
-          introStart: '07:30:00',
-          introEnd: '08:00:00',
-          lunchStart: '12:00:00',
-          lunchEnd: '13:00:00',
-          outroStart: '17:00:00',
-          outroEnd: '17:30:00',
-        },
-        scheduleFormFields: [
-          {
-            name: 'startTime',
-            type: 'time',
-            label: 'Heure de début',
-            required: true,
-          },
-          {
-            name: 'endTime',
-            type: 'time',
-            label: 'Heure de fin',
-            required: true,
-          },
-          {
-            name: 'introStart',
-            type: 'time',
-            label: "Début de l'introduction",
-          },
-          {
-            name: 'introEnd',
-            type: 'time',
-            label: "Fin de l'introduction",
-          },
-          {
-            name: 'lunchStart',
-            type: 'time',
-            label: 'Début du déjeuner',
-          },
-          {
-            name: 'lunchEnd',
-            type: 'time',
-            label: 'Fin du déjeuner',
-          },
-          {
-            name: 'outroStart',
-            type: 'time',
-            label: 'Début de la conclusion',
-          },
-          {
-            name: 'outroEnd',
-            type: 'time',
-            label: 'Fin de la conclusion',
-          },
-          {
-            name: 'gameDuration',
-            type: 'number',
-            label: 'Durée d’un match (en minutes)',
-            required: true,
-          },
-          {
-            name: 'transitionGameTime',
-            type: 'number',
-            label: 'Transition entre les matchs (en minutes)',
-            required: true,
-          },
-        ],
         showEditModal: false,
         eventToEdit: null,
         eventFormData: {},
-        eventFormFields: [
-          {
-            name: 'startTime',
-            type: 'time',
-            label: 'Heure de début',
-            required: true,
-          },
-          {
-            name: 'endTime',
-            type: 'time',
-            label: 'Heure de fin',
-            required: true,
-          },
-        ],
+
         showGeneratePlanningConfirmation: false,
         showClearPlanningConfirmation: false,
         currentStatus: null,
         useUnifiedColors: false,
-        colorMap: {}, // Pour stocker les couleurs unies par Pool ID
+        colorMap: {},
+
+        // For creating new games
+        showCreateModal: false,
+        createFormData: {},
       };
     },
     computed: {
@@ -446,24 +344,55 @@
         if (this.showAllTerrains) {
           return 1;
         }
-        return Math.ceil(this.fields.length / this.terrainsPerPage);
+        return Math.ceil(this.filteredFields.length / this.terrainsPerPage);
+      },
+      /**
+       * Filters fields based on selected pool
+       */
+      filteredFields() {
+        if (this.selectedPoolId) {
+          // Get field IDs where the selected pool has schedules
+          const fieldIds = new Set();
+          const selectedPool = this.pools.find(
+            (pool) => pool.id === this.selectedPoolId
+          );
+          if (selectedPool && selectedPool.schedules) {
+            selectedPool.schedules.forEach((schedule) => {
+              fieldIds.add(schedule.fieldId);
+            });
+          }
+          return this.fields.filter((field) => fieldIds.has(field.id));
+        }
+        return this.fields;
       },
       paginatedFields() {
         if (this.showAllTerrains) {
-          return this.fields;
+          return this.filteredFields;
         }
         const start = (this.currentPage - 1) * this.terrainsPerPage;
         const end = start + this.terrainsPerPage;
-        return this.fields.slice(start, end);
+        return this.filteredFields.slice(start, end);
       },
+      /**
+       * Determines if the planning is editable based on the current status.
+       */
       isEditable() {
         return this.statuses.planningStatus !== 'completed';
       },
+      /**
+       * Checks if there are any games.
+       */
       hasGames() {
         return this.games.length > 0;
       },
+      /**
+       * Generates a unique color for pools.
+       * @param {number} poolId - The ID of the pool.
+       * @returns {string} - The generated color.
+       */
       generateUniqueColor() {
         return (poolId) => {
+          if (!poolId) return '#888888'; // Default color if poolId is undefined
           if (this.colorMap[poolId]) {
             return this.colorMap[poolId];
           }
@@ -474,11 +403,29 @@
         };
       },
       poolOptions() {
-        return [{ id: null, name: 'All Pools' }, ...this.pools];
+        return [{ id: null, name: 'Tous les Pools' }, ...this.pools];
       },
       teamOptions() {
-        return [{ id: null, teamName: 'All Teams' }, ...this.teams];
+        return this.teams.map((team) => ({
+          value: team.id,
+          label: team.teamName,
+        }));
       },
+      fieldOptions() {
+        return this.fields.map((field) => ({
+          value: field.id,
+          label: field.name,
+        }));
+      },
+      sportOptions() {
+        return this.sports.map((sport) => ({
+          value: sport.id,
+          label: sport.name,
+        }));
+      },
+      /**
+       * Filters teams based on the selected pool.
+       */
       filteredTeams() {
         if (this.selectedPoolId) {
           return this.teams.filter(
@@ -487,6 +434,9 @@
         }
         return this.teams;
       },
+      /**
+       * Configures the options for FullCalendar.
+       */
       calendarOptions() {
         if (!this.tourney.dateTourney) {
           console.error('La date du tournoi n’est pas disponible');
@@ -495,10 +445,10 @@
 
         const events = [];
 
-        // Ajouter les matchs en tant qu'événements
+        // Add games as events
         this.games.forEach((game) => {
-          // Filtrer par pool et équipe si sélectionnées
-          if (this.selectedPoolId && game.poolId !== this.selectedPoolId) {
+          // Filter by selected pool and team
+          if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
             return;
           }
           if (
@@ -515,7 +465,7 @@
             end: game.endTime,
             resourceId: game.field.id.toString(),
             backgroundColor: this.useUnifiedColors
-              ? this.generateUniqueColor(game.poolId)
+              ? this.generateUniqueColor(game.pool?.id)
               : game.sport?.color || '#3B82F6',
             textColor: '#FFFFFF',
             extendedProps: {
@@ -524,7 +474,27 @@
           });
         });
 
-        // Ajouter les sportsFields en tant qu'événements de fond (si nécessaire)
+        // Add poolSchedules as background events
+        this.pools.forEach((pool) => {
+          if (pool.schedules && pool.schedules.length > 0) {
+            pool.schedules.forEach((schedule) => {
+              // If a pool is selected and doesn't match, skip
+              if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
+                return;
+              }
+              events.push({
+                id: `pool-${pool.id}-schedule-${schedule.id}`,
+                title: `Pool ${pool.name}`,
+                start: `${schedule.date}T${schedule.startTime}`,
+                end: `${schedule.date}T${schedule.endTime}`,
+                resourceId: schedule.fieldId.toString(),
+                display: 'background',
+                backgroundColor: this.generateUniqueColor(pool.id),
+                overlap: false,
+              });
+            });
+          }
+        });
 
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
@@ -533,10 +503,13 @@
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
-          droppable: true,
+          selectable: this.isEditable,
+          select: this.handleSelect,
           height: 'auto',
           slotMinTime: this.adjustedSlotMinTime,
           slotMaxTime: this.adjustedSlotMaxTime,
+          slotDuration: '00:05:00',
+          slotLabelInterval: '00:30:00',
           allDaySlot: false,
           resources: this.paginatedFields.map((field) => ({
             id: field.id.toString(),
@@ -550,19 +523,157 @@
             hour12: false,
           },
           headerToolbar: false,
-          eventReceive: this.handleEventReceive,
           eventDrop: this.handleEventDrop,
           eventResize: this.handleEventResize,
           eventContent: this.renderEventContent,
+          // Enhanced hover feedback
+          eventMouseEnter: this.handleEventMouseEnter,
+          eventMouseLeave: this.handleEventMouseLeave,
         };
       },
       adjustedSlotMinTime() {
         const startTime = this.scheduleConfig.startTime || '07:00:00';
-        return this.subtractOneHour(startTime);
+        return startTime;
       },
       adjustedSlotMaxTime() {
         const endTime = this.scheduleConfig.endTime || '23:00:00';
-        return this.addOneHour(endTime);
+        return endTime;
+      },
+      /**
+       * Defines the fields for the edit game form.
+       */
+      eventFormFields() {
+        return [
+          {
+            name: 'teamAId',
+            type: 'select',
+            label: 'Équipe A',
+            options: this.teamOptions,
+            required: true,
+          },
+          {
+            name: 'teamBId',
+            type: 'select',
+            label: 'Équipe B',
+            options: this.teamOptions,
+            required: true,
+          },
+          {
+            name: 'fieldId',
+            type: 'select',
+            label: 'Terrain',
+            options: this.fieldOptions,
+            required: true,
+          },
+          {
+            name: 'startTime',
+            type: 'datetime-local',
+            label: 'Heure de début',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            type: 'datetime-local',
+            label: 'Heure de fin',
+            required: true,
+          },
+        ];
+      },
+      /**
+       * Defines the fields for the create game form.
+       */
+      createFormFields() {
+        const fields = [
+          {
+            name: 'teamAId',
+            type: 'select',
+            label: 'Équipe A',
+            options: this.createTeamOptions,
+            required: true,
+          },
+          {
+            name: 'teamBId',
+            type: 'select',
+            label: 'Équipe B',
+            options: this.createTeamOptions,
+            required: true,
+          },
+          {
+            name: 'startTime',
+            type: 'datetime-local',
+            label: 'Heure de début',
+            required: true,
+          },
+          {
+            name: 'endTime',
+            type: 'datetime-local',
+            label: 'Heure de fin',
+            required: true,
+            disabled: this.autoCalculateEndTime,
+          },
+        ];
+
+        if (!this.createFormData.poolScheduleId) {
+          fields.push(
+            {
+              name: 'fieldId',
+              type: 'select',
+              label: 'Terrain',
+              options: this.fieldOptions,
+              required: true,
+            },
+            {
+              name: 'sportId',
+              type: 'select',
+              label: 'Sport',
+              options: this.sportOptions,
+              required: true,
+            }
+          );
+        }
+
+        return fields;
+      },
+      /**
+       * Determines if end time should be auto-calculated.
+       */
+      autoCalculateEndTime() {
+        return !!this.createFormData.poolScheduleId;
+      },
+      /**
+       * Provides team options based on the pool when creating a game.
+       */
+      createTeamOptions() {
+        if (this.createFormData.poolScheduleId) {
+          const pool = this.findPoolByScheduleId(
+            this.createFormData.poolScheduleId
+          );
+          if (pool) {
+            return pool.teams.map((team) => ({
+              value: team.id,
+              label: team.teamName,
+            }));
+          }
+        }
+        return this.teamOptions;
+      },
+      /**
+       * Dynamically sets the title for the create game modal.
+       */
+      createModalTitle() {
+        if (this.createFormData.poolScheduleId) {
+          const pool = this.findPoolByScheduleId(
+            this.createFormData.poolScheduleId
+          );
+          if (pool) {
+            const schedule = pool.schedules.find(
+              (s) => s.id === this.createFormData.poolScheduleId
+            );
+            const sportName = schedule.sport ? schedule.sport.name : 'Sport';
+            return `${pool.name} - ${sportName}`;
+          }
+        }
+        return 'Créer un Match';
       },
     },
     watch: {
@@ -586,18 +697,16 @@
         }
       },
     },
-    beforeUnmount() {
-      if (this.externalDraggableInstance) {
-        this.externalDraggableInstance.destroy();
-        window.removeEventListener('resize', this.checkScreenSize);
-      }
-    },
     methods: {
+      // Map Vuex actions
       ...mapActions('tourney', [
         'fetchTourneyStatuses',
         'setTournamentName',
         'clearTournamentName',
       ]),
+      /**
+       * Fetches planning details including fields, pools, games, etc.
+       */
       async fetchPlanningDetails() {
         try {
           await this.fetchTourneyStatuses(this.tourneyId);
@@ -612,21 +721,22 @@
           this.fields = data.fields || [];
           this.pools = data.pools || [];
           this.games = data.games || [];
+          this.sports = data.sports || [];
           this.scheduleConfig = data.scheduleTourney || this.scheduleConfig;
 
-          // Récupérer les détails du tournoi pour avoir la date
+          // Fetch tournament details to get the date
           const tourneyResponse = await apiService.get(
             `/tourneys/${this.tourneyId}`
           );
           this.tourney = tourneyResponse.data;
 
-          // Récupérer les équipes
+          // Fetch teams with their poolId
           const teamsResponse = await apiService.get(
             `/tourneys/${this.tourneyId}/teams`
           );
           this.teams = teamsResponse.data;
 
-          // Vérifier que dateTourney est défini
+          // Check if dateTourney is defined
           if (!this.tourney.dateTourney) {
             console.warn("La date du tournoi n'est pas définie.");
           }
@@ -637,36 +747,20 @@
           );
         }
       },
+      /**
+       * Refreshes calendar events.
+       */
       refreshCalendarEvents() {
         if (this.$refs.fullCalendar) {
           const calendarApi = this.$refs.fullCalendar.getApi();
           calendarApi.refetchEvents();
         }
       },
-      initializeExternalEvents() {
-        if (!this.isEditable) return;
-
-        if (this.externalDraggableInstance) {
-          this.externalDraggableInstance.destroy();
-          this.externalDraggableInstance = null;
-        }
-
-        const containerEl = document.getElementById('external-events');
-        this.externalDraggableInstance = new Draggable(containerEl, {
-          itemSelector: '.external-event',
-          eventData(eventEl) {
-            return {
-              title: eventEl.dataset.teamName,
-              duration: '00:15', // La durée sera définie dans handleEventReceive
-              create: true,
-              extendedProps: {
-                teamId: eventEl.dataset.id,
-                teamName: eventEl.dataset.teamName,
-              },
-            };
-          },
-        });
-      },
+      /**
+       * Renders custom event content with sport and pool information.
+       * @param {Object} arg - Event render info.
+       * @returns {Object} - Custom DOM nodes.
+       */
       renderEventContent(arg) {
         const container = document.createElement('div');
         container.classList.add('flex', 'flex-col', 'space-y-1');
@@ -684,7 +778,8 @@
 
         headerContainer.appendChild(title);
 
-        if (this.isEditable) {
+        // Check if the event is editable and not a background event
+        if (this.isEditable && arg.event.display !== 'background') {
           const editIcon = document.createElement('span');
           editIcon.innerHTML = '&#9998;';
           editIcon.classList.add('edit-icon');
@@ -724,17 +819,61 @@
           headerContainer.appendChild(deleteIcon);
         }
 
-        const startTime = this.formatDisplayTime(arg.event.start);
-        const endTime = this.formatDisplayTime(arg.event.end);
+        // For background events or events without a game, we might not have start and end times
+        const startTime = arg.event.start
+          ? this.formatDisplayTime(arg.event.start)
+          : '';
+        const endTime = arg.event.end
+          ? this.formatDisplayTime(arg.event.end)
+          : '';
         const timeRange = document.createElement('div');
-        timeRange.innerText = `${startTime} - ${endTime}`;
-        timeRange.classList.add('text-sm', 'text-white');
+        if (startTime && endTime) {
+          timeRange.innerText = `${startTime} - ${endTime}`;
+          timeRange.classList.add('text-sm', 'text-white');
+        }
 
-        container.appendChild(headerContainer);
-        container.appendChild(timeRange);
+        // Display sport and pool information if 'game' exists
+        const game = arg.event.extendedProps.game;
+        if (game) {
+          const sportPoolInfo = document.createElement('div');
+          const poolName = game.pool ? game.pool.name : '';
+          const sportName = game.sport ? game.sport.name : '';
+          sportPoolInfo.innerText = `${poolName} - ${sportName}`;
+          sportPoolInfo.classList.add('text-xs', 'text-white');
+
+          container.appendChild(headerContainer);
+          container.appendChild(timeRange);
+          container.appendChild(sportPoolInfo);
+        } else {
+          // For events without 'game' (e.g., background events), only show the title and time range if available
+          container.appendChild(headerContainer);
+          if (startTime && endTime) {
+            container.appendChild(timeRange);
+          }
+        }
 
         return { domNodes: [container] };
       },
+
+      /**
+       * Handles the hover over events to provide feedback.
+       * @param {Object} info - Event hover info.
+       */
+      handleEventMouseEnter() {
+        // Add custom hover effects if needed
+      },
+      /**
+       * Handles the mouse leave event.
+       * @param {Object} info - Event hover leave info.
+       */
+      handleEventMouseLeave() {
+        // Remove custom hover effects if needed
+      },
+      /**
+       * Returns CSS class based on warning type.
+       * @param {string} type - Warning type.
+       * @returns {string} - CSS class.
+       */
       warningClass(type) {
         switch (type) {
           case 'grave':
@@ -747,64 +886,152 @@
             return '';
         }
       },
-      isSchedule() {
-        if (this.scheduleConfig) {
-          return true;
+      /**
+       * Handles selection on the calendar to create a new game.
+       * @param {Object} selectionInfo - Selection info from FullCalendar.
+       */
+      handleSelect(selectionInfo) {
+        if (!this.isEditable) return;
+
+        const poolSchedule = this.findPoolScheduleForSelection(selectionInfo);
+
+        if (poolSchedule) {
+          // If a poolSchedule is found, set poolScheduleId
+          this.createFormData = {
+            startTime: this.formatDateTime(selectionInfo.start),
+            // Calculate end time based on gameDuration
+            endTime: this.calculateEndTime(
+              selectionInfo.start,
+              this.scheduleConfig.gameDuration
+            ),
+            poolScheduleId: poolSchedule.id,
+            teamAId: null,
+            teamBId: null,
+            fieldId: null,
+            sportId: null,
+          };
         } else {
-          return false;
-        }
-      },
-      async handleEventReceive(info) {
-        if (!this.isEditable) {
-          info.revert();
+          // If no poolSchedule is found, show an error message
+          toast.error(
+            "Vous ne pouvez créer un match qu'à l'intérieur d'une plage horaire de pool."
+          );
           return;
         }
-        const event = info.event;
-        try {
-          const teamId = event.extendedProps.teamId;
-          const newFieldId = event.getResources()[0]?.id;
 
-          if (!newFieldId) {
-            console.error("Problème d'ID : Terrain mal identifié.");
-            info.revert();
-            return;
+        this.showCreateModal = true;
+      },
+      /**
+       * Finds the pool schedule for a given selection.
+       * @param {Object} selectionInfo - Selection info from FullCalendar.
+       * @returns {Object|null} - The matching pool schedule or null.
+       */
+      findPoolScheduleForSelection(selectionInfo) {
+        const selectionStart = selectionInfo.start;
+        const selectionEnd = selectionInfo.end;
+        const resourceId = selectionInfo.resource.id;
+
+        // Iterate over all poolSchedules
+        for (const pool of this.pools) {
+          for (const schedule of pool.schedules) {
+            // Check if the schedule is on the same field
+            if (schedule.fieldId.toString() === resourceId) {
+              const scheduleStart = new Date(
+                `${schedule.date}T${schedule.startTime}`
+              );
+              const scheduleEnd = new Date(
+                `${schedule.date}T${schedule.endTime}`
+              );
+
+              // Check if the selection is within the schedule
+              if (
+                selectionStart >= scheduleStart &&
+                selectionEnd <= scheduleEnd
+              ) {
+                return schedule;
+              }
+            }
           }
-
-          // Définir la durée de l'événement selon gameDuration
-          const durationMinutes =
-            parseInt(this.scheduleConfig.gameDuration) || 15;
-          const startDate = new Date(event.start);
-          const endDate = new Date(
-            startDate.getTime() + durationMinutes * 60000
-          );
-          event.setEnd(endDate);
-
+        }
+        return null;
+      },
+      /**
+       * Finds a pool by its schedule ID.
+       * @param {number} scheduleId - The schedule ID.
+       * @returns {Object|null} - The matching pool or null.
+       */
+      findPoolByScheduleId(scheduleId) {
+        for (const pool of this.pools) {
+          if (pool.schedules.some((s) => s.id === scheduleId)) {
+            return pool;
+          }
+        }
+        return null;
+      },
+      /**
+       * Formats a Date object to 'YYYY-MM-DDTHH:MM' format.
+       * @param {Date} date - The date to format.
+       * @returns {string} - The formatted date string.
+       */
+      formatDateTime(date) {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+          return null;
+        }
+        const year = d.getFullYear().toString().padStart(4, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, '0');
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      },
+      /**
+       * Calculates the end time based on start time and duration.
+       * @param {Date} startTime - The start time.
+       * @param {number} durationMinutes - Duration in minutes.
+       * @returns {string} - The calculated end time in 'YYYY-MM-DDTHH:MM' format.
+       */
+      calculateEndTime(startTime, durationMinutes) {
+        const endDate = new Date(startTime.getTime() + durationMinutes * 60000);
+        return this.formatDateTime(endDate);
+      },
+      /**
+       * Saves a new game after form submission.
+       */
+      async saveNewEvent() {
+        try {
           const data = {
-            fieldId: newFieldId,
-            startTime: this.formatTime(event.start),
-            endTime: this.formatTime(event.end),
+            teamAId: this.createFormData.teamAId,
+            teamBId: this.createFormData.teamBId,
+            startTime: this.createFormData.startTime.replace('T', ' ') + ':00',
+            endTime: this.createFormData.endTime.replace('T', ' ') + ':00',
             date: this.tourney.dateTourney,
-            teamAId: teamId,
-            // teamBId sera défini lorsqu'une autre équipe sera ajoutée
           };
 
-          // Créer un nouveau match
+          if (this.createFormData.poolScheduleId) {
+            data.poolScheduleId = this.createFormData.poolScheduleId;
+          } else {
+            data.fieldId = this.createFormData.fieldId;
+            data.sportId = this.createFormData.sportId;
+          }
+
           const response = await apiService.post(
             `/tourneys/${this.tourneyId}/games`,
             data
           );
 
-          // Mettre à jour l'événement avec les nouvelles informations
-          event.setProp('id', response.data.id);
-          event.setExtendedProp('game', response.data);
-
-          // Ajouter le nouveau match à la liste locale
           this.games.push(response.data);
+          this.refreshCalendarEvents();
+          this.showCreateModal = false;
         } catch (error) {
-          console.error("Erreur lors du traitement de l'événement :", error);
-          info.revert();
+          console.error('Erreur lors de la création du match :', error);
+          toast.error('Erreur lors de la création du match.');
         }
       },
+      /**
+       * Handles the drag and drop of events on the calendar.
+       * Allows moving within the same pool schedule.
+       * @param {Object} info - Event drop info from FullCalendar.
+       */
       async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
@@ -823,19 +1050,40 @@
             return;
           }
 
+          const game = event.extendedProps.game;
+
+          // Check if the new position is within the same pool schedule
+          const poolSchedule = this.findPoolScheduleForEvent(event);
+
+          if (
+            (game.poolScheduleId && !poolSchedule) ||
+            (poolSchedule && game.poolScheduleId !== poolSchedule.id)
+          ) {
+            // Prevent moving games outside of their pool schedule
+            toast.error(
+              'Vous ne pouvez pas déplacer ce match en dehors de son pool schedule.'
+            );
+            info.revert();
+            return;
+          }
+
           const data = {
-            fieldId: newFieldId,
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
             date: this.tourney.dateTourney,
+            fieldId: newFieldId,
           };
+
+          if (poolSchedule) {
+            data.poolScheduleId = poolSchedule.id;
+          }
 
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${eventId}`,
             data
           );
 
-          // Mettre à jour localement le match
+          // Update the game locally
           const index = this.games.findIndex(
             (g) => g.id.toString() === eventId.toString()
           );
@@ -843,13 +1091,46 @@
             this.games[index] = response.data;
           }
 
-          // Mettre à jour les propriétés de l'événement
+          // Update event properties
           event.setExtendedProp('game', response.data);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
       },
+      /**
+       * Finds the poolSchedule for a given event.
+       * @param {Object} event - The event object from FullCalendar.
+       * @returns {Object|null} - The matching poolSchedule or null.
+       */
+      findPoolScheduleForEvent(event) {
+        const eventStart = event.start;
+        const eventEnd = event.end;
+        const resourceId = event.getResources()[0]?.id;
+
+        // Iterate over all poolSchedules
+        for (const pool of this.pools) {
+          for (const schedule of pool.schedules) {
+            if (schedule.fieldId.toString() === resourceId) {
+              const scheduleStart = new Date(
+                `${schedule.date}T${schedule.startTime}`
+              );
+              const scheduleEnd = new Date(
+                `${schedule.date}T${schedule.endTime}`
+              );
+
+              if (eventStart >= scheduleStart && eventEnd <= scheduleEnd) {
+                return schedule;
+              }
+            }
+          }
+        }
+        return null;
+      },
+      /**
+       * Handles event resizing on the calendar.
+       * @param {Object} info - Event resize info from FullCalendar.
+       */
       async handleEventResize(info) {
         if (!this.isEditable) {
           info.revert();
@@ -875,12 +1156,32 @@
             date: this.tourney.dateTourney,
           };
 
+          // Ensure the resized event stays within its pool schedule
+          const poolSchedule = this.findPoolScheduleForEvent(event);
+
+          if (
+            (event.extendedProps.game.poolScheduleId && !poolSchedule) ||
+            (poolSchedule &&
+              event.extendedProps.game.poolScheduleId !== poolSchedule.id)
+          ) {
+            // Prevent resizing outside of the pool schedule
+            toast.error(
+              'Vous ne pouvez pas redimensionner ce match en dehors de son pool schedule.'
+            );
+            info.revert();
+            return;
+          }
+
+          if (poolSchedule) {
+            data.poolScheduleId = poolSchedule.id;
+          }
+
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${eventId}`,
             data
           );
 
-          // Mettre à jour localement le match
+          // Update the game locally
           const index = this.games.findIndex(
             (g) => g.id.toString() === eventId.toString()
           );
@@ -888,7 +1189,7 @@
             this.games[index] = response.data;
           }
 
-          // Mettre à jour les propriétés de l'événement
+          // Update event properties
           event.setExtendedProp('game', response.data);
         } catch (error) {
           console.error(
@@ -898,20 +1199,25 @@
           info.revert();
         }
       },
+      /**
+       * Saves edits to an event after form submission.
+       */
       async saveEventEdits() {
         try {
           const data = {
-            startTime: this.eventFormData.startTime,
-            endTime: this.eventFormData.endTime,
+            teamAId: this.eventFormData.teamAId,
+            teamBId: this.eventFormData.teamBId,
+            startTime: this.eventFormData.startTime.replace('T', ' ') + ':00',
+            endTime: this.eventFormData.endTime.replace('T', ' ') + ':00',
+            fieldId: this.eventFormData.fieldId,
             date: this.tourney.dateTourney,
-            fieldId: this.eventToEdit.getResources()[0]?.id,
           };
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${this.eventToEdit.id}`,
             data
           );
 
-          // Mettre à jour localement le match
+          // Update the game locally
           const index = this.games.findIndex(
             (g) => g.id.toString() === this.eventToEdit.id.toString()
           );
@@ -919,18 +1225,23 @@
             this.games[index] = response.data;
           }
 
-          // Mettre à jour les propriétés de l'événement
+          // Update event properties
           const event = this.eventToEdit;
           event.setExtendedProp('game', response.data);
-
+          this.refreshCalendarEvents();
           this.showEditModal = false;
         } catch (error) {
           console.error(
             'Erreur lors de la sauvegarde des modifications :',
             error
           );
+          toast.error('Erreur lors de la sauvegarde des modifications.');
         }
       },
+      /**
+       * Deletes an event.
+       * @param {Object} event - The event object from FullCalendar.
+       */
       async deleteEvent(event) {
         if (!this.isEditable) return;
         try {
@@ -938,39 +1249,70 @@
             `/tourneys/${this.tourneyId}/games/${event.id}`
           );
           event.remove();
-          // Supprimer le match de la liste locale
+          // Remove the game from the local list
           this.games = this.games.filter(
             (g) => g.id.toString() !== event.id.toString()
           );
         } catch (error) {
           console.error('Erreur lors de la suppression du match :', error);
+          toast.error('Erreur lors de la suppression du match.');
         }
       },
+      /**
+       * Formats date for display in events.
+       * @param {Date} date - The date to format.
+       * @returns {string} - The formatted time.
+       */
       formatDisplayTime(date) {
         const d = new Date(date);
         const hours = d.getHours().toString().padStart(2, '0');
         const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;
       },
+      /**
+       * Formats date to 'YYYY-MM-DD HH:MM:SS' format.
+       * @param {Date} date - The date to format.
+       * @returns {string} - The formatted date string.
+       */
       formatTime(date) {
         const d = new Date(date);
+        if (isNaN(d.getTime())) {
+          return null;
+        }
+        const year = d.getFullYear().toString().padStart(4, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, '0');
         const hours = d.getHours().toString().padStart(2, '0');
         const minutes = d.getMinutes().toString().padStart(2, '0');
         const seconds = d.getSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}:${seconds}`;
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       },
+      /**
+       * Opens the schedule configuration modal.
+       */
       openScheduleConfigModal() {
         this.showScheduleConfigModal = true;
         this.loadScheduleConfig();
       },
+      /**
+       * Opens the edit modal for an event.
+       * @param {Object} event - The event object from FullCalendar.
+       */
       openEditModal(event) {
         this.eventToEdit = event;
+        const game = event.extendedProps.game;
         this.eventFormData = {
-          startTime: this.formatTime(event.start),
-          endTime: this.formatTime(event.end),
+          teamAId: game.teamA.id,
+          teamBId: game.teamB.id,
+          startTime: this.formatDateTime(event.start),
+          endTime: this.formatDateTime(event.end),
+          fieldId: event.getResources()[0]?.id,
         };
         this.showEditModal = true;
       },
+      /**
+       * Loads the existing schedule configuration.
+       */
       async loadScheduleConfig() {
         try {
           const response = await apiService.get(
@@ -992,23 +1334,41 @@
           }
         }
       },
+      /**
+       * Opens the generate planning confirmation modal.
+       */
       openGeneratePlanningModal() {
         this.showGeneratePlanningConfirmation = true;
       },
+      /**
+       * Closes the generate planning confirmation modal.
+       */
       closeGeneratePlanningConfirmation() {
         this.showGeneratePlanningConfirmation = false;
       },
+      /**
+       * Opens the clear planning confirmation modal.
+       */
       confirmClearPlanning() {
         this.showClearPlanningConfirmation = true;
       },
+      /**
+       * Closes the clear planning confirmation modal.
+       */
       closeClearPlanningConfirmation() {
         this.showClearPlanningConfirmation = false;
       },
+      /**
+       * Handles the planning generation.
+       */
       async handlePlanningGenerated() {
         await this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();
       },
+      /**
+       * Clears the planning.
+       */
       async clearPlanning() {
         try {
           await apiService.delete(
@@ -1022,6 +1382,9 @@
           toast.error('Erreur lors de la suppression du planning.');
         }
       },
+      /**
+       * Validates the planning.
+       */
       async validatePlanning() {
         try {
           const response = await apiService.post(
@@ -1059,6 +1422,9 @@
           toast.error('Erreur lors de la validation du planning.');
         }
       },
+      /**
+       * Saves the schedule configuration.
+       */
       async saveScheduleConfig() {
         try {
           let successMessage = '';
@@ -1079,7 +1445,6 @@
           }
           this.showScheduleConfigModal = false;
           await this.fetchPlanningDetails();
-          this.initializeExternalEvents();
           toast.success(successMessage);
         } catch (error) {
           console.error(
@@ -1091,26 +1456,17 @@
           );
         }
       },
+      /**
+       * Closes the warnings modal.
+       */
       closeWarningsModal() {
         this.showWarningsModal = false;
         this.warnings = [];
       },
-      subtractOneHour(timeStr) {
-        let [hours] = timeStr.split(':').map(Number);
-
-        if (hours < 0) hours = 0;
-        return `${hours.toString().padStart(2, '0')}:00:00`;
-      },
-      addOneHour(timeStr) {
-        let [hours, minutes, seconds] = timeStr.split(':').map(Number);
-        if (minutes > 0 || seconds > 0) {
-          hours += 1;
-        }
-        if (hours >= 24) hours = 23;
-        minutes = 0;
-        seconds = 0;
-        return `${hours.toString().padStart(2, '0')}:00:00`;
-      },
+      /**
+       * Validates the schedule configuration form.
+       * @returns {Object} - Form errors.
+       */
       validateForm() {
         const errors = {};
 
@@ -1198,10 +1554,16 @@
 
         return errors;
       },
+      /**
+       * Checks screen size and adjusts terrains per page.
+       */
       checkScreenSize() {
         this.isSmallScreen = window.innerWidth < 768;
         this.terrainsPerPage = this.isSmallScreen ? 2 : 10;
       },
+      /**
+       * Adjusts terrains per page based on screen width.
+       */
       adjustTerrainsPerPage() {
         const screenWidth = window.innerWidth;
 
@@ -1222,21 +1584,11 @@
       this.adjustTerrainsPerPage();
       window.addEventListener('resize', this.adjustTerrainsPerPage);
       await this.fetchPlanningDetails();
-      this.initializeExternalEvents();
     },
   };
 </script>
 
 <style scoped>
-  .team-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
   .navigation-button {
     transition: transform 0.2s;
   }
