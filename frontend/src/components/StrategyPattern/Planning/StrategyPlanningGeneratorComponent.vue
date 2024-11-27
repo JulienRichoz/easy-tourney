@@ -36,8 +36,12 @@
       <ButtonComponent variant="secondary" @click="handleClose">
         Annuler
       </ButtonComponent>
-      <ButtonComponent variant="primary" @click="generatePlanning">
-        Générer
+      <ButtonComponent
+        :disabled="isGenerating"
+        variant="primary"
+        @click="generatePlanning"
+      >
+        {{ isGenerating ? 'Génération...' : 'Générer' }}
       </ButtonComponent>
     </template>
   </ModalComponent>
@@ -93,6 +97,7 @@
     data() {
       return {
         localRandomMode: this.randomMode,
+        isGenerating: false, // Nouvel état pour gérer le clic
       };
     },
     computed: {
@@ -112,10 +117,23 @@
         this.$emit('close');
       },
       async generatePlanning() {
-        const result = await this.$refs.strategyComponent.generatePlanning();
-        if (result) {
-          this.$emit('planningGenerated');
+        if (this.isGenerating) return; // Empêche les clics multiples
+        this.isGenerating = true;
+
+        try {
+          // Fermer la modale immédiatement
           this.handleClose();
+
+          // Appeler la méthode de la stratégie sélectionnée
+          const result = await this.$refs.strategyComponent.generatePlanning();
+
+          if (result) {
+            this.$emit('planningGenerated');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la génération du planning :', error);
+        } finally {
+          this.isGenerating = false; // Réinitialiser l'état
         }
       },
     },

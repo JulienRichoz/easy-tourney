@@ -17,6 +17,10 @@
   @apply bg-white;
 }
 
+.fc .fc-timegrid-axis {
+  @apply bg-gray-100;
+}
+
 .fc .fc-event {
   /* Styles pour les événements */
 }
@@ -39,6 +43,10 @@
 }
 
 .dark .fc .fc-border-color {
+  @apply bg-gray-900;
+}
+
+.dark .fc .fc-timegrid-axis {
   @apply bg-gray-900;
 }
 

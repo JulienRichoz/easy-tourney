@@ -101,7 +101,7 @@
             :disabled="!pools.length"
             class="w-auto"
           >
-            <span class="hidden md:inline">Reset</span>
+            <span class="hidden md:inline">Reset Pools</span>
             <span class="md:hidden">Del</span>
           </ButtonComponent>
 
@@ -112,7 +112,7 @@
             :disabled="!isEditable || !pools.length"
             class="w-auto"
           >
-            <span class="hidden md:inline">Générer</span>
+            <span class="hidden md:inline">Générer Pools</span>
             <span class="md:hidden">Gen.</span>
           </ButtonComponent>
 
@@ -123,7 +123,7 @@
             :disabled="!isEditable || !hasPoolSchedules"
             class="w-auto"
           >
-            <span class="hidden md:inline">Vérifier</span>
+            <span class="hidden md:inline">Vérifier Pools</span>
             <span class="md:hidden">Check</span>
           </ButtonComponent>
         </div>
@@ -155,13 +155,18 @@
           class="w-36 flex-shrink-0"
         />
 
-        <!-- Toggle pour les couleurs -->
+        <!-- Color Toggle -->
         <label class="flex items-center cursor-pointer flex-shrink-0">
           <div class="relative">
             <input type="checkbox" v-model="useUnifiedColors" class="sr-only" />
             <div
-              class="block bg-gray-600 w-14 h-8 rounded-full transition-colors duration-300"
-              :class="{ 'bg-blue-500': useUnifiedColors }"
+              class="block w-14 h-8 rounded-full transition-colors duration-300"
+              :class="{
+                'bg-light-menuActive dark:bg-light-menuActive':
+                  useUnifiedColors,
+                'bg-light-logoutButton-default dark:bg-light-logoutButton-default':
+                  !useUnifiedColors,
+              }"
             ></div>
             <div
               class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300"
@@ -169,7 +174,7 @@
             ></div>
           </div>
           <span class="ml-2 hidden md:block text-gray-700 dark:text-gray-300">
-            {{ useUnifiedColors ? 'Pool' : 'Sport' }}
+            {{ useUnifiedColors ? 'Color by Pool' : 'Color by Sport' }}
           </span>
         </label>
 
@@ -178,11 +183,14 @@
           <button
             v-if="currentPage > 1"
             @click="currentPage--"
-            class="text-gray-700 text-2xl px-2 py-1 rounded hover:bg-gray-200 navigation-button"
+            class="text-2xl px-2 py-1 rounded navigation-button"
           >
             &lt;
           </button>
-          <select v-model="currentPage" class="px-2 py-1 border rounded">
+          <select
+            v-model="currentPage"
+            class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
+          >
             <option v-for="page in totalPages" :key="page" :value="page">
               Page {{ page }} / {{ totalPages }}
             </option>
@@ -190,7 +198,7 @@
           <button
             v-if="currentPage < totalPages"
             @click="currentPage++"
-            class="text-gray-700 text-2xl px-2 py-1 rounded hover:bg-gray-200 navigation-button"
+            class="text-2xl px-2 py-1 rounded navigation-button"
           >
             &gt;
           </button>
