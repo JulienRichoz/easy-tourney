@@ -12,6 +12,7 @@ const {
 } = require('../models');
 
 const tourneyTypes = require('../config/tourneyTypes');
+const { Op } = require('sequelize');
 
 /**
  * Créer un nouveau match
@@ -114,6 +115,44 @@ exports.createGame = async (req, res) => {
           return res.status(404).json({ message: 'Sport non trouvé.' });
         }
 
+        // **Vérification des conflits d'équipes**
+        // Vérifier si teamA ou teamB est déjà engagée dans un autre match au même créneau horaire
+        const overlappingGamesA = await Game.findOne({
+          where: {
+            tourneyId,
+            [Op.or]: [
+              { teamAId: teamAId },
+              { teamBId: teamAId },
+            ],
+            startTime: { [Op.lt]: endTime },
+            endTime: { [Op.gt]: startTime },
+          },
+        });
+
+        if (overlappingGamesA) {
+          return res.status(400).json({
+            message: `L'équipe A (${teamA.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+          });
+        }
+
+        const overlappingGamesB = await Game.findOne({
+          where: {
+            tourneyId,
+            [Op.or]: [
+              { teamAId: teamBId },
+              { teamBId: teamBId },
+            ],
+            startTime: { [Op.lt]: endTime },
+            endTime: { [Op.gt]: startTime },
+          },
+        });
+
+        if (overlappingGamesB) {
+          return res.status(400).json({
+            message: `L'équipe B (${teamB.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+          });
+        }
+
         // Créer le match
         const game = await Game.create({
           tourneyId,
@@ -159,6 +198,44 @@ exports.createGame = async (req, res) => {
         const sport = await Sport.findByPk(sportId);
         if (!sport) {
           return res.status(404).json({ message: 'Sport non trouvé.' });
+        }
+
+        // **Vérification des conflits d'équipes**
+        // Vérifier si teamA ou teamB est déjà engagée dans un autre match au même créneau horaire
+        const overlappingGamesA = await Game.findOne({
+          where: {
+            tourneyId,
+            [Op.or]: [
+              { teamAId: teamAId },
+              { teamBId: teamAId },
+            ],
+            startTime: { [Op.lt]: endTime },
+            endTime: { [Op.gt]: startTime },
+          },
+        });
+
+        if (overlappingGamesA) {
+          return res.status(400).json({
+            message: `L'équipe A (${teamA.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+          });
+        }
+
+        const overlappingGamesB = await Game.findOne({
+          where: {
+            tourneyId,
+            [Op.or]: [
+              { teamAId: teamBId },
+              { teamBId: teamBId },
+            ],
+            startTime: { [Op.lt]: endTime },
+            endTime: { [Op.gt]: startTime },
+          },
+        });
+
+        if (overlappingGamesB) {
+          return res.status(400).json({
+            message: `L'équipe B (${teamB.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+          });
         }
 
         // Créer le match sans 'poolId' et 'poolScheduleId'
@@ -209,6 +286,44 @@ exports.createGame = async (req, res) => {
       const sport = await Sport.findByPk(sportId);
       if (!sport) {
         return res.status(404).json({ message: 'Sport non trouvé.' });
+      }
+
+      // **Vérification des conflits d'équipes**
+      // Vérifier si teamA ou teamB est déjà engagée dans un autre match au même créneau horaire
+      const overlappingGamesA = await Game.findOne({
+        where: {
+          tourneyId,
+          [Op.or]: [
+            { teamAId: teamAId },
+            { teamBId: teamAId },
+          ],
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gt]: startTime },
+        },
+      });
+
+      if (overlappingGamesA) {
+        return res.status(400).json({
+          message: `L'équipe A (${teamA.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+        });
+      }
+
+      const overlappingGamesB = await Game.findOne({
+        where: {
+          tourneyId,
+          [Op.or]: [
+            { teamAId: teamBId },
+            { teamBId: teamBId },
+          ],
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gt]: startTime },
+        },
+      });
+
+      if (overlappingGamesB) {
+        return res.status(400).json({
+          message: `L'équipe B (${teamB.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+        });
       }
 
       // Créer le match
@@ -495,6 +610,52 @@ exports.updateGame = async (req, res) => {
         updates.poolScheduleId = poolSchedule.id;
       }
     }
+    if ('teamAId' in updates || 'teamBId' in updates || 'startTime' in updates || 'endTime' in updates) {
+      const newTeamAId = updates.teamAId || game.teamAId;
+      const newTeamBId = updates.teamBId || game.teamBId;
+      const newStartTime = updates.startTime || game.startTime;
+      const newEndTime = updates.endTime || game.endTime;
+
+      // Vérifier les conflits pour l'équipe A
+      const overlappingGamesA = await Game.findOne({
+        where: {
+          tourneyId: game.tourneyId,
+          id: { [Op.ne]: gameId }, // Exclure le match actuel
+          [Op.or]: [
+            { teamAId: newTeamAId },
+            { teamBId: newTeamAId },
+          ],
+          startTime: { [Op.lt]: newEndTime },
+          endTime: { [Op.gt]: newStartTime },
+        },
+      });
+
+      if (overlappingGamesA) {
+        return res.status(400).json({
+          message: `L'équipe A (${newTeamAId}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+        });
+      }
+
+      // Vérifier les conflits pour l'équipe B
+      const overlappingGamesB = await Game.findOne({
+        where: {
+          tourneyId: game.tourneyId,
+          id: { [Op.ne]: gameId }, // Exclure le match actuel
+          [Op.or]: [
+            { teamAId: newTeamBId },
+            { teamBId: newTeamBId },
+          ],
+          startTime: { [Op.lt]: newEndTime },
+          endTime: { [Op.gt]: newStartTime },
+        },
+      });
+
+      if (overlappingGamesB) {
+        return res.status(400).json({
+          message: `L'équipe B (${newTeamBId}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
+        });
+      }
+    }
 
     // Vérifications supplémentaires (équipes, sport, etc.)
     if (updates.teamAId && updates.teamBId && updates.teamAId === updates.teamBId) {
@@ -572,21 +733,83 @@ exports.validateGames = async (req, res) => {
 
     const games = await Game.findAll({
       where: { tourneyId },
-      attributes: ['id', 'fieldId', 'startTime', 'endTime'],
-      order: [['fieldId'], ['startTime']],
+      attributes: ['id', 'fieldId', 'teamAId', 'teamBId', 'startTime', 'endTime'],
+      order: [['startTime', 'ASC']],
     });
 
     const conflicts = [];
 
-    for (let i = 0; i < games.length - 1; i++) {
-      const currentGame = games[i];
-      const nextGame = games[i + 1];
+    // Vérification des conflits de terrain
+    const fieldGamesMap = {};
+    games.forEach((game) => {
+      const key = game.fieldId;
+      if (!fieldGamesMap[key]) {
+        fieldGamesMap[key] = [];
+      }
+      fieldGamesMap[key].push(game);
+    });
 
-      if (currentGame.fieldId === nextGame.fieldId) {
-        if (currentGame.endTime > nextGame.startTime) {
+    for (const fieldId in fieldGamesMap) {
+      const fieldGames = fieldGamesMap[fieldId];
+      // Trier les matchs par heure de début
+      fieldGames.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+      for (let i = 0; i < fieldGames.length - 1; i++) {
+        const currentGame = fieldGames[i];
+        const nextGame = fieldGames[i + 1];
+
+        if (new Date(currentGame.endTime) > new Date(nextGame.startTime)) {
           conflicts.push({
+            type: 'Field Conflict',
+            fieldId: fieldId,
             game1: currentGame,
             game2: nextGame,
+            message: `Conflit de temps sur le terrain ${currentGame.fieldId} entre les matchs ${currentGame.id} et ${nextGame.id}.`,
+          });
+        }
+      }
+    }
+
+    // Vérification des conflits d'équipe
+    // Créer une carte pour suivre les périodes de jeu pour chaque équipe
+    const teamScheduleMap = {};
+
+    games.forEach((game) => {
+      const { teamAId, teamBId, startTime, endTime } = game;
+
+      // Fonction pour ajouter un créneau à une équipe
+      const addGameToTeam = (teamId) => {
+        if (!teamScheduleMap[teamId]) {
+          teamScheduleMap[teamId] = [];
+        }
+        teamScheduleMap[teamId].push({ startTime: new Date(startTime), endTime: new Date(endTime), gameId: game.id });
+      };
+
+      addGameToTeam(teamAId);
+      addGameToTeam(teamBId);
+    });
+
+    // Parcourir chaque équipe et vérifier les chevauchements
+    for (const teamId in teamScheduleMap) {
+      const teamGames = teamScheduleMap[teamId];
+      // Trier les matchs par heure de début
+      teamGames.sort((a, b) => a.startTime - b.startTime);
+
+      for (let i = 0; i < teamGames.length - 1; i++) {
+        const currentGame = teamGames[i];
+        const nextGame = teamGames[i + 1];
+
+        if (currentGame.endTime > nextGame.startTime) {
+          // Récupérer les détails des matchs
+          const game1 = games.find(g => g.id === currentGame.gameId);
+          const game2 = games.find(g => g.id === nextGame.gameId);
+
+          conflicts.push({
+            type: 'Team Conflict',
+            teamId: teamId,
+            game1: game1,
+            game2: game2,
+            message: `Conflit de planning pour l'équipe ${teamId} entre les matchs ${game1.id} et ${game2.id}.`,
           });
         }
       }
@@ -604,3 +827,4 @@ exports.validateGames = async (req, res) => {
       .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
+
