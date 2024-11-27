@@ -209,11 +209,15 @@
       </div>
     </div>
 
-    <!-- Modal de Confirmation pour la Génération du Planning -->
+    <!-- Generate Planning Confirmation Modal for Pools -->
     <StrategyPlanningGeneratorComponent
       :isVisible="showGeneratePlanningConfirmation"
       :tourneyId="tourneyId"
       :tourneyType="tourneyType"
+      :pools="pools"
+      :fields="fields"
+      :planningTourney="scheduleConfig"
+      :planningType="'pool'"
       @close="closeGeneratePlanningConfirmation"
       @planningGenerated="handlePlanningGenerated"
     />

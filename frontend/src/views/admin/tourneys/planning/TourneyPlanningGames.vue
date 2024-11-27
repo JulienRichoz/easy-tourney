@@ -167,11 +167,15 @@
       </div>
     </div>
 
-    <!-- Generate Planning Confirmation Modal -->
+    <!-- Generate Planning Confirmation Modal for Games -->
     <StrategyPlanningGeneratorComponent
       :isVisible="showGeneratePlanningConfirmation"
       :tourneyId="tourneyId"
       :tourneyType="tourneyType"
+      :pools="pools"
+      :fields="fields"
+      :planningTourney="scheduleConfig"
+      :planningType="'game'"
       @close="closeGeneratePlanningConfirmation"
       @planningGenerated="handlePlanningGenerated"
     />
@@ -1566,9 +1570,6 @@
        * Handles the planning generation.
        */
       async handlePlanningGenerated() {
-        await apiService.post(
-          `/tourneys/${this.tourneyId}/planning/games/generate`
-        );
         await this.fetchPlanningDetails();
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();

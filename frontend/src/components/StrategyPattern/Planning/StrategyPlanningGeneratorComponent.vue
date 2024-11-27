@@ -1,4 +1,4 @@
-<!-- components/StrategyPattern/Planning/StrategyPlanningGeneratorComponent.vue -->
+<!-- StrategyPlanningGeneratorComponent.vue -->
 <template>
   <ModalComponent
     :isVisible="isVisible"
@@ -13,9 +13,9 @@
             v-model="localRandomMode"
             class="form-checkbox h-5 w-5 text-blue-600"
           />
-          <span class="text-gray-700 dark:text-gray-300"
-            >Génération aléatoire</span
-          >
+          <span class="text-gray-700 dark:text-gray-300">
+            Génération aléatoire (erreurs plus probables)
+          </span>
         </label>
       </div>
       <p>
@@ -44,13 +44,15 @@
 </template>
 
 <script>
-  import CustomRoundRobinPlanningStrategy from './strategies/CustomRoundRobinPlanningStrategy.vue';
+  import CustomRoundRobinPoolPlanningStrategy from './strategies/CustomRoundRobinPoolPlanningStrategy.vue';
+  import CustomRoundRobinGamePlanningStrategy from './strategies/CustomRoundRobinGamePlanningStrategy.vue';
   import ModalComponent from '@/components/ModalComponent.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
 
   export default {
     components: {
-      CustomRoundRobinPlanningStrategy,
+      CustomRoundRobinPoolPlanningStrategy,
+      CustomRoundRobinGamePlanningStrategy,
       ModalComponent,
       ButtonComponent,
     },
@@ -83,6 +85,10 @@
         type: Boolean,
         default: false,
       },
+      planningType: {
+        type: String,
+        required: true, // 'pool' ou 'game'
+      },
     },
     data() {
       return {
@@ -91,11 +97,13 @@
     },
     computed: {
       currentStrategyComponent() {
-        switch (this.tourneyType) {
-          case 'customRoundRobin':
-            return 'CustomRoundRobinPlanningStrategy';
-          default:
-            return 'CustomRoundRobinPlanningStrategy';
+        if (this.planningType === 'pool') {
+          return 'CustomRoundRobinPoolPlanningStrategy';
+        } else if (this.planningType === 'game') {
+          return 'CustomRoundRobinGamePlanningStrategy';
+        } else {
+          // Valeur par défaut ou gestion d'erreur
+          return 'CustomRoundRobinPoolPlanningStrategy';
         }
       },
     },

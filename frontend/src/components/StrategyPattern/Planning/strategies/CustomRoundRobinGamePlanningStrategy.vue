@@ -1,16 +1,14 @@
-<!-- components/StrategyPattern/Planning/strategies/CustomRoundRobinPlanningStrategy.vue -->
+<!-- CustomRoundRobinGamePlanningStrategy.vue -->
 <template>
   <div>
     <p class="mb-4 text-gray-600">
       <span class="text-red-500 dark:text-red-600 font-bold">
-        <strong>Attention :</strong> Le planning existant sera supprimé et
-        remplacé. <br /><br />
+        <strong>Attention :</strong> Le planning des matchs existants sera
+        supprimé et remplacé.
       </span>
-      L'algorithme 'Custom Round Robin' va répartir équitablement les Pools sur
-      les terrains pour que chaque Pool participe au plus de sports différents
-      possibles, selon les réglages définis dans le planning. Pour une
-      répartition équilibrée, assurez-vous d'avoir suffisamment de terrains et
-      de créneaux horaires.
+      <br /><br />
+      L'algorithme 'Custom Round Robin' va réorganiser les matchs au sein des
+      pools existants selon les nouvelles contraintes définies dans le planning.
     </p>
   </div>
 </template>
@@ -38,7 +36,6 @@
         required: false,
       },
       randomMode: {
-        // Déclaration de la prop
         type: Boolean,
         default: false,
       },
@@ -47,25 +44,28 @@
       async generatePlanning() {
         try {
           const response = await apiService.post(
-            `/tourneys/${this.tourneyId}/planning/pools/generate`,
+            `/tourneys/${this.tourneyId}/planning/games/generate`,
             {},
             {
               params: {
-                randomMode: this.randomMode, // Inclusion du paramètre randomMode
+                randomMode: this.randomMode,
               },
             }
           );
           console.log('Response', response);
-          toast.success('Planning généré avec succès !', {
+          toast.success('Planning des matchs généré avec succès !', {
             autoClose: 3000,
           });
 
           return true;
         } catch (error) {
-          console.error('Erreur lors de la génération du planning :', error);
+          console.error(
+            'Erreur lors de la génération du planning des matchs :',
+            error
+          );
           const errorMessage =
             error.response?.data?.message ||
-            'Erreur lors de la génération du planning.';
+            'Erreur lors de la génération du planning des matchs.';
           toast.error(errorMessage);
 
           return false;
