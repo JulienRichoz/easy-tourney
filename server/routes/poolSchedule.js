@@ -24,7 +24,7 @@ module.exports = router;
 
 /**
  * TODO:
- * 1) AJUSTER ALGORITHME GENERATION GAMES -Tourney id 2, grosses erreurs dans la generation des games ! 
  * REFLECHIR a la vue planning pool <-> game => final
  * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
  */
+
