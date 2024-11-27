@@ -220,14 +220,14 @@ exports.resetPoolPlanning = async (req, res) => {
 exports.generateGamePlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
-
+    const { randomMode } = req.query; // Extraction du paramaetre ?randomMode=bool
     // Récupérer le type de tournoi
     const tourney = await Tourney.findByPk(tourneyId);
     if (!tourney) {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
     }
 
-    const strategyManager = new GameStrategyManager(tourneyId, tourney.tourneyType);
+    const strategyManager = new GameStrategyManager(tourneyId, tourney.tourneyType, { randomMode: randomMode === 'true' });
     const result = await strategyManager.generateGames();
 
     res.status(200).json(result);

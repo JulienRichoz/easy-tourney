@@ -1,35 +1,17 @@
 // server/services/planningStrategies/game/customRoundRobinGamePlanning.js
 
 /**
- * Custom Round Robin Balanced Game Strategy
+ * Custom Round Robin Balanced Game Strategy with Random Mode
  *
  * Ce module implémente une stratégie de génération de matchs pour un tournoi en utilisant un algorithme
- * de round-robin équilibré. L'objectif est de planifier les matchs de manière à ce que :
+ * de round-robin équilibré, avec la possibilité d'activer un mode aléatoire pour mélanger l'ordre des équipes.
+ *
+ * Fonctionnalités principales :
  * - Chaque équipe joue le même nombre de matchs (ou avec une différence maximale d'un match).
- * - Le nombre de confrontations entre chaque paire d'équipes soit équilibré.
+ * - Le nombre de confrontations entre chaque paire d'équipes est équilibré.
  * - Les équipes évitent de jouer deux matchs consécutifs, sauf si c'est inévitable.
- * - Tous les créneaux horaires disponibles soient remplis.
- *
- * Algorithme :
- * 1. Calculer le nombre total de matchs possibles en fonction du temps disponible et de la durée des matchs.
- * 2. Déterminer le nombre idéal de matchs par équipe pour assurer l'équité.
- * 3. Générer toutes les combinaisons possibles de matchs entre les équipes.
- * 4. Planifier les matchs en respectant les contraintes d'équilibrage et de repos.
- *
- * Formules utilisées :
- * - totalMatchesPossible = floor(totalAvailableTime / totalMatchTime)
- * - matchesPerTeam = floor((totalMatchesPossible * 2) / totalTeams)
- * - totalMatchesBetweenTeams = floor((totalMatchesPossible * 2) / (totalTeams * (totalTeams - 1)))
- *
- * Contraintes :
- * - Chaque équipe ne doit pas dépasser le nombre maximal de matchs (matchesPerTeam).
- * - Chaque paire d'équipes ne doit pas dépasser le nombre maximal de confrontations (totalMatchesBetweenTeams).
- * - Éviter que les équipes jouent deux matchs consécutifs.
- *
- * Difficultés rencontrées :
- * - Assurer l'équilibre parfait des matchs par équipe et des confrontations entre paires d'équipes.
- * - Gérer les pools avec un nombre impair d'équipes.
- * - Remplir tous les créneaux horaires tout en respectant les contraintes.
+ * - Tous les créneaux horaires disponibles sont remplis.
+ * - Mode aléatoire pour mélanger l'ordre des équipes et des matchs.
  */
 
 const GameStrategy = require('./gameStrategy');
@@ -52,8 +34,21 @@ const {
 } = require('../../../utils/dateUtils');
 
 class CustomRoundRobinGamePlanning extends GameStrategy {
-    constructor(tourneyId) {
+    constructor(tourneyId, options = {}) {
         super(tourneyId);
+        // Ajout de la variable randomMode avec une valeur par défaut false
+        this.randomMode = options.randomMode || false;
+    }
+
+    /**
+     * Mélange un tableau en place en utilisant l'algorithme de Fisher-Yates.
+     * @param {Array} array - Le tableau à mélanger.
+     */
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
     }
 
     /**
@@ -134,12 +129,17 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
      * @param {Object} tourney - Le tournoi en cours.
      */
     async generateGamesForPool(pool, scheduleTourney, tourney) {
-        const teams = pool.teams;
+        let teams = pool.teams;
         const poolSchedules = pool.schedules;
 
         if (teams.length < 2 || poolSchedules.length === 0) {
             // Impossible de générer des matchs
             return;
+        }
+
+        // Si le mode aléatoire est activé, mélanger l'ordre des équipes
+        if (this.randomMode) {
+            this.shuffleArray(teams);
         }
 
         // Calculer le nombre total de matchs disponibles dans les créneaux horaires
@@ -192,11 +192,22 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             }
         }
 
+        // Si le mode aléatoire est activé, mélanger les confrontations possibles
+        if (this.randomMode) {
+            this.shuffleArray(allPossibleMatchups);
+        }
+
         // Planifier les matchs dans les créneaux horaires disponibles
         const matchesScheduled = [];
         let globalRound = 0; // Compteur global pour suivre les tours
 
-        for (const poolSchedule of poolSchedules) {
+        // Si le mode aléatoire est activé, mélanger l'ordre des créneaux horaires
+        let poolSchedulesOrdered = [...poolSchedules];
+        if (this.randomMode) {
+            this.shuffleArray(poolSchedulesOrdered);
+        }
+
+        for (const poolSchedule of poolSchedulesOrdered) {
             await this.generateMatchesForPoolSchedule(
                 pool,
                 teams,
@@ -255,6 +266,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
      * @param {number} globalRound - Compteur global des matchs planifiés.
      * @param {number} matchesPerTeam - Nombre maximal de matchs par équipe.
      * @param {number} totalMatchesBetweenTeams - Nombre maximal de confrontations entre paires d'équipes.
+     * @param {Map} teamScheduledTimes - Créneaux programmés pour chaque équipe.
      */
     async generateMatchesForPoolSchedule(
         pool,
@@ -324,26 +336,30 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 break;
             }
 
-            // Trier les matchs possibles en priorisant les paires avec le moins de confrontations
-            availableMatchups.sort((a, b) => {
-                if (a.matchCount !== b.matchCount) {
-                    return a.matchCount - b.matchCount;
-                } else {
-                    // Si égalité, prioriser les équipes ayant joué le moins de matchs au total
-                    const aTotal =
-                        teamTotalMatchCounts.get(a.teamA.id) +
-                        teamTotalMatchCounts.get(a.teamB.id);
-                    const bTotal =
-                        teamTotalMatchCounts.get(b.teamA.id) +
-                        teamTotalMatchCounts.get(b.teamB.id);
-                    return aTotal - bTotal
-                }
-            });
-
-
+            // Si le mode aléatoire est activé, mélanger les matchs disponibles
+            let matchupsToTry = [...availableMatchups];
+            if (this.randomMode) {
+                this.shuffleArray(matchupsToTry);
+            } else {
+                // Trier les matchs possibles en priorisant les paires avec le moins de confrontations
+                matchupsToTry.sort((a, b) => {
+                    if (a.matchCount !== b.matchCount) {
+                        return a.matchCount - b.matchCount;
+                    } else {
+                        // Si égalité, prioriser les équipes ayant joué le moins de matchs au total
+                        const aTotal =
+                            teamTotalMatchCounts.get(a.teamA.id) +
+                            teamTotalMatchCounts.get(a.teamB.id);
+                        const bTotal =
+                            teamTotalMatchCounts.get(b.teamA.id) +
+                            teamTotalMatchCounts.get(b.teamB.id);
+                        return aTotal - bTotal;
+                    }
+                });
+            }
 
             let matchScheduled = false;
-            for (const matchup of availableMatchups) {
+            for (const matchup of matchupsToTry) {
                 const { teamA, teamB } = matchup;
 
                 // Vérifier si les équipes ne jouent pas déjà dans le dernier match
@@ -387,6 +403,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                         start: new Date(matchStartTime),
                         end: new Date(addMinutesToTime(matchStartTime, matchDuration)),
                     });
+
                     // Mettre à jour les équipes ayant joué le dernier match
                     lastTeamsPlayed = new Set([teamA.id, teamB.id]);
 
