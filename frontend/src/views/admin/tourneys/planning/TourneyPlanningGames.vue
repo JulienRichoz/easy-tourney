@@ -1161,7 +1161,6 @@
             data.fieldId = Number(this.createFormData.fieldId);
             data.sportId = this.createFormData.sportId;
           }
-          console.log('Données envoyées au serveur:', data);
 
           const response = await apiService.post(
             `/tourneys/${this.tourneyId}/games`,
@@ -1717,7 +1716,6 @@
           formData = {};
         }
 
-        console.log('Form data:', formData);
         const errors = {};
 
         if (formType === 'create' || formType === 'edit') {

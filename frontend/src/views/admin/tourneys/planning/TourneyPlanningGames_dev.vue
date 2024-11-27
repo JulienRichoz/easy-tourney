@@ -259,8 +259,6 @@
             `/tourneys/${this.tourneyId}/planning/details`
           );
           this.games = response.data.games;
-          console.log('Jeux récupérés:', this.games); // Ajoutez cette ligne
-
           // Préparer les données pour l'affichage par équipe
           this.prepareTeamsData();
           // Préparer les données pour l'affichage par pool
@@ -315,9 +313,6 @@
       preparePoolSchedulesData() {
         const poolSchedulesMap = {};
         this.games.forEach((game) => {
-          console.log('Game ID:', game.id);
-          console.log('PoolScheduleId:', game.poolScheduleId);
-          console.log('PoolSchedule:', game.poolSchedule);
           const poolScheduleId = game.poolScheduleId;
           const poolSchedule = game.poolSchedule; // Assurez-vous que cette information est disponible
 

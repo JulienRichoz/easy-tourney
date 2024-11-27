@@ -43,7 +43,7 @@
     methods: {
       async generatePlanning() {
         try {
-          const response = await apiService.post(
+          await apiService.post(
             `/tourneys/${this.tourneyId}/planning/games/generate`,
             {},
             {
@@ -52,7 +52,6 @@
               },
             }
           );
-          console.log('Response', response);
           toast.success('Planning des matchs généré avec succès !', {
             autoClose: 3000,
           });
