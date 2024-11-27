@@ -416,12 +416,69 @@ exports.updateGame = async (req, res) => {
     const { gameId } = req.params;
     const updates = req.body;
 
-    const game = await Game.findByPk(gameId);
+    // Récupérer le match existant avec ses associations Pool et PoolSchedule
+    const game = await Game.findByPk(gameId, {
+      include: [
+        { model: Pool, as: 'pool', attributes: ['id'] },
+        { model: PoolSchedule, as: 'poolSchedule', attributes: ['poolId'] },
+      ],
+    });
 
     if (!game) {
       return res.status(404).json({ message: 'Match non trouvé.' });
     }
 
+    // Si poolScheduleId est mis à jour
+    if ('poolScheduleId' in updates) {
+      const newPoolScheduleId = updates.poolScheduleId;
+
+      if (newPoolScheduleId) {
+        // Vérifier que le nouveau PoolSchedule existe
+        const newPoolSchedule = await PoolSchedule.findByPk(newPoolScheduleId);
+        if (!newPoolSchedule) {
+          return res.status(404).json({ message: 'PoolSchedule non trouvée.' });
+        }
+
+        // Vérifier que le nouveau PoolSchedule appartient à la même Pool
+        if (game.poolId && newPoolSchedule.poolId !== game.poolId) {
+          return res.status(400).json({
+            message: 'Vous ne pouvez déplacer le match que dans la même Pool ou hors Pool.',
+          });
+        }
+      } else {
+        // Si poolScheduleId est mis à null, s'assurer que le tournoi permet des matchs sans Pool
+        const tourney = await Tourney.findByPk(game.tourneyId);
+        const tourneyType = tourneyTypes[tourney.tourneyType];
+
+        if (tourneyType && tourneyType.requiresPool) {
+          return res.status(400).json({
+            message: 'Ce tournoi nécessite que les matchs appartiennent à une Pool.',
+          });
+        }
+      }
+    }
+
+    // Si fieldId est mis à jour, vérifier la cohérence avec la Pool actuelle
+    if ('fieldId' in updates) {
+      const newFieldId = updates.fieldId;
+      if (game.poolId) {
+        // Vérifier que le nouveau terrain est associé à la même Pool via PoolSchedule
+        const poolSchedule = await PoolSchedule.findOne({
+          where: { poolId: game.poolId, fieldId: newFieldId },
+        });
+
+        if (!poolSchedule) {
+          return res.status(400).json({
+            message: 'Le terrain doit appartenir à la même Pool.',
+          });
+        }
+
+        // Mettre à jour poolScheduleId si nécessaire
+        updates.poolScheduleId = poolSchedule.id;
+      }
+    }
+
+    // Vérifications supplémentaires (équipes, sport, etc.)
     if (updates.teamAId && updates.teamBId && updates.teamAId === updates.teamBId) {
       return res.status(400).json({
         message: "L'équipe A et l'équipe B doivent être différentes.",
@@ -436,6 +493,8 @@ exports.updateGame = async (req, res) => {
 
     // Sauvegarder les modifications
     await game.save();
+
+    // Récupérer le match mis à jour avec ses associations
     const updatedGame = await Game.findByPk(gameId, {
       include: [
         { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
@@ -443,6 +502,7 @@ exports.updateGame = async (req, res) => {
         { model: Field, as: 'field', attributes: ['id', 'name'] },
         { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
         { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+        { model: PoolSchedule, as: 'poolSchedule', attributes: ['id', 'startTime', 'endTime', 'date', 'poolId'] },
       ],
     });
 

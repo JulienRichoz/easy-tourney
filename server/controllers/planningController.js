@@ -78,6 +78,7 @@ exports.getPlanningDetails = async (req, res) => {
             'endTime',
             'date',
             'sportId',
+            'poolId',
           ],
         },
       ],
