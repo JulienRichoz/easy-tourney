@@ -175,6 +175,12 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             teamTotalMatchCounts.set(team.id, 0);
         });
 
+        // Initialiser les créneaux programmés pour chaque équipe
+        const teamScheduledTimes = new Map();
+        teams.forEach(team => {
+            teamScheduledTimes.set(team.id, []);
+        });
+
         // Générer toutes les combinaisons possibles de matchs entre les équipes
         const allPossibleMatchups = [];
         for (let i = 0; i < teams.length; i++) {
@@ -202,7 +208,8 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 tourney,
                 globalRound,
                 matchesPerTeam,
-                totalMatchesBetweenTeams
+                totalMatchesBetweenTeams,
+                teamScheduledTimes
             );
 
             // Mettre à jour le compteur global en fonction du nombre de matchs planifiés dans ce créneau
@@ -260,7 +267,8 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
         tourney,
         globalRound,
         matchesPerTeam,
-        totalMatchesBetweenTeams
+        totalMatchesBetweenTeams,
+        teamScheduledTimes
     ) {
         // Calculer le nombre de matchs possibles dans ce créneau
         const matchDuration = scheduleTourney.gameDuration; // en minutes
@@ -287,6 +295,19 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
 
         // Initialiser les équipes ayant joué le dernier match
         let lastTeamsPlayed = new Set();
+
+        // Avant de planifier un match, vérifier si les équipes sont déjà programmées dans ce créneau
+        const isTeamAvailable = (teamA, teamB, matchStartTime, matchEndTime) => {
+            const scheduledA = teamScheduledTimes.get(teamA.id) || [];
+            const scheduledB = teamScheduledTimes.get(teamB.id) || [];
+
+            const overlap = (s1, e1, s2, e2) => s1 < e2 && s2 < e1;
+
+            const aAvailable = !scheduledA.some(({ start, end }) => overlap(start, end, matchStartTime, matchEndTime));
+            const bAvailable = !scheduledB.some(({ start, end }) => overlap(start, end, matchStartTime, matchEndTime));
+
+            return aAvailable && bAvailable;
+        };
 
         // Planifier les matchs dans le créneau horaire
         for (let m = 0; m < numMatchesInSlot; m++) {
@@ -328,7 +349,9 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 // Vérifier si les équipes ne jouent pas déjà dans le dernier match
                 if (
                     !lastTeamsPlayed.has(teamA.id) &&
-                    !lastTeamsPlayed.has(teamB.id)
+                    !lastTeamsPlayed.has(teamB.id) &&
+                    // Vérifier si les équipes sont disponibles pour jouer
+                    isTeamAvailable(teamA, teamB, new Date(matchStartTime), new Date(addMinutesToTime(matchStartTime, matchDuration)))
                 ) {
                     // Planifier le match
                     matchesScheduled.push({
@@ -355,6 +378,15 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                         teamTotalMatchCounts.get(teamB.id) + 1
                     );
 
+                    // Mettre à jour les créneaux programmés pour les équipes
+                    teamScheduledTimes.get(teamA.id).push({
+                        start: new Date(matchStartTime),
+                        end: new Date(addMinutesToTime(matchStartTime, matchDuration)),
+                    });
+                    teamScheduledTimes.get(teamB.id).push({
+                        start: new Date(matchStartTime),
+                        end: new Date(addMinutesToTime(matchStartTime, matchDuration)),
+                    });
                     // Mettre à jour les équipes ayant joué le dernier match
                     lastTeamsPlayed = new Set([teamA.id, teamB.id]);
 
@@ -452,7 +484,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                     const nextGame = fieldGames[i + 1];
 
                     if (new Date(currentGame.endTime) > new Date(nextGame.startTime)) {
-                        errors.high.push(`Conflit de temps sur le terrain ${currentGame.field.name} entre les matchs ${currentGame.id} (${currentGame.teamA.teamName} vs ${currentGame.teamB.teamName}) et ${nextGame.id} (${nextGame.teamA.teamName} vs ${nextGame.teamB.teamName}).`);
+                        errors.high.push(`Conflit de temps sur le terrain ${currentGame.field.name} entre les matchs ${currentGame.id}(${currentGame.teamA.teamName} vs ${currentGame.teamB.teamName}) et ${nextGame.id}(${nextGame.teamA.teamName} vs ${nextGame.teamB.teamName}).`);
                     }
                 }
             }
@@ -478,7 +510,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                             (gameEndTime > pauseStart && gameEndTime <= pauseEnd) ||
                             (gameStartTime <= pauseStart && gameEndTime >= pauseEnd) // Game spans the entire pause
                         ) {
-                            errors.high.push(`Le match ${game.id} (${game.teamA.teamName} vs ${game.teamB.teamName}) est planifié pendant la pause ${pause.label}.`);
+                            errors.high.push(`Le match ${game.id}(${game.teamA.teamName} vs ${game.teamB.teamName}) est planifié pendant la pause ${pause.label}.`);
                         }
                     }
                 });
@@ -531,17 +563,44 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 }
 
                 if (maxDifference >= allowedDifference + 1) {
-                    errors.mid.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}. Certaines équipes ont joué ${maxMatches} matchs tandis que d'autres ont joué ${minMatches} matchs.`);
+                    errors.mid.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}.Certaines équipes ont joué ${maxMatches} matchs tandis que d'autres ont joué ${minMatches} matchs.`);
                 } else if (maxDifference === allowedDifference) {
                     errors.low.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}.`);
                 }
 
                 // Calculer et ajouter le nombre moyen de matchs par équipe pour la pool
-                const numTeams = poolTeamCounts[poolId];
-                const totalMatches = matchCounts.reduce((a, b) => a + b, 0) / 2; // Diviser par 2 car chaque match est compté deux fois
-                const avgMatches = totalMatches / numTeams;
-                const poolName = poolId === 'No Pool' ? 'Sans Pool' : `Pool ${poolId}`;
-                errors.low.push(`Nombre moyen de matchs par équipe pour ${poolName} : ${avgMatches.toFixed(2)}`);
+                let numTeams = poolTeamCounts[poolId] || 0; // Sécuriser les valeurs undefined
+                let totalMatches = matchCounts.reduce((a, b) => a + b, 0) / 2; // Diviser par 2 car chaque match est compté deux fois
+                let avgMatches = 0;
+
+                // Traiter le cas où poolId est 'No Pool'
+                if (poolId === null || poolId === 'No Pool') {
+                    const gamesWithoutPool = games.filter((game) => game.poolId === null);
+                    const teamsWithoutPool = new Set();
+                    gamesWithoutPool.forEach((game) => {
+                        teamsWithoutPool.add(game.teamAId);
+                        teamsWithoutPool.add(game.teamBId);
+                    });
+
+                    numTeams = teamsWithoutPool.size; // Nombre d'équipes impliquées
+                    totalMatches = gamesWithoutPool.length * 2; // Nombre total d'apparitions d'équipes
+                } else {
+                    // Pour les pools normales, totalMatches reste inchangé
+                }
+
+                // Éviter NaN en cas d'absence d'équipes ou de matchs
+                if (numTeams > 0) {
+                    avgMatches = totalMatches / numTeams;
+                } else {
+                    avgMatches = 0; // Pas d'équipes ou de matchs, moyenne = 0
+                }
+
+                // Nom de la pool pour l'affichage
+                const poolName =
+                    poolId === null || poolId === 'No Pool' ? 'Matchs sans pool (poolId=null)' : `Pool ${poolId}`;
+                errors.low.push(
+                    `Nombre moyen de matchs par équipe pour ${poolName} : ${avgMatches.toFixed(2)}`
+                );
             }
 
             // Vérifier si des équipes ont joué le même adversaire plus que le nombre autorisé
@@ -559,16 +618,6 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 }
                 teamPairCounts[key]++;
             });
-
-            for (const key in teamPairCounts) {
-                const count = teamPairCounts[key];
-                if (count > 1) {
-                    const [teamAId, teamBId] = key.split('-');
-                    const teamAName = teamIdNameMap[teamAId];
-                    const teamBName = teamIdNameMap[teamBId];
-                    errors.mid.push(`Les équipes ${teamAName} et ${teamBName} se sont affrontées ${count} fois.`);
-                }
-            }
 
             // Retourner les erreurs
             const hasErrors = Object.values(errors).some(
