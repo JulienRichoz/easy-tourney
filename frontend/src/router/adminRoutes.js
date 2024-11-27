@@ -110,13 +110,13 @@ export default [
   },
   {
     path: '/admin/tourneys/:tourneyId/planning/games',
-    name: 'TourneyPlanningGames',
+    name: 'AdminTourneyPlanningGames',
     component: TourneyPlanningGames,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
   {
     path: '/admin/tourneys/:tourneyId/planning/games/details',
-    name: 'TourneyPlanningGamesDev',
+    name: 'AdminTourneyPlanningCompleted',
     component: TourneyPlanningGamesDev,
     meta: { requiresAuth: true, permission: 'viewAdminPage' },
   },
