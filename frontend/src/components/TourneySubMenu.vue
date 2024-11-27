@@ -98,6 +98,9 @@
     computed: {
       ...mapState('tourney', ['statuses']),
       currentPlanningStatus() {
+        if (this.statuses.planningStatus === 'notStarted') {
+          return 'pools';
+        }
         return this.statuses.planningStatus || 'pools'; // Valeur par défaut
       },
     },
