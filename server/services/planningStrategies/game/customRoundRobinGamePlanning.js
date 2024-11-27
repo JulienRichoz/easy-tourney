@@ -137,10 +137,31 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             return;
         }
 
-        // Si le mode aléatoire est activé, mélanger l'ordre des équipes
-        if (this.randomMode) {
-            this.shuffleArray(teams);
+        if (teams.length === 3) {
+            // Utiliser une méthode spécifique pour les pools de 3 équipes
+            await this.generateGamesForThreeTeamPool(pool, scheduleTourney, tourney);
+        } else if (teams.length === 4) {
+            // Utiliser une méthode spécifique pour les pools de 4 équipes
+            await this.generateGamesForFourTeamPool(pool, scheduleTourney, tourney);
+        } else {
+            // Utiliser l'algorithme existant pour les pools plus grandes
+            // Si le mode aléatoire est activé, mélanger l'ordre des équipes
+            if (this.randomMode) {
+                this.shuffleArray(teams);
+            }
+            await this.generateGamesForLargerPool(pool, scheduleTourney, tourney, teams);
         }
+    }
+
+    /**
+     * Génère les matchs pour une pool avec plus de 4 équipes.
+     * @param {Object} pool - La pool concernée.
+     * @param {Object} scheduleTourney - La configuration du planning.
+     * @param {Object} tourney - Le tournoi en cours.
+     * @param {Array} teams - Les équipes de la pool.
+     */
+    async generateGamesForLargerPool(pool, scheduleTourney, tourney, teams) {
+        const poolSchedules = pool.schedules;
 
         // Calculer le nombre total de matchs disponibles dans les créneaux horaires
         let totalAvailableTime = 0;
@@ -254,20 +275,20 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
     }
 
     /**
-     * Génère les matchs pour un créneau horaire spécifique d'une pool.
-     * @param {Object} pool - La pool concernée.
-     * @param {Array} teams - Les équipes de la pool.
-     * @param {Object} poolSchedule - Le créneau horaire de la pool.
-     * @param {Array} allPossibleMatchups - Toutes les combinaisons de matchs possibles.
-     * @param {Map} teamTotalMatchCounts - Compteur total de matchs par équipe.
-     * @param {Object} scheduleTourney - La configuration du planning.
-     * @param {Array} matchesScheduled - Liste des matchs déjà planifiés.
-     * @param {Object} tourney - Le tournoi en cours.
-     * @param {number} globalRound - Compteur global des matchs planifiés.
-     * @param {number} matchesPerTeam - Nombre maximal de matchs par équipe.
-     * @param {number} totalMatchesBetweenTeams - Nombre maximal de confrontations entre paires d'équipes.
-     * @param {Map} teamScheduledTimes - Créneaux programmés pour chaque équipe.
-     */
+    * Génère les matchs pour un créneau horaire spécifique d'une pool.
+    * @param {Object} pool - La pool concernée.
+    * @param {Array} teams - Les équipes de la pool.
+    * @param {Object} poolSchedule - Le créneau horaire de la pool.
+    * @param {Array} allPossibleMatchups - Toutes les combinaisons de matchs possibles.
+    * @param {Map} teamTotalMatchCounts - Compteur total de matchs par équipe.
+    * @param {Object} scheduleTourney - La configuration du planning.
+    * @param {Array} matchesScheduled - Liste des matchs déjà planifiés.
+    * @param {Object} tourney - Le tournoi en cours.
+    * @param {number} globalRound - Compteur global des matchs planifiés.
+    * @param {number} matchesPerTeam - Nombre maximal de matchs par équipe.
+    * @param {number} totalMatchesBetweenTeams - Nombre maximal de confrontations entre paires d'équipes.
+    * @param {Map} teamScheduledTimes - Créneaux programmés pour chaque équipe.
+    */
     async generateMatchesForPoolSchedule(
         pool,
         teams,
@@ -429,16 +450,312 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             }
         }
     }
+    /**
+     * Génère les matchs pour une pool de 3 équipes.
+     * @param {Object} pool - La pool concernée.
+     * @param {Object} scheduleTourney - La configuration du planning.
+     * @param {Object} tourney - Le tournoi en cours.
+     */
+    async generateGamesForThreeTeamPool(pool, scheduleTourney, tourney) {
+        let teams = pool.teams;
+        const poolSchedules = pool.schedules;
+
+        if (teams.length !== 3 || poolSchedules.length === 0) {
+            // Impossible de générer des matchs
+            return;
+        }
+
+        // Calculer le nombre total de matchs disponibles dans les créneaux horaires
+        let totalAvailableTime = 0;
+        for (const poolSchedule of poolSchedules) {
+            totalAvailableTime += timeDifferenceInMinutes(
+                poolSchedule.startTime,
+                poolSchedule.endTime
+            );
+        }
+
+        const matchDuration = scheduleTourney.gameDuration; // en minutes
+        const transitionTime = scheduleTourney.transitionGameTime; // en minutes
+        const totalMatchTime = matchDuration + transitionTime;
+
+        // Nombre total de matchs possibles
+        const totalMatchesPossible = Math.floor(totalAvailableTime / totalMatchTime);
+
+        // Générer les matchs nécessaires pour remplir les créneaux
+        const teamIds = teams.map(team => team.id);
+        const teamMap = new Map(teams.map(team => [team.id, team]));
+
+        // Matchs de round-robin
+        const initialMatchups = [
+            [teamIds[0], teamIds[1]],
+            [teamIds[1], teamIds[2]],
+            [teamIds[2], teamIds[0]],
+        ];
+
+        // Répéter les matchs pour remplir les créneaux
+        let matchesNeeded = totalMatchesPossible;
+        let allMatchups = [];
+
+        let rounds = Math.ceil(matchesNeeded / initialMatchups.length);
+
+        for (let r = 0; r < rounds; r++) {
+            for (let matchup of initialMatchups) {
+                allMatchups.push({
+                    teamA: teamMap.get(matchup[0]),
+                    teamB: teamMap.get(matchup[1]),
+                });
+            }
+        }
+
+        // Limiter le nombre de matchs au nombre de créneaux disponibles
+        allMatchups = allMatchups.slice(0, matchesNeeded);
+
+        // Planifier les matchs
+        const matchesScheduled = [];
+        let matchIndex = 0;
+
+        // Mélanger les matchs si le mode aléatoire est activé
+        if (this.randomMode) {
+            this.shuffleArray(allMatchups);
+        }
+
+        // Initialiser les temps de disponibilité des équipes
+        const teamNextAvailableTime = new Map(teams.map(team => [team.id, null]));
+
+        for (const poolSchedule of poolSchedules) {
+            // Calculer le nombre de matchs possibles dans ce créneau
+            const slotAvailableTime = timeDifferenceInMinutes(
+                poolSchedule.startTime,
+                poolSchedule.endTime
+            );
+
+            const numMatchesInSlot = Math.floor(slotAvailableTime / totalMatchTime);
+
+            let matchStartTime = poolSchedule.startTime;
+
+            // Déterminer la date du match
+            const matchDate = poolSchedule.date || tourney.dateTourney;
+
+            for (let m = 0; m < numMatchesInSlot; m++) {
+                if (matchIndex >= allMatchups.length) {
+                    // Tous les matchs ont été planifiés
+                    break;
+                }
+
+                const matchup = allMatchups[matchIndex];
+                const teamAId = matchup.teamA.id;
+                const teamBId = matchup.teamB.id;
+
+                // Planifier le match
+                matchesScheduled.push({
+                    teamA: matchup.teamA,
+                    teamB: matchup.teamB,
+                    poolScheduleId: poolSchedule.id,
+                    fieldId: poolSchedule.fieldId,
+                    sportId: poolSchedule.sportId,
+                    startTime: combineDateAndTime(matchDate, matchStartTime),
+                    endTime: combineDateAndTime(
+                        matchDate,
+                        addMinutesToTime(matchStartTime, matchDuration)
+                    ),
+                });
+
+                // Mettre à jour les temps de disponibilité des équipes
+                const matchEndTime = addMinutesToTime(matchStartTime, matchDuration + transitionTime);
+                teamNextAvailableTime.set(teamAId, new Date(`${matchDate} ${matchEndTime}`));
+                teamNextAvailableTime.set(teamBId, new Date(`${matchDate} ${matchEndTime}`));
+
+                // Mettre à jour l'heure de début pour le prochain match
+                matchStartTime = addMinutesToTime(
+                    addMinutesToTime(matchStartTime, matchDuration),
+                    transitionTime
+                );
+
+                matchIndex++;
+            }
+        }
+
+        // Enregistrer les matchs planifiés dans la base de données
+        for (const match of matchesScheduled) {
+            await Game.create({
+                tourneyId: this.tourneyId,
+                poolId: pool.id,
+                poolScheduleId: match.poolScheduleId,
+                teamAId: match.teamA.id,
+                teamBId: match.teamB.id,
+                fieldId: match.fieldId,
+                sportId: match.sportId,
+                startTime: match.startTime,
+                endTime: match.endTime,
+                status: 'scheduled',
+            });
+        }
+    }
 
     /**
-   * Valide les matchs planifiés selon les règles spécifiées.
-   * @returns {Object} Résultats de la validation avec différents niveaux d'erreurs.
-   */
+     * Génère les matchs pour une pool de 4 équipes.
+     * @param {Object} pool - La pool concernée.
+     * @param {Object} scheduleTourney - La configuration du planning.
+     * @param {Object} tourney - Le tournoi en cours.
+     */
+    async generateGamesForFourTeamPool(pool, scheduleTourney, tourney) {
+        let teams = pool.teams;
+        const poolSchedules = pool.schedules;
+
+        if (teams.length !== 4 || poolSchedules.length === 0) {
+            // Impossible de générer des matchs
+            return;
+        }
+
+        // Calculer le nombre total de matchs disponibles dans les créneaux horaires
+        let totalAvailableTime = 0;
+        for (const poolSchedule of poolSchedules) {
+            totalAvailableTime += timeDifferenceInMinutes(
+                poolSchedule.startTime,
+                poolSchedule.endTime
+            );
+        }
+
+        const matchDuration = scheduleTourney.gameDuration; // en minutes
+        const transitionTime = scheduleTourney.transitionGameTime; // en minutes
+        const totalMatchTime = matchDuration + transitionTime;
+
+        // Nombre total de matchs possibles
+        const totalMatchesPossible = Math.floor(totalAvailableTime / totalMatchTime);
+
+        // Générer les matchs nécessaires pour remplir les créneaux
+        const teamIds = teams.map(team => team.id);
+        const teamMap = new Map(teams.map(team => [team.id, team]));
+
+        // Matchs de round-robin pour 4 équipes
+        const initialMatchups = [
+            [teamIds[0], teamIds[1]],
+            [teamIds[2], teamIds[3]],
+            [teamIds[0], teamIds[2]],
+            [teamIds[1], teamIds[3]],
+            [teamIds[0], teamIds[3]],
+            [teamIds[1], teamIds[2]],
+        ];
+
+        // Répéter les matchs pour remplir les créneaux
+        let matchesNeeded = totalMatchesPossible;
+        let allMatchups = [];
+
+        let rounds = Math.ceil(matchesNeeded / initialMatchups.length);
+
+        for (let r = 0; r < rounds; r++) {
+            for (let matchup of initialMatchups) {
+                allMatchups.push({
+                    teamA: teamMap.get(matchup[0]),
+                    teamB: teamMap.get(matchup[1]),
+                });
+            }
+        }
+
+        // Limiter le nombre de matchs au nombre de créneaux disponibles
+        allMatchups = allMatchups.slice(0, matchesNeeded);
+
+        // Planifier les matchs
+        const matchesScheduled = [];
+        let matchIndex = 0;
+
+        // Mélanger les matchs si le mode aléatoire est activé
+        if (this.randomMode) {
+            this.shuffleArray(allMatchups);
+        }
+
+        // Initialiser les temps de disponibilité des équipes
+        const teamNextAvailableTime = new Map(teams.map(team => [team.id, null]));
+
+        for (const poolSchedule of poolSchedules) {
+            // Calculer le nombre de matchs possibles dans ce créneau
+            const slotAvailableTime = timeDifferenceInMinutes(
+                poolSchedule.startTime,
+                poolSchedule.endTime
+            );
+
+            const numMatchesInSlot = Math.floor(slotAvailableTime / totalMatchTime);
+
+            let matchStartTime = poolSchedule.startTime;
+
+            // Déterminer la date du match
+            const matchDate = poolSchedule.date || tourney.dateTourney;
+
+            for (let m = 0; m < numMatchesInSlot; m++) {
+                if (matchIndex >= allMatchups.length) {
+                    // Tous les matchs ont été planifiés
+                    break;
+                }
+
+                const matchup = allMatchups[matchIndex];
+                const teamAId = matchup.teamA.id;
+                const teamBId = matchup.teamB.id;
+
+                // Planifier le match
+                matchesScheduled.push({
+                    teamA: matchup.teamA,
+                    teamB: matchup.teamB,
+                    poolScheduleId: poolSchedule.id,
+                    fieldId: poolSchedule.fieldId,
+                    sportId: poolSchedule.sportId,
+                    startTime: combineDateAndTime(matchDate, matchStartTime),
+                    endTime: combineDateAndTime(
+                        matchDate,
+                        addMinutesToTime(matchStartTime, matchDuration)
+                    ),
+                });
+
+                // Mettre à jour les temps de disponibilité des équipes
+                const matchEndTime = addMinutesToTime(matchStartTime, matchDuration + transitionTime);
+                teamNextAvailableTime.set(teamAId, new Date(`${matchDate} ${matchEndTime}`));
+                teamNextAvailableTime.set(teamBId, new Date(`${matchDate} ${matchEndTime}`));
+
+                // Mettre à jour l'heure de début pour le prochain match
+                matchStartTime = addMinutesToTime(
+                    addMinutesToTime(matchStartTime, matchDuration),
+                    transitionTime
+                );
+
+                matchIndex++;
+            }
+        }
+
+        // Enregistrer les matchs planifiés dans la base de données
+        for (const match of matchesScheduled) {
+            await Game.create({
+                tourneyId: this.tourneyId,
+                poolId: pool.id,
+                poolScheduleId: match.poolScheduleId,
+                teamAId: match.teamA.id,
+                teamBId: match.teamB.id,
+                fieldId: match.fieldId,
+                sportId: match.sportId,
+                startTime: match.startTime,
+                endTime: match.endTime,
+                status: 'scheduled',
+            });
+        }
+    }
+
+    /**
+     * Génère une clé unique pour une paire d'équipes.
+     * @param {number} teamAId - ID de l'équipe A.
+     * @param {number} teamBId - ID de l'équipe B.
+     * @returns {string} - Clé unique pour la paire d'équipes.
+     */
+    getMatchKey(teamAId, teamBId) {
+        return [teamAId, teamBId].sort().join('-');
+    }
+
+    /**
+     * Valide les matchs planifiés selon les règles spécifiées.
+     * @returns {Object} Résultats de la validation avec différents niveaux d'erreurs.
+     */
     async validateGames() {
         const errors = {
-            high: [], // Conflit sur le meme terrain ou match planifié pendant une pause
-            mid: [], // Différence de matchs par équipe, nombre de confrontations entre paires d'équipes
-            low: [], // Nombre moyen de matchs par équipe pour chaque pool
+            high: [], // Conflit sur le même terrain ou match planifié pendant une pause
+            mid: [],  // Différence de matchs par équipe, nombre de confrontations entre paires d'équipes
+            low: [],  // Informations supplémentaires
         };
 
         try {
@@ -473,7 +790,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             });
 
             if (!games.length) {
-                errors.high.push('Aucun match n\'a été planifié.');
+                errors.high.push("Aucun match n'a été planifié.");
                 return { hasErrors: true, errors };
             }
 
@@ -501,7 +818,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                     const nextGame = fieldGames[i + 1];
 
                     if (new Date(currentGame.endTime) > new Date(nextGame.startTime)) {
-                        errors.high.push(`Conflit de temps sur le terrain ${currentGame.field.name} entre les matchs ${currentGame.id}(${currentGame.teamA.teamName} vs ${currentGame.teamB.teamName}) et ${nextGame.id}(${nextGame.teamA.teamName} vs ${nextGame.teamB.teamName}).`);
+                        errors.high.push(`Conflit de temps sur le terrain ${currentGame.field.name} entre les matchs ${currentGame.id} (${currentGame.teamA.teamName} vs ${currentGame.teamB.teamName}) et ${nextGame.id} (${nextGame.teamA.teamName} vs ${nextGame.teamB.teamName}).`);
                     }
                 }
             }
@@ -525,121 +842,66 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                         if (
                             (gameStartTime >= pauseStart && gameStartTime < pauseEnd) ||
                             (gameEndTime > pauseStart && gameEndTime <= pauseEnd) ||
-                            (gameStartTime <= pauseStart && gameEndTime >= pauseEnd) // Game spans the entire pause
+                            (gameStartTime <= pauseStart && gameEndTime >= pauseEnd) // Le match couvre toute la pause
                         ) {
-                            errors.high.push(`Le match ${game.id}(${game.teamA.teamName} vs ${game.teamB.teamName}) est planifié pendant la pause ${pause.label}.`);
+                            errors.high.push(`Le match ${game.id} (${game.teamA.teamName} vs ${game.teamB.teamName}) est planifié pendant la pause ${pause.label}.`);
                         }
                     }
                 });
             });
 
             // Mid level errors
-            // Vérifier la différence du nombre de matchs par équipe, en tenant compte de la taille des pools
-            // Récupérer toutes les équipes du tournoi
+            // Vérifier la différence du nombre de matchs par équipe dans chaque pool
             const teams = await Team.findAll({
                 where: { tourneyId: this.tourneyId },
                 attributes: ['id', 'teamName', 'poolId'],
+                include: [
+                    { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+                ],
             });
 
-            // Calculer le nombre de matchs par équipe, par pool
             const poolTeamMatchCounts = {};
-            const poolTeamCounts = {};
             teams.forEach((team) => {
                 const poolId = team.poolId || 'No Pool';
+                const poolName = team.pool ? team.pool.name : 'No Pool';
                 if (!poolTeamMatchCounts[poolId]) {
-                    poolTeamMatchCounts[poolId] = {};
-                    poolTeamCounts[poolId] = 0;
+                    poolTeamMatchCounts[poolId] = { poolName, teams: {} };
                 }
-                poolTeamMatchCounts[poolId][team.id] = 0;
-                poolTeamCounts[poolId]++;
+                poolTeamMatchCounts[poolId].teams[team.id] = { teamName: team.teamName, count: 0 };
             });
 
             games.forEach((game) => {
                 const poolId = game.poolId || 'No Pool';
-                if (!poolTeamMatchCounts[poolId]) {
-                    poolTeamMatchCounts[poolId] = {};
+                if (poolTeamMatchCounts[poolId]) {
+                    if (poolTeamMatchCounts[poolId].teams[game.teamAId]) {
+                        poolTeamMatchCounts[poolId].teams[game.teamAId].count++;
+                    }
+                    if (poolTeamMatchCounts[poolId].teams[game.teamBId]) {
+                        poolTeamMatchCounts[poolId].teams[game.teamBId].count++;
+                    }
                 }
-                poolTeamMatchCounts[poolId][game.teamAId]++;
-                poolTeamMatchCounts[poolId][game.teamBId]++;
             });
 
-            // Vérifier la différence de matchs par équipe dans chaque pool
             for (const poolId in poolTeamMatchCounts) {
-                const teamMatchCounts = poolTeamMatchCounts[poolId];
-                const matchCounts = Object.values(teamMatchCounts);
+                const { poolName, teams } = poolTeamMatchCounts[poolId];
+                const matchCounts = Object.values(teams).map((t) => t.count);
                 const maxMatches = Math.max(...matchCounts);
                 const minMatches = Math.min(...matchCounts);
                 const maxDifference = maxMatches - minMatches;
 
-                const poolSize = poolTeamCounts[poolId];
-
-                // Autoriser une différence maximale de 2 si la taille de la pool est différente
-                let allowedDifference = 1;
-                if (poolSize !== teams.length / Object.keys(poolTeamCounts).length) {
-                    allowedDifference = 2;
+                if (maxDifference > 1) {
+                    errors.mid.push(`Dans la pool "${poolName}", la différence du nombre de matchs entre les équipes est de ${maxDifference}. Certaines équipes ont joué ${maxMatches} matchs tandis que d'autres ont joué ${minMatches} matchs.`);
                 }
 
-                if (maxDifference >= allowedDifference + 1) {
-                    errors.mid.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}.Certaines équipes ont joué ${maxMatches} matchs tandis que d'autres ont joué ${minMatches} matchs.`);
-                } else if (maxDifference === allowedDifference) {
-                    errors.low.push(`Dans la pool ${poolId}, la différence du nombre de matchs entre les équipes est de ${maxDifference}.`);
-                }
+                // Afficher les équipes avec le plus et le moins de matchs
+                const teamsWithMaxMatches = Object.values(teams).filter(t => t.count === maxMatches).map(t => t.teamName);
+                const teamsWithMinMatches = Object.values(teams).filter(t => t.count === minMatches).map(t => t.teamName);
 
-                // Calculer et ajouter le nombre moyen de matchs par équipe pour la pool
-                let numTeams = poolTeamCounts[poolId] || 0; // Sécuriser les valeurs undefined
-                let totalMatches = matchCounts.reduce((a, b) => a + b, 0) / 2; // Diviser par 2 car chaque match est compté deux fois
-                let avgMatches = 0;
-
-                // Traiter le cas où poolId est 'No Pool'
-                if (poolId === null || poolId === 'No Pool') {
-                    const gamesWithoutPool = games.filter((game) => game.poolId === null);
-                    const teamsWithoutPool = new Set();
-                    gamesWithoutPool.forEach((game) => {
-                        teamsWithoutPool.add(game.teamAId);
-                        teamsWithoutPool.add(game.teamBId);
-                    });
-
-                    numTeams = teamsWithoutPool.size; // Nombre d'équipes impliquées
-                    totalMatches = gamesWithoutPool.length * 2; // Nombre total d'apparitions d'équipes
-                } else {
-                    // Pour les pools normales, totalMatches reste inchangé
-                }
-
-                // Éviter NaN en cas d'absence d'équipes ou de matchs
-                if (numTeams > 0) {
-                    avgMatches = totalMatches / numTeams;
-                } else {
-                    avgMatches = 0; // Pas d'équipes ou de matchs, moyenne = 0
-                }
-
-                // Nom de la pool pour l'affichage
-                const poolName =
-                    poolId === null || poolId === 'No Pool' ? 'Matchs sans pool (poolId=null)' : `Pool ${poolId}`;
-                errors.low.push(
-                    `Nombre moyen de matchs par équipe pour ${poolName} : ${avgMatches.toFixed(2)}`
-                );
+                errors.low.push(`Dans la pool "${poolName}", les équipes avec le plus de matchs (${maxMatches}) sont : ${teamsWithMaxMatches.join(', ')}. Les équipes avec le moins de matchs (${minMatches}) sont : ${teamsWithMinMatches.join(', ')}.`);
             }
 
-            // Vérifier si des équipes ont joué le même adversaire plus que le nombre autorisé
-            // On suppose que le nombre maximum de confrontations est 1 pour un round-robin
-            const teamPairCounts = {};
-            const teamIdNameMap = {};
-            teams.forEach((team) => {
-                teamIdNameMap[team.id] = team.teamName;
-            });
-
-            games.forEach((game) => {
-                const key = this.getMatchKey(game.teamAId, game.teamBId);
-                if (!teamPairCounts[key]) {
-                    teamPairCounts[key] = 0;
-                }
-                teamPairCounts[key]++;
-            });
-
             // Retourner les erreurs
-            const hasErrors = Object.values(errors).some(
-                (levelErrors) => levelErrors.length > 0
-            );
+            const hasErrors = errors.high.length > 0 || errors.mid.length > 0;
 
             return {
                 hasErrors,
@@ -651,15 +913,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             throw error; // Propager l'erreur pour qu'elle soit gérée par le contrôleur
         }
     }
-    /**
-     * Génère une clé unique pour une paire d'équipes.
-     * @param {number} teamAId - ID de l'équipe A.
-     * @param {number} teamBId - ID de l'équipe B.
-     * @returns {string} - Clé unique pour la paire d'équipes.
-     */
-    getMatchKey(teamAId, teamBId) {
-        return [teamAId, teamBId].sort().join('-');
-    }
 }
 
 module.exports = CustomRoundRobinGamePlanning;
+
