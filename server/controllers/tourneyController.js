@@ -9,6 +9,7 @@ const {
   User,
   Team,
   UsersTourneys,
+  ScheduleTourney,
   Role,
   InviteToken,
   Pool,
@@ -56,6 +57,18 @@ exports.createTourney = async (req, res) => {
       defaultMaxTeamPerPool,
       defaultMinTeamPerPool,
       status,
+    });
+
+    // Créer une configuration de planning par défaut
+    await ScheduleTourney.create({
+      tourneyId: newTourney.id,
+      startTime: '07:30:00',
+      endTime: '17:30:00',
+      poolDuration: 105,
+      gameDuration: 15,
+      transitionPoolTime: 15,
+      transitionGameTime: 5,
+      // Ajoutez d'autres champs par défaut si nécessaire
     });
 
     res.status(201).json(newTourney);
