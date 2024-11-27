@@ -409,11 +409,48 @@
           });
         },
       },
-      totalPages() {
+      /**
+       * Calcule les pages avec une répartition équilibrée des terrains.
+       */
+      pages() {
         if (this.showAllTerrains) {
-          return 1;
+          return [this.filteredFields];
         }
-        return Math.ceil(this.filteredFields.length / this.terrainsPerPage);
+
+        const total = this.filteredFields.length;
+        const maxPerPage = this.terrainsPerPage;
+        const numPages = Math.ceil(total / maxPerPage);
+
+        const base = Math.floor(total / numPages);
+        let remainder = total % numPages;
+
+        const pages = [];
+        let start = 0;
+        for (let i = 0; i < numPages; i++) {
+          let perPage = base;
+          if (remainder > 0) {
+            perPage += 1;
+            remainder -= 1;
+          }
+          const end = start + perPage;
+          pages.push(this.filteredFields.slice(start, end));
+          start = end;
+        }
+        return pages;
+      },
+
+      /**
+       * Nombre total de pages.
+       */
+      totalPages() {
+        return this.pages.length;
+      },
+
+      /**
+       * Terrains à afficher sur la page actuelle.
+       */
+      paginatedFields() {
+        return this.pages[this.currentPage - 1];
       },
       /**
        * Filters fields based on selected pool
@@ -433,14 +470,6 @@
           return this.fields.filter((field) => fieldIds.has(field.id));
         }
         return this.fields;
-      },
-      paginatedFields() {
-        if (this.showAllTerrains) {
-          return this.filteredFields;
-        }
-        const start = (this.currentPage - 1) * this.terrainsPerPage;
-        const end = start + this.terrainsPerPage;
-        return this.filteredFields.slice(start, end);
       },
       /**
        *
@@ -1145,6 +1174,23 @@
             return;
           }
 
+          if (poolSchedule) {
+            // Vérifier que le poolSchedule appartient à la même Pool que le match actuel
+            const currentGame = event.extendedProps.game;
+            console.log('Current pool:', currentGame.pool.id);
+            console.log('poolSchedule:', poolSchedule);
+            if (
+              currentGame.pool.id &&
+              poolSchedule.poolId !== currentGame.pool.id
+            ) {
+              toast.warning(
+                'Vous ne pouvez pas déplacer ce match dans une autre Pool.'
+              );
+              info.revert();
+              return;
+            }
+          }
+
           const data = {
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
@@ -1152,6 +1198,10 @@
             fieldId: newFieldId,
             poolScheduleId: poolSchedule.id,
           };
+          console.log(
+            "Données envoyées au serveur lors du déplacement de l'événement :",
+            data
+          );
 
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${eventId}`,
@@ -1170,6 +1220,7 @@
           event.setExtendedProp('game', response.data);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
+          console.log(error.request.response);
           info.revert();
         }
       },
