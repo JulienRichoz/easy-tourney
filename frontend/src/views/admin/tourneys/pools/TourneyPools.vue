@@ -48,6 +48,7 @@
             label="Pools:"
             statusKey="poolStatus"
             :statusOptions="poolStatusOptions"
+            v-model="currentStatus"
           />
         </div>
       </div>
@@ -325,7 +326,6 @@
         tourneyId: this.$route.params.tourneyId, // Récupération du tourneyId depuis les params
         pools: [], // Liste des pools
         teams: [], // Liste des équipes du tournoi
-        selectedStatus: this.currentStatus,
         showModal: false,
         showDeleteConfirmation: false,
         showDeleteAllConfirmation: false,
@@ -422,6 +422,19 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.poolStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'poolStatus',
+            value: newStatus,
+          });
+        },
+      },
       isEditable() {
         return this.statuses.poolStatus !== 'completed';
       },

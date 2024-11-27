@@ -199,6 +199,7 @@
             label="Inscriptions:"
             statusKey="registrationStatus"
             :statusOptions="registrationStatusOptions"
+            v-model="currentStatus"
           />
         </div>
       </div>
@@ -540,6 +541,19 @@
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.registrationStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'registrationStatus',
+            value: newStatus,
+          });
+        },
+      },
       isEditable() {
         return this.statuses.registrationStatus !== 'completed';
       },

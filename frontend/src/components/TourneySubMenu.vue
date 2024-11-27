@@ -59,12 +59,13 @@
 
     <!-- PLANNING -->
     <router-link
-      :to="`/admin/tourneys/${tourneyId}/planning/pools`"
+      :to="`/admin/tourneys/${tourneyId}/planning/${currentPlanningStatus}`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{
         active:
           $route.name === 'AdminTourneyPlanningPools' ||
-          $route.name === 'AdminTourneyPlanningGames',
+          $route.name === 'AdminTourneyPlanningGames' ||
+          $route.name === 'AdminTourneyPlanningCompleted',
       }"
     >
       <font-awesome-icon :icon="['fas', 'calendar-alt']" />
@@ -74,6 +75,8 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex';
+
   export default {
     data() {
       return {
@@ -90,6 +93,12 @@
       tourneyId: {
         type: String,
         required: true,
+      },
+    },
+    computed: {
+      ...mapState('tourney', ['statuses']),
+      currentPlanningStatus() {
+        return this.statuses.planningStatus || 'pools'; // Valeur par défaut
       },
     },
   };

@@ -11,6 +11,7 @@ export default {
       fieldAssignmentStatus: 'notStarted',
       sportAssignmentStatus: 'notStarted',
       registrationStatus: 'notStarted',
+      poolStatus: 'notStarted',
       planningStatus: 'notStarted',
     },
   },

@@ -49,6 +49,7 @@
         :tourneyId="tourneyId"
         statusKey="sportAssignmentStatus"
         :statusOptions="sportAssignmentStatusOptions"
+        v-model="currentStatus"
       />
     </div>
 
@@ -150,6 +151,19 @@
       }),
       isEditable() {
         return this.statuses.sportAssignmentStatus !== 'completed';
+      },
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.sportAssignmentStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'sportAssignmentStatus',
+            value: newStatus,
+          });
+        },
       },
     },
 

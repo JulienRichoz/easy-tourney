@@ -384,7 +384,6 @@
 
         showGeneratePlanningConfirmation: false,
         showClearPlanningConfirmation: false,
-        currentStatus: null,
         useUnifiedColors: false,
         colorMap: {},
 
@@ -398,6 +397,18 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+      currentStatus: {
+        get() {
+          return this.statuses.planningStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'planningStatus',
+            value: newStatus,
+          });
+        },
+      },
       totalPages() {
         if (this.showAllTerrains) {
           return 1;

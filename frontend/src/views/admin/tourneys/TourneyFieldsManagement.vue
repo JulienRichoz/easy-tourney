@@ -33,6 +33,7 @@
           :tourneyId="tourneyId"
           statusKey="fieldAssignmentStatus"
           :statusOptions="fieldAssignmentStatusOptions"
+          v-model="currentStatus"
         />
       </div>
 
@@ -216,6 +217,19 @@
       isEditable() {
         // Vérifie si le statut est différent de 'completed'
         return this.statuses.fieldAssignmentStatus !== 'completed';
+      },
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.fieldAssignmentStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'fieldAssignmentStatus',
+            value: newStatus,
+          });
+        },
       },
     },
     methods: {

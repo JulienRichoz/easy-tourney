@@ -10,7 +10,6 @@
     <select
       :id="statusKey"
       v-model="selectedStatus"
-      @change="onStatusChange"
       class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
     >
       <option
@@ -47,11 +46,10 @@
         type: Boolean,
         default: true,
       },
-    },
-    data() {
-      return {
-        selectedStatus: '',
-      };
+      modelValue: {
+        type: String,
+        default: '',
+      },
     },
     computed: {
       currentStatus() {
@@ -64,23 +62,23 @@
         }
         return true;
       },
-    },
-    watch: {
-      currentStatus(newStatus) {
-        this.selectedStatus = newStatus;
+      selectedStatus: {
+        get() {
+          return this.modelValue;
+        },
+        set(value) {
+          this.$emit('update:modelValue', value);
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: this.statusKey,
+            value: value,
+          });
+        },
       },
-    },
-    methods: {
-      onStatusChange() {
-        this.$store.dispatch('tourney/updateStatus', {
-          tourneyId: this.tourneyId,
-          key: this.statusKey,
-          value: this.selectedStatus,
-        });
-      },
-    },
-    mounted() {
-      this.selectedStatus = this.currentStatus;
     },
   };
 </script>
+
+<style scoped>
+  /* Vos styles ici */
+</style>

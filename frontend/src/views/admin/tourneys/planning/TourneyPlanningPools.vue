@@ -435,7 +435,6 @@
         ],
         showGeneratePlanningConfirmation: false,
         showClearPlanningConfirmation: false,
-        currentStatus: null,
         useUnifiedColors: false,
         colorMap: {}, // Pour stocker les couleurs unies par Pool ID
       };
@@ -445,6 +444,18 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+      currentStatus: {
+        get() {
+          return this.statuses.planningStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'planningStatus',
+            value: newStatus,
+          });
+        },
+      },
       totalPages() {
         if (this.showAllTerrains) {
           return 1; // Si tous les terrains sont affichés, une seule "page"
