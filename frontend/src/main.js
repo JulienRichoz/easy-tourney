@@ -9,7 +9,7 @@ import 'vue3-toastify/dist/index.css'; // Importer les styles de vue3-toastify
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import './assets/vue-select-custom.css'; // Import des styles personnalisés pour vue-select
-
+import '@fortawesome/fontawesome-free/css/all.css';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
@@ -43,6 +43,7 @@ import {
   faCopy,
   faBars,
   faUsersSlash,
+  faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
@@ -50,6 +51,7 @@ import './registerServiceWorker';
 
 // Ajouter les icônes supplémentaires
 library.add(
+  faSpinner,
   faUsersSlash,
   faBars,
   faCopy,

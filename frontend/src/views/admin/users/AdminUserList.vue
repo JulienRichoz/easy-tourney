@@ -22,6 +22,15 @@
       @delete-user="handleDeleteUser"
       @user-updated="fetchData"
     />
+    <div v-if="isLoading" class="flex justify-center items-center h-64">
+      <i
+        class="fas fa-spinner fa-spin fa-3x text-light-menuActive dark:text-light-menuActive"
+      ></i>
+      <span
+        class="ml-4 text-light-profileText dark:text-light-profileText text-lg"
+        >Chargement...</span
+      >
+    </div>
 
     <!-- Modale pour éditer un utilisateur -->
     <ModalComponent
@@ -91,6 +100,7 @@
         },
         formErrors: {},
         isFormValid: false,
+        isLoading: false, // État pour le chargement
       };
     },
     async created() {
@@ -102,6 +112,7 @@
        * @returns {Promise<void>}
        */
       async fetchData() {
+        this.isLoading = true; // Début du chargement
         try {
           const [usersResponse, tourneysResponse] = await Promise.all([
             apiService.get('/users/all/details'),
@@ -117,6 +128,8 @@
           toast.error(
             'Une erreur est survenue lors de la récupération des données.'
           );
+        } finally {
+          this.isLoading = false; // Fin du chargement
         }
       },
       /**
