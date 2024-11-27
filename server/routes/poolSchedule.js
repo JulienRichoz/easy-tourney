@@ -24,9 +24,7 @@ module.exports = router;
 
 /**
  * TODO:
- * 1) AJUSTER ALGORITHME GENERATION POOL - DIFFERENCES DE SESSIONS :( (osef?)
- * 2) Verifier si toute l'implémentation est correcte en créant un nouveau tournoi + test intégrations
- * 3) Implémentation et reflexion page Games (vue)
+ * 1) AJUSTER ALGORITHME GENERATION GAMES -Tourney id 2, grosses erreurs dans la generation des games ! 
  * REFLECHIR a la vue planning pool <-> game => final
  * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
  */
