@@ -636,9 +636,20 @@
        * @param newStatus
        */
       currentStatus(newStatus) {
-        if (newStatus === 'games') {
+        if (newStatus === 'pools') {
           this.$router.push({
-            name: 'TourneyPlanningGames',
+            name: 'AdminTourneyPlanningPools',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'games') {
+          this.$router.push({
+            name: 'AdminTourneyPlanningGames',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'completed') {
+          // Rediriger vers la vue appropriée pour 'Terminé'
+          this.$router.push({
+            name: 'AdminTourneyPlanningCompleted',
             params: { tourneyId: this.tourneyId },
           });
         }

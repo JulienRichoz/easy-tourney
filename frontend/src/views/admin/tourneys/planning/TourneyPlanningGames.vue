@@ -227,6 +227,7 @@
           :fields="createFormFields"
           @form-submit="saveNewEvent"
           @cancel="showCreateModal = false"
+          :customValidation="validateForm"
         />
       </template>
     </ModalComponent>
@@ -243,6 +244,7 @@
           :fields="eventFormFields"
           @form-submit="saveEventEdits"
           @cancel="showEditModal = false"
+          :customValidation="validateForm"
         />
       </template>
     </ModalComponent>
@@ -429,6 +431,9 @@
         const end = start + this.terrainsPerPage;
         return this.filteredFields.slice(start, end);
       },
+      /**
+       *
+       */
       editTeamOptions() {
         if (this.eventToEdit && this.eventToEdit.extendedProps.game.pool) {
           const poolId = this.eventToEdit.extendedProps.game.pool.id;
@@ -749,7 +754,18 @@
       currentStatus(newStatus) {
         if (newStatus === 'pools') {
           this.$router.push({
-            name: 'TourneyPlanningPools',
+            name: 'AdminTourneyPlanningPools',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'games') {
+          this.$router.push({
+            name: 'AdminTourneyPlanningGames',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'completed') {
+          // Rediriger vers la vue appropriée pour 'Terminé'
+          this.$router.push({
+            name: 'AdminTourneyPlanningCompleted',
             params: { tourneyId: this.tourneyId },
           });
         }
@@ -954,10 +970,9 @@
         const poolSchedule = this.findPoolScheduleForSelection(selectionInfo);
 
         if (poolSchedule) {
-          // If a poolSchedule is found, set poolScheduleId
+          // Si un poolSchedule est trouvé, remplir les données en conséquence
           this.createFormData = {
             startTime: this.formatDateTime(selectionInfo.start),
-            // Calculate end time based on gameDuration
             endTime: this.calculateEndTime(
               selectionInfo.start,
               this.scheduleConfig.gameDuration
@@ -968,17 +983,19 @@
             fieldId: null,
             sportId: null,
           };
-        } // Si aucun poolSchedule n'est trouvé, permettre la création sans poolScheduleId
-        (this.createFormData = {
-          startTime: this.formatDateTime(selectionInfo.start),
-          endTime: this.formatDateTime(selectionInfo.end),
-          poolScheduleId: null,
-          fieldId: selectionInfo.resource.id, // Champ de terrain sélectionné
-          sportId: null, // Vous pouvez éventuellement demander le sport
-          teamAId: null,
-          teamBId: null,
-        }),
-          (this.showCreateModal = true);
+        } else {
+          // Si aucun poolSchedule n'est trouvé, permettre la création sans poolScheduleId
+          this.createFormData = {
+            startTime: this.formatDateTime(selectionInfo.start),
+            endTime: this.formatDateTime(selectionInfo.end),
+            poolScheduleId: null,
+            fieldId: selectionInfo.resource.id,
+            sportId: null,
+            teamAId: null,
+            teamBId: null,
+          };
+        }
+        this.showCreateModal = true;
       },
       /**
        * Finds the pool schedule for a given selection.
@@ -1064,15 +1081,15 @@
             teamBId: this.createFormData.teamBId,
             startTime: this.createFormData.startTime.replace('T', ' ') + ':00',
             endTime: this.createFormData.endTime.replace('T', ' ') + ':00',
-            date: this.tourney.dateTourney,
           };
 
           if (this.createFormData.poolScheduleId) {
             data.poolScheduleId = this.createFormData.poolScheduleId;
           } else {
-            data.fieldId = this.createFormData.fieldId;
+            data.fieldId = Number(this.createFormData.fieldId);
             data.sportId = this.createFormData.sportId;
           }
+          console.log('Données envoyées au serveur:', data);
 
           const response = await apiService.post(
             `/tourneys/${this.tourneyId}/games`,
@@ -1531,8 +1548,31 @@
        * Validates the schedule configuration form.
        * @returns {Object} - Form errors.
        */
-      validateForm() {
+      validateForm(formData) {
         const errors = {};
+
+        if (!formData.teamAId) {
+          errors.teamAId = "Veuillez sélectionner l'équipe A.";
+        }
+        if (!formData.teamBId) {
+          errors.teamBId = "Veuillez sélectionner l'équipe B.";
+        }
+        if (
+          formData.teamAId &&
+          formData.teamBId &&
+          formData.teamAId === formData.teamBId
+        ) {
+          errors.teamBId = "L'équipe B doit être différente de l'équipe A.";
+        }
+
+        if (!formData.poolScheduleId) {
+          if (!formData.fieldId) {
+            errors.fieldId = 'Veuillez sélectionner un terrain.';
+          }
+          if (!formData.sportId) {
+            errors.sportId = 'Veuillez sélectionner un sport.';
+          }
+        }
 
         const schedule = this.scheduleConfig;
         const {
