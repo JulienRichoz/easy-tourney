@@ -59,79 +59,124 @@ exports.createGame = async (req, res) => {
         .json({ message: 'Les équipes doivent être de type "player".' });
     }
 
+    if (teamAId === teamBId) {
+      return res.status(400).json({
+        message: "L'équipe A et l'équipe B doivent être différentes.",
+      });
+    }
+
     const tourneyType = tourneyTypes[tourney.tourneyType];
     let poolId = null;
 
     // Si le tournoi utilise des pools
     if (tourneyType && tourneyType.requiresPool) {
-      if (!poolScheduleId) {
+      // UI Experience: A remettre si on veut vraiment bloquer tout ajout en dehors des
+      /* if (!poolScheduleId) {
         return res.status(400).json({
           message: "'poolScheduleId' est requis pour ce type de tournoi.",
         });
-      }
+      }*/
+      if (poolScheduleId) {
+        const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
+        if (!poolSchedule) {
+          return res
+            .status(404)
+            .json({ message: 'PoolSchedule non trouvée.' });
+        }
 
-      const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
-      if (!poolSchedule) {
-        return res
-          .status(404)
-          .json({ message: 'PoolSchedule non trouvée.' });
-      }
+        poolId = poolSchedule.poolId;
 
-      poolId = poolSchedule.poolId;
+        // Vérifier que les équipes appartiennent à la même Pool
+        if (
+          teamA.poolId !== poolId ||
+          teamB.poolId !== poolId ||
+          teamA.poolId !== teamB.poolId
+        ) {
+          return res.status(400).json({
+            message: 'Les équipes doivent appartenir à la même Pool.',
+          });
+        }
 
-      // Vérifier que les équipes appartiennent à la même Pool
-      if (
-        teamA.poolId !== poolId ||
-        teamB.poolId !== poolId ||
-        teamA.poolId !== teamB.poolId
-      ) {
-        return res.status(400).json({
-          message: 'Les équipes doivent appartenir à la même Pool.',
+        // Si 'fieldId' ou 'sportId' ne sont pas fournis, utiliser ceux de la PoolSchedule
+        const finalFieldId = fieldId || poolSchedule.fieldId;
+        const finalSportId = sportId || poolSchedule.sportId;
+
+        // Vérifier que le terrain existe
+        const field = await Field.findByPk(finalFieldId);
+        if (!field) {
+          return res.status(404).json({ message: 'Terrain non trouvé.' });
+        }
+
+        // Vérifier que le sport existe
+        const sport = await Sport.findByPk(finalSportId);
+        if (!sport) {
+          return res.status(404).json({ message: 'Sport non trouvé.' });
+        }
+
+        // Créer le match
+        const game = await Game.create({
+          tourneyId,
+          poolId,
+          poolScheduleId,
+          teamAId,
+          teamBId,
+          fieldId: finalFieldId,
+          sportId: finalSportId,
+          startTime,
+          endTime,
+          assistantId,
+          status: 'scheduled',
         });
+
+        const newGame = await Game.findByPk(game.id, {
+          include: [
+            { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+            { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+            { model: Field, as: 'field', attributes: ['id', 'name'] },
+            { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+            { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+          ],
+        });
+
+        res.status(201).json(newGame);
+      } else {
+        // Permettre la création de matchs sans 'poolScheduleId' pour ce type de tournoi
+        // Vérifiez que 'fieldId' et 'sportId' sont fournis
+        if (!fieldId || !sportId) {
+          return res.status(400).json({
+            message: "'fieldId' et 'sportId' sont requis pour ce type de tournoi.",
+          });
+        }
+
+        // Vérifier que le terrain existe
+        const field = await Field.findByPk(fieldId);
+        if (!field) {
+          return res.status(404).json({ message: 'Terrain non trouvé.' });
+        }
+
+        // Vérifier que le sport existe
+        const sport = await Sport.findByPk(sportId);
+        if (!sport) {
+          return res.status(404).json({ message: 'Sport non trouvé.' });
+        }
+
+        // Créer le match sans 'poolId' et 'poolScheduleId'
+        const game = await Game.create({
+          tourneyId,
+          poolId: null,
+          poolScheduleId: null,
+          teamAId,
+          teamBId,
+          fieldId,
+          sportId,
+          startTime,
+          endTime,
+          assistantId,
+          status: 'scheduled',
+        });
+
+        res.status(201).json(game);
       }
-
-      // Si 'fieldId' ou 'sportId' ne sont pas fournis, utiliser ceux de la PoolSchedule
-      const finalFieldId = fieldId || poolSchedule.fieldId;
-      const finalSportId = sportId || poolSchedule.sportId;
-
-      // Vérifier que le terrain existe
-      const field = await Field.findByPk(finalFieldId);
-      if (!field) {
-        return res.status(404).json({ message: 'Terrain non trouvé.' });
-      }
-
-      // Vérifier que le sport existe
-      const sport = await Sport.findByPk(finalSportId);
-      if (!sport) {
-        return res.status(404).json({ message: 'Sport non trouvé.' });
-      }
-
-      // Créer le match
-      const game = await Game.create({
-        tourneyId,
-        poolId,
-        poolScheduleId,
-        teamAId,
-        teamBId,
-        fieldId: finalFieldId,
-        sportId: finalSportId,
-        startTime,
-        endTime,
-        assistantId,
-        status: 'scheduled',
-      });
-
-      const newGame = await Game.findByPk(game.id, {
-        include: [
-          { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
-          { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
-          { model: Field, as: 'field', attributes: ['id', 'name'] },
-          { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
-          { model: Pool, as: 'pool', attributes: ['id', 'name'] },
-        ],
-      });
-
-      res.status(201).json(newGame);
     } else {
       // Pour les tournois sans pools
 
@@ -375,6 +420,12 @@ exports.updateGame = async (req, res) => {
 
     if (!game) {
       return res.status(404).json({ message: 'Match non trouvé.' });
+    }
+
+    if (updates.teamAId && updates.teamBId && updates.teamAId === updates.teamBId) {
+      return res.status(400).json({
+        message: "L'équipe A et l'équipe B doivent être différentes.",
+      });
     }
 
     // Mettre à jour les champs du match
