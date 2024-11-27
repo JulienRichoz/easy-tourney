@@ -76,6 +76,7 @@ exports.createGame = async (req, res) => {
           message: "'poolScheduleId' est requis pour ce type de tournoi.",
         });
       }*/
+      let game;
       if (poolScheduleId) {
         const poolSchedule = await PoolSchedule.findByPk(poolScheduleId);
         if (!poolSchedule) {
@@ -161,7 +162,7 @@ exports.createGame = async (req, res) => {
         }
 
         // Créer le match sans 'poolId' et 'poolScheduleId'
-        const game = await Game.create({
+        game = await Game.create({
           tourneyId,
           poolId: null,
           poolScheduleId: null,
@@ -175,7 +176,18 @@ exports.createGame = async (req, res) => {
           status: 'scheduled',
         });
 
-        res.status(201).json(game);
+        // Fetch the new game with associations
+        const newGame = await Game.findByPk(game.id, {
+          include: [
+            { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
+            { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+            { model: Field, as: 'field', attributes: ['id', 'name'] },
+            { model: Sport, as: 'sport', attributes: ['id', 'name', 'color'] },
+            { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+          ],
+        });
+
+        res.status(201).json(newGame);
       }
     } else {
       // Pour les tournois sans pools
@@ -433,19 +445,25 @@ exports.updateGame = async (req, res) => {
       const newPoolScheduleId = updates.poolScheduleId;
 
       if (newPoolScheduleId) {
-        // Vérifier que le nouveau PoolSchedule existe
         const newPoolSchedule = await PoolSchedule.findByPk(newPoolScheduleId);
         if (!newPoolSchedule) {
           return res.status(404).json({ message: 'PoolSchedule non trouvée.' });
         }
 
-        // Vérifier que le nouveau PoolSchedule appartient à la même Pool
         if (game.poolId && newPoolSchedule.poolId !== game.poolId) {
           return res.status(400).json({
             message: 'Vous ne pouvez déplacer le match que dans la même Pool ou hors Pool.',
           });
         }
-      } else {
+
+        // Check if sports match
+        if (game.sportId !== newPoolSchedule.sportId) {
+          return res.status(400).json({
+            message: 'Vous ne pouvez pas déplacer le match vers un PoolSchedule avec un sport différent.',
+          });
+        }
+      } /*else {
+        // UI Experience: A remettre si on veut vraiment bloquer tout ajout en dehors des Pools
         // Si poolScheduleId est mis à null, s'assurer que le tournoi permet des matchs sans Pool
         const tourney = await Tourney.findByPk(game.tourneyId);
         const tourneyType = tourneyTypes[tourney.tourneyType];
@@ -454,8 +472,8 @@ exports.updateGame = async (req, res) => {
           return res.status(400).json({
             message: 'Ce tournoi nécessite que les matchs appartiennent à une Pool.',
           });
-        }
-      }
+        }*/
+      // }
     }
 
     // Si fieldId est mis à jour, vérifier la cohérence avec la Pool actuelle
@@ -509,6 +527,9 @@ exports.updateGame = async (req, res) => {
     res.status(200).json(updatedGame);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du match :', error);
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ message: 'Validation échouée.', errors: error.errors });
+    }
     res
       .status(500)
       .json({ message: 'Erreur serveur.', error: error.message });

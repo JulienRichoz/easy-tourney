@@ -389,7 +389,15 @@
 
         // For creating new games
         showCreateModal: false,
-        createFormData: {},
+        createFormData: {
+          startTime: '',
+          endTime: '',
+          poolScheduleId: null,
+          fieldId: '',
+          sportId: '',
+          teamAId: null,
+          teamBId: null,
+        },
       };
     },
     computed: {
@@ -565,12 +573,21 @@
           if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
             return;
           }
+          // Check if game.field is defined
+          if (!game.field) {
+            console.warn(`Game with ID ${game.id} has no field assigned.`);
+            return;
+          }
+          // Check if game.teamA and game.teamB are defined
+          const teamATeamName = game.teamA?.teamName || 'Équipe A';
+          const teamBTeamName = game.teamB?.teamName || 'Équipe B';
+
           events.push({
             id: game.id.toString(),
-            resourceId: game.field.id.toString(), // Assure que le terrain est défini
-            title: `${game.teamA.teamName} vs ${game.teamB.teamName}`,
-            start: game.startTime,
-            end: game.endTime,
+            resourceId: game.field.id.toString(),
+            title: `${teamATeamName} vs ${teamBTeamName}`,
+            start: new Date(game.startTime),
+            end: new Date(game.endTime),
             backgroundColor: this.useUnifiedColors
               ? this.generateUniqueColor(game.pool?.id)
               : game.sport?.color || '#3B82F6',
@@ -714,7 +731,7 @@
           },
         ];
 
-        // Ajouter les champs 'fieldId' et 'sportId' si 'poolScheduleId' n'est pas défini
+        // Ajout conditionnel de 'fieldId' et 'sportId' si 'poolScheduleId' est null
         if (!this.createFormData.poolScheduleId) {
           fields.push(
             {
@@ -1027,7 +1044,10 @@
           // Si aucun poolSchedule n'est trouvé, permettre la création sans poolScheduleId
           this.createFormData = {
             startTime: this.formatDateTime(selectionInfo.start),
-            endTime: this.formatDateTime(selectionInfo.end),
+            endTime: this.calculateEndTime(
+              selectionInfo.start,
+              this.scheduleConfig.gameDuration
+            ),
             poolScheduleId: null,
             fieldId: selectionInfo.resource.id,
             sportId: null,
@@ -1136,7 +1156,29 @@
             data
           );
 
-          this.games.push(response.data);
+          const newGame = response.data;
+
+          // Manually assign the field to the new game if it's not included in the response
+          if (!newGame.field && data.fieldId) {
+            const field = this.fields.find((f) => f.id === data.fieldId);
+            if (field) {
+              newGame.field = field;
+            } else {
+              console.warn(`Field with ID ${data.fieldId} not found.`);
+            }
+          }
+
+          // Similarly, assign the sport if it's not included
+          if (!newGame.sport && data.sportId) {
+            const sport = this.sports.find((s) => s.id === data.sportId);
+            if (sport) {
+              newGame.sport = sport;
+            } else {
+              console.warn(`Sport with ID ${data.sportId} not found.`);
+            }
+          }
+
+          this.games.push(newGame);
           this.refreshCalendarEvents();
           this.showCreateModal = false;
         } catch (error) {
@@ -1146,6 +1188,30 @@
       },
 
       /**
+       * Helper function to format time from a Date object.
+       * @param startTime
+       * @param endTime
+       * @param fieldId
+       */
+      findPoolScheduleAtPosition(startTime, endTime, fieldId) {
+        for (const pool of this.pools) {
+          for (const schedule of pool.schedules) {
+            if (schedule.fieldId.toString() === fieldId) {
+              const scheduleStart = new Date(
+                `${schedule.date}T${schedule.startTime}`
+              );
+              const scheduleEnd = new Date(
+                `${schedule.date}T${schedule.endTime}`
+              );
+              if (startTime >= scheduleStart && endTime <= scheduleEnd) {
+                return schedule;
+              }
+            }
+          }
+        }
+        return null;
+      },
+      /**
        * Handles the drag and drop of events on the calendar.
        * Allows moving within the same pool schedule.
        * @param {Object} info - Event drop info from FullCalendar.
@@ -1153,62 +1219,76 @@
       async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
-          console.log('Not editable');
           return;
         }
 
         const event = info.event;
+        const eventId = event.id;
+        const newFieldId = event.getResources()[0]?.id;
+        const newStart = event.start;
+        const newEnd = event.end;
+        const currentGame = event.extendedProps.game;
+
         try {
-          const eventId = event.id;
-          const newFieldId = event.getResources()[0]?.id;
+          const poolScheduleAtNewPosition = this.findPoolScheduleAtPosition(
+            newStart,
+            newEnd,
+            newFieldId
+          );
 
-          // Trouver le poolSchedule correspondant
-          const poolSchedule = this.findPoolScheduleForEvent(event);
+          let data = {
+            startTime: this.formatTime(newStart),
+            endTime: this.formatTime(newEnd),
+            fieldId: newFieldId,
+            poolScheduleId: currentGame.poolScheduleId || null,
+          };
 
-          if (!poolSchedule || poolSchedule.fieldId.toString() !== newFieldId) {
-            // Revert l'opération si l'événement est déplacé en dehors du poolSchedule
-            toast.warning(
-              'Vous ne pouvez pas déplacer ce match en dehors de son pool schedule.'
-            );
-            info.revert();
-            return;
-          }
-
-          if (poolSchedule) {
-            // Vérifier que le poolSchedule appartient à la même Pool que le match actuel
-            const currentGame = event.extendedProps.game;
-            console.log('Current pool:', currentGame.pool.id);
-            console.log('poolSchedule:', poolSchedule);
+          if (currentGame.poolScheduleId) {
+            // Game has a poolScheduleId
             if (
-              currentGame.pool.id &&
-              poolSchedule.poolId !== currentGame.pool.id
+              !poolScheduleAtNewPosition ||
+              poolScheduleAtNewPosition.id !== currentGame.poolScheduleId
             ) {
               toast.warning(
-                'Vous ne pouvez pas déplacer ce match dans une autre Pool.'
+                'Vous ne pouvez pas déplacer ce match en dehors de son pool schedule.'
               );
               info.revert();
               return;
             }
-          }
 
-          const data = {
-            startTime: this.formatTime(event.start),
-            endTime: this.formatTime(event.end),
-            date: this.tourney.dateTourney,
-            fieldId: newFieldId,
-            poolScheduleId: poolSchedule.id,
-          };
-          console.log(
-            "Données envoyées au serveur lors du déplacement de l'événement :",
-            data
-          );
+            if (poolScheduleAtNewPosition.id !== currentGame.poolScheduleId) {
+              // Check if sports match
+              if (poolScheduleAtNewPosition.sportId !== currentGame.sport.id) {
+                toast.warning(
+                  'Vous ne pouvez pas déplacer ce match vers un pool schedule avec un sport différent.'
+                );
+                info.revert();
+                return;
+              }
+              // Update poolScheduleId
+              data.poolScheduleId = poolScheduleAtNewPosition.id;
+            }
+            // Update data
+            data.poolScheduleId = currentGame.poolScheduleId;
+          } else {
+            // Game does not have a poolScheduleId
+            if (poolScheduleAtNewPosition) {
+              toast.warning(
+                'Vous ne pouvez pas déplacer ce match dans un créneau de pool.'
+              );
+              info.revert();
+              return;
+            }
+            // Ensure poolScheduleId remains null
+            data.poolScheduleId = null;
+          }
 
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${eventId}`,
             data
           );
 
-          // Met à jour localement
+          // Update the game locally
           const index = this.games.findIndex(
             (g) => g.id.toString() === event.id
           );
@@ -1216,11 +1296,10 @@
             this.games[index] = response.data;
           }
 
-          // Met à jour les propriétés de l'événement
+          // Update event properties
           event.setExtendedProp('game', response.data);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
-          console.log(error.request.response);
           info.revert();
         }
       },
@@ -1336,7 +1415,6 @@
             startTime: this.eventFormData.startTime.replace('T', ' ') + ':00',
             endTime: this.eventFormData.endTime.replace('T', ' ') + ':00',
             fieldId: this.eventFormData.fieldId,
-            date: this.tourney.dateTourney,
           };
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/${this.eventToEdit.id}`,
@@ -1610,7 +1688,20 @@
        * Validates the schedule configuration form.
        * @returns {Object} - Form errors.
        */
-      validateForm(formData) {
+      validateForm() {
+        let formData;
+        /**
+         * Déterminer quel formulaire est actuellement affiché.
+         */
+        if (this.showCreateModal) {
+          formData = this.createFormData;
+        } else if (this.showEditModal) {
+          formData = this.eventFormData;
+        } else {
+          formData = {};
+        }
+
+        console.log('Form data:', formData);
         const errors = {};
 
         if (!formData.teamAId) {
@@ -1627,6 +1718,9 @@
           errors.teamBId = "L'équipe B doit être différente de l'équipe A.";
         }
 
+        /**
+         * Si 'poolScheduleId' est défini, 'fieldId' et 'sportId' ne sont pas nécessaires. (Clique sur un poolSchedule)
+         */
         if (!formData.poolScheduleId) {
           if (!formData.fieldId) {
             errors.fieldId = 'Veuillez sélectionner un terrain.';
