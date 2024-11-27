@@ -105,12 +105,12 @@
         <v-select
           :options="poolOptions"
           v-model="selectedPoolId"
-          placeholder="Toutes les Pools"
+          placeholder="All Pools"
           :clearable="true"
           :searchable="true"
           label="name"
           :reduce="(pool) => pool.id"
-          class="w-auto flex-shrink-0 whitespace-nowrap"
+          class="w-36 flex-shrink-0"
         />
 
         <!-- Color Toggle -->
@@ -161,7 +161,7 @@
             "
             class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            {{ showAllTerrains ? 'Réduire' : 'Afficher Tous les Terrains' }}
+            {{ showAllTerrains ? 'Reduce' : 'Show All Fields' }}
           </button>
         </div>
       </div>
@@ -529,7 +529,7 @@
         };
       },
       poolOptions() {
-        return [{ id: null, name: 'Toutes les Pools' }, ...this.pools];
+        return [{ id: null, name: 'All Pools' }, ...this.pools];
       },
       teamOptions() {
         return this.teams.map((team) => ({
@@ -1691,13 +1691,20 @@
        */
       validateForm() {
         let formData;
+        let formType = '';
+
         /**
          * Déterminer quel formulaire est actuellement affiché.
          */
         if (this.showCreateModal) {
           formData = this.createFormData;
+          formType = 'create';
         } else if (this.showEditModal) {
           formData = this.eventFormData;
+          formType = 'edit';
+        } else if (this.showScheduleConfigModal) {
+          formData = this.scheduleConfig;
+          formType = 'schedule';
         } else {
           formData = {};
         }
@@ -1705,111 +1712,113 @@
         console.log('Form data:', formData);
         const errors = {};
 
-        if (!formData.teamAId) {
-          errors.teamAId = "Veuillez sélectionner l'équipe A.";
-        }
-        if (!formData.teamBId) {
-          errors.teamBId = "Veuillez sélectionner l'équipe B.";
-        }
-        if (
-          formData.teamAId &&
-          formData.teamBId &&
-          formData.teamAId === formData.teamBId
-        ) {
-          errors.teamBId = "L'équipe B doit être différente de l'équipe A.";
-        }
-
-        /**
-         * Si 'poolScheduleId' est défini, 'fieldId' et 'sportId' ne sont pas nécessaires. (Clique sur un poolSchedule)
-         */
-        if (!formData.poolScheduleId) {
-          if (!formData.fieldId) {
-            errors.fieldId = 'Veuillez sélectionner un terrain.';
+        if (formType === 'create' || formType === 'edit') {
+          // Validation pour les formulaires de création et de modification des matchs
+          if (!formData.teamAId) {
+            errors.teamAId = "Veuillez sélectionner l'équipe A.";
           }
-          if (!formData.sportId) {
-            errors.sportId = 'Veuillez sélectionner un sport.';
+          if (!formData.teamBId) {
+            errors.teamBId = "Veuillez sélectionner l'équipe B.";
+          }
+          if (
+            formData.teamAId &&
+            formData.teamBId &&
+            formData.teamAId === formData.teamBId
+          ) {
+            errors.teamBId = "L'équipe B doit être différente de l'équipe A.";
+          }
+
+          if (!formData.poolScheduleId) {
+            if (!formData.fieldId) {
+              errors.fieldId = 'Veuillez sélectionner un terrain.';
+            }
+            if (!formData.sportId) {
+              errors.sportId = 'Veuillez sélectionner un sport.';
+            }
           }
         }
 
-        const schedule = this.scheduleConfig;
-        const {
-          startTime,
-          endTime,
-          introStart,
-          introEnd,
-          lunchStart,
-          lunchEnd,
-          outroStart,
-          outroEnd,
-        } = schedule;
+        if (formType === 'schedule') {
+          // Validation pour le formulaire de configuration des horaires
+          const {
+            startTime,
+            endTime,
+            introStart,
+            introEnd,
+            lunchStart,
+            lunchEnd,
+            outroStart,
+            outroEnd,
+          } = formData;
 
-        const timeStringToNumber = (timeStr) => {
-          const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-          return hours * 3600 + minutes * 60 + (seconds || 0);
-        };
+          const timeStringToNumber = (timeStr) => {
+            const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+            return hours * 3600 + minutes * 60 + (seconds || 0);
+          };
 
-        const startTimeNum = timeStringToNumber(startTime);
-        const endTimeNum = timeStringToNumber(endTime);
+          const startTimeNum = timeStringToNumber(startTime);
+          const endTimeNum = timeStringToNumber(endTime);
 
-        if (startTimeNum >= endTimeNum) {
-          errors.startTime =
-            "L'heure de début doit être inférieure à l'heure de fin.";
-          errors.endTime =
-            "L'heure de fin doit être supérieure à l'heure de début.";
-        }
+          if (startTimeNum >= endTimeNum) {
+            errors.startTime =
+              "L'heure de début doit être inférieure à l'heure de fin.";
+            errors.endTime =
+              "L'heure de fin doit être supérieure à l'heure de début.";
+          }
 
-        const timePairs = [
-          {
-            start: introStart,
-            end: introEnd,
-            label: 'Introduction',
-            startField: 'introStart',
-            endField: 'introEnd',
-          },
-          {
-            start: lunchStart,
-            end: lunchEnd,
-            label: 'Déjeuner',
-            startField: 'lunchStart',
-            endField: 'lunchEnd',
-          },
-          {
-            start: outroStart,
-            end: outroEnd,
-            label: 'Conclusion',
-            startField: 'outroStart',
-            endField: 'outroEnd',
-          },
-        ];
+          const timePairs = [
+            {
+              start: introStart,
+              end: introEnd,
+              label: 'Introduction',
+              startField: 'introStart',
+              endField: 'introEnd',
+            },
+            {
+              start: lunchStart,
+              end: lunchEnd,
+              label: 'Déjeuner',
+              startField: 'lunchStart',
+              endField: 'lunchEnd',
+            },
+            {
+              start: outroStart,
+              end: outroEnd,
+              label: 'Conclusion',
+              startField: 'outroStart',
+              endField: 'outroEnd',
+            },
+          ];
 
-        for (const pair of timePairs) {
-          if (pair.start && pair.end) {
-            const pairStartNum = timeStringToNumber(pair.start);
-            const pairEndNum = timeStringToNumber(pair.end);
+          for (const pair of timePairs) {
+            if (pair.start && pair.end) {
+              const pairStartNum = timeStringToNumber(pair.start);
+              const pairEndNum = timeStringToNumber(pair.end);
 
-            if (pairStartNum >= pairEndNum) {
+              if (pairStartNum >= pairEndNum) {
+                errors[
+                  pair.startField
+                ] = `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
+                errors[
+                  pair.endField
+                ] = `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
+              }
+              if (pairStartNum < startTimeNum || pairEndNum > endTimeNum) {
+                errors[
+                  pair.startField
+                ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+                errors[
+                  pair.endField
+                ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
+              }
+            } else if ((pair.start && !pair.end) || (!pair.start && pair.end)) {
               errors[
                 pair.startField
-              ] = `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`;
+              ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
               errors[
                 pair.endField
-              ] = `L'heure de fin doit être supérieure à l'heure de début pour la section ${pair.label}.`;
+              ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
             }
-            if (pairStartNum < startTimeNum || pairEndNum > endTimeNum) {
-              errors[
-                pair.startField
-              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
-              errors[
-                pair.endField
-              ] = `Les heures de ${pair.label} doivent être comprises entre le début (${startTime}) et la fin (${endTime}) du planning global.`;
-            }
-          } else if ((pair.start && !pair.end) || (!pair.start && pair.end)) {
-            errors[
-              pair.startField
-            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
-            errors[
-              pair.endField
-            ] = `Veuillez fournir à la fois l'heure de début et de fin pour la section ${pair.label}.`;
           }
         }
 

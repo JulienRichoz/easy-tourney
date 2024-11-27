@@ -1,7 +1,7 @@
 <!-- CustomRoundRobinPoolPlanningStrategy.vue -->
 <template>
   <div>
-    <p class="mb-4 text-gray-600">
+    <p class="mb-4">
       <span class="text-red-500 dark:text-red-600 font-bold">
         <strong>Attention :</strong> Le planning des pools existantes sera
         supprimé et remplacé.
