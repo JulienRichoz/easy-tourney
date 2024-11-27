@@ -126,13 +126,13 @@
         <!-- Bouton pour peupler les pools avec les équipes non assignées -->
         <ButtonComponent
           v-if="isEditable && unassignedTeams.length > 0"
-          @click="populatePoolsWithUnassignedTeams"
+          @click="openConfirmationModal"
           variant="algo"
           fontAwesomeIcon="users"
           class="ml-2"
           :disabled="allPoolsComplete || unassignedTeams.length === 0"
         >
-          <span class="hidden sm:inline">Peupler Pools manquantes</span>
+          <span class="hidden sm:inline">Peupler Pools Auto.</span>
         </ButtonComponent>
         <!-- Bouton pour retirer toutes les équipes des pools -->
         <ButtonComponent
@@ -250,6 +250,15 @@
         </template>
       </ModalComponent>
 
+      <!-- Modale de confirmation pour peupler les pools avec les équipes non assignées -->
+      <ConfirmationModal
+        :isVisible="showConfirmationModal"
+        title="Confirmation de Peuplement"
+        message="Êtes-vous sûr de vouloir peupler automatiquement les pools avec les équipes non assignées ?"
+        @confirm="populatePoolsWithUnassignedTeams"
+        @cancel="closeConfirmationModal"
+      />
+
       <!-- Modale de confirmation pour retirer toutes les équipes des pools -->
       <DeleteConfirmationModal
         :isVisible="showRemoveTeamsConfirmation"
@@ -306,6 +315,7 @@
   import { toast } from 'vue3-toastify';
   import FilterComponent from '@/components/FilterComponent.vue';
   import StrategyPoolGeneratorComponent from '@/components/StrategyPattern/Pool/StrategyPoolGeneratorComponent.vue';
+  import ConfirmationModal from '@/components/ConfirmationModal.vue';
 
   export default {
     components: {
@@ -320,6 +330,7 @@
       StatusSelectorComponent,
       FilterComponent,
       StrategyPoolGeneratorComponent,
+      ConfirmationModal,
     },
     data() {
       return {
@@ -327,6 +338,7 @@
         pools: [], // Liste des pools
         teams: [], // Liste des équipes du tournoi
         showModal: false,
+        showConfirmationModal: false,
         showDeleteConfirmation: false,
         showDeleteAllConfirmation: false,
         showPoolSetupModal: false,
@@ -531,7 +543,7 @@
             id: 3,
             type: 'warning',
             title: 'Nombre de pools excède les terrains disponibles',
-            description: `${this.pools.length} Pools pour ${this.availableFields} terrains. Risque de temps d'attente élevée pour les joueurs.`,
+            description: ` ${this.pools.length} Pools pour ${this.availableFields} terrains. Risque de temps d'attente élevée pour les joueurs.`,
             recommendation:
               'Veuillez ajouter des terrains pour garantir un tournus fluide.',
           });
@@ -542,9 +554,18 @@
             id: 4,
             type: 'info',
             title: 'Terrains disponibles',
-            description: `Vous avez plus de terrains disponibles (${this.availableFields}) que le nombre maximum de pools (${this.tourneySetup.maxNumberOfPools}).`,
+            description: ` Vous avez plus de terrains disponibles (${this.availableFields}) que le nombre maximum de pools (${this.tourneySetup.maxNumberOfPools}).`,
             recommendation:
               'Vous pouvez augmenter le nombre de pools pour optimiser l’utilisation des terrains.',
+          });
+        }
+
+        if (this.pools.length < this.availableFields) {
+          messages.push({
+            id: 6,
+            type: 'info',
+            title: 'Nombre de Pools recommandés',
+            description: ` Nous vous recommandons de créer autant de pools que de terrains disponibles (${this.availableFields}).`,
           });
         }
 
@@ -607,8 +628,15 @@
           toast.error('Erreur lors de la génération des pools manquantes.');
         }
       },
+      openConfirmationModal() {
+        this.showConfirmationModal = true; // Affiche le modal
+      },
+      closeConfirmationModal() {
+        this.showConfirmationModal = false; // Cache le modal
+      },
 
       async populatePoolsWithUnassignedTeams() {
+        this.showConfirmationModal = false; // Cache le modal
         try {
           const response = await apiService.post(
             `/tourneys/${this.tourneyId}/pools/populate-missing`
