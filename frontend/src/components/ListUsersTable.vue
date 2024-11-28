@@ -709,7 +709,7 @@
        * @param {Number} userId - ID de l'utilisateur.
        */
       navigateToEdit(userId) {
-        this.$router.push(`/users/${userId}`);
+        this.$router.push(`/admin/users/${userId}`);
       },
 
       validateAssignments() {
