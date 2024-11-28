@@ -68,9 +68,9 @@
         switch (this.tourneyType) {
           case 'customRoundRobin':
             return 'CustomRoundRobinStrategy';
-          // Ajoutez d'autres cas pour chaque tourneyType
+          // Ajouter d'autres cas pour chaque tourneyType
           default:
-            return 'CustomRoundRobinStrategy'; // Valeur par défaut
+            return 'CustomRoundRobinStrategy';
         }
       },
     },

@@ -53,19 +53,6 @@
             <span class="md:hidden">Conf.</span>
           </ButtonComponent>
 
-          <!-- Bouton pour effacer le planning des matchs -->
-          <ButtonComponent
-            v-if="hasGames && isEditable"
-            fontAwesomeIcon="trash"
-            @click="confirmClearPlanning"
-            variant="danger"
-            :disabled="!games.length"
-            class="w-auto"
-          >
-            <span class="hidden md:inline">Reset Matchs</span>
-            <span class="md:hidden">Del</span>
-          </ButtonComponent>
-
           <!-- Bouton pour générer le planning des matchs -->
           <ButtonComponent
             v-if="isEditable"
@@ -89,6 +76,19 @@
           >
             <span class="hidden md:inline">Vérifier Planning Matchs</span>
             <span class="md:hidden">Check</span>
+          </ButtonComponent>
+
+          <!-- Bouton pour effacer le planning des matchs -->
+          <ButtonComponent
+            v-if="hasGames && isEditable"
+            fontAwesomeIcon="trash"
+            @click="confirmClearPlanning"
+            variant="danger"
+            :disabled="!games.length"
+            class="w-auto"
+          >
+            <span class="hidden md:inline">Reset Matchs</span>
+            <span class="md:hidden">Del</span>
           </ButtonComponent>
         </div>
 
@@ -1010,7 +1010,7 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/export-data/excel`,
             {
-              responseType: 'blob', // Spécifiez que vous attendez un blob
+              responseType: 'blob', // Demande un blob en réponse
             }
           );
 
@@ -1628,7 +1628,7 @@
         // Récupérer l'événement déplacé
         const game = event.extendedProps.game;
 
-        // Vérifiez que le champ (terrain) appartient toujours au même poolSchedule
+        // Vérifier si le poolSchedule correspondant existe
         const poolSchedule = this.poolSchedules.find(
           (ps) =>
             ps.id === game.poolScheduleId &&

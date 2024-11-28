@@ -260,8 +260,6 @@
             latitude: formData.location.latitude,
             longitude: formData.location.longitude,
           };
-          // Si nécessaire, supprimez l'objet location du payload
-          // delete payload.location;
 
           if (this.editingTourneyId) {
             await apiService.put(`/tourneys/${this.editingTourneyId}`, payload);

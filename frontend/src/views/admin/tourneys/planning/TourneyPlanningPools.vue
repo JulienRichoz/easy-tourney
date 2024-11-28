@@ -690,7 +690,7 @@
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
-        window.removeEventListener('resize', this.checkScreenSize);
+        // TODO: DELETE IF NOT USED window.removeEventListener('resize', this.checkScreenSize);
       }
     },
     methods: {
@@ -901,7 +901,7 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/export-data/excel`,
             {
-              responseType: 'blob', // Spécifiez que vous attendez un blob
+              responseType: 'blob', // Demander un blob pour le téléchargement de fichiers
             }
           );
 
@@ -1599,11 +1599,12 @@
         // Retourner l'objet errors
         return errors;
       },
-
+      /* TODO: DELETE IF NOT USED
       checkScreenSize() {
-        this.isSmallScreen = window.innerWidth < 768; // Par exemple, pour les écrans de largeur < 768px
-        this.terrainsPerPage = this.isSmallScreen ? 2 : 10; // Ajustez selon vos besoins
-      },
+        this.isSmallScreen = window.innerWidth < 768;
+        this.terrainsPerPage = this.isSmallScreen ? 2 : 10; // Ajuster selon les besoins
+      },*/
+
       adjustTerrainsPerPage() {
         const screenWidth = window.innerWidth;
 

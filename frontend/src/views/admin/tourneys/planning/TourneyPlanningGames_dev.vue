@@ -309,7 +309,7 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/export-data/excel`,
             {
-              responseType: 'blob', // Spécifiez que vous attendez un blob
+              responseType: 'blob', // Demander un blob en réponse
             }
           );
 
@@ -377,7 +377,7 @@
         const poolSchedulesMap = {};
         this.games.forEach((game) => {
           const poolScheduleId = game.poolScheduleId;
-          const poolSchedule = game.poolSchedule; // Assurez-vous que cette information est disponible
+          const poolSchedule = game.poolSchedule;
 
           if (!poolScheduleId || !poolSchedule) {
             console.warn(
@@ -431,7 +431,7 @@
           'POOL G': 'bg-indigo-100',
           'Pool H': 'bg-gray-100',
           'Pool I': 'bg-blue-200',
-          // Ajoutez d'autres pools si nécessaire
+          // TODO: Dynamically fix this ?
         };
         return poolColors[game.pool.name] || '';
       },

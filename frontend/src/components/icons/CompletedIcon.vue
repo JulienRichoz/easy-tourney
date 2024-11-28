@@ -7,7 +7,7 @@
     class="fill-current text-green-500"
     viewBox="0 0 24 24"
   >
-    <!-- Votre SVG pour l'icône complétée -->
+    <!-- Icone SVG Completed -->
     <path
       d="M9.7 11.3c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l3 3c.2.2.4.3.7.3s.5-.1.7-.3l7-8c.3-.5.3-1.1-.2-1.4-.4-.3-1-.3-1.3.1L12 13.5z"
     />

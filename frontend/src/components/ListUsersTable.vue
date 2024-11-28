@@ -814,7 +814,6 @@
           name: '',
           email: '',
           phone: '',
-          // Réinitialisez les champs
         };
       },
 
@@ -826,7 +825,6 @@
         if (!this.newUser.email) {
           errors.email = "L'email est obligatoire.";
         }
-        // Ajoutez d'autres validations si nécessaire
         this.formErrors = errors;
         this.isFormValid = Object.keys(errors).length === 0;
         return errors;

@@ -364,7 +364,7 @@
         return this.isAdmin ? "Profil de l'utilisateur" : 'Mon Profil';
       },
       canEditEmail() {
-        // Si vous voulez permettre aux utilisateurs de modifier leur email, changez cette valeur
+        // Pour permettre aux utilisateurs de modifier leur email, changer cette valeur
         return this.isAdmin;
       },
       currentUserId() {
