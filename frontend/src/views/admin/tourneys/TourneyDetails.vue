@@ -143,102 +143,130 @@
     </div>
 
     <!-- Guide de configuration du tournoi -->
-    <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8 mt-8">
+    <div
+      class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8 mt-8 relative"
+    >
       <h3
         class="text-2xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
       >
-        Guide de Configuration
+        Guide de configuration du tournoi
       </h3>
-      <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-        Pour configurer votre tournoi, suivez ces étapes clés :
-      </p>
-      <ol
-        class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
-      >
-        <li>
-          <strong>Terrains</strong> : Ajoutez vos terrains dans l'onglet
-          Terrains.
-        </li>
-        <li>
-          <strong>Sports</strong> : Assignez les sports aux terrains dans
-          l'onglet Assignation.
-        </li>
-        <li>
-          <strong>Inscriptions</strong> : Configurez les équipes et ouvrez les
-          inscriptions.
-        </li>
-        <li>
-          <strong>Pools</strong> : Créez les pools et assignez les équipes.
-        </li>
-        <li><strong>Planning</strong> : Générez le planning des matchs.</li>
-      </ol>
-      <button
-        @click="showExample = true"
-        class="text-blue-500 mt-4 flex items-center space-x-2"
-      >
-        <span>Voir un exemple pratique</span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-        >
-          <path d="M9 18l6-6-6-6"></path>
-        </svg>
-      </button>
-    </div>
 
-    <!-- Exemple pratique de configuration -->
-    <div
-      v-if="showExample"
-      class="mt-8 bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8"
-    >
-      <h4
-        class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
-      >
-        Exemple Pratique :
-      </h4>
-      <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-        Imaginons que vous avez 6 terrains disponibles :
-      </p>
-      <ol
-        class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
-      >
-        <li>
-          Allez dans l'onglet <strong>Terrains</strong> et créez vos 6 terrains.
-        </li>
-        <li>
-          Assignez les sports aux terrains dans l'onglet
-          <strong>Assignation</strong>.
-        </li>
-        <li>
-          Configurez les équipes et ouvrez les inscriptions dans l'onglet
-          <strong>Inscriptions</strong>.
-        </li>
-        <li>
-          Créez 6 pools (un par terrain) dans l'onglet <strong>Pools</strong>.
-        </li>
-        <li>
-          Générez le planning des matchs dans l'onglet
-          <strong>Planning</strong>.
-        </li>
-      </ol>
-      <button
-        @click="showExample = false"
-        class="text-blue-500 mt-4 flex items-center space-x-2"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
+      <!-- Texte explicatif de base -->
+      <div v-if="!showExample">
+        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
+          Pour configurer votre tournoi, suivez ces étapes clés :
+        </p>
+        <ol
+          class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
         >
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-        <span>Retourner au guide</span>
-      </button>
+          <li>
+            <strong>Terrains</strong> : Ajoutez vos terrains dans l'onglet
+            Terrains.
+          </li>
+          <li>
+            <strong>Sports</strong> : Assignez les sports aux terrains dans
+            l'onglet Assignation.
+          </li>
+          <li>
+            <strong>Inscriptions</strong> : Configurez les équipes et ouvrez les
+            inscriptions.
+          </li>
+          <li>
+            <strong>Pools</strong> : Créez les pools et assignez les équipes.
+          </li>
+          <li><strong>Planning</strong> : Générez le planning des matchs.</li>
+        </ol>
+
+        <button
+          @click="showExample = true"
+          class="text-blue-500 mt-4 flex items-center space-x-2"
+        >
+          <span>Voir un exemple pratique</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Exemple pratique de configuration -->
+      <div v-else>
+        <h4
+          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
+        >
+          Exemple Pratique :
+        </h4>
+        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
+          Imaginons que vous avez 6 terrains disponibles :
+        </p>
+        <ol
+          class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
+        >
+          <li>
+            Allez dans l'onglet <strong>Terrains</strong> et créez vos 6
+            terrains.
+          </li>
+          <li>
+            Allez dans l'onglet <strong>Assignation</strong> et associez les
+            sports aux terrains pour un planning de base.
+          </li>
+          <li>
+            Dans l'onglet <strong>Inscriptions</strong> :
+            <ul class="list-disc list-inside ml-6">
+              <li>
+                Configurez vos équipes via <strong>Config Équipe</strong>. Avec
+                6 terrains, vous pouvez créer environ 24 équipes (4 par terrain,
+                2 en repos).
+              </li>
+              <li>
+                Définissez la taille des équipes entre 3 à 6 joueurs, soit un
+                total max de 24 * 6 = 144 joueurs.
+              </li>
+              <li>
+                Utilisez le groupe assistant pour gérer les inscriptions
+                supplémentaires.
+              </li>
+              <li>
+                Générez les équipes manuellement ou automatiquement avec
+                <strong>Générer équipes</strong>.
+              </li>
+              <li>Activez les inscriptions et générez un lien d’invitation.</li>
+            </ul>
+          </li>
+          <li>
+            En mode <strong>Custom Round Robin</strong>, créez 6 pools (1 par
+            terrain). Configurez chaque pool pour contenir entre 3 et 4 équipes
+            pour un roulement fluide.
+          </li>
+          <li>
+            Une fois les pools créés, passez à l’onglet
+            <strong>Planning</strong> pour générer le planning des matchs, et
+            utilisez les outils de générations pour créer un planning équilibré.
+          </li>
+        </ol>
+
+        <button
+          @click="showExample = false"
+          class="text-blue-500 mt-4 flex items-center space-x-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+          <span>Retourner au guide</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
