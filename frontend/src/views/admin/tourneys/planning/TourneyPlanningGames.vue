@@ -136,8 +136,10 @@
           </span>
         </label>
 
-        <!-- Navigation par Boutons Radio -->
-        <PlanningViewSelector :tourneyId="tourneyId" />
+        <div class="flex items-center justify-center mx-auto">
+          <!-- Navigation par Boutons Radio -->
+          <PlanningViewSelector :tourneyId="tourneyId" />
+        </div>
 
         <!-- Pagination -->
         <div class="flex items-center gap-2 ml-auto">
