@@ -42,6 +42,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-4 flex-grow">
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="cog"
             @click="openScheduleConfigModal"
             variant="secondary"
@@ -64,10 +65,10 @@
           </ButtonComponent>
 
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="cog"
             @click="openGeneratePlanningModal"
             variant="algo"
-            :disabled="!isEditable"
             class="w-auto"
           >
             <span class="hidden md:inline">Générer Matchs</span>
@@ -75,10 +76,11 @@
           </ButtonComponent>
 
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="check"
             @click="validatePlanning"
             variant="primary"
-            :disabled="!isEditable || !hasGames"
+            :disabled="!hasGames"
             class="w-auto"
           >
             <span class="hidden md:inline">Vérifier Planning Matchs</span>
@@ -824,25 +826,6 @@
         if (this.$refs.fullCalendar) {
           const calendarApi = this.$refs.fullCalendar.getApi();
           calendarApi.refetchResources();
-        }
-      },
-      currentStatus(newStatus) {
-        if (newStatus === 'pools') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningPools',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'games') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningGames',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'completed') {
-          // Rediriger vers la vue appropriée pour 'Terminé'
-          this.$router.push({
-            name: 'AdminTourneyPlanningCompleted',
-            params: { tourneyId: this.tourneyId },
-          });
         }
       },
     },

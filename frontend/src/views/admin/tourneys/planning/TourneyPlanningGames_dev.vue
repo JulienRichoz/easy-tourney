@@ -24,6 +24,7 @@
           @click="generateGames"
           label="Générer les Matchs"
           variant="algo"
+          :disabled="!isEditable"
           >Générer Match</ButtonComponent
         >
         <ButtonComponent
@@ -36,6 +37,7 @@
           @click="resetGames"
           label="Réinitialiser les Matchs"
           variant="danger"
+          :disabled="!isEditable"
           >Reset Match</ButtonComponent
         >
         <ButtonComponent
@@ -243,6 +245,7 @@
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import { toast } from 'vue3-toastify';
   import moment from 'moment';
+  import { mapState } from 'vuex';
 
   export default {
     components: {
@@ -258,6 +261,30 @@
         pools: [],
         poolSchedules: [], // Nouvelle propriété pour les créneaux horaires
       };
+    },
+    computed: {
+      ...mapState('tourney', {
+        statuses: (state) => state.statuses,
+        tourneyType: (state) => state.tourneyType,
+      }),
+      currentStatus: {
+        get() {
+          return this.statuses.planningStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'planningStatus',
+            value: newStatus,
+          });
+        },
+      },
+      /**
+       * Determines if the planning is editable based on the current status.
+       */
+      isEditable() {
+        return this.statuses.planningStatus !== 'completed';
+      },
     },
     methods: {
       async fetchGames() {

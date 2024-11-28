@@ -84,6 +84,7 @@
         <!-- Boutons d'action -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-4 flex-grow">
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="cog"
             @click="openScheduleConfigModal"
             variant="secondary"
@@ -93,10 +94,11 @@
             <span class="md:hidden">Conf.</span>
           </ButtonComponent>
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="cog"
             @click="openGeneratePlanningModal"
             variant="algo"
-            :disabled="!isEditable || !pools.length"
+            :disabled="!pools.length"
             class="w-auto"
           >
             <span class="hidden md:inline">Générer Pools</span>
@@ -104,10 +106,11 @@
           </ButtonComponent>
 
           <ButtonComponent
+            v-if="isEditable"
             fontAwesomeIcon="check"
             @click="validatePlanning"
             variant="primary"
-            :disabled="!isEditable || !hasPoolSchedules"
+            :disabled="!hasPoolSchedules"
             class="w-auto"
           >
             <span class="hidden md:inline">Vérifier Planning Pools</span>
