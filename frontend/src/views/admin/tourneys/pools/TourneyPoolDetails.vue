@@ -51,6 +51,7 @@
                 >
                   <th class="px-4 py-3 text-left">
                     <input
+                      v-if="isEditable"
                       type="checkbox"
                       v-model="selectAllAssigned"
                       @change="toggleSelectAllAssigned"
@@ -58,7 +59,7 @@
                     <span class="ml-2">All</span>
                   </th>
                   <th class="px-4 py-3 text-left">Nom de l'équipe</th>
-                  <th class="px-4 py-3 text-left">Actions</th>
+                  <th v-if="isEditable" class="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -75,10 +76,13 @@
                         selectedAssignedTeams.includes(team.id),
                     },
                   ]"
-                  @click="toggleRemoveTeamSelection(team.id)"
+                  @click="
+                    isEditable ? toggleRemoveTeamSelection(team.id) : null
+                  "
                 >
                   <td class="px-4 py-2">
                     <input
+                      v-if="isEditable"
                       type="checkbox"
                       v-model="selectedAssignedTeams"
                       :value="team.id"
@@ -96,6 +100,7 @@
                   </td>
                   <td class="px-4 py-2">
                     <SoftButtonComponent
+                      v-if="isEditable"
                       fontAwesomeIcon="fa-trash"
                       iconClass="w-4 h-4 text-red-500 hover:text-red-700"
                       aria-label="Retirer du pool"
@@ -107,10 +112,11 @@
             </table>
           </div>
           <ButtonComponent
+            v-if="isEditable"
             type="submit"
             variant="danger"
             class="mt-2"
-            :disabled="selectedAssignedTeams.length === 0"
+            :disabled="selectedAssignedTeams.length === 0 || !isEditable"
           >
             Retirer
           </ButtonComponent>
@@ -186,7 +192,7 @@
                         selectedUnassignedTeams.includes(team.id),
                     },
                   ]"
-                  @click="toggleTeamSelection(team.id)"
+                  @click="isEditable ? toggleTeamSelection(team.id) : null"
                 >
                   <td class="px-4 py-2">
                     <input
@@ -265,11 +271,21 @@
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.poolStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'poolStatus',
+            value: newStatus,
+          });
+        },
+      },
       isEditable() {
-        return (
-          this.statuses.poolAssignmentStatus !== 'completed' &&
-          this.statuses.status !== 'completed'
-        );
+        return this.statuses.poolStatus !== 'completed';
       },
       maxTeamsPerPool() {
         return (

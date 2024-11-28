@@ -11,9 +11,9 @@
       :team-setup="teamSetup"
       :isAssigned="true"
       :enable-auto-fill="false"
-      :enable-assign-team="true"
-      :allow-assign-to-other-teams="true"
-      :enable-remove-user="true"
+      :enable-assign-team="isEditable"
+      :allow-assign-to-other-teams="isEditable"
+      :enable-remove-user="isEditable"
       :back-button-text="'Retour aux équipes'"
       :delete-modal-title="'Confirmer le retrait'"
       :delete-modal-message="'Êtes-vous sûr de vouloir retirer cet utilisateur de la team ?'"
@@ -62,6 +62,7 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex';
   import ListUsersTable from '@/components/ListUsersTable.vue';
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
@@ -88,6 +89,25 @@
       };
     },
     computed: {
+      ...mapState('tourney', {
+        statuses: (state) => state.statuses,
+      }),
+      // Définir `currentStatus` comme une propriété calculée liée au store
+      currentStatus: {
+        get() {
+          return this.statuses.registrationStatus;
+        },
+        set(newStatus) {
+          this.$store.dispatch('tourney/updateStatus', {
+            tourneyId: this.tourneyId,
+            key: 'registrationStatus',
+            value: newStatus,
+          });
+        },
+      },
+      isEditable() {
+        return this.statuses.registrationStatus !== 'completed';
+      },
       teamNotFull() {
         if (!this.team) return false;
         return this.teamUsers.length < this.getTeamCapacity(this.team);
