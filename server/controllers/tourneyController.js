@@ -3,6 +3,7 @@
 const { Op } = require('sequelize');
 const {
   Tourney,
+  Field,
   SportsFields,
   Sport,
   TeamSetup,
@@ -694,9 +695,18 @@ exports.getTourneyPoolsDetails = async (req, res) => {
       attributes: [
         'id',
         'name',
+        'tourneyType',
+        'domain',
+        'dateTourney',
         'maxNumberOfPools',
         'defaultMaxTeamPerPool',
         'defaultMinTeamPerPool',
+        'status',
+        'fieldAssignmentStatus',
+        'sportAssignmentStatus',
+        'registrationStatus',
+        'poolStatus',
+        'planningStatus',
       ],
     });
     if (!tourney) {
@@ -771,19 +781,116 @@ exports.getTourneyPoolsDetails = async (req, res) => {
 };
 
 
+/**
+ * Récupère les détails complets d'un tournoi, y compris les statistiques nécessaires pour la page Détails.
+ * @param {Object} req - Requête HTTP.
+ * @param {Object} res - Réponse HTTP.
+ */
 exports.getTourneyDetails = async (req, res) => {
   try {
     const { tourneyId } = req.params;
 
+    // 1. Vérifier si le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId);
 
-    // Vous pouvez personnaliser la réponse selon vos besoins
-    res.status(200).json({
-      tourney: await Tourney.findByPk(tourneyId, {
-        attributes: ['id', 'name', 'location', 'dateTourney', 'locationLat', 'locationLng'],
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // 2. Récupérer les statistiques en parallèle
+    const [
+      usersCount,
+      fieldsCount,
+      sportsList,
+      teamsCount,
+      timeSlotsCount,
+      poolsCount,
+    ] = await Promise.all([
+      // a. Nombre d'utilisateurs inscrits (excluant les admins)
+      UsersTourneys.count({
+        where: { tourneyId },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            where: { roleId: { [Op.ne]: 1 } }, // Exclure les administrateurs (roleId = 1)
+            attributes: [],
+          },
+        ],
+        distinct: true,
+        col: 'userId',
       }),
-      ...data,
-      allUsers: data.allUsers, // Assurez-vous que allUsers est inclus
-    });
+      // b. Nombre de terrains
+      Field.count({
+        where: { tourneyId },
+      }),
+      // c. Liste unique des sports via SportsFields et Fields
+      Sport.findAll({
+        include: [
+          {
+            model: SportsFields,
+            as: 'sportsFields',
+            required: true,
+            include: [
+              {
+                model: Field,
+                as: 'field',
+                where: { tourneyId },
+                attributes: [],
+              },
+            ],
+            attributes: [],
+          },
+        ],
+        attributes: ['id', 'name', 'color'],
+        group: ['Sport.id'],
+        raw: true,
+      }),
+      // d. Nombre d'équipes
+      Team.count({
+        where: { tourneyId },
+      }),
+      // e. Nombre total de créneaux horaires par pool via PoolSchedules et Pools
+      PoolSchedule.count({
+        include: [
+          {
+            model: Pool,
+            as: 'pool',
+            where: { tourneyId },
+            attributes: [],
+          },
+        ],
+      }),
+      // f. Nombre de pools
+      Pool.count({
+        where: { tourneyId },
+      }),
+    ]);
+
+    // 3. Structurer les données de réponse
+    const counts = {
+      users: usersCount,
+      fields: fieldsCount,
+      sports: sportsList.length,
+      teams: teamsCount,
+      timeSlotsPerPool: timeSlotsCount,
+      pools: poolsCount,
+    };
+
+    const sports = sportsList.map((sport) => ({
+      id: sport.id,
+      name: sport.name,
+      color: sport.color,
+    }));
+
+    const responseData = {
+      tourney,
+      counts,
+      sports,
+    };
+
+    // 4. Envoyer la réponse
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('Erreur lors de la récupération des détails du tournoi:', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
