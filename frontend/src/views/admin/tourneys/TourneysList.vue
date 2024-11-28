@@ -58,7 +58,7 @@
           :minDate="'1900-01-01'"
           :maxDate="'2200-01-01'"
           @form-submit="handleFormSubmit"
-          @cancel="closeModal"
+          @form-cancel="closeModal"
           :customValidation="validateForm"
         />
       </template>
@@ -67,7 +67,7 @@
     <!-- Confirmation de suppression -->
     <DeleteConfirmationModal
       :isVisible="showDeleteConfirmation"
-      @cancel="closeDeleteConfirmation"
+      @form-cancel="closeDeleteConfirmation"
       @confirm="deleteTourney(confirmedDeleteTourneyId)"
     />
   </div>

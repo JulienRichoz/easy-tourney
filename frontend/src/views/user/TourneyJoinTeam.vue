@@ -61,7 +61,7 @@
             :message="'Êtes-vous sûr de vouloir quitter le groupe ?'"
             :isVisible="showDeleteConfirmation"
             :textButton="'Quitter'"
-            @cancel="closeDeleteConfirmation"
+            @form-cancel="closeDeleteConfirmation"
             @confirm="leaveTeam"
           />
         </div>

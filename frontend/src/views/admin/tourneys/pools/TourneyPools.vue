@@ -216,7 +216,7 @@
             :fields="formFields"
             :isEditing="!!editingPoolId"
             @form-submit="handleFormSubmit"
-            @cancel="closeModal"
+            @form-cancel="closeModal"
           />
         </template>
       </ModalComponent>
@@ -227,7 +227,7 @@
         :isHardDelete="false"
         :title="'Supprimer Pool'"
         :message="'Êtes-vous sûr de vouloir supprimer cette pool ?'"
-        @cancel="closeDeleteConfirmation"
+        @form-cancel="closeDeleteConfirmation"
         @confirm="deletePool(confirmedDeletePoolId)"
       />
 
@@ -244,7 +244,7 @@
             :fields="poolSetupFields"
             :isEditing="true"
             @form-submit="handlePoolSetupSubmit"
-            @cancel="closePoolSetupModal"
+            @form-cancel="closePoolSetupModal"
             :customValidation="customPoolSetupValidation"
           />
         </template>
@@ -265,7 +265,7 @@
         :isHardDelete="false"
         :title="'Retirer toutes les équipes des Pools'"
         :message="'Êtes-vous sûr de vouloir retirer toutes les équipes des pools ?'"
-        @cancel="closeRemoveTeamsConfirmation"
+        @form-cancel="closeRemoveTeamsConfirmation"
         @confirm="removeAllTeamsFromPools"
       >
       </DeleteConfirmationModal>
@@ -288,7 +288,7 @@
         :isHardDelete="true"
         :title="'Supprimer toutes les Pools'"
         :message="'Êtes-vous sûr de vouloir supprimer toutes les pools ? Cette action est irréversible.'"
-        @cancel="closeDeleteAllConfirmation"
+        @form-cancel="closeDeleteAllConfirmation"
         @confirm="deleteAllPools"
       >
         <template #message>

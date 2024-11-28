@@ -33,7 +33,7 @@
         :fields="formFields"
         :isEditing="false"
         @form-submit="handleConfirm"
-        @cancel="handleCancel"
+        @form-cancel="handleCancel"
       >
         <!-- Personnalisation des boutons via un slot nommé -->
         <template #buttons>
@@ -125,7 +125,7 @@
       ];
 
       const handleCancel = () => {
-        emit('cancel');
+        emit('form-cancel');
       };
 
       const handleConfirm = () => {

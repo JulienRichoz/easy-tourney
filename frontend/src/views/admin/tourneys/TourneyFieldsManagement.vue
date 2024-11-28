@@ -78,7 +78,7 @@
             :isEditing="!!editingFieldId"
             :isEditable="isEditable"
             @form-submit="handleFormSubmit"
-            @cancel="closeModal"
+            @form-cancel="closeModal"
           />
         </template>
       </ModalComponent>
@@ -97,7 +97,7 @@
             :isEditing="!!editingFieldId"
             :isEditable="isEditable"
             @form-submit="handleMultipleFieldsSubmit"
-            @cancel="closeMultipleFieldsModal"
+            @form-cancel="closeMultipleFieldsModal"
           />
         </template>
       </ModalComponent>
@@ -106,7 +106,7 @@
       <DeleteConfirmationModal
         v-if="isEditable"
         :isVisible="showDeleteAllFieldsModal"
-        @cancel="closeDeleteAllFieldsModal"
+        @form-cancel="closeDeleteAllFieldsModal"
         @confirm="handleDeleteAllFieldsSubmit"
         :isHardDelete="true"
         hardDeleteMessage="Cette action supprimera définitivement tous les terrains et les sports associés."
@@ -116,7 +116,7 @@
       <DeleteConfirmationModal
         v-if="isEditable"
         :isVisible="showDeleteConfirmation"
-        @cancel="closeDeleteConfirmation"
+        @form-cancel="closeDeleteConfirmation"
         @confirm="deleteField(confirmedDeleteFieldId)"
       />
     </div>

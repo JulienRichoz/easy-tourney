@@ -99,12 +99,14 @@ file-selected: Lorsqu'un fichier est sélectionné.
               </option>
             </select>
 
+            <!-- Champ de type 'file' -->
             <input
               v-if="field.type === 'file'"
               type="file"
               :id="field.name"
               :disabled="!isEditable"
               @change="handleFileChange"
+              @click.stop
               accept="image/*"
               class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
             />
@@ -271,7 +273,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
           this.visibleTooltip === fieldName ? null : fieldName;
       },
       handleFileChange(event) {
-        const file = event.target.files[0];
+        const file = event.target.files[0] || null;
         if (file) {
           const maxSize = 10 * 1024 * 1024; // 10MB
           if (file.size > maxSize) {
@@ -283,7 +285,14 @@ file-selected: Lorsqu'un fichier est sélectionné.
             this.formData.image = file; // Mettre à jour le modèle de données
             this.$emit('file-selected', file); // Émettre l'événement
           }
+        } else {
+          // User canceled the file selection
+          this.formData.image = null; // Reset the image in form data
+          // Optionally, emit the file-selected event with null
+          this.$emit('file-selected', null);
         }
+        // Bloquer toute action supplémentaire
+        event.stopPropagation();
       },
 
       handleSubmit() {
@@ -312,7 +321,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
       },
 
       handleCancel() {
-        this.$emit('cancel');
+        this.$emit('form-cancel');
       },
     },
   };

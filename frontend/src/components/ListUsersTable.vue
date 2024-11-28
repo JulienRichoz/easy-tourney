@@ -311,7 +311,7 @@
       :title="deleteModalTitle"
       :message="deleteModalMessage"
       @confirm="deleteUser"
-      @cancel="closeDeleteModal"
+      @form-cancel="closeDeleteModal"
     />
 
     <!-- Confirmation modal pour retirer un utilisateur d'un tournoi -->
@@ -320,7 +320,7 @@
       title="Confirmer le retrait"
       message="Êtes-vous sûr de vouloir retirer cet utilisateur du tournoi?"
       @confirm="removeUserFromTourney"
-      @cancel="closeRemoveFromTourneyModal"
+      @form-cancel="closeRemoveFromTourneyModal"
     />
   </div>
 </template>

@@ -291,7 +291,7 @@
       title="Confirmer la suppression"
       message="Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
       @confirm="deleteUser"
-      @cancel="closeDeleteModal"
+      @form-cancel="closeDeleteModal"
     />
 
     <!-- Modale de confirmation pour retirer du tournoi -->
@@ -300,7 +300,7 @@
       title="Confirmer le retrait"
       message="Êtes-vous sûr de vouloir retirer l'utilisateur de ce tournoi ?"
       @confirm="removeUserFromTourney"
-      @cancel="closeRemoveFromTourneyModal"
+      @form-cancel="closeRemoveFromTourneyModal"
     />
   </div>
 </template>

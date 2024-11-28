@@ -43,7 +43,7 @@
           :isEditing="!!editingSportId"
           @file-selected="handleFileUpload"
           @form-submit="handleFormSubmit"
-          @cancel="closeModal"
+          @form-cancel="closeModal"
           :customValidation="validateForm"
         />
       </template>
@@ -53,7 +53,7 @@
     <DeleteConfirmationModal
       :isVisible="showDeleteConfirmation"
       :isHardDelete="true"
-      @cancel="closeDeleteConfirmation"
+      @form-cancel="closeDeleteConfirmation"
       @confirm="deleteSport(confirmedDeleteSportId)"
     />
   </div>
@@ -199,6 +199,11 @@
       },
 
       handleFileUpload(file) {
+        if (file === null) {
+          this.selectedFile = null;
+          return;
+        }
+
         if (file) {
           const maxSizeInMB = 10;
           const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
@@ -211,6 +216,9 @@
           } else {
             this.selectedFile = file;
           }
+        } else {
+          // File selection was canceled
+          this.selectedFile = null;
         }
         this.validateForm();
       },

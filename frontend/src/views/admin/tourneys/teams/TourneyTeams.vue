@@ -109,7 +109,7 @@
                   v-model="inviteTokenForm"
                   :fields="inviteTokenFields"
                   @form-submit="handleGenerateInviteToken"
-                  @cancel="showAddTokenForm = false"
+                  @form-cancel="showAddTokenForm = false"
                 />
               </div>
 
@@ -359,7 +359,7 @@
             :fields="teamSetupFields"
             :isEditing="!!teamSetup"
             @form-submit="handleTeamSetupSubmit"
-            @cancel="closeTeamSetupModal"
+            @form-cancel="closeTeamSetupModal"
             :customValidation="customTeamSetupValidation"
           />
         </template>
@@ -379,7 +379,7 @@
             :fields="formFields"
             :isEditing="!!editingTeamId"
             @form-submit="handleFormSubmit"
-            @cancel="closeModal"
+            @form-cancel="closeModal"
           />
         </template>
       </ModalComponent>
@@ -389,7 +389,7 @@
         :isVisible="showGenerateConfirmationModal"
         title="Confirmer la Génération des Équipes"
         message="Êtes-vous sûr de vouloir générer les équipes automatiquement ?"
-        @cancel="closeGenerateConfirmationModal"
+        @form-cancel="closeGenerateConfirmationModal"
         @confirm="confirmGenerateTeams"
       />
 
@@ -397,7 +397,7 @@
       <DeleteConfirmationModal
         :isVisible="showDeleteConfirmation"
         :isHardDelete="false"
-        @cancel="closeDeleteConfirmation"
+        @form-cancel="closeDeleteConfirmation"
         @confirm="deleteTeam(confirmedDeleteTeamId)"
       />
 
@@ -405,7 +405,7 @@
       <DeleteConfirmationModal
         v-if="isEditable"
         :isVisible="showModalResetTeams"
-        @cancel="closeModalResetTeams"
+        @form-cancel="closeModalResetTeams"
         @confirm="handleResetAllTeamsSubmit"
         :isHardDelete="true"
         hardDeleteMessage="Toutes les équipes seront supprimées et les utilisateurs n'auront plus d'équipe (reset complet). Il ne sera pas possible de revenir en arrière. Êtes-vous sûr de vouloir continuer ?"
@@ -413,7 +413,7 @@
       <!-- Modale pour confirmer la suppression des équipes invalides -->
       <DeleteConfirmationModal
         :isVisible="showDeleteInvalidTeamsModal"
-        @cancel="closeDeleteInvalidTeamsModal"
+        @form-cancel="closeDeleteInvalidTeamsModal"
         @confirm="deleteInvalidTeams"
         :isHardDelete="false"
         message="Êtes-vous sûr de vouloir supprimer toutes les équipes invalides ? Cette action est irréversible."

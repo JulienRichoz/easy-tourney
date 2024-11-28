@@ -237,7 +237,7 @@
       :isHardDelete="false"
       :title="'Suppression du Planning'"
       :message="'Êtes-vous sûr de vouloir supprimer le planning ?'"
-      @cancel="closeClearPlanningConfirmation"
+      @form-cancel="closeClearPlanningConfirmation"
       @confirm="clearPlanning"
     />
 
@@ -262,7 +262,7 @@
           v-model="scheduleConfig"
           :fields="scheduleFormFields"
           @form-submit="saveScheduleConfig"
-          @cancel="showScheduleConfigModal = false"
+          @form-cancel="showScheduleConfigModal = false"
           :columns="2"
           :customValidation="validateForm"
           :isEditing="this.scheduleConfig ? true : false"
@@ -278,7 +278,7 @@
           v-model="eventFormData"
           :fields="eventFormFields"
           @form-submit="saveEventEdits"
-          @cancel="showEditModal = false"
+          @form-cancel="showEditModal = false"
         />
       </template>
     </ModalComponent>

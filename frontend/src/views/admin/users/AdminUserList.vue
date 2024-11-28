@@ -44,7 +44,7 @@
           :fields="userFormFields"
           :isEditing="true"
           @form-submit="handleUserFormSubmit"
-          @cancel="closeEditUserModal"
+          @form-cancel="closeEditUserModal"
           :customValidation="validateUserForm"
         />
       </template>
@@ -62,7 +62,7 @@
           :fields="userFormFields"
           :isEditing="false"
           @form-submit="handleAddUserSubmit"
-          @cancel="closeAddUserModal"
+          @form-cancel="closeAddUserModal"
           :customValidation="validateUserForm"
         />
       </template>

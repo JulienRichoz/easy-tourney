@@ -197,7 +197,7 @@
       :isHardDelete="false"
       :title="'Suppression du Planning des Matchs'"
       :message="'Êtes-vous sûr de vouloir supprimer le planning des matchs ?'"
-      @cancel="closeClearPlanningConfirmation"
+      @form-cancel="closeClearPlanningConfirmation"
       @confirm="clearPlanning"
     />
 
@@ -222,7 +222,7 @@
           v-model="scheduleConfig"
           :fields="scheduleFormFields"
           @form-submit="saveScheduleConfig"
-          @cancel="showScheduleConfigModal = false"
+          @form-cancel="showScheduleConfigModal = false"
           :columns="2"
           :customValidation="validateForm"
           :isEditing="this.scheduleConfig ? true : false"
@@ -241,7 +241,7 @@
           v-model="createFormData"
           :fields="createFormFields"
           @form-submit="saveNewEvent"
-          @cancel="showCreateModal = false"
+          @form-cancel="showCreateModal = false"
           :customValidation="validateForm"
         />
       </template>
@@ -258,7 +258,7 @@
           v-model="eventFormData"
           :fields="eventFormFields"
           @form-submit="saveEventEdits"
-          @cancel="showEditModal = false"
+          @form-cancel="showEditModal = false"
           :customValidation="validateForm"
         />
       </template>
@@ -825,7 +825,6 @@
         }
       },
       currentStatus(newStatus) {
-        console.log('Nouveau statut:', newStatus);
         if (newStatus === 'pools') {
           this.$router.push({
             name: 'AdminTourneyPlanningPools',
