@@ -16,12 +16,13 @@ function generateCalendarSheet(workbook, data) {
     const times = [];
 
     // Générer les créneaux horaires comme objets Date
-    const date = new Date(data.tourney.dateTourney); // Utiliser la date du tournoi
-    date.setHours(startHour, 0, 0, 0);
+    const tourneyDate = new Date(data.tourney.dateTourney); // Utiliser la date du tournoi
+    const initialDate = new Date(tourneyDate);
+    initialDate.setHours(startHour, 0, 0, 0);
 
-    while (date.getHours() < endHour) {
-        times.push(new Date(date.getTime())); // Ajouter une copie de l'heure actuelle
-        date.setMinutes(date.getMinutes() + interval);
+    while (initialDate.getHours() < endHour || (initialDate.getHours() === endHour && initialDate.getMinutes() === 0)) {
+        times.push(new Date(initialDate.getTime())); // Ajouter une copie de l'heure actuelle
+        initialDate.setMinutes(initialDate.getMinutes() + interval);
     }
 
     const fields = [...new Set(data.games.map(game => game.field.name))]; // Liste unique des terrains
@@ -35,11 +36,11 @@ function generateCalendarSheet(workbook, data) {
     });
     calendarSheet.getColumn(1).width = 15; // Largeur pour les horaires
 
-    // Stocker les positions des cellules déjà fusionnées
-    const mergedCells = {};
+    // Stocker les numéros de ligne pour chaque horaire
+    const timeRowMap = {};
 
-    // Remplir les lignes avec les horaires
-    times.forEach((time, rowIndex) => {
+    // Générer toutes les lignes pour les horaires
+    times.forEach((time, index) => {
         const timeString = time.toLocaleTimeString('fr-FR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -47,45 +48,77 @@ function generateCalendarSheet(workbook, data) {
         });
 
         const row = calendarSheet.addRow([timeString]);
+        const rowNumber = row.number; // Numéro de ligne réel dans la feuille Excel
+        timeRowMap[time.getTime()] = rowNumber;
 
-        // Parcourir les terrains pour chaque horaire
-        fields.forEach((field, colIndex) => {
-            const cellPosition = `${rowIndex + 2},${colIndex + 2}`;
-            // Vérifier si cette cellule est déjà fusionnée
-            if (mergedCells[cellPosition]) {
-                return; // Passer si la cellule est déjà fusionnée
+        // Centrer l'alignement des horaires
+        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    // Liste des périodes de transition avec leurs heures de début et de fin
+    const transitions = [
+        {
+            label: 'Lunch Break',
+            startTime: new Date(tourneyDate.getFullYear(), tourneyDate.getMonth(), tourneyDate.getDate(), 12, 0, 0),
+            endTime: new Date(tourneyDate.getFullYear(), tourneyDate.getMonth(), tourneyDate.getDate(), 13, 0, 0),
+            color: 'ADD8E6', // Bleu clair
+        },
+        {
+            label: 'Outro',
+            startTime: new Date(tourneyDate.getFullYear(), tourneyDate.getMonth(), tourneyDate.getDate(), 17, 0, 0),
+            endTime: new Date(tourneyDate.getFullYear(), tourneyDate.getMonth(), tourneyDate.getDate(), 17, 30, 0),
+            color: 'CCCCCC', // Gris
+        },
+        // Ajoutez d'autres transitions si nécessaire
+    ];
+
+    // Stocker les positions des cellules déjà fusionnées
+    const mergedCells = {};
+
+    // Fonction pour fusionner les cellules en évitant les chevauchements
+    function mergeCellsIfPossible(startRow, endRow, colIndex, cellContent, fillColor) {
+        // Vérifier qu'il n'y a pas de chevauchement de fusion
+        let canMerge = true;
+        for (let i = startRow; i <= endRow; i++) {
+            if (mergedCells[`${i},${colIndex}`]) {
+                canMerge = false;
+                break;
+            }
+        }
+
+        if (canMerge) {
+            calendarSheet.mergeCells(startRow, colIndex, endRow, colIndex);
+
+            // Enregistrer les positions fusionnées
+            for (let i = startRow; i <= endRow; i++) {
+                mergedCells[`${i},${colIndex}`] = true;
             }
 
-            // Rechercher le match qui couvre ce créneau horaire et ce terrain
-            const game = data.games.find(game => {
-                const gameStart = new Date(game.startTime);
-                const gameEnd = new Date(game.endTime);
+            const cell = calendarSheet.getCell(startRow, colIndex);
+            cell.value = cellContent;
+            cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
 
-                return (
-                    game.field.name === field &&
-                    time.getTime() >= gameStart.getTime() &&
-                    time.getTime() < gameEnd.getTime()
-                );
-            });
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: fillColor },
+            };
+        }
+    }
 
-            if (game) {
-                // Calculer le nombre de lignes à fusionner en fonction de la durée du match
-                const gameStart = new Date(game.startTime);
-                const gameEnd = new Date(game.endTime);
-                const durationMinutes = (gameEnd - gameStart) / (1000 * 60);
-                const rowsToMerge = Math.ceil(durationMinutes / interval);
+    // Remplir les données des matchs
+    data.games.forEach(game => {
+        const gameStart = new Date(game.startTime);
+        const gameEnd = new Date(game.endTime);
 
-                // Fusionner les cellules correspondantes
-                const startRow = rowIndex + 2;
-                const endRow = startRow + rowsToMerge - 1;
+        const fieldIndex = fields.indexOf(game.field.name);
+        if (fieldIndex !== -1) {
+            const colIndex = fieldIndex + 2; // +2 pour tenir compte de la colonne des horaires et de l'indexation à partir de 1
 
-                // Enregistrer les positions fusionnées
-                for (let i = startRow; i <= endRow; i++) {
-                    mergedCells[`${i},${colIndex + 2}`] = true;
-                }
+            const startRow = timeRowMap[gameStart.getTime()];
+            const endRow = timeRowMap[gameEnd.getTime()] - 1; // Soustraire 1 car l'heure de fin est exclusive
 
-                calendarSheet.mergeCells(startRow, colIndex + 2, endRow, colIndex + 2);
-
+            if (startRow && endRow && startRow <= endRow) {
                 // Préparer le contenu de la cellule
                 const cellContent = [
                     `${game.pool?.name || 'N/A'}`,
@@ -94,91 +127,44 @@ function generateCalendarSheet(workbook, data) {
                     `Sport: ${game.sport?.name || 'N/A'}`
                 ].join('\n');
 
-                const cell = row.getCell(colIndex + 2); // Colonne correspondante au terrain
-                cell.value = cellContent;
-                cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
-
                 // Ajouter des couleurs en fonction du sport
                 const sportColor = game.sport?.color || 'FFFFFF'; // Couleur du sport ou blanc par défaut
-                cell.fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: sportColor.replace('#', '') },
-                };
-            } else {
-                // Vérifier si c'est une période de transition
-                const isTransition = true; // Vous pouvez ajouter votre logique pour déterminer les transitions
-                // Liste des périodes de transition avec leurs heures de début et de fin
-                const transitions = [
-                    {
-                        label: 'Introduction',
-                        startTime: new Date('2024-11-15T08:00:00'),
-                        endTime: new Date('2024-11-15T08:15:00'),
-                        color: 'FFD700', // Or
-                    },
-                    {
-                        label: 'Lunch Break',
-                        startTime: new Date('2024-11-15T12:00:00'),
-                        endTime: new Date('2024-11-15T13:00:00'),
-                        color: 'ADD8E6', // Bleu clair
-                    },
-                    // Ajoutez d'autres transitions si nécessaire
-                ];
 
-                // Dans la boucle, avant de vérifier 'isTransition'
-                const transition = transitions.find(tr => {
-                    return (
-                        time.getTime() >= tr.startTime.getTime() &&
-                        time.getTime() < tr.endTime.getTime()
-                    );
-                });
+                // Fusionner les cellules
+                mergeCellsIfPossible(startRow, endRow, colIndex, cellContent, sportColor.replace('#', ''));
 
-                if (transition) {
-                    // Calculer le nombre de lignes à fusionner
-                    const durationMinutes = (transition.endTime - transition.startTime) / (1000 * 60);
-                    const rowsToMerge = Math.ceil(durationMinutes / interval);
+                // Optionnel: Ajouter une transition après le match
+                const rotationStart = new Date(gameEnd.getTime());
+                const rotationEnd = new Date(gameEnd.getTime() + 5 * 60000); // 5 minutes rotation
 
-                    const startRow = rowIndex + 2;
-                    const endRow = startRow + rowsToMerge - 1;
+                const rotationStartRow = timeRowMap[rotationStart.getTime()];
+                const rotationEndRow = timeRowMap[rotationEnd.getTime()] - 1;
 
-                    // Enregistrer les positions fusionnées
-                    for (let i = startRow; i <= endRow; i++) {
-                        mergedCells[`${i},${colIndex + 2}`] = true;
-                    }
+                if (rotationStartRow && rotationEndRow && rotationStartRow <= rotationEndRow) {
+                    const rotationCellContent = 'Rotation Team';
+                    const rotationColor = '808080'; // Gris
 
-                    calendarSheet.mergeCells(startRow, colIndex + 2, endRow, colIndex + 2);
-
-                    const cell = row.getCell(colIndex + 2);
-                    cell.value = transition.label;
-                    cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
-
-                    // Couleur pour la transition
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: transition.color },
-                    };
-                }
-                if (isTransition) {
-                    // Fusionner les cellules pour la période de transition
-                    const startRow = rowIndex + 2;
-                    const endRow = startRow; // Peut être ajusté si la transition dure plus d'un intervalle
-
-                    calendarSheet.mergeCells(startRow, colIndex + 2, endRow, colIndex + 2);
-
-                    const cell = row.getCell(colIndex + 2);
-                    cell.value = 'Transition';
-                    cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
-
-                    // Couleur pour la transition (par exemple, gris clair)
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'CCCCCC' },
-                    };
+                    mergeCellsIfPossible(rotationStartRow, rotationEndRow, colIndex, rotationCellContent, rotationColor);
                 }
             }
-        });
+        }
+    });
+
+    // Remplir les transitions
+    transitions.forEach(transition => {
+        const transitionStart = new Date(transition.startTime);
+        const transitionEnd = new Date(transition.endTime);
+
+        const startRow = timeRowMap[transitionStart.getTime()];
+        const endRow = timeRowMap[transitionEnd.getTime()] - 1;
+
+        if (startRow && endRow && startRow <= endRow) {
+            fields.forEach((field, fieldIndex) => {
+                const colIndex = fieldIndex + 2; // +2 pour tenir compte de la colonne des horaires
+
+                mergeCellsIfPossible(startRow, endRow, colIndex, transition.label, transition.color);
+            });
+        }
     });
 
     // Appliquer les bordures aux cellules
