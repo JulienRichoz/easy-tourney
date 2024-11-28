@@ -78,5 +78,7 @@
 
 <style scoped>
   .planning-view-selector {
+    flex-shrink: 0; /* Pour éviter qu'il ne se réduise dans un espace restreint */
+    max-width: 100%; /* Empêche de dépasser le conteneur parent */
   }
 </style>

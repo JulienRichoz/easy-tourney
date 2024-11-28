@@ -174,7 +174,7 @@
             {{ useUnifiedColors ? 'Color by Pool' : 'Color by Sport' }}
           </span>
         </label>
-        <div class="content-center">
+        <div class="flex items-center justify-center mx-auto">
           <!-- Navigation par Boutons Radio -->
           <PlanningViewSelector :tourneyId="tourneyId" />
         </div>
