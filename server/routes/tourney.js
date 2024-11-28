@@ -14,8 +14,7 @@ const {
   joinTourneyWithToken,
   getRegistrationStatus,
   getTourneyPoolsDetails,
-  getTourneyPlanningDetails,
-  generatePoolPlanning,
+  getTourneyDetails,
 } = require('../controllers/tourneyController');
 
 const {
@@ -40,5 +39,6 @@ router.post('/join', isAuthenticated, joinTourneyWithToken); // Rejoindre un tou
 // Aggregate/custom routes
 router.get('/:tourneyId/teams-details', isAuthenticated, authorizeTournamentAccess, getTourneyTeamsDetails); // Team Page -> get all data required in one request
 router.get('/:tourneyId/pools-details', isAuthenticated, authorizeTournamentAccess, getTourneyPoolsDetails); // Team Pool -> get all data required in one request
+router.get('/:tourneyId/details', isAuthenticated, isAdmin, getTourneyDetails); // Details Page -> get all data required in one request
 
 module.exports = router;

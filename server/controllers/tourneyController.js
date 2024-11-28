@@ -769,3 +769,23 @@ exports.getTourneyPoolsDetails = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
+
+
+exports.getTourneyDetails = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+
+
+    // Vous pouvez personnaliser la réponse selon vos besoins
+    res.status(200).json({
+      tourney: await Tourney.findByPk(tourneyId, {
+        attributes: ['id', 'name', 'location', 'dateTourney', 'locationLat', 'locationLng'],
+      }),
+      ...data,
+      allUsers: data.allUsers, // Assurez-vous que allUsers est inclus
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des détails du tournoi:', error);
+    res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
