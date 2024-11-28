@@ -5,8 +5,9 @@ const {
   Field,
   SportsFields,
   TeamSetup,
-  ScheduleTourney,
+  PoolSchedule,
   Pool,
+  Game,
 } = require('../models');
 
 /**
@@ -117,6 +118,7 @@ const checkAndUpdateStatuses = async (tourneyId) => {
     include: [
       {
         model: Pool,
+        as: 'pool',
         where: { tourneyId },
       },
     ],
