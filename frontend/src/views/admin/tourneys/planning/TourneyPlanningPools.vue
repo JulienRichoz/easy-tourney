@@ -658,25 +658,12 @@
        * Redirige vers la page des matchs si le statut est 'games'
        * @param newStatus
        */
-      currentStatus(newStatus) {
-        console.log('Nouveau statut:', newStatus);
-        if (newStatus === 'pools') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningPools',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'games') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningGames',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'completed') {
-          // Rediriger vers la vue appropriée pour 'Terminé'
-          this.$router.push({
-            name: 'AdminTourneyPlanningCompleted',
-            params: { tourneyId: this.tourneyId },
-          });
-        }
+      currentStatus: {
+        immediate: false,
+        handler(newStatus) {
+          console.log('Nouveau statut détecté :', newStatus);
+          this.handleStatusChange(newStatus);
+        },
       },
       /**
        * recharger FullCalendar à chaque changement de page
@@ -771,6 +758,27 @@
         }
       },
 
+      handleStatusChange(newStatus) {
+        // Redirections selon le nouveau statut
+        if (newStatus === 'pools') {
+          this.$router.push({
+            name: 'AdminTourneyPlanningPools',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'games') {
+          this.$router.push({
+            name: 'AdminTourneyPlanningGames',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else if (newStatus === 'completed') {
+          this.$router.push({
+            name: 'AdminTourneyPlanningCompleted',
+            params: { tourneyId: this.tourneyId },
+          });
+        } else {
+          console.warn('Statut non reconnu, aucune redirection effectuée.');
+        }
+      },
       /**
        * Rafraîchir les événements du calendrier
        */
