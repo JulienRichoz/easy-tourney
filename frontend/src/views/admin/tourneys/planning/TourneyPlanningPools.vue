@@ -1034,7 +1034,11 @@
             pool: { id: Number(poolId), name: event.extendedProps.poolName },
             sport: response.data.poolSchedule.sport,
           });
+          toast.success('Événement ajouté avec succès !');
         } catch (error) {
+          toast.error(
+            error.message || "Une erreur s'est produite lors de l'ajout."
+          );
           console.error("Erreur lors du traitement de l'événement :", error);
           info.revert();
         }
@@ -1238,7 +1242,9 @@
           this.poolSchedules = this.poolSchedules.filter(
             (ps) => ps.id.toString() !== event.id.toString()
           );
+          toast.success('Événement supprimé avec succès !');
         } catch (error) {
+          toast.error('Erreur lors de la suppression de l’événement.');
           console.error('Erreur lors de la suppression du pool :', error);
         }
       },
