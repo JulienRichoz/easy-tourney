@@ -172,6 +172,7 @@ exports.updatePoolSchedule = async (req, res) => {
  */
 exports.deletePoolSchedule = async (req, res) => {
   try {
+    const { tourneyId } = req.params;
     const { poolScheduleId } = req.params;
 
     // Vérification de l'existence du PoolSchedule
