@@ -3,9 +3,34 @@
     <!-- Sous-menu du tournoi -->
     <TourneySubMenu :tourneyId="tourneyId" @selectTab="selectTab" />
 
-    <!-- Contenu principal -->
+    <!-- Avancement du Tournoi avec le stepper horizontal -->
+    <div
+      class="flex items-center gap-y-6 gap-x-4 max-w-screen-lg mx-auto px-4 font-sans mt-8"
+    >
+      <div v-for="(step, index) in statusSteps" :key="index" class="flex-1">
+        <!-- Barre de progression -->
+        <div
+          :class="['w-full h-2 rounded-xl', progressBarClass(step.status)]"
+        ></div>
+        <!-- Informations sur l'étape -->
+        <div class="mt-2 mr-4 flex items-center">
+          <!-- Icône de l'étape -->
+          <component :is="stepIconComponent(step.status)" class="shrink-0" />
+          <div class="ml-2">
+            <h6 :class="['text-lg font-bold', stepTextClass(step.status)]">
+              {{ step.label }}
+            </h6>
+            <p :class="['text-base', stepTextClass(step.status)]">
+              {{ stepStatusText(step.status) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenu principal avec deux colonnes -->
     <div class="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-start">
-      <!-- Détails du tournoi -->
+      <!-- Détails du tournoi et Statistiques -->
       <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8">
         <h2
           class="text-3xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
@@ -13,40 +38,82 @@
           {{ tourney.name }}
         </h2>
         <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
-          <strong>Lieu:</strong> {{ tourney.location }}
+          <strong>Lieu :</strong> {{ tourney.location }}
         </p>
         <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
-          <strong>Date:</strong> {{ formatDate(tourney.dateTourney) }}
+          <strong>Date :</strong> {{ formatDate(tourney.dateTourney) }}
         </p>
 
-        <h3
-          class="mt-6 text-2xl font-bold text-light-form-text dark:text-dark-form-text"
-        >
-          Étape actuelle:
-        </h3>
-        <p class="text-base text-light-form-text dark:text-dark-form-text">
-          Assigner les terrains
-        </p>
+        <!-- Informations Supplémentaires sur deux colonnes -->
+        <div class="mt-6">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Utilisateurs Inscrits :</strong> {{ counts.users }}
+              </p>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Terrains :</strong> {{ counts.fields }}
+              </p>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Sports :</strong> {{ counts.sports }}
+              </p>
+            </div>
+            <div>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Équipes :</strong> {{ counts.teams }}
+              </p>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Créneaux Horaires par Pool :</strong>
+                {{ counts.timeSlotsPerPool }}
+              </p>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Pools :</strong> {{ counts.pools }}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <ol class="list-none pl-0 my-4">
-          <li
-            v-for="(step, index) in steps"
-            :key="index"
-            :class="{
-              'py-2 font-medium text-light-form-text dark:text-dark-form-text':
-                currentStepNumber < index + 1,
-              'py-2 font-medium text-green-700 dark:text-green-400 line-through':
-                currentStepNumber >= index + 1,
-            }"
+        <!-- Liste des Sports -->
+        <div class="mt-6">
+          <h3
+            class="text-2xl font-semibold mb-2 text-light-form-text dark:text-dark-form-text"
           >
-            {{ step }}
-          </li>
-        </ol>
+            Liste des Sports
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              v-for="sport in sports"
+              :key="sport.id"
+              class="flex items-center"
+            >
+              <span
+                class="w-4 h-4 rounded-full mr-2"
+                :style="{ backgroundColor: sport.color }"
+              ></span>
+              <span
+                class="text-base text-light-form-text dark:text-dark-form-text"
+                >{{ sport.name }}</span
+              >
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Carte OpenStreetMap -->
       <div
-        class="rounded-lg overflow-hidden shadow-lg p-4 sm:h-[50vh] h-[300px]"
+        class="rounded-lg overflow-hidden shadow-lg p-4 sm:h-[50vh] h-[300px] mt-8 md:mt-0"
       >
         <l-map
           v-if="mapIsReady"
@@ -76,206 +143,102 @@
     </div>
 
     <!-- Guide de configuration du tournoi -->
-    <div
-      class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8 mt-8 relative"
-    >
+    <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8 mt-8">
       <h3
         class="text-2xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
       >
-        Guide de configuration du tournoi
+        Guide de Configuration
       </h3>
-
-      <!-- Texte explicatif de base -->
-      <div v-if="!showExample">
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Suivez ces étapes pour configurer votre tournoi efficacement :
-        </p>
-
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Pour configurer efficacement votre tournoi, suivez ces étapes :
-        </p>
-
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
+      <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
+        Pour configurer votre tournoi, suivez ces étapes clés :
+      </p>
+      <ol
+        class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
+      >
+        <li>
+          <strong>Terrains</strong> : Ajoutez vos terrains dans l'onglet
+          Terrains.
+        </li>
+        <li>
+          <strong>Sports</strong> : Assignez les sports aux terrains dans
+          l'onglet Assignation.
+        </li>
+        <li>
+          <strong>Inscriptions</strong> : Configurez les équipes et ouvrez les
+          inscriptions.
+        </li>
+        <li>
+          <strong>Pools</strong> : Créez les pools et assignez les équipes.
+        </li>
+        <li><strong>Planning</strong> : Générez le planning des matchs.</li>
+      </ol>
+      <button
+        @click="showExample = true"
+        class="text-blue-500 mt-4 flex items-center space-x-2"
+      >
+        <span>Voir un exemple pratique</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
         >
-          1. Informations à connaître en amont
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Avant de commencer, vous pouvez connaître vos terrains disponibles
-          et/ou le nombre potentiels d'élèves :
-        </p>
-        <ul class="list-disc list-inside mb-4">
-          <li>
-            <strong>Si vous connaissez le nombre d'élèves :</strong> Utilisez ce
-            nombre pour déterminer le nombre de terrains nécessaires, en
-            fonction de la taille des équipes (par exemple, 3 à 6 joueurs par
-            équipe). Un terrain accueille généralement 3-4 équipes pour un
-            tournus fluide.
-          </li>
-          <li>
-            <strong>Si vous connaissez le nombre de terrains :</strong> Utilisez
-            le nombre de terrains pour estimer la capacité en équipes et la
-            structure des pools. Avoir 5 petits terrains avec 4 équipes par
-            terrain de 6 joueurs max permet d'accueillir environ 120 personnes
-            (5 * 4 * 6).
-          </li>
-        </ul>
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      </button>
+    </div>
 
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
+    <!-- Exemple pratique de configuration -->
+    <div
+      v-if="showExample"
+      class="mt-8 bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8"
+    >
+      <h4
+        class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
+      >
+        Exemple Pratique :
+      </h4>
+      <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
+        Imaginons que vous avez 6 terrains disponibles :
+      </p>
+      <ol
+        class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
+      >
+        <li>
+          Allez dans l'onglet <strong>Terrains</strong> et créez vos 6 terrains.
+        </li>
+        <li>
+          Assignez les sports aux terrains dans l'onglet
+          <strong>Assignation</strong>.
+        </li>
+        <li>
+          Configurez les équipes et ouvrez les inscriptions dans l'onglet
+          <strong>Inscriptions</strong>.
+        </li>
+        <li>
+          Créez 6 pools (un par terrain) dans l'onglet <strong>Pools</strong>.
+        </li>
+        <li>
+          Générez le planning des matchs dans l'onglet
+          <strong>Planning</strong>.
+        </li>
+      </ol>
+      <button
+        @click="showExample = false"
+        class="text-blue-500 mt-4 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
         >
-          2. Organiser les équipes et les terrains
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Basé sur le nombre de terrains et d'équipes, suivez ces suggestions :
-        </p>
-        <ul class="list-disc list-inside mb-4">
-          <li>
-            Divisez les grands terrains en deux petits terrains si nécessaire.
-            Cela permet d’accueillir des équipes de 3 à 6 joueurs, avec deux
-            équipes en match et éventuellement une ou deux équipes en repos.
-          </li>
-          <li>
-            <strong>Exemple :</strong> Pour 5 petits terrains, vous pouvez
-            organiser 4 équipes par terrain, ce qui donne 5 pools de 4 équipes,
-            avec un total de 20 équipes.
-          </li>
-        </ul>
-
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
-        >
-          3. Estimer le nombre de participants
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Selon la capacité de vos terrains, estimez le nombre maximum de
-          joueurs que le tournoi peut accueillir :
-        </p>
-        <ul class="list-disc list-inside mb-4">
-          <li>
-            <strong>Nombre de joueurs total :</strong> Multipliez le nombre
-            d'équipes par la taille de l'équipe. Par exemple, pour 20 équipes de
-            3 à 6 joueurs, le tournoi peut accueillir entre 60 et 120 joueurs.
-          </li>
-        </ul>
-
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
-        >
-          4. Ajuster selon les besoins
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Si vous avez besoin de plus de participants ou d’un nombre d'équipes
-          différent, vous pouvez :
-        </p>
-        <ul class="list-disc list-inside mb-4">
-          <li>Augmenter le nombre de joueurs par équipe.</li>
-          <li>
-            Augmenter le nombre de terrains (par exemple, diviser un grand
-            terrain en deux).
-          </li>
-        </ul>
-
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
-        >
-          5. Générer les pools et les matchs
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Une fois les équipes et terrains configurés, vous pouvez générer les
-          pools. Chaque pool est associé à un terrain, et les équipes y jouent
-          en round-robin, c’est-à-dire que toutes les équipes d’un pool se
-          rencontrent au moins une fois.
-        </p>
-
-        <button
-          @click="showExample = true"
-          class="text-blue-500 mt-4 flex items-center space-x-2"
-        >
-          <span>Voir un exemple pratique</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-          >
-            <path d="M9 18l6-6-6-6"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Exemple pratique de configuration -->
-      <div v-else>
-        <h4
-          class="font-semibold text-light-form-text dark:text-dark-form-text mt-4"
-        >
-          Exemple Pratique :
-        </h4>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
-          Imaginons que vous avez 6 terrains disponibles :
-        </p>
-        <ol
-          class="list-decimal list-inside mb-4 space-y-2 text-light-form-text dark:text-dark-form-text"
-        >
-          <li>
-            Allez dans l'onglet <strong>Terrains</strong> et créez vos 6
-            terrains.
-          </li>
-          <li>
-            Allez dans l'onglet <strong>Assignation</strong> et associez les
-            sports aux terrains pour un planning de base.
-          </li>
-          <li>
-            Dans l'onglet <strong>Inscriptions</strong> :
-            <ul class="list-disc list-inside ml-6">
-              <li>
-                Configurez vos équipes via <strong>Config Équipe</strong>. Avec
-                6 terrains, vous pouvez créer environ 24 équipes (4 par terrain,
-                2 en repos).
-              </li>
-              <li>
-                Définissez la taille des équipes entre 3 à 6 joueurs, soit un
-                total max de 24 * 6 = 144 joueurs.
-              </li>
-              <li>
-                Utilisez le groupe assistant pour gérer les inscriptions
-                supplémentaires.
-              </li>
-              <li>
-                Générez les équipes manuellement ou automatiquement avec
-                <strong>Générer équipes</strong>.
-              </li>
-              <li>Activez les inscriptions et générez un lien d’invitation.</li>
-            </ul>
-          </li>
-          <li>
-            En mode <strong>Custom Round Robin</strong>, créez 6 pools (1 par
-            terrain). Configurez chaque pool pour contenir entre 3 et 4 équipes
-            pour un roulement fluide.
-          </li>
-          <li>
-            Une fois les pools créés, passez à l’onglet
-            <strong>Planning</strong> pour générer le planning des matchs.
-          </li>
-        </ol>
-
-        <button
-          @click="showExample = false"
-          class="text-blue-500 mt-4 flex items-center space-x-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-          >
-            <path d="M15 18l-6-6 6-6"></path>
-          </svg>
-          <span>Retourner au guide</span>
-        </button>
-      </div>
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+        <span>Retourner au guide</span>
+      </button>
     </div>
   </div>
 </template>
@@ -287,6 +250,12 @@
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import apiService from '@/services/apiService';
 
+  // Importation des icônes
+  import CompletedIcon from '@/components/icons/CompletedIcon.vue';
+  import PendingIcon from '@/components/icons/PendingIcon.vue';
+  import ActiveIcon from '@/components/icons/ActiveIcon.vue';
+  import DraftIcon from '@/components/icons/DraftIcon.vue';
+
   export default {
     components: {
       LMap,
@@ -294,6 +263,10 @@
       LMarker,
       LPopup,
       TourneySubMenu,
+      CompletedIcon,
+      PendingIcon,
+      ActiveIcon,
+      DraftIcon,
     },
     data() {
       return {
@@ -302,12 +275,22 @@
         currentStepNumber: 1, // Pour gérer l'étape actuelle en nombre
         mapIsReady: false,
         showExample: false, // Affichage de l'exemple pratique
-        steps: [
-          'Assigner les terrains',
-          'Gérer les groupes',
-          'Lancer les inscriptions',
-          'Inscriptions validées, gérer le planning',
+        statusSteps: [
+          { label: 'Terrains', status: '' },
+          { label: 'Sports', status: '' },
+          { label: 'Inscriptions', status: '' },
+          { label: 'Pools', status: '' },
+          { label: 'Planning', status: '' },
         ],
+        sports: [],
+        counts: {
+          users: 0,
+          fields: 0,
+          sports: 0,
+          teams: 0,
+          timeSlotsPerPool: 0,
+          pools: 0,
+        },
       };
     },
     async mounted() {
@@ -319,30 +302,140 @@
       ...mapActions('tourney', ['fetchTourneyStatuses', 'setTournamentName']),
       async fetchTourneyDetails() {
         try {
-          this.fetchTourneyStatuses(this.tourneyId);
-          const response = await apiService.get(`/tourneys/${this.tourneyId}`);
-          this.tourney = response.data;
-          // Optionnel: Définir l'étape actuelle en fonction des données du tournoi
-          this.currentStepNumber = this.tourney.currentStep || 1;
+          // Récupérer les statuts
+          await this.fetchTourneyStatuses(this.tourneyId);
+
+          // Récupérer les détails du tournoi
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/details`
+          );
+          this.tourney = response.data.tourney;
+          this.counts = response.data.counts;
+          this.sports = response.data.sports;
+
+          // Mettre à jour les statuts des étapes
+          this.updateStatusSteps();
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi:',
             error
           );
+          // Afficher un message d'erreur à l'utilisateur si nécessaire
         }
       },
+      /**
+       * Formate la date au format lisible.
+       * @param {String} dateString - La date en format ISO.
+       * @returns {String} - La date formatée.
+       */
       formatDate(dateString) {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
       },
+      /**
+       * Gère le changement d'onglet si nécessaire.
+       * @param {String} tab - L'onglet sélectionné.
+       */
       selectTab(tab) {
         this.activeTab = tab;
+      },
+      /**
+       * Met à jour les statuts des étapes du tournoi.
+       */
+      updateStatusSteps() {
+        const {
+          fieldAssignmentStatus,
+          sportAssignmentStatus,
+          registrationStatus,
+          poolStatus,
+          planningStatus,
+        } = this.tourney;
+
+        this.statusSteps = [
+          { label: 'Terrains', status: fieldAssignmentStatus },
+          { label: 'Sports', status: sportAssignmentStatus },
+          { label: 'Inscriptions', status: registrationStatus },
+          { label: 'Pools', status: poolStatus },
+          { label: 'Planning', status: planningStatus },
+        ];
+      },
+      /**
+       * Détermine les classes CSS pour la barre de progression en fonction du statut de l'étape.
+       * @param {String} status - Le statut de l'étape.
+       * @returns {String} - Les classes CSS à appliquer.
+       */
+      progressBarClass(status) {
+        switch (status) {
+          case 'completed':
+            return 'bg-light-details-completed dark:bg-dark-details-completed';
+          case 'active':
+            return 'bg-light-details-active dark:bg-dark-details-active';
+          case 'draft':
+            return 'bg-light-details-inProgress dark:bg-dark-details-inProgress';
+          default:
+            return 'bg-light-details-notStarted dark:bg-dark-details-notStarted';
+        }
+      },
+      /**
+       * Détermine les classes CSS pour le texte de l'étape.
+       * @param {String} status - Le statut de l'étape.
+       * @returns {String} - Les classes CSS à appliquer.
+       */
+      stepTextClass(status) {
+        if (status === 'completed') {
+          return 'text-light-details-completed dark:text-dark-details-completed';
+        } else if (status === 'active') {
+          return 'text-light-details-active dark:text-dark-details-active';
+        } else if (status === 'draft') {
+          return 'text-light-details-inProgress dark:text-dark-details-inProgress';
+        } else {
+          return 'text-light-details-notStarted dark:text-dark-details-notStarted';
+        }
+      },
+      /**
+       * Retourne le texte du statut de l'étape.
+       * @param {String} status - Le statut de l'étape.
+       * @returns {String} - Le texte à afficher.
+       */
+      stepStatusText(status) {
+        if (status === 'completed') {
+          return 'Complété';
+        } else if (status === 'active') {
+          return 'En cours';
+        } else if (status === 'draft') {
+          return 'Brouillon';
+        } else {
+          return 'En attente';
+        }
+      },
+      /**
+       * Retourne le composant icône approprié en fonction du statut.
+       * @param {String} status - Le statut de l'étape.
+       * @returns {Component} - Le composant icône.
+       */
+      stepIconComponent(status) {
+        if (status === 'completed') {
+          return 'CompletedIcon';
+        } else if (status === 'active') {
+          return 'ActiveIcon';
+        } else if (status === 'draft') {
+          return 'DraftIcon';
+        } else {
+          return 'PendingIcon';
+        }
       },
     },
     computed: {
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
+      /**
+       * Vérifie si toutes les étapes sont complétées.
+       * @returns {Boolean} - Vrai si toutes les étapes sont complétées.
+       */
+      allStepsCompleted() {
+        return this.statusSteps.every((step) => step.status === 'completed');
+      },
     },
   };
 </script>
