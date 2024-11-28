@@ -25,6 +25,7 @@ const gameEventRoutes = require('./routes/gameEvent');
 const scheduleTourneyRoutes = require('./routes/scheduleTourney');
 const poolScheduleRoutes = require('./routes/poolSchedule');
 const planningRoutes = require('./routes/planning');
+const exportDataRoutes = require('./routes/exportData');
 
 const { errorHandler, limiter } = require('./middlewares');
 
@@ -64,6 +65,9 @@ app.use('/api/tourneys/:tourneyId/pools/schedule', poolScheduleRoutes); // Route
 app.use('/api/tourneys/:tourneyId/planning', planningRoutes); // Routes pour la gestion des plannings
 // Gestion des erreurs
 app.use(errorHandler);
+
+// Route pour exporter les données d'un tournoi
+app.use('/api/tourneys/:tourneyId/export-data', exportDataRoutes);
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
