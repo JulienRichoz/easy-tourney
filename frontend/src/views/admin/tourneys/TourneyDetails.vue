@@ -112,15 +112,13 @@
       </div>
 
       <!-- Carte OpenStreetMap -->
-      <div
-        class="rounded-lg overflow-hidden shadow-lg p-4 sm:h-[50vh] h-[300px] mt-8 md:mt-0"
-      >
+      <div class="rounded-lg shadow-lg p-4 sm:h-[50vh] h-[300px] mt-8 md:mt-0">
         <div
           v-if="!coordinatesAreValid"
           class="text-sm text-red-500 mt-2 text-center"
         >
-          Les coordonnées ne sont pas valides, la carte affiche le lieu par
-          défaut.
+          Les coordonnées ne sont pas valides, la carte affiche un lieu par
+          défaut (FR) .
         </div>
         <l-map
           v-if="mapIsReady"
@@ -138,6 +136,16 @@
             <l-popup>{{ tourney.location || 'Fribourg, Suisse' }}</l-popup>
           </l-marker>
         </l-map>
+        <!-- Bouton sous la carte -->
+        <div class="mt-4 flex justify-end">
+          <ButtonComponent
+            :variant="'primary'"
+            fontAwesomeIcon="map-marker-alt"
+            @click="openGoogleMaps"
+          >
+            Itinéraire
+          </ButtonComponent>
+        </div>
       </div>
     </div>
 
@@ -277,7 +285,8 @@
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import apiService from '@/services/apiService';
 
-  // Importation des icônes
+  // Importation des composants
+  import ButtonComponent from '@/components/ButtonComponent.vue';
   import CompletedIcon from '@/components/icons/CompletedIcon.vue';
   import PendingIcon from '@/components/icons/PendingIcon.vue';
   import ActiveIcon from '@/components/icons/ActiveIcon.vue';
@@ -294,6 +303,7 @@
       PendingIcon,
       ActiveIcon,
       DraftIcon,
+      ButtonComponent,
     },
     data() {
       return {
@@ -492,6 +502,21 @@
        */
       mapLongitude() {
         return this.coordinatesAreValid ? this.tourney.longitude : 7.1619;
+      },
+
+      /**
+       * Génère le lien Google Maps vers l'emplacement du tournoi.
+       * @returns {String} - L'URL vers Google Maps.
+       */
+      googleMapsLink() {
+        if (this.coordinatesAreValid) {
+          const lat = this.tourney.latitude;
+          const lng = this.tourney.longitude;
+          return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        } else {
+          // Lien vers Fribourg par défaut si les coordonnées ne sont pas valides
+          return 'https://www.google.com/maps/dir/?api=1&destination=46.8065,7.1619';
+        }
       },
 
       /**
