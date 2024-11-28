@@ -6,6 +6,7 @@
 
     <!-- Liste des pools en haut, sticky sans fond gris -->
     <div
+      v-if="isEditable"
       id="external-events"
       class="p-2 rounded-lg shadow-lg sticky top-0 z-50 overflow-x-auto flex items-center justify-between bg-white dark:bg-dark-background"
     >
@@ -83,6 +84,7 @@
       <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
         <!-- Boutons d'action -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-4 flex-grow">
+          <!-- Bouton pour configurer le planning -->
           <ButtonComponent
             v-if="isEditable"
             fontAwesomeIcon="cog"
@@ -93,6 +95,8 @@
             <span class="hidden md:inline">Config Horaires</span>
             <span class="md:hidden">Conf.</span>
           </ButtonComponent>
+
+          <!-- Bouton pour générer le planning -->
           <ButtonComponent
             v-if="isEditable"
             fontAwesomeIcon="cog"
@@ -105,6 +109,7 @@
             <span class="md:hidden">Gen.</span>
           </ButtonComponent>
 
+          <!-- Bouton pour valider le planning -->
           <ButtonComponent
             v-if="isEditable"
             fontAwesomeIcon="check"
@@ -116,6 +121,8 @@
             <span class="hidden md:inline">Vérifier Planning Pools</span>
             <span class="md:hidden">Check</span>
           </ButtonComponent>
+
+          <!-- Bouton pour effacer le planning -->
           <ButtonComponent
             v-if="hasPoolSchedules && isEditable"
             fontAwesomeIcon="trash"
@@ -128,6 +135,17 @@
             <span class="md:hidden">Del</span>
           </ButtonComponent>
         </div>
+
+        <!-- Bouton Télécharger Excel -->
+        <ButtonComponent
+          v-if="!isEditable"
+          @click="downloadExcel"
+          label="Télécharger Excel"
+          variant="success"
+          font-awesome-icon="file-excel"
+        >
+          Download Planning Excel
+        </ButtonComponent>
 
         <!-- Sélecteur "Étape" et bouton Étape -->
         <div class="flex items-center gap-2 order-last">
@@ -873,6 +891,45 @@
         container.appendChild(timeRange);
 
         return { domNodes: [container] };
+      },
+      async downloadExcel() {
+        try {
+          // Afficher un toast indiquant que le téléchargement démarre
+          const toastId = toast.info('Téléchargement du fichier en cours...', {
+            autoClose: false, // Empêche la fermeture automatique
+          });
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/export-data/excel`,
+            {
+              responseType: 'blob', // Spécifiez que vous attendez un blob
+            }
+          );
+
+          // Créer une URL temporaire pour le fichier
+          const blob = response.data; // Axios renvoie le blob dans `data`
+          const url = window.URL.createObjectURL(blob);
+
+          // Créer un lien pour déclencher le téléchargement
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tournament_${this.tourneyId}.xlsx`; // Nom du fichier
+          document.body.appendChild(a);
+          a.click();
+
+          // Nettoyer l'URL temporaire après le téléchargement
+          window.URL.revokeObjectURL(url);
+          // Mettre à jour le toast pour indiquer que le téléchargement est terminé
+          toast.update(toastId, {
+            render: 'Téléchargement terminé avec succès !',
+            type: toast.TYPE.SUCCESS,
+            autoClose: 2000, // Fermeture automatique après 5 secondes
+          });
+        } catch (error) {
+          console.error('Erreur lors du téléchargement Excel :', error);
+          toast.error(
+            error.message || "Une erreur s'est produite lors du téléchargement."
+          );
+        }
       },
       /**
        * Retourne la classe CSS appropriée en fonction du type d'avertissement.
