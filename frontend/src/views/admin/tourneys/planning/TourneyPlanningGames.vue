@@ -821,6 +821,7 @@
         }
       },
       currentStatus(newStatus) {
+        console.log('Nouveau statut:', newStatus);
         if (newStatus === 'pools') {
           this.$router.push({
             name: 'AdminTourneyPlanningPools',
@@ -853,7 +854,6 @@
       async fetchPlanningDetails() {
         try {
           await this.fetchTourneyStatuses(this.tourneyId);
-          this.currentStatus = this.statuses.planningStatus;
 
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/planning/details`

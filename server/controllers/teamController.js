@@ -9,7 +9,6 @@ const {
 } = require('../models');
 const { Op } = require('sequelize');
 const {
-  checkAndUpdateStatuses,
   getRegistrationStatus,
 } = require('../utils/statusUtils');
 

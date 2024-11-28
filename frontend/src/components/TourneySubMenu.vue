@@ -98,13 +98,19 @@
     computed: {
       ...mapState('tourney', ['statuses']),
       currentPlanningStatus() {
-        if (this.statuses.planningStatus === 'completed') {
-          return 'games/details';
+        const status = this.statuses.planningStatus;
+        switch (status) {
+          case 'notStarted':
+            return 'pools';
+          case 'pools':
+            return 'pools';
+          case 'games':
+            return 'games';
+          case 'completed':
+            return 'games/details';
+          default:
+            return 'pools'; // Valeur par défaut si aucun statut n'est défini
         }
-        if (this.statuses.planningStatus !== 'notStarted') {
-          return 'pools';
-        }
-        return this.statuses.planningStatus || 'pools'; // Valeur par défaut
       },
     },
   };

@@ -659,6 +659,7 @@
        * @param newStatus
        */
       currentStatus(newStatus) {
+        console.log('Nouveau statut:', newStatus);
         if (newStatus === 'pools') {
           this.$router.push({
             name: 'AdminTourneyPlanningPools',
@@ -708,9 +709,6 @@
         try {
           // Charger les statuts du tournoi
           await this.fetchTourneyStatuses(this.tourneyId);
-
-          // Définir le statut actuel
-          this.currentStatus = this.statuses.planningStatus;
 
           // Récupérer les détails du planning
           const response = await apiService.get(
