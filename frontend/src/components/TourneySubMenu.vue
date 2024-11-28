@@ -5,7 +5,6 @@
     :class="['tourney-nav', isNavVisible ? 'visible' : 'hidden']"
     class="tourney-nav w-full z-50 bg-light-subMenu-background dark:bg-dark-subMenu-background shadow-lg border-b border-light-subMenu-border dark:border-dark-subMenu-border"
   >
-    <!-- Liens du menu -->
     <!-- DETAILS -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}`"
@@ -13,7 +12,6 @@
       :class="{ active: $route.name === 'AdminTourneyDetails' }"
     >
       <font-awesome-icon :icon="['fas', 'info-circle']" />
-
       <span class="hidden sm:inline"> Détails</span>
     </router-link>
 
@@ -27,24 +25,24 @@
       <span class="hidden sm:inline"> Terrains</span>
     </router-link>
 
-    <!-- ASSIGNATION SPORTS AUX TERRAINS -->
+    <!-- SPORT -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/sports-fields`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'AdminTourneySportsFields' }"
     >
       <font-awesome-icon :icon="['fas', 'futbol']" />
-      <span class="hidden sm:inline"> Assignation</span>
+      <span class="hidden sm:inline"> Sport</span>
     </router-link>
 
-    <!-- INSCRIPTIONS ET GESTION DES EQUIPES -->
+    <!-- PLAYERS -->
     <router-link
       :to="`/admin/tourneys/${tourneyId}/teams`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{ active: $route.name === 'AdminTourneyTeams' }"
     >
       <font-awesome-icon :icon="['fas', 'user']" />
-      <span class="hidden sm:inline"> Inscriptions</span>
+      <span class="hidden sm:inline"> Players</span>
     </router-link>
 
     <!-- POOLS -->
@@ -59,7 +57,7 @@
 
     <!-- PLANNING -->
     <router-link
-      :to="`/admin/tourneys/${tourneyId}/planning/${currentPlanningStatus}`"
+      :to="`/admin/tourneys/${tourneyId}/planning/pools`"
       class="tourney-nav-item text-light-subMenu-text dark:text-dark-subMenu-text hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground hover:text-light-subMenu-hoverText dark:hover:text-dark-subMenu-hoverText"
       :class="{
         active:
@@ -75,8 +73,6 @@
 </template>
 
 <script>
-  import { mapState } from 'vuex';
-
   export default {
     data() {
       return {
@@ -93,24 +89,6 @@
       tourneyId: {
         type: String,
         required: true,
-      },
-    },
-    computed: {
-      ...mapState('tourney', ['statuses']),
-      currentPlanningStatus() {
-        const status = this.statuses.planningStatus;
-        switch (status) {
-          case 'notStarted':
-            return 'pools';
-          case 'pools':
-            return 'pools';
-          case 'games':
-            return 'games';
-          case 'completed':
-            return 'games/details';
-          default:
-            return 'pools'; // Valeur par défaut si aucun statut n'est défini
-        }
       },
     },
   };
@@ -143,6 +121,9 @@
   .tourney-nav-item.active {
     color: #2f855a; /* Vert pour indiquer que l’élément est actif */
     font-weight: bold;
+  }
+  .tourney-nav-item div {
+    position: relative;
   }
 
   .tourney-nav-item.active::after {
