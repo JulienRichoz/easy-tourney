@@ -1,5 +1,7 @@
 const { Pool, PoolSchedule, Field, SportsFields, Sport } = require('../models');
 const { Op } = require('sequelize');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils');
+
 
 /**
  * Assigner une pool à un terrain avec des horaires spécifiques
@@ -68,6 +70,9 @@ exports.assignPoolToField = async (req, res) => {
       endTime,
       date,
     });
+
+    // Mettre à jour le statut global après l'assignation
+    await checkAndUpdateStatuses(tourneyId);
 
     // Récupérer le poolSchedule avec le sport associé
     const updatedPoolSchedule = await PoolSchedule.findByPk(poolSchedule.id, {
@@ -177,6 +182,9 @@ exports.deletePoolSchedule = async (req, res) => {
 
     // Suppression
     await poolSchedule.destroy();
+
+    // Mettre à jour le statut global après l'assignation
+    await checkAndUpdateStatuses(tourneyId);
 
     res.status(200).json({ message: 'PoolSchedule supprimé avec succès.' });
   } catch (error) {

@@ -80,7 +80,7 @@ module.exports = {
         defaultValue: 'notStarted',
       },
       planningStatus: {
-        type: Sequelize.ENUM('notStarted', 'pools', 'games', 'completed'),
+        type: Sequelize.ENUM('notStarted', 'draft', 'completed'),
         allowNull: false,
         defaultValue: 'notStarted',
       },

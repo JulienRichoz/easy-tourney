@@ -123,7 +123,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       planningStatus: {
-        type: DataTypes.ENUM('notStarted', 'pools', 'games', 'completed'),
+        type: DataTypes.ENUM('notStarted', 'draft', 'completed'),
         defaultValue: 'notStarted',
         allowNull: false,
       },

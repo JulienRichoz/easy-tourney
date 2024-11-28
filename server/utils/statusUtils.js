@@ -113,25 +113,23 @@ const checkAndUpdateStatuses = async (tourneyId) => {
   }
   await tourney.save();
 
-  // Mise à jour du planningStatus
-  const poolSchedulesCount = await PoolSchedule.count({
-    include: [
-      {
-        model: Pool,
-        as: 'pool',
-        where: { tourneyId },
-      },
-    ],
-  });
+  // planningStatus: notStarted <-> draft
+  if (tourney.planningStatus === 'notStarted') {
+    const hasPoolSchedules = await PoolSchedule.count({
+      include: [
+        {
+          model: Pool,
+          as: 'pool',
+          where: { tourneyId },
+          required: true,
+        },
+      ],
+    });
 
-  const gamesCount = await Game.count({ where: { tourneyId } });
-
-  if (gamesCount > 0) {
-    tourney.planningStatus = 'games';
-  } else if (poolSchedulesCount > 0) {
-    tourney.planningStatus = 'pools';
-  } else {
-    tourney.planningStatus = 'notStarted';
+    const hasGames = await Game.count({ where: { tourneyId } }) > 0;
+    if (hasPoolSchedules || hasGames) {
+      tourney.planningStatus = 'draft';
+    }
   }
   await tourney.save();
 

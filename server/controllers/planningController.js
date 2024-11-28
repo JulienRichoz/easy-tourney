@@ -14,6 +14,7 @@ const {
 
 const PlanningStrategyManager = require('../services/planningStrategies/pool/planningStrategyManager');
 const GameStrategyManager = require('../services/planningStrategies/game/gameStrategyManager');
+const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
 const {
   timeDifferenceInMinutes,
@@ -139,6 +140,8 @@ exports.generatePoolPlanning = async (req, res) => {
       { randomMode: randomMode === 'true' }
     );
     await planningStrategyManager.generatePlanning();
+    // Mettre à jour le statut global après l'assignation
+    await checkAndUpdateStatuses(tourneyId);
 
     res.status(200).json({ message: 'Planning généré avec succès.' });
   } catch (error) {
@@ -202,6 +205,8 @@ exports.resetPoolPlanning = async (req, res) => {
       },
     });
 
+    // Mettre à jour le statut global après l'assignation
+    await checkAndUpdateStatuses(tourneyId);
     res
       .status(200)
       .json({ message: 'Plannings des Pools réinitialisés avec succès.' });
@@ -229,7 +234,8 @@ exports.generateGamePlanning = async (req, res) => {
 
     const strategyManager = new GameStrategyManager(tourneyId, tourney.tourneyType, { randomMode: randomMode === 'true' });
     const result = await strategyManager.generateGames();
-
+    // Mettre à jour le statut global après l'assignation
+    await checkAndUpdateStatuses(tourneyId);
     res.status(200).json(result);
   } catch (error) {
     console.error('Erreur lors de la génération des matchs :', error);
@@ -269,7 +275,8 @@ exports.resetGamePlanning = async (req, res) => {
 
     // Supprimer tous les matchs du tournoi
     await Game.destroy({ where: { tourneyId } });
-
+    // Mettre à jour le statut global
+    await checkAndUpdateStatuses(tourneyId);
     res.status(200).json({ message: 'Tous les matchs ont été supprimés.' });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation des matchs :', error);
