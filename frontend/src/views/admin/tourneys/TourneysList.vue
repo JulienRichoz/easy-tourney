@@ -102,13 +102,11 @@
         confirmedDeleteTourneyId: null,
         newTourney: {
           name: '',
-          location: '',
+          location: { address: '', latitude: null, longitude: null },
           dateTourney: '',
           domain: '',
           emergencyDetails: '',
           status: 'draft',
-          latitude: null, // Ajouté
-          longitude: null, // Ajouté
         },
         editingTourneyId: null,
         isFormValid: false,
@@ -226,7 +224,7 @@
         this.editingTourneyId = null;
         this.newTourney = {
           name: '',
-          location: '',
+          location: { address: '', latitude: null, longitude: null }, // Réinitialiser comme objet
           dateTourney: '',
           domain: '',
           emergencyDetails: '',
@@ -242,8 +240,11 @@
         this.editingTourneyId = tourney.id;
         this.newTourney = {
           ...tourney,
-          latitude: tourney.latitude,
-          longitude: tourney.longitude,
+          location: {
+            address: tourney.location,
+            latitude: tourney.latitude,
+            longitude: tourney.longitude,
+          },
         };
         this.isFormValid = false;
         this.formErrors = {}; // Réinitialiser les erreurs
@@ -252,14 +253,21 @@
       async handleFormSubmit(formData) {
         this.isSaving = true;
         try {
+          // Préparer le payload en séparant location, latitude, longitude
+          const payload = {
+            ...formData,
+            location: formData.location.address,
+            latitude: formData.location.latitude,
+            longitude: formData.location.longitude,
+          };
+          // Si nécessaire, supprimez l'objet location du payload
+          // delete payload.location;
+
           if (this.editingTourneyId) {
-            await apiService.put(
-              `/tourneys/${this.editingTourneyId}`,
-              formData
-            );
+            await apiService.put(`/tourneys/${this.editingTourneyId}`, payload);
             toast.success('Tournoi modifié avec succès!');
           } else {
-            await apiService.post('/tourneys', formData);
+            await apiService.post('/tourneys', payload);
             toast.success('Nouveau tournoi ajouté avec succès!');
           }
           this.closeModal();
@@ -271,6 +279,7 @@
           this.isSaving = false;
         }
       },
+
       validateForm() {
         const { name, location, dateTourney } = this.newTourney;
         const trimmedName = name.trim();
@@ -292,14 +301,11 @@
         }
 
         // Valider le lieu
-        if (!location) {
+        if (!location || !location.address) {
           errors.location = 'Le lieu du tournoi est obligatoire.';
         } else {
           // Vérifier si latitude et longitude sont présentes
-          if (
-            this.newTourney.latitude === null ||
-            this.newTourney.longitude === null
-          ) {
+          if (location.latitude === null || location.longitude === null) {
             errors.location = 'Veuillez sélectionner une adresse valide.';
           }
         }

@@ -51,7 +51,9 @@
           icon="map-marker-alt"
           class="mr-2 text-light-form-text dark:text-dark-form-text"
         />
-        <span class="text-light-form-text dark:text-dark-form-text">
+        <span
+          class="text-light-form-text dark:text-dark-form-text truncate ..."
+        >
           {{ location }}
         </span>
       </div>

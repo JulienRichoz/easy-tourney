@@ -45,8 +45,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
             <!-- Utilisation du composant AutocompleteAddress pour le champ 'location' -->
             <AutocompleteAddress
               v-if="field.name === 'location'"
-              :value="formData[field.name]"
-              @input="updateLocation"
+              v-model="formData.location"
               :disabled="!isEditable"
               :placeholder="field.placeholder"
             />
@@ -255,6 +254,18 @@ file-selected: Lorsqu'un fichier est sélectionné.
     },
     methods: {
       validateField(field) {
+        if (field.name === 'location' && field.required) {
+          if (
+            !this.formData.location ||
+            !this.formData.location.address ||
+            !this.formData.location.latitude ||
+            !this.formData.location.longitude
+          ) {
+            this.errors.location = 'Veuillez sélectionner une adresse valide.';
+          } else {
+            delete this.errors.location;
+          }
+        }
         if (field.required && !this.formData[field.name]) {
           this.errors[field.name] = 'Ce champ est obligatoire';
         } else if (field.type === 'date') {
@@ -330,12 +341,6 @@ file-selected: Lorsqu'un fichier est sélectionné.
         if (this.isFormValid) {
           this.$emit('form-submit', this.formData);
         }
-      },
-      updateLocation(locationData) {
-        this.formData.location = locationData.address;
-        this.formData.latitude = locationData.latitude;
-        this.formData.longitude = locationData.longitude;
-        this.validateField({ name: 'location', required: true });
       },
 
       handleCancel() {

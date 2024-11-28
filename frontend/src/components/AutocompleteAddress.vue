@@ -1,7 +1,8 @@
+<!-- AutocompleteAddress.vue -->
 <template>
   <div>
     <input
-      :value="value"
+      v-model="inputValue"
       @input="onInput"
       :placeholder="placeholder"
       :disabled="disabled"
@@ -27,8 +28,8 @@
   export default {
     name: 'AutocompleteAddress',
     props: {
-      value: {
-        type: Object, // Maintenant, la valeur est un objet contenant address, latitude, longitude
+      modelValue: {
+        type: Object, // { address: '', latitude: null, longitude: null }
         default: () => ({ address: '', latitude: null, longitude: null }),
       },
       placeholder: {
@@ -42,15 +43,26 @@
     },
     data() {
       return {
+        inputValue: this.modelValue.address || '',
         suggestions: [],
         query: '',
         timeout: null,
       };
     },
+    watch: {
+      modelValue: {
+        handler(newVal) {
+          if (newVal.address !== this.inputValue) {
+            this.inputValue = newVal.address || '';
+          }
+        },
+        deep: true,
+      },
+    },
     methods: {
       onInput(event) {
         const value = event.target.value;
-        this.$emit('input', value);
+        this.inputValue = value;
         this.query = value;
 
         if (this.timeout) clearTimeout(this.timeout);
@@ -62,13 +74,12 @@
         } else {
           this.suggestions = [];
         }
-      },
-      onAddressSelected(selected) {
-        // Exemple: selected contient address, latitude, longitude
-        this.$emit('input', {
-          address: selected.address,
-          latitude: selected.latitude,
-          longitude: selected.longitude,
+
+        // Émettre un objet avec l'adresse et des coordonnées nulles
+        this.$emit('update:modelValue', {
+          address: value,
+          latitude: null,
+          longitude: null,
         });
       },
       async fetchSuggestions() {
@@ -93,7 +104,13 @@
         }
       },
       selectSuggestion(suggestion) {
-        this.$emit('input', suggestion.display_name);
+        const selected = {
+          address: suggestion.display_name,
+          latitude: parseFloat(suggestion.lat),
+          longitude: parseFloat(suggestion.lon),
+        };
+        this.inputValue = selected.address;
+        this.$emit('update:modelValue', selected); // Émettre l'objet complet
         this.suggestions = [];
       },
     },
