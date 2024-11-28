@@ -60,6 +60,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      latitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      longitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
       dateTourney: {
         type: DataTypes.DATEONLY,
         allowNull: false,

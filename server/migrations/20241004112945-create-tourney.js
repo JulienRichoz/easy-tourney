@@ -17,6 +17,14 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      latitude: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },
+      longitude: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },
       dateTourney: {
         type: Sequelize.DATEONLY,
         allowNull: false,
