@@ -115,14 +115,18 @@
       <div
         class="rounded-lg overflow-hidden shadow-lg p-4 sm:h-[50vh] h-[300px] mt-8 md:mt-0"
       >
+        <div
+          v-if="!coordinatesAreValid"
+          class="text-sm text-red-500 mt-2 text-center"
+        >
+          Les coordonnées ne sont pas valides, la carte affiche le lieu par
+          défaut.
+        </div>
         <l-map
           v-if="mapIsReady"
           ref="map"
           :zoom="12"
-          :center="[
-            tourney.locationLat || 46.8065,
-            tourney.locationLng || 7.1619,
-          ]"
+          :center="[mapLatitude, mapLongitude]"
           class="h-full w-full"
         >
           <l-tile-layer
@@ -130,12 +134,7 @@
             layer-type="base"
             name="OpenStreetMap"
           />
-          <l-marker
-            :lat-lng="[
-              tourney.locationLat || 46.8065,
-              tourney.locationLng || 7.1619,
-            ]"
-          >
+          <l-marker :lat-lng="[mapLatitude, mapLongitude]">
             <l-popup>{{ tourney.location || 'Fribourg, Suisse' }}</l-popup>
           </l-marker>
         </l-map>
@@ -457,6 +456,44 @@
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
+
+      /**
+       * Latitude de la carte OpenStreetMap.
+       * @returns {Number} - La latitude.
+       * @default 46.8069
+       * @see https://www.openstreetmap.org/#map=12/46.8069/7.1611
+       */
+      coordinatesAreValid() {
+        const lat = this.tourney.latitude;
+        const lng = this.tourney.longitude;
+        return (
+          lat !== null &&
+          lng !== null &&
+          !isNaN(lat) &&
+          !isNaN(lng) &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180
+        );
+      },
+
+      /**
+       * Latitude de la carte OpenStreetMap.
+       * @returns {Number} - La latitude.
+       */
+      mapLatitude() {
+        return this.coordinatesAreValid ? this.tourney.latitude : 46.8065;
+      },
+
+      /**
+       * Longitude de la carte OpenStreetMap.
+       * @returns {Number} - La longitude.
+       */
+      mapLongitude() {
+        return this.coordinatesAreValid ? this.tourney.longitude : 7.1619;
+      },
+
       /**
        * Vérifie si toutes les étapes sont complétées.
        * @returns {Boolean} - Vrai si toutes les étapes sont complétées.
