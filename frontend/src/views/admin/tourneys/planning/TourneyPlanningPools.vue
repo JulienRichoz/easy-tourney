@@ -92,19 +92,6 @@
             <span class="hidden md:inline">Config Horaires</span>
             <span class="md:hidden">Conf.</span>
           </ButtonComponent>
-
-          <ButtonComponent
-            v-if="hasPoolSchedules && isEditable"
-            fontAwesomeIcon="trash"
-            @click="confirmClearPlanning"
-            variant="danger"
-            :disabled="!pools.length"
-            class="w-auto"
-          >
-            <span class="hidden md:inline">Reset Pools</span>
-            <span class="md:hidden">Del</span>
-          </ButtonComponent>
-
           <ButtonComponent
             fontAwesomeIcon="cog"
             @click="openGeneratePlanningModal"
@@ -123,8 +110,19 @@
             :disabled="!isEditable || !hasPoolSchedules"
             class="w-auto"
           >
-            <span class="hidden md:inline">Vérifier Pools</span>
+            <span class="hidden md:inline">Vérifier Planning Pools</span>
             <span class="md:hidden">Check</span>
+          </ButtonComponent>
+          <ButtonComponent
+            v-if="hasPoolSchedules && isEditable"
+            fontAwesomeIcon="trash"
+            @click="confirmClearPlanning"
+            variant="danger"
+            :disabled="!pools.length"
+            class="w-auto"
+          >
+            <span class="hidden md:inline">Reset Pools</span>
+            <span class="md:hidden">Del</span>
           </ButtonComponent>
         </div>
 
@@ -132,10 +130,10 @@
         <div class="flex items-center gap-2 order-last">
           <StatusSelectorComponent
             :tourneyId="tourneyId"
+            label="Etape"
             statusKey="planningStatus"
             :statusOptions="planningStatusOptions"
             v-model="currentStatus"
-            label="Etape"
             :hideWhenNotStarted="false"
           />
         </div>
@@ -162,9 +160,8 @@
             <div
               class="block w-14 h-8 rounded-full transition-colors duration-300"
               :class="{
-                'bg-light-menuActive dark:bg-light-menuActive':
-                  useUnifiedColors,
-                'bg-light-logoutButton-default dark:bg-light-logoutButton-default':
+                'bg-light-menuActive dark:bg-dark-menuActive': useUnifiedColors,
+                'bg-light-pool-infoText dark:bg-dark-pool-infoText':
                   !useUnifiedColors,
               }"
             ></div>
@@ -177,6 +174,10 @@
             {{ useUnifiedColors ? 'Color by Pool' : 'Color by Sport' }}
           </span>
         </label>
+        <div class="content-center">
+          <!-- Navigation par Boutons Radio -->
+          <PlanningViewSelector :tourneyId="tourneyId" />
+        </div>
 
         <!-- Pagination alignée à droite -->
         <div class="flex items-center gap-2 ml-auto">
@@ -303,6 +304,7 @@
   import StrategyPlanningGeneratorComponent from '@/components/StrategyPattern/Planning/StrategyPlanningGeneratorComponent.vue';
   import vSelect from 'vue-select';
   import 'vue-select/dist/vue-select.css';
+  import PlanningViewSelector from '@/components/PlanningViewSelector.vue';
 
   export default {
     components: {
@@ -316,6 +318,7 @@
       DeleteConfirmationModal,
       StrategyPlanningGeneratorComponent,
       vSelect,
+      PlanningViewSelector,
     },
     data() {
       return {
@@ -327,8 +330,7 @@
         formErrors: {}, // Pour stocker les erreurs du formulaire
         selectedPoolId: null, // ID de la pool sélectionnée pour les filtres
         planningStatusOptions: [
-          { value: 'pools', label: 'Pools' },
-          { value: 'games', label: 'Matchs' },
+          { value: 'draft', label: 'Edition' },
           { value: 'completed', label: 'Terminé' },
         ],
         warnings: [],
@@ -655,17 +657,6 @@
         }
       },
       /**
-       * Redirige vers la page des matchs si le statut est 'games'
-       * @param newStatus
-       */
-      currentStatus: {
-        immediate: false,
-        handler(newStatus) {
-          console.log('Nouveau statut détecté :', newStatus);
-          this.handleStatusChange(newStatus);
-        },
-      },
-      /**
        * recharger FullCalendar à chaque changement de page
        */
       currentPage() {
@@ -758,27 +749,6 @@
         }
       },
 
-      handleStatusChange(newStatus) {
-        // Redirections selon le nouveau statut
-        if (newStatus === 'pools') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningPools',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'games') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningGames',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else if (newStatus === 'completed') {
-          this.$router.push({
-            name: 'AdminTourneyPlanningCompleted',
-            params: { tourneyId: this.tourneyId },
-          });
-        } else {
-          console.warn('Statut non reconnu, aucune redirection effectuée.');
-        }
-      },
       /**
        * Rafraîchir les événements du calendrier
        */

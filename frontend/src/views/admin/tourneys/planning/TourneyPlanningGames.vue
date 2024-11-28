@@ -136,6 +136,9 @@
           </span>
         </label>
 
+        <!-- Navigation par Boutons Radio -->
+        <PlanningViewSelector :tourneyId="tourneyId" />
+
         <!-- Pagination -->
         <div class="flex items-center gap-2 ml-auto">
           <button
@@ -282,6 +285,7 @@
   import StrategyPlanningGeneratorComponent from '@/components/StrategyPattern/Planning/StrategyPlanningGeneratorComponent.vue';
   import vSelect from 'vue-select';
   import 'vue-select/dist/vue-select.css';
+  import PlanningViewSelector from '@/components/PlanningViewSelector.vue';
 
   export default {
     components: {
@@ -295,6 +299,7 @@
       DeleteConfirmationModal,
       StrategyPlanningGeneratorComponent,
       vSelect,
+      PlanningViewSelector,
     },
     data() {
       return {
@@ -309,8 +314,7 @@
         formErrors: {},
         selectedPoolId: null,
         planningStatusOptions: [
-          { value: 'pools', label: 'Pools' },
-          { value: 'games', label: 'Matchs' },
+          { value: 'draft', label: 'Edition' },
           { value: 'completed', label: 'Terminé' },
         ],
         scheduleFormFields: [
