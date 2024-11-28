@@ -195,6 +195,7 @@
             {{ useUnifiedColors ? 'Color by Pool' : 'Color by Sport' }}
           </span>
         </label>
+
         <div class="flex items-center justify-center mx-auto">
           <!-- Navigation par Boutons Radio -->
           <PlanningViewSelector :tourneyId="tourneyId" />
@@ -470,7 +471,7 @@
         ],
         showGeneratePlanningConfirmation: false,
         showClearPlanningConfirmation: false,
-        useUnifiedColors: false,
+        useUnifiedColors: true,
         colorMap: {}, // Pour stocker les couleurs unies par Pool ID
       };
     },
@@ -690,7 +691,6 @@
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
-        // TODO: DELETE IF NOT USED window.removeEventListener('resize', this.checkScreenSize);
       }
     },
     methods: {
@@ -892,6 +892,11 @@
 
         return { domNodes: [container] };
       },
+
+      /**
+       * Télécharge le planning du tournoi au format Excel.
+       * Utilise l'API pour récupérer le fichier Excel et le télécharger.
+       */
       async downloadExcel() {
         try {
           // Afficher un toast indiquant que le téléchargement démarre
@@ -949,6 +954,9 @@
         }
       },
 
+      /**
+       * Ouvre le modal pour configurer le planning du tournoi.
+       */
       isSchedule() {
         if (this.scheduleConfig) {
           return true;
@@ -1599,12 +1607,10 @@
         // Retourner l'objet errors
         return errors;
       },
-      /* TODO: DELETE IF NOT USED
-      checkScreenSize() {
-        this.isSmallScreen = window.innerWidth < 768;
-        this.terrainsPerPage = this.isSmallScreen ? 2 : 10; // Ajuster selon les besoins
-      },*/
 
+      /**
+       * Calcul le nombre de terrains à afficher par page en fonction de la largeur de l'écran.
+       */
       adjustTerrainsPerPage() {
         const screenWidth = window.innerWidth;
 
@@ -1622,13 +1628,14 @@
       },
     },
 
+    /**
+     * Méthode appelée lorsque le composant est monté.
+     */
     async mounted() {
       this.adjustTerrainsPerPage();
       window.addEventListener('resize', this.adjustTerrainsPerPage);
-      // Méthode appelée lorsque le composant est monté
       await this.fetchPlanningDetails(); // Récupérer les détails du planning
-      // Rendre les éléments de pools externes "draggables"
-      this.initializeExternalEvents();
+      this.initializeExternalEvents(); // Rendre les éléments de pools externes "draggables"
       this.checkWarnings();
     },
   };
@@ -1642,22 +1649,6 @@
     text-align: center;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Styles pour le toggle */
-  .toggle-bg {
-    background-color: #ccc;
-  }
-  .toggle-bg-active {
-    background-color: #3b82f6;
-  }
-  .toggle-dot {
-    top: 0.25rem;
-    left: 0.25rem;
-    transition: transform 0.2s;
-  }
-  .toggle-dot-active {
-    transform: translateX(1.5rem);
   }
 
   .navigation-button {

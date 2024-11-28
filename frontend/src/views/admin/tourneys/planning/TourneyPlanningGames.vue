@@ -137,9 +137,8 @@
             <div
               class="block w-14 h-8 rounded-full transition-colors duration-300"
               :class="{
-                'bg-light-menuActive dark:bg-light-menuActive':
-                  useUnifiedColors,
-                'bg-light-logoutButton-default dark:bg-light-logoutButton-default':
+                'bg-light-menuActive dark:bg-dark-menuActive': useUnifiedColors,
+                'bg-light-pool-infoText dark:bg-dark-pool-infoText':
                   !useUnifiedColors,
               }"
             ></div>
@@ -336,6 +335,7 @@
           { value: 'draft', label: 'Edition' },
           { value: 'completed', label: 'Terminé' },
         ],
+        // Configuration des champs du formulaire de configuration du planning
         scheduleFormFields: [
           {
             name: 'startTime',
@@ -408,6 +408,7 @@
         showScheduleConfigModal: false,
         showWarningsModal: false,
 
+        // Pagination
         isSmallScreen: false,
         currentPage: 1,
         terrainsPerPage: 6,
@@ -419,7 +420,7 @@
 
         showGeneratePlanningConfirmation: false,
         showClearPlanningConfirmation: false,
-        useUnifiedColors: false,
+        useUnifiedColors: true,
         colorMap: {},
 
         // For creating new games
@@ -452,6 +453,7 @@
           });
         },
       },
+
       /**
        * Calcule les pages avec une répartition équilibrée des terrains.
        */
@@ -514,8 +516,9 @@
         }
         return this.fields;
       },
+
       /**
-       *
+       * Edits the team options based on the selected pool.
        */
       editTeamOptions() {
         if (this.eventToEdit && this.eventToEdit.extendedProps.game.pool) {
@@ -530,18 +533,21 @@
         // Si pas de pool associée, retourner toutes les équipes
         return this.teamOptions;
       },
+
       /**
        * Determines if the planning is editable based on the current status.
        */
       isEditable() {
         return this.statuses.planningStatus !== 'completed';
       },
+
       /**
        * Checks if there are any games.
        */
       hasGames() {
         return this.games.length > 0;
       },
+
       /**
        * Generates a unique color for pools.
        * @param {number} poolId - The ID of the pool.
@@ -559,27 +565,44 @@
           return color;
         };
       },
+
+      /**
+       * Returns the selected pool object to show for filtering.
+       */
       poolOptions() {
         return [{ id: null, name: 'All Pools' }, ...this.pools];
       },
+
+      /**
+       * Returns the team options for the create game form.
+       */
       teamOptions() {
         return this.teams.map((team) => ({
           value: team.id,
           label: team.teamName,
         }));
       },
+
+      /**
+       * Returns the field options for the create game form.
+       */
       fieldOptions() {
         return this.fields.map((field) => ({
           value: field.id,
           label: field.name,
         }));
       },
+
+      /**
+       * Returns the sport options for the create game form.
+       */
       sportOptions() {
         return this.sports.map((sport) => ({
           value: sport.id,
           label: sport.name,
         }));
       },
+
       /**
        * Filters teams based on the selected pool.
        */
@@ -591,6 +614,7 @@
         }
         return this.teams;
       },
+
       /**
        * Configures the options for FullCalendar.
        */
@@ -600,7 +624,7 @@
           return {};
         }
 
-        const events = [];
+        const events = []; // Store events for the calendar
 
         // Add games as events
         this.games.forEach((game) => {
@@ -617,6 +641,7 @@
           const teamATeamName = game.teamA?.teamName || 'Équipe A';
           const teamBTeamName = game.teamB?.teamName || 'Équipe B';
 
+          // Add game as an event
           events.push({
             id: game.id.toString(),
             resourceId: game.field.id.toString(),
@@ -651,9 +676,12 @@
           }
         });
 
+        /**
+         * Returns the FullCalendar options.
+         */
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
-          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial (https://fullcalendar.io/license)
           initialView: 'resourceTimeGridDay',
           timeZone: 'local',
           initialDate: this.tourney.dateTourney,
@@ -685,19 +713,25 @@
           eventDrop: this.handleEventDrop,
           eventResize: this.handleEventResize,
           eventContent: this.renderEventContent,
-          // Enhanced hover feedback
-          eventMouseEnter: this.handleEventMouseEnter,
-          eventMouseLeave: this.handleEventMouseLeave,
         };
       },
+
+      /**
+       * Adjusts the slot min time based on the schedule config.
+       */
       adjustedSlotMinTime() {
         const startTime = this.scheduleConfig.startTime || '07:00:00';
         return startTime;
       },
+
+      /**
+       * Adjusts the slot max time based on the schedule config.
+       */
       adjustedSlotMaxTime() {
         const endTime = this.scheduleConfig.endTime || '23:00:00';
         return endTime;
       },
+
       /**
        * Defines the fields for the edit game form.
        */
@@ -732,6 +766,7 @@
           },
         ];
       },
+
       /**
        * Defines the fields for the create game form.
        */
@@ -795,6 +830,7 @@
       autoCalculateEndTime() {
         return !!this.createFormData.poolScheduleId;
       },
+
       /**
        * Provides team options based on the pool when creating a game.
        */
@@ -812,6 +848,7 @@
         }
         return this.teamOptions;
       },
+
       /**
        * Dynamically sets the title for the create game modal.
        */
@@ -831,12 +868,20 @@
         return 'Créer un Match';
       },
     },
+
     watch: {
+      /**
+       * Toggle color to group by pool or sport.
+       */
       useUnifiedColors() {
         if (this.$refs.fullCalendar) {
           this.$refs.fullCalendar.getApi().refetchEvents();
         }
       },
+
+      /**
+       * Refreshes the calendar when the current page changes.
+       */
       currentPage() {
         if (this.$refs.fullCalendar) {
           const calendarApi = this.$refs.fullCalendar.getApi();
@@ -893,6 +938,7 @@
           );
         }
       },
+
       /**
        * Refreshes calendar events.
        */
@@ -902,6 +948,7 @@
           calendarApi.refetchEvents();
         }
       },
+
       /**
        * Renders custom event content with sport and pool information.
        * @param {Object} arg - Event render info.
@@ -1001,6 +1048,10 @@
         return { domNodes: [container] };
       },
 
+      /**
+       * Downloads the planning as an Excel file.
+       * @returns {Promise<void>} - A promise that resolves when the download is complete.
+       */
       async downloadExcel() {
         try {
           // Afficher un toast indiquant que le téléchargement démarre
@@ -1042,20 +1093,6 @@
       },
 
       /**
-       * Handles the hover over events to provide feedback.
-       * @param {Object} info - Event hover info.
-       */
-      handleEventMouseEnter() {
-        // Add custom hover effects if needed
-      },
-      /**
-       * Handles the mouse leave event.
-       * @param {Object} info - Event hover leave info.
-       */
-      handleEventMouseLeave() {
-        // Remove custom hover effects if needed
-      },
-      /**
        * Returns CSS class based on warning type.
        * @param {string} type - Warning type.
        * @returns {string} - CSS class.
@@ -1072,13 +1109,13 @@
             return '';
         }
       },
+
       /**
        * Handles selection on the calendar to create a new game.
        * @param {Object} selectionInfo - Selection info from FullCalendar.
        */
       handleSelect(selectionInfo) {
         if (!this.isEditable) return;
-
         const poolSchedule = this.findPoolScheduleForSelection(selectionInfo);
 
         if (poolSchedule) {
@@ -1112,6 +1149,7 @@
         }
         this.showCreateModal = true;
       },
+
       /**
        * Finds the pool schedule for a given selection.
        * @param {Object} selectionInfo - Selection info from FullCalendar.
@@ -1146,6 +1184,7 @@
         }
         return null;
       },
+
       /**
        * Finds a pool by its schedule ID.
        * @param {number} scheduleId - The schedule ID.
@@ -1159,6 +1198,7 @@
         }
         return null;
       },
+
       /**
        * Formats a Date object to 'YYYY-MM-DDTHH:MM' format.
        * @param {Date} date - The date to format.
@@ -1176,6 +1216,7 @@
         const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
       },
+
       /**
        * Calculates the end time based on start time and duration.
        * @param {Date} startTime - The start time.
@@ -1186,6 +1227,7 @@
         const endDate = new Date(startTime.getTime() + durationMinutes * 60000);
         return this.formatDateTime(endDate);
       },
+
       /**
        * Saves a new game after form submission.
        */
@@ -1265,6 +1307,7 @@
         }
         return null;
       },
+
       /**
        * Handles the drag and drop of events on the calendar.
        * Allows moving within the same pool schedule.
@@ -1458,6 +1501,7 @@
           info.revert();
         }
       },
+
       /**
        * Saves edits to an event after form submission.
        */
@@ -1496,6 +1540,7 @@
           toast.error('Erreur lors de la sauvegarde des modifications.');
         }
       },
+
       /**
        * Deletes an event.
        * @param {Object} event - The event object from FullCalendar.
@@ -1516,6 +1561,7 @@
           toast.error('Erreur lors de la suppression du match.');
         }
       },
+
       /**
        * Formats date for display in events.
        * @param {Date} date - The date to format.
@@ -1527,6 +1573,7 @@
         const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;
       },
+
       /**
        * Formats date to 'YYYY-MM-DD HH:MM:SS' format.
        * @param {Date} date - The date to format.
@@ -1545,6 +1592,7 @@
         const seconds = d.getSeconds().toString().padStart(2, '0');
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       },
+
       /**
        * Opens the schedule configuration modal.
        */
@@ -1552,6 +1600,7 @@
         this.showScheduleConfigModal = true;
         this.loadScheduleConfig();
       },
+
       /**
        * Opens the edit modal for an event.
        * @param {Object} event - The event object from FullCalendar.
@@ -1568,6 +1617,7 @@
         };
         this.showEditModal = true;
       },
+
       /**
        * Loads the existing schedule configuration.
        */
@@ -1592,30 +1642,35 @@
           }
         }
       },
+
       /**
        * Opens the generate planning confirmation modal.
        */
       openGeneratePlanningModal() {
         this.showGeneratePlanningConfirmation = true;
       },
+
       /**
        * Closes the generate planning confirmation modal.
        */
       closeGeneratePlanningConfirmation() {
         this.showGeneratePlanningConfirmation = false;
       },
+
       /**
        * Opens the clear planning confirmation modal.
        */
       confirmClearPlanning() {
         this.showClearPlanningConfirmation = true;
       },
+
       /**
        * Closes the clear planning confirmation modal.
        */
       closeClearPlanningConfirmation() {
         this.showClearPlanningConfirmation = false;
       },
+
       /**
        * Handles the planning generation.
        */
@@ -1624,6 +1679,12 @@
         this.closeGeneratePlanningConfirmation();
         this.validatePlanning();
       },
+
+      /**
+       * Validates the event drop action.
+       * @param event
+       * @param resourceId
+       */
       validateEventDrop(event, resourceId) {
         // Récupérer l'événement déplacé
         const game = event.extendedProps.game;
@@ -1638,6 +1699,7 @@
         // Si aucune correspondance n'est trouvée, l'action est invalide
         return !!poolSchedule;
       },
+
       /**
        * Clears the planning.
        */
@@ -1654,6 +1716,7 @@
           toast.error('Erreur lors de la suppression du planning.');
         }
       },
+
       /**
        * Validates the planning.
        */
@@ -1665,19 +1728,23 @@
 
           const validationResults = response.data.validation;
 
+          // Afficher les erreurs de validation
           if (validationResults.hasErrors) {
             const newWarnings = [];
             if (validationResults.errors.high.length > 0) {
+              // Erreurs graves
               validationResults.errors.high.forEach((err) => {
                 newWarnings.push({ type: 'grave', message: err });
               });
             }
             if (validationResults.errors.mid.length > 0) {
+              // Erreurs moyennes
               validationResults.errors.mid.forEach((err) => {
                 newWarnings.push({ type: 'moyenne', message: err });
               });
             }
             if (validationResults.errors.low.length > 0) {
+              // Erreurs faibles
               validationResults.errors.low.forEach((err) => {
                 newWarnings.push({ type: 'faible', message: err });
               });
@@ -1728,6 +1795,7 @@
           );
         }
       },
+
       /**
        * Closes the warnings modal.
        */
@@ -1735,6 +1803,7 @@
         this.showWarningsModal = false;
         this.warnings = [];
       },
+
       /**
        * Validates the schedule configuration form.
        * @returns {Object} - Form errors.
@@ -1873,6 +1942,7 @@
 
         return errors;
       },
+
       /**
        * Checks screen size and adjusts terrains per page.
        */
@@ -1880,6 +1950,7 @@
         this.isSmallScreen = window.innerWidth < 768;
         this.terrainsPerPage = this.isSmallScreen ? 2 : 10;
       },
+
       /**
        * Adjusts terrains per page based on screen width.
        */
@@ -1899,6 +1970,7 @@
         }
       },
     },
+
     async mounted() {
       this.adjustTerrainsPerPage();
       window.addEventListener('resize', this.adjustTerrainsPerPage);
