@@ -42,6 +42,15 @@ file-selected: Lorsqu'un fichier est sélectionné.
               </button>
             </label>
 
+            <!-- Utilisation du composant AutocompleteAddress pour le champ 'location' -->
+            <AutocompleteAddress
+              v-if="field.name === 'location'"
+              :value="formData[field.name]"
+              @input="updateLocation"
+              :disabled="!isEditable"
+              :placeholder="field.placeholder"
+            />
+
             <input
               v-if="
                 field.type !== 'textarea' &&
@@ -162,10 +171,12 @@ file-selected: Lorsqu'un fichier est sélectionné.
 
 <script>
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import AutocompleteAddress from '@/components/AutocompleteAddress.vue';
 
   export default {
     components: {
       ButtonComponent,
+      AutocompleteAddress,
     },
     props: {
       // Tableau décrivant les champs du formulaire (nom, type, label, etc.)
@@ -318,6 +329,10 @@ file-selected: Lorsqu'un fichier est sélectionné.
         if (this.isFormValid) {
           this.$emit('form-submit', this.formData);
         }
+      },
+      updateLocation(value) {
+        this.formData.location = value;
+        this.validateField({ name: 'location', required: true });
       },
 
       handleCancel() {
