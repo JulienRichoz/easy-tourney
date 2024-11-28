@@ -38,6 +38,13 @@
           variant="danger"
           >Reset Match</ButtonComponent
         >
+        <ButtonComponent
+          @click="downloadExcel"
+          label="Télécharger Excel"
+          variant="success"
+        >
+          Exporter Excel
+        </ButtonComponent>
       </div>
     </div>
 
@@ -268,6 +275,35 @@
         } catch (error) {
           console.error('Erreur lors de la récupération des matchs:', error);
           toast.error('Erreur lors de la récupération des matchs.');
+        }
+      },
+      async downloadExcel() {
+        try {
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/export-data/excel`,
+            {
+              responseType: 'blob', // Spécifiez que vous attendez un blob
+            }
+          );
+
+          // Créer une URL temporaire pour le fichier
+          const blob = response.data; // Axios renvoie le blob dans `data`
+          const url = window.URL.createObjectURL(blob);
+
+          // Créer un lien pour déclencher le téléchargement
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tournament_${this.tourneyId}.xlsx`; // Nom du fichier
+          document.body.appendChild(a);
+          a.click();
+
+          // Nettoyer l'URL temporaire après le téléchargement
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Erreur lors du téléchargement Excel :', error);
+          toast.error(
+            error.message || "Une erreur s'est produite lors du téléchargement."
+          );
         }
       },
       prepareTeamsData() {
