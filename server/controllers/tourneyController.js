@@ -35,6 +35,8 @@ exports.createTourney = async (req, res) => {
       defaultMaxTeamPerPool,
       defaultMinTeamPerPool,
       status,
+      latitude,
+      longitude,
     } = req.body;
 
     if (!name || !location || !dateTourney) {
@@ -58,6 +60,8 @@ exports.createTourney = async (req, res) => {
       defaultMaxTeamPerPool,
       defaultMinTeamPerPool,
       status,
+      latitude,
+      longitude
     });
 
     // Créer une configuration de planning par défaut

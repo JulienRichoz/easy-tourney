@@ -28,8 +28,8 @@
     name: 'AutocompleteAddress',
     props: {
       value: {
-        type: String,
-        default: '',
+        type: Object, // Maintenant, la valeur est un objet contenant address, latitude, longitude
+        default: () => ({ address: '', latitude: null, longitude: null }),
       },
       placeholder: {
         type: String,
@@ -62,6 +62,14 @@
         } else {
           this.suggestions = [];
         }
+      },
+      onAddressSelected(selected) {
+        // Exemple: selected contient address, latitude, longitude
+        this.$emit('input', {
+          address: selected.address,
+          latitude: selected.latitude,
+          longitude: selected.longitude,
+        });
       },
       async fetchSuggestions() {
         try {

@@ -1,4 +1,4 @@
-<!-- TourneysPage.vue -->
+<!-- TourneysList.vue -->
 <template>
   <div class="p-6">
     <div
@@ -107,6 +107,8 @@
           domain: '',
           emergencyDetails: '',
           status: 'draft',
+          latitude: null, // Ajouté
+          longitude: null, // Ajouté
         },
         editingTourneyId: null,
         isFormValid: false,
@@ -165,8 +167,9 @@
           {
             name: 'location',
             label: 'Lieu',
-            type: 'text',
+            type: 'location', // Type personnalisé pour utiliser AutocompleteAddress
             required: true,
+            tooltip: 'Entrez l’adresse précise du tournoi.',
           },
           {
             name: 'dateTourney',
@@ -208,6 +211,7 @@
           this.tourneys = response.data;
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
+          toast.error('Erreur lors de la récupération des tournois!');
         }
       },
       handleFilterChange(filter) {
@@ -227,6 +231,8 @@
           domain: '',
           emergencyDetails: '',
           status: 'draft',
+          latitude: null,
+          longitude: null,
         };
         this.isFormValid = false;
         this.formErrors = {}; // Réinitialiser les erreurs
@@ -234,22 +240,26 @@
       },
       editTourney(tourney) {
         this.editingTourneyId = tourney.id;
-        this.newTourney = { ...tourney };
+        this.newTourney = {
+          ...tourney,
+          latitude: tourney.latitude,
+          longitude: tourney.longitude,
+        };
         this.isFormValid = false;
         this.formErrors = {}; // Réinitialiser les erreurs
         this.showModal = true;
       },
-      async handleFormSubmit() {
+      async handleFormSubmit(formData) {
         this.isSaving = true;
         try {
           if (this.editingTourneyId) {
             await apiService.put(
               `/tourneys/${this.editingTourneyId}`,
-              this.newTourney
+              formData
             );
             toast.success('Tournoi modifié avec succès!');
           } else {
-            await apiService.post('/tourneys', this.newTourney);
+            await apiService.post('/tourneys', formData);
             toast.success('Nouveau tournoi ajouté avec succès!');
           }
           this.closeModal();
@@ -284,6 +294,14 @@
         // Valider le lieu
         if (!location) {
           errors.location = 'Le lieu du tournoi est obligatoire.';
+        } else {
+          // Vérifier si latitude et longitude sont présentes
+          if (
+            this.newTourney.latitude === null ||
+            this.newTourney.longitude === null
+          ) {
+            errors.location = 'Veuillez sélectionner une adresse valide.';
+          }
         }
 
         // Valider la date

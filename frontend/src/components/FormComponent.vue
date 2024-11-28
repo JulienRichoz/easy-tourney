@@ -51,13 +51,15 @@ file-selected: Lorsqu'un fichier est sélectionné.
               :placeholder="field.placeholder"
             />
 
+            <!-- Champs de formulaire génériques -->
             <input
               v-if="
                 field.type !== 'textarea' &&
                 field.type !== 'select' &&
                 field.type !== 'file' &&
                 field.type !== 'radio' &&
-                field.type !== 'color'
+                field.type !== 'color' &&
+                field.name !== 'location'
               "
               :type="field.type"
               :id="field.name"
@@ -179,7 +181,6 @@ file-selected: Lorsqu'un fichier est sélectionné.
       AutocompleteAddress,
     },
     props: {
-      // Tableau décrivant les champs du formulaire (nom, type, label, etc.)
       fields: {
         type: Array,
         required: true,
@@ -194,7 +195,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
         default: false,
       },
       minDate: {
-        type: String, // Format de date 'YYYY-MM-DD' ou autre
+        type: String,
         required: false,
       },
       maxDate: {
@@ -330,8 +331,10 @@ file-selected: Lorsqu'un fichier est sélectionné.
           this.$emit('form-submit', this.formData);
         }
       },
-      updateLocation(value) {
-        this.formData.location = value;
+      updateLocation(locationData) {
+        this.formData.location = locationData.address;
+        this.formData.latitude = locationData.latitude;
+        this.formData.longitude = locationData.longitude;
         this.validateField({ name: 'location', required: true });
       },
 
