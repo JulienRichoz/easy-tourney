@@ -657,7 +657,7 @@ class CustomRoundRobinPoolPlanning extends PlanningStrategy {
             model: Pool,
             as: 'pool',
             where: { tourneyId },
-            attributes: ['id', 'name'], // Inclure 'name' pour pouvoir l'utiliser dans les messages
+            attributes: ['id', 'name'],
           },
           {
             model: Sport,
@@ -667,7 +667,7 @@ class CustomRoundRobinPoolPlanning extends PlanningStrategy {
           {
             model: Field,
             as: 'field',
-            attributes: ['id', 'name'], // Ajouter cette partie
+            attributes: ['id', 'name'],
           },
         ],
       });
@@ -698,7 +698,32 @@ class CustomRoundRobinPoolPlanning extends PlanningStrategy {
         }
       }
 
-      // b. Vérifier les pools pendant les pauses
+      // b. Vérifier les chevauchements au niveau des pools
+      const poolScheduleMap = {};
+      poolSchedules.forEach((schedule) => {
+        const key = `${schedule.poolId}-${schedule.date}`;
+        if (!poolScheduleMap[key]) {
+          poolScheduleMap[key] = [];
+        }
+        poolScheduleMap[key].push(schedule);
+      });
+
+      for (const key in poolScheduleMap) {
+        const schedules = poolScheduleMap[key];
+        // Trier par startTime
+        schedules.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        for (let i = 0; i < schedules.length - 1; i++) {
+          const currentEnd = schedules[i].endTime;
+          const nextStart = schedules[i + 1].startTime;
+          if (currentEnd > nextStart) {
+            errors.high.push(
+              `Conflit pour la pool ${schedules[i].pool.name} entre les créneaux horaires ${formatTime(schedules[i].startTime)} - ${formatTime(schedules[i].endTime)} sur le terrain ${schedules[i].field.name} et ${formatTime(schedules[i + 1].startTime)} - ${formatTime(schedules[i + 1].endTime)} sur le terrain ${schedules[i + 1].field.name}.`
+            );
+          }
+        }
+      }
+
+      // c. Vérifier les pools pendant les pauses
       const scheduleTourney = await ScheduleTourney.findOne({
         where: { tourneyId },
       });
