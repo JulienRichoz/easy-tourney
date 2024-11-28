@@ -29,6 +29,15 @@ module.exports = {
             text: '#b45309', // text-yellow-700
             closeText: '#854d0e', // text-yellow-800
           },
+          details: {
+            completed: '#22c55e', // green-500
+            inProgress: '#f59e0b', // yellow-500
+            notStarted: '#9ca3af', // gray-400
+            active: '#3b82f6', // blue-500
+            text: '#1f2937', // gray-800
+            background: '#ffffff', // white
+            border: '#e5e7eb', // gray-200
+          },
           pool: {
             infoBg: '#dbeafe', // blue-100
             infoBorder: '#bfdbfe', // blue-200
@@ -125,6 +134,15 @@ module.exports = {
             border: '#a16207', // border-yellow-600
             text: '#fcd34d', // text-yellow-300
             closeText: '#facc15', // text-yellow-400
+          },
+          details: {
+            completed: '#22c55e', // green-500
+            inProgress: '#f59e0b', // yellow-500
+            active: '#2563eb', // blue-600
+            notStarted: '#6b7280', // gray-500
+            text: '#f3f4f6', // gray-100
+            background: '#1f2937', // gray-800
+            border: '#374151', // gray-700
           },
           pool: {
             infoBg: '#1f2937', // gray-800
