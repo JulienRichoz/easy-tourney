@@ -137,13 +137,14 @@
           </l-marker>
         </l-map>
         <!-- Bouton sous la carte -->
-        <div class="mt-4 flex justify-end">
+        <div class="mt-4 flex justify-end relative">
           <ButtonComponent
             :variant="'primary'"
             fontAwesomeIcon="map-marker-alt"
             @click="openGoogleMaps"
           >
             Itinéraire
+            <span class="hidden sm:inline"> Avec Google Maps</span>
           </ButtonComponent>
         </div>
       </div>
