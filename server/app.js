@@ -4,6 +4,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+require('./cronJobs');
 const path = require('path');
 const { sequelize } = require('./models');
 
