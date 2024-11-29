@@ -5,17 +5,20 @@
 
     <!-- Avancement du Tournoi avec le stepper horizontal -->
     <div
-      class="flex items-center gap-y-6 gap-x-4 max-w-screen-lg mx-auto px-4 font-sans mt-8"
+      class="flex items-center gap-y-6 gap-x-4 max-w-screen-lg mx-auto px-4 font-sans mt-8 overflow-x-auto flex-nowrap"
     >
       <div v-for="(step, index) in statusSteps" :key="index" class="flex-1">
         <!-- Barre de progression -->
         <div
-          :class="['w-full h-2 rounded-xl', progressBarClass(step.status)]"
+          :class="['w-full h-1 rounded', progressBarClass(step.status)]"
         ></div>
         <!-- Informations sur l'étape -->
         <div class="mt-2 mr-4 flex items-center">
           <!-- Icône de l'étape -->
-          <component :is="stepIconComponent(step.status)" class="shrink-0" />
+          <component
+            :is="stepIconComponent(step.status)"
+            class="shrink-0 w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8"
+          />
           <div class="ml-2">
             <h6 :class="['text-lg font-bold', stepTextClass(step.status)]">
               {{ step.label }}
@@ -137,7 +140,7 @@
           </l-marker>
         </l-map>
         <!-- Bouton sous la carte -->
-        <div class="mt-4 flex justify-end relative">
+        <div class="mt-4 flex justify-end relative z-30">
           <ButtonComponent
             :variant="'primary'"
             fontAwesomeIcon="map-marker-alt"
