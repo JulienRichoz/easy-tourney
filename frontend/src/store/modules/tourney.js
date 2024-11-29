@@ -6,6 +6,7 @@ export default {
   state: {
     currentTournamentName: '', // Stocker le nom du tournoi
     tourneyType: '', // Stocker le type du tournoi
+    dateTourney: '', // Stocker la date du tournoi
     statuses: {
       status: 'draft',
       fieldAssignmentStatus: 'notStarted',
@@ -22,8 +23,12 @@ export default {
     SET_TOURNAMENT_TYPE(state, tourneyType) {
       state.tourneyType = tourneyType;
     },
+    SET_TOURNAMENT_DATE(state, dateTourney) {
+      state.dateTourney = dateTourney;
+    },
     CLEAR_TOURNAMENT_NAME(state) {
       state.currentTournamentName = '';
+      state.currentTournamentDate = ''; // Réinitialise la date
     },
     SET_STATUSES(state, statuses) {
       state.statuses = { ...state.statuses, ...statuses };
@@ -33,6 +38,7 @@ export default {
     },
     RESET_TOURNEY_STATE(state) {
       state.currentTournamentName = ''; // Réinitialisation du nom du tournoi
+      state.dateTourney = ''; // Réinitialisation de la date du tournoi
       state.statuses = {
         // Réinitialisation des statuts à un état "vide"
         status: null,
@@ -49,10 +55,18 @@ export default {
         const response = await apiService.get(
           `/tourneys/${tourneyId}/statuses`
         );
-        const { name, tourneyType, ...statuses } = response.data;
+        const {
+          name,
+          tourneyType,
+          dateTourney,
+          status,
+          registrationStatus,
+          ...statuses
+        } = response.data;
         commit('SET_TOURNAMENT_NAME', name);
         commit('SET_TOURNAMENT_TYPE', tourneyType);
-        commit('SET_STATUSES', statuses);
+        commit('SET_TOURNAMENT_DATE', dateTourney); // Mets à jour la date
+        commit('SET_STATUSES', { ...statuses, status, registrationStatus });
       } catch (error) {
         console.error('Erreur lors de la récupération des statuts:', error);
         throw error;
