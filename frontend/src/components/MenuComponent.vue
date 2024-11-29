@@ -34,9 +34,12 @@
     <!-- Section du nom du tournoi (visible uniquement sur les pages de tournoi) -->
     <div
       v-if="showTournamentName"
-      class="tournament-name text-lg font-bold absolute left-1/2 transform -translate-x-1/2 text-light-profileText dark:text-dark-profileText hidden md:block"
+      class="tournament-name text-lg font-bold absolute left-1/2 transform -translate-x-1/2 text-light-profileText dark:text-dark-profileText hidden sm:block"
     >
       {{ this.tournamentName }}
+      <span v-if="tournamentDate" class="hidden md:inline">
+        - {{ formatDate(tournamentDate) }}
+      </span>
     </div>
 
     <!-- Section de droite -->
@@ -98,6 +101,7 @@
         userName: (state) => state.user?.name,
         ...mapState('tourney', {
           tournamentName: (state) => state.currentTournamentName,
+          tournamentDate: (state) => state.dateTourney,
         }),
       }),
       showTournamentName() {
@@ -113,6 +117,10 @@
         localStorage.removeItem('token');
         this.$store.dispatch('logout');
         this.$router.push('/login');
+      },
+      formatDate(date) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(date).toLocaleDateString(undefined, options);
       },
       toggleDarkMode() {
         this.isDarkMode = !this.isDarkMode;
