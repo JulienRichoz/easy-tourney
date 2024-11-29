@@ -5,8 +5,8 @@
 
     <!-- Contenu de la page -->
     <div class="p-6">
-      <TitleComponent title="Scores du Tournoi" />
-      <!-- Afficher les scores -->
+      <TitleComponent title="Planning" />
+      <!-- Afficher le Planning -->
     </div>
   </div>
 </template>
