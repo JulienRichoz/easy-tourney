@@ -45,6 +45,7 @@ import {
   faUsersSlash,
   faSpinner,
   faFileExcel,
+  faListOl,
 } from '@fortawesome/free-solid-svg-icons';
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
@@ -52,6 +53,7 @@ import './registerServiceWorker';
 
 // Ajouter les icônes supplémentaires
 library.add(
+  faListOl,
   faFileExcel,
   faSpinner,
   faUsersSlash,
