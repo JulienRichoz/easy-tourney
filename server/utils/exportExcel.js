@@ -339,9 +339,9 @@ function generatePoolCalendarSheet(workbook, data) {
 
     // Fonction pour convertir une couleur HSL en hexadécimal
     function hslToHex(hsl) {
-        const [h, s, l] = hsl.match(/\d+/g).map(Number);
-        s /= 100;
-        l /= 100;
+        const [h, sRaw, lRaw] = hsl.match(/[\d.]+/g).map(Number);
+        const s = sRaw / 100;
+        const l = lRaw / 100;
         const c = (1 - Math.abs(2 * l - 1)) * s;
         const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
         const m = l - c / 2;
@@ -364,6 +364,40 @@ function generatePoolCalendarSheet(workbook, data) {
         b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
         return `${r}${g}${b}`.toUpperCase();
     }
+
+    // Remplir les données des pools
+    data.poolSchedules.forEach(poolSchedule => {
+        const poolStart = new Date(`${tourneyDate}T${poolSchedule.startTime}`);
+        const poolEnd = new Date(`${tourneyDate}T${poolSchedule.endTime}`);
+        const fieldIndex = fields.indexOf(poolSchedule.field.name);
+        if (fieldIndex !== -1) {
+            const colIndex = fieldIndex + 2; // +2 pour tenir compte de la colonne des horaires
+            intervals.forEach(interval => {
+                if (doesOverlap(poolStart, poolEnd, interval.start, interval.end)) {
+                    const cell = poolCalendarSheet.getCell(interval.rowNumber, colIndex);
+                    const existingValue = cell.value || '';
+                    const cellContent = [
+                        `Pool: ${poolSchedule.pool.name}`,
+                        `Sport: ${poolSchedule.sport?.name || 'N/A'}`
+                    ].join('\n');
+                    cell.value = existingValue ? existingValue + '\n\n' + cellContent : cellContent;
+                    cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'center' };
+
+                    // Générer une couleur pour la pool
+                    const hslColor = generateColor(poolSchedule.pool.id);
+                    const hexColor = hslToHex(hslColor);
+
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: hexColor },
+                    };
+                }
+            });
+        }
+    });
+
+
 
     // Remplir les données des pools
     data.poolSchedules.forEach(poolSchedule => {
