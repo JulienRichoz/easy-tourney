@@ -23,6 +23,11 @@ module.exports = {
             default: '#ef4444', // red-500
             hover: '#dc2626', // red-700
           },
+          token: {
+            valid: '#d1fae5', // Vert clair
+            expiring: '#fde68a', // Orange clair
+            invalid: '#fee2e2', // Rouge clair
+          },
           warning: {
             bg: '#fef3c7', // bg-yellow-100
             border: '#fde68a', // border-yellow-200
@@ -128,6 +133,11 @@ module.exports = {
           logoutButton: {
             default: '#dc2626', // red-600 (adoucissement de la couleur rouge)
             hover: '#b91c1c', // red-700 (rouge plus sombre)
+          },
+          token: {
+            valid: '#047857', // Vert plus soutenu
+            expiring: '#ca8a04', // Orange plus foncé
+            invalid: '#991b1b', // Rouge plus vif
           },
           warning: {
             bg: '#44403c', // bg-gray-700

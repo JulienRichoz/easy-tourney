@@ -81,6 +81,8 @@
               Lien d'invitation
             </ButtonComponent>
           </div>
+
+          <!-- Modale pour gérer les liens d'invitation -->
           <ModalComponent
             :isVisible="showInviteTokenModal"
             title="Gestion des liens d'invitation"
@@ -104,6 +106,8 @@
                   Générer un lien
                 </ButtonComponent>
               </div>
+
+              <!-- Formulaire pour générer un nouveau token -->
               <div v-if="showAddTokenForm" class="mb-4">
                 <FormComponent
                   v-model="inviteTokenForm"
@@ -113,19 +117,24 @@
                 />
               </div>
 
+              <!-- Liste des tokens d'invitation -->
               <ul class="space-y-2">
                 <li
                   v-for="token in filteredSortedInviteTokens"
                   :key="token.id"
                   class="p-4 border rounded-md flex justify-between items-center"
                   :class="{
-                    'bg-green-100':
-                      token.isValid && new Date(token.expiresAt) > new Date(),
-                    'bg-orange-100':
+                    'bg-light-token-valid dark:bg-dark-token-valid':
+                      token.isValid &&
+                      new Date(token.expiresAt) >
+                        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+
+                    'bg-light-token-expiring dark:bg-dark-token-expiring':
                       token.isValid &&
                       new Date(token.expiresAt) <=
                         new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                    'bg-red-100':
+
+                    'bg-light-token-invalid dark:bg-dark-token-invalid':
                       !token.isValid || new Date(token.expiresAt) <= new Date(),
                   }"
                 >
@@ -133,7 +142,7 @@
                     <label class="font-semibold">Lien d'invitation :</label>
                     <font-awesome-icon
                       icon="copy"
-                      class="ml-2 cursor-pointer text-gray-600 hover:text-gray-800"
+                      class="ml-2 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-200"
                       @click="copyToClipboard(token.token)"
                       title="Copier le lien"
                     />
@@ -142,11 +151,11 @@
                         type="text"
                         :value="`${BASE_URL}/register?inviteToken=${token.token}`"
                         readonly
-                        class="w-full p-1 border rounded-md overflow-x-auto"
+                        class="w-full p-1 border text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-md overflow-x-auto"
                         style="max-width: 100%"
                       />
                     </div>
-                    <p>
+                    <p class="text-gray-700 dark:text-gray-300">
                       Expire le :
                       {{ new Date(token.expiresAt).toLocaleDateString() }}
                     </p>
@@ -154,8 +163,8 @@
                       Statut :
                       <span
                         :class="{
-                          'text-green-600': token.isValid,
-                          'text-red-600': !token.isValid,
+                          'text-green-600 dark:text-green-300': token.isValid,
+                          'text-red-600 dark:text-red-300': !token.isValid,
                         }"
                       >
                         {{ token.isValid ? 'Valide' : 'Invalide' }}
@@ -517,7 +526,7 @@
           { value: 'active', label: 'Ouvertes' },
           { value: 'completed', label: 'Terminées' },
         ],
-        // TOKEN INVITSATION
+        // TOKEN INVITATION
         showInviteTokenModal: false,
         inviteTokens: [], // Liste des tokens récupérés
         showValidOnly: true, // Pour filtrer uniquement les tokens valides
