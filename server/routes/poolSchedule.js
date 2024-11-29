@@ -23,12 +23,12 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // RÃ
 module.exports = router;
 
 /**
- * TODO: 
+ * TODO: Page planning + PWA responsive user. Verifier si besoin de composant pour calendar/pagination ? 
+ * TODOptionnel : Ajouter systeme de gestion statuts dans page admin/info (details)
  * REFLECHIR a la vue planning pool <-> game => final
  * IMPLEMENTATION : Partie arbitre des matchs. Websocket ou pas ?
  * IMPLEMENTATION : Vue utilisateur et reflechir au workflow
- * 
- * OPTIONNEL: Modifier vue sports-fields pour afficher 1 seul calendar ?
+ 
  * OPTIONNEL: Composant entre planning games et planning pools (reduction code, + clean)
  */
 
