@@ -18,7 +18,9 @@
         :location="tourney.location"
         :date="tourney.dateTourney"
         :status="tourney.status"
-        @click="viewTourneyDetails(tourney.id)"
+        :registration-status="tourney.registrationStatus"
+        :title-color="getTitleColor(tourney)"
+        @click="viewTourneyDetails(tourney)"
       />
     </div>
   </div>
@@ -49,8 +51,67 @@
           console.error('Erreur lors de la récupération des tournois:', error);
         }
       },
-      viewTourneyDetails(tourneyId) {
-        this.$router.push(`/tourneys/${tourneyId}/join-team`);
+      isAdmin() {
+        return this.$store.state.user?.roleId === 1;
+      },
+      getTitleColor(tourney) {
+        if (tourney.status === 'active') {
+          return '#48bb78'; // Vert pour 'active'
+        } else if (tourney.status === 'completed') {
+          return '#a0aec0'; // Gris pour 'completed'
+        } else {
+          if (tourney.registrationStatus === 'active') {
+            return '#ed8936'; // Orange pour inscriptions ouvertes
+          } else if (
+            tourney.registrationStatus === 'notStarted' ||
+            tourney.registrationStatus === 'completed'
+          ) {
+            return '#f56565'; // Rouge pour inscriptions fermées
+          } else {
+            return '#4299e1'; // Bleu par défaut
+          }
+        }
+      },
+      isCardClickable(tourney) {
+        if (this.isAdmin()) {
+          return true; // Toujours cliquable pour un administrateur
+        }
+        // Si les inscriptions sont fermées et le tournoi n'est ni actif ni terminé
+        if (
+          (tourney.registrationStatus === 'draft' ||
+            tourney.registrationStatus === 'notStarted') &&
+          tourney.status !== 'active' &&
+          tourney.status !== 'completed'
+        ) {
+          return false; // Ne pas permettre le clic
+        }
+        return true; // Permettre le clic
+      },
+
+      viewTourneyDetails(tourney) {
+        if (!this.isCardClickable(tourney)) {
+          return; // Ne pas rediriger si la carte n'est pas cliquable
+        }
+
+        // Priorité sur le statut du tournoi
+        if (
+          tourney.status === 'active' ||
+          tourney.status === 'completed' ||
+          this.isAdmin()
+        ) {
+          // Rediriger vers 'planning'
+          this.$router.push(`/tourneys/${tourney.id}/planning`);
+        } else if (
+          tourney.registrationStatus === 'active' ||
+          tourney.registrationStatus === 'completed'
+        ) {
+          // Rediriger vers 'join-team'
+          ('Redirection vers join-team');
+
+          this.$router.push(`/tourneys/${tourney.id}/join-team`);
+        } else {
+          return; // Ne pas rediriger si le statut est inconnu
+        }
       },
     },
     mounted() {
