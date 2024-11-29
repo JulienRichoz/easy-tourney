@@ -14,7 +14,7 @@
           >
             <div>
               <p class="font-medium">{{ userTourney.user.name }}</p>
-              <p class="text-sm text-gray-600">{{ userTourney.user.email }}</p>
+              <p class="text-sm">{{ userTourney.user.email }}</p>
             </div>
           </li>
         </ul>

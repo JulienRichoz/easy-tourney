@@ -102,6 +102,22 @@ router.beforeEach(async (to, from, next) => {
         return next('/access-denied');
       }
 
+      // Vérifiez si l'utilisateur a un tournoi actif
+      await store.dispatch('user/fetchActiveTourney');
+      const activeTourney = store.state.user.activeTourney;
+
+      if (activeTourney) {
+        // Si l'utilisateur a un tournoi actif, redirigez vers la page de planning
+        if (to.name === 'UserDashboard' || to.name === 'UserTourneys') {
+          return next(`/tourneys/${activeTourney.id}/planning`);
+        }
+      } else {
+        // Si pas de tournoi actif, redirigez vers la liste des tournois
+        if (to.name === 'UserDashboard') {
+          return next('/tourneys');
+        }
+      }
+
       // 6. Gestion des routes spécifiques aux tournois
       const isTournamentRoute =
         (to.path.startsWith('/tourneys/') ||
