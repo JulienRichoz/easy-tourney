@@ -168,8 +168,6 @@
         return '';
       },
       statusText() {
-        console.log(this.status);
-        console.log(this.registrationStatus);
         if (this.status === 'active') {
           return 'Tournoi en cours';
         } else if (this.status === 'completed') {
@@ -177,11 +175,14 @@
         } else {
           if (this.registrationStatus === 'active') {
             return 'Inscriptions ouvertes';
-          } else if (
-            this.registrationStatus === 'notStarted' ||
-            this.registrationStatus === 'completed'
-          ) {
+          } else if (this.registrationStatus === 'notStarted') {
             return 'Inscriptions fermées';
+          } else if (this.registrationStatus === 'completed') {
+            return 'Inscriptions terminées';
+          } else if (this.status === 'ready') {
+            return 'Tournoi prêt';
+          } else if (this.status === 'draft') {
+            return 'Tournoi en édition';
           } else {
             return 'Statut inconnu';
           }
