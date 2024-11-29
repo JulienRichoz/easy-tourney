@@ -108,7 +108,6 @@ router.beforeEach(async (to, from, next) => {
       await store.dispatch('userTourney/fetchActiveTourney');
 
       const activeTourney = store.state.userTourney.activeTourney;
-      console.log('activeTourney', activeTourney);
 
       if (activeTourney && activeTourney.status === 'active') {
         // Récupérer le rôle dans le tournoi

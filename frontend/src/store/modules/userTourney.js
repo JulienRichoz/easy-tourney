@@ -20,7 +20,7 @@ export default {
       try {
         const response = await apiService.get('/users/active-tourney');
         const activeTourneyData = response.data;
-        console.log('activeTourneyData', activeTourneyData);
+
         if (activeTourneyData && activeTourneyData.status === 'active') {
           commit('SET_ACTIVE_TOURNEY', activeTourneyData);
 
