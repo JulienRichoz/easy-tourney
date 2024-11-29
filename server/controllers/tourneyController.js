@@ -549,6 +549,7 @@ exports.getTourneyStatuses = async (req, res) => {
     const {
       name,
       tourneyType,
+      dateTourney,
       status,
       fieldAssignmentStatus,
       sportAssignmentStatus,
@@ -559,6 +560,7 @@ exports.getTourneyStatuses = async (req, res) => {
     res.status(200).json({
       name,
       tourneyType,
+      dateTourney,
       status,
       fieldAssignmentStatus,
       sportAssignmentStatus,
