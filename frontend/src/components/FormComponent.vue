@@ -48,6 +48,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
               v-model="formData.location"
               :disabled="!isEditable"
               :placeholder="field.placeholder"
+              @input="validateField(field)"
             />
 
             <!-- Champs de formulaire génériques -->
