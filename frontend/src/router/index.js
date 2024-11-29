@@ -95,6 +95,8 @@ router.beforeEach(async (to, from, next) => {
       });
 
       const userRole = user.roleId;
+      const isLoginNavigation =
+        from.name === 'Login' || from.name === 'Register';
 
       // 5. Vérification des permissions d'accès à la route
       if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
@@ -102,19 +104,26 @@ router.beforeEach(async (to, from, next) => {
         return next('/access-denied');
       }
 
-      // Vérifiez si l'utilisateur a un tournoi actif
+      // Récupérer le tournoi actif
       await store.dispatch('userTourney/fetchActiveTourney');
-      const activeTourney = store.state.userTourney.activeTourney;
 
-      if (activeTourney) {
-        // Si l'utilisateur a un tournoi actif, redirigez vers la page de planning
-        if (to.name === 'UserDashboard' || to.name === 'UserTourneys') {
-          return next(`/tourneys/${activeTourney.id}/planning`);
+      const activeTourney = store.state.userTourney.activeTourney;
+      console.log('activeTourney', activeTourney);
+
+      if (activeTourney && activeTourney.status === 'active') {
+        // Récupérer le rôle dans le tournoi
+        await store.dispatch('userTourney/fetchTourneyRole', activeTourney.id);
+
+        // Redirection en fonction du tournoi actif
+        if (to.name === 'UserTourneys') {
+          if (isLoginNavigation) {
+            return next(`/tourneys/${activeTourney.id}/planning`);
+          }
         }
       } else {
-        // Si pas de tournoi actif, redirigez vers la liste des tournois
         if (to.name === 'UserTourneys') {
-          return next('/tourneys');
+          // Autoriser l'accès sans redirection
+          return next();
         }
       }
 
@@ -125,10 +134,24 @@ router.beforeEach(async (to, from, next) => {
         to.params.tourneyId;
 
       if (isTournamentRoute) {
-        // Récupération des statuts et informations du tournoi
         try {
           const tourneyId = to.params.tourneyId;
-          await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
+          // Récupérer les détails du tournoi, y compris le statut
+          const response = await apiService.get(`/tourneys/${tourneyId}`);
+          const tourney = response.data;
+
+          // Vérifier si le statut est 'active' ou 'completed'
+          if (
+            tourney.status === 'active' ||
+            tourney.status === 'completed' ||
+            userRole === 1
+          ) {
+            // Autoriser l'accès
+            await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
+          } else {
+            // Rediriger ou afficher une page d'accès refusé
+            return next('/access-denied'); // TODO: Ajouter dans la vue un message pour empecher l'accès
+          }
         } catch (error) {
           console.error('Erreur lors de la récupération du tournoi:', error);
 
@@ -139,9 +162,6 @@ router.beforeEach(async (to, from, next) => {
             await store.dispatch('tourney/clearTournamentName');
           }
         }
-      } else {
-        // Si la route n'est pas liée à un tournoi, nettoie les informations du tournoi dans le store
-        store.dispatch('tourney/clearTournamentName');
       }
 
       // Autorise l'accès à la route après avoir vérifié toutes les conditions

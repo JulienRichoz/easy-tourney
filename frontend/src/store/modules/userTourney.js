@@ -16,10 +16,23 @@ export default {
     },
   },
   actions: {
-    async fetchActiveTourney({ commit }) {
+    async fetchActiveTourney({ commit, dispatch }) {
       try {
         const response = await apiService.get('/users/active-tourney');
-        commit('SET_ACTIVE_TOURNEY', response.data);
+        const activeTourneyData = response.data;
+        console.log('activeTourneyData', activeTourneyData);
+        if (activeTourneyData && activeTourneyData.status === 'active') {
+          commit('SET_ACTIVE_TOURNEY', activeTourneyData);
+
+          const tourneyId = activeTourneyData.id;
+          if (tourneyId) {
+            await dispatch('fetchTourneyRole', tourneyId);
+          }
+        } else {
+          // Si aucun tournoi actif, on peut gérer cela ici
+          commit('SET_ACTIVE_TOURNEY', null);
+          commit('SET_TOURNEY_ROLE', null);
+        }
       } catch (error) {
         console.error(
           'Erreur lors de la récupération du tournoi actif :',
@@ -32,6 +45,7 @@ export default {
         const response = await apiService.get(
           `/users/me/tourneys/${tourneyId}/role`
         );
+
         commit('SET_TOURNEY_ROLE', response.data.tourneyRole);
       } catch (error) {
         console.error(
