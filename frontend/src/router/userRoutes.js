@@ -11,6 +11,11 @@ import TourneyScores from '@/views/user/tourneys/TourneyScores.vue';
 import TourneyStatistics from '@/views/user/tourneys/TourneyStatistics.vue';
 import TourneyDetails from '@/views/user/tourneys/TourneyDetails.vue';
 
+import {
+  checkTournamentAccess,
+  checkTourneyRules,
+} from '@/router/guards/tourneyGuard';
+
 export default [
   {
     path: '/user',
@@ -35,41 +40,48 @@ export default [
     name: 'UserTourneyJoinTeam',
     component: TourneyJoinTeam,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/teams/:teamId/details',
     name: 'UserTourneyTeamDetails',
     component: TourneyTeamDetails,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/planning',
     name: 'UserTourneyPlanning',
     component: TourneyPlanning,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/games/:gameId',
     name: 'UserTourneyGameDetails',
     component: TourneyGameDetails,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/scores',
     name: 'UserTourneyScores',
     component: TourneyScores,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/statistics',
     name: 'UserTourneyStatistics',
     component: TourneyStatistics,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
   {
     path: '/tourneys/:tourneyId/details',
     name: 'UserTourneyDetails',
     component: TourneyDetails,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
 ];
