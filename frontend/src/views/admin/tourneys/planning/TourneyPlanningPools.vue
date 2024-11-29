@@ -898,9 +898,10 @@
        * Utilise l'API pour récupérer le fichier Excel et le télécharger.
        */
       async downloadExcel() {
+        let toastId;
         try {
           // Afficher un toast indiquant que le téléchargement démarre
-          const toastId = toast.info('Téléchargement du fichier en cours...', {
+          toastId = toast.info('Téléchargement du fichier en cours...', {
             autoClose: false, // Empêche la fermeture automatique
           });
           const response = await apiService.get(
@@ -930,10 +931,14 @@
             autoClose: 2000, // Fermeture automatique après 5 secondes
           });
         } catch (error) {
+          toast.update(toastId, {
+            render:
+              error.message ||
+              "Une erreur s'est produite lors du téléchargement.",
+            type: toast.TYPE.ERROR,
+            autoClose: 2000, // Fermeture automatique après 5 secondes
+          });
           console.error('Erreur lors du téléchargement Excel :', error);
-          toast.error(
-            error.message || "Une erreur s'est produite lors du téléchargement."
-          );
         }
       },
       /**
