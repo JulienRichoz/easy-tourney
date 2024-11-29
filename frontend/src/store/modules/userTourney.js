@@ -1,4 +1,4 @@
-// store/modules/user.js
+// store/modules/userTourney.js
 
 import apiService from '@/services/apiService';
 export default {

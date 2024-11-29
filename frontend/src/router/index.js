@@ -103,11 +103,10 @@ router.beforeEach(async (to, from, next) => {
       }
 
       // Vérifiez si l'utilisateur a un tournoi actif
-      await store.dispatch('user/fetchActiveTourney');
-      const activeTourney = store.state.user.activeTourney;
+      await store.dispatch('userTourney/fetchActiveTourney');
+      const activeTourney = store.state.userTourney.activeTourney;
 
       if (activeTourney) {
-        console.log('Tournoi actif:', activeTourney);
         // Si l'utilisateur a un tournoi actif, redirigez vers la page de planning
         if (to.name === 'UserDashboard' || to.name === 'UserTourneys') {
           return next(`/tourneys/${activeTourney.id}/planning`);

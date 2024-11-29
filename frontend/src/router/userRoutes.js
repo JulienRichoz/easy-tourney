@@ -6,7 +6,7 @@ import UserTourneys from '@/views/user/UserTourneys.vue';
 import TourneyJoinTeam from '@/views/user/tourneys/TourneyJoinTeam.vue';
 import TourneyTeamDetails from '@/views/user/tourneys/TourneyTeamDetails.vue';
 import TourneyPlanning from '@/views/user/tourneys/TourneyPlanning.vue';
-import TourneyMatchDetails from '@/views/user/tourneys/TourneyGameDetails.vue';
+import TourneyGameDetails from '@/views/user/tourneys/TourneyGameDetails.vue';
 import TourneyScores from '@/views/user/tourneys/TourneyScores.vue';
 import TourneyStatistics from '@/views/user/tourneys/TourneyStatistics.vue';
 import TourneyDetails from '@/views/user/tourneys/TourneyDetails.vue';
@@ -49,9 +49,9 @@ export default [
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
   {
-    path: '/tourneys/:tourneyId/matches/:matchId',
-    name: 'UserTourneyMatchDetails',
-    component: TourneyMatchDetails,
+    path: '/tourneys/:tourneyId/games/:gameId',
+    name: 'UserTourneyGameDetails',
+    component: TourneyGameDetails,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
   {

@@ -2,12 +2,12 @@ import { createStore } from 'vuex';
 import apiService from '@/services/apiService';
 import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
 import tourney from './modules/tourney';
-import user from './modules/user';
+import userTourney from './modules/userTourney';
 
 export default createStore({
   modules: {
     tourney,
-    user,
+    userTourney,
   },
   state: {
     isAuthenticated: !!localStorage.getItem('token'), // On vérifie si un token est déjà présent
