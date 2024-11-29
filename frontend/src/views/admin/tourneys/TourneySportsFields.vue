@@ -1,5 +1,3 @@
-<!-- views/admin/TourneySportsFields.vue -->
-
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -59,44 +57,65 @@
         message="Aucun terrain trouvé. Veuillez créer des terrains avant d'assigner des sports."
       ></ErrorMessageComponent>
     </div>
-    <!-- Grille des terrains avec le calendrier FullCalendar -->
-    <div
-      v-if="tourney.dateTourney && fields.length"
-      class="grid gap-4 justify-items-stretch"
-      :class="gridClasses"
-    >
-      <div
-        v-for="(field, index) in fields"
-        :key="field.id"
-        class="relative bg-white dark:bg-dark-card shadow-lg rounded-lg p-2 w-full"
-      >
-        <!-- Nom du terrain avec le numéro -->
-        <div class="flex justify-between items-center">
-          <h3 class="text-xl font-bold text-center truncate">
-            {{ field.name }}
-          </h3>
-          <span class="text-sm text-gray-500">
-            {{ index + 1 }}/{{ fields.length }}
-          </span>
-        </div>
-        <p class="truncate">{{ field.description }}</p>
 
-        <!-- FullCalendar pour chaque terrain -->
-        <FullCalendar
-          :options="getFieldCalendarOptions(field)"
-          :key="tourney.dateTourney + '-' + field.id"
-        />
+    <!-- Pagination et calendrier -->
+    <div class="flex flex-wrap gap-4 my-2 px-4">
+      <!-- Pagination alignée à droite -->
+      <div class="flex items-center gap-2 ml-auto">
+        <button
+          v-if="currentPage > 1"
+          @click="currentPage--"
+          class="text-2xl px-2 py-1 rounded navigation-button"
+        >
+          &lt;
+        </button>
+        <select
+          v-model="currentPage"
+          class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
+        >
+          <option v-for="page in totalPages" :key="page" :value="page">
+            Page {{ page }} / {{ totalPages }}
+          </option>
+        </select>
+        <button
+          v-if="currentPage < totalPages"
+          @click="currentPage++"
+          class="text-2xl px-2 py-1 rounded navigation-button"
+        >
+          &gt;
+        </button>
+
+        <!-- Bouton Show All Fields -->
+        <button
+          @click="
+            showAllTerrains = !showAllTerrains;
+            currentPage = 1;
+          "
+          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          {{ showAllTerrains ? 'Reduce' : 'Show All Fields' }}
+        </button>
       </div>
+    </div>
+
+    <!-- Calendrier avec les ressources (terrains) -->
+    <div v-if="tourney.dateTourney && fields.length">
+      <FullCalendar
+        ref="fullCalendar"
+        :options="calendarOptions"
+        :key="tourney.dateTourney"
+      />
     </div>
   </div>
 </template>
 
 <script>
+  // Importations nécessaires
   import { mapState, mapActions } from 'vuex';
   import FullCalendar from '@fullcalendar/vue3';
   import timeGridPlugin from '@fullcalendar/timegrid';
-  import dayGridPlugin from '@fullcalendar/daygrid'; // Import du plugin dayGrid
   import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
+  import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
   import apiService from '@/services/apiService';
   import TourneySubMenu from '@/components/TourneySubMenu.vue';
   import ErrorMessageComponent from '@/components/ErrorMessageComponent.vue';
@@ -120,32 +139,12 @@
           { value: 'completed', label: 'Terminé' },
         ],
         externalDraggableInstance: null,
+        currentPage: 1,
+        terrainsPerPage: 10,
+        showAllTerrains: false,
       };
     },
     computed: {
-      /**
-       * Génère dynamiquement les classes de la grille pour l'affichage responsive
-       * en fonction du nombre de terrains.
-       * @returns {string} Classes CSS à appliquer à la grille
-       */
-      gridClasses() {
-        const fieldCount = this.fields.length;
-        const baseClasses = 'grid-cols-1';
-        const smClasses = 'sm:grid-cols-1';
-        const mdClasses = fieldCount >= 2 ? 'md:grid-cols-2' : 'md:grid-cols-1';
-        const lgClasses = fieldCount >= 3 ? 'lg:grid-cols-3' : '';
-        const xlClasses = fieldCount >= 4 ? 'xl:grid-cols-4' : '';
-        const xxlClasses = fieldCount >= 5 ? '2xl:grid-cols-5' : '';
-
-        return [
-          baseClasses,
-          smClasses,
-          mdClasses,
-          lgClasses,
-          xlClasses,
-          xxlClasses,
-        ].join(' ');
-      },
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
@@ -165,8 +164,90 @@
           });
         },
       },
-    },
+      totalPages() {
+        if (this.showAllTerrains) {
+          return 1; // Si tous les terrains sont affichés, une seule "page"
+        }
+        return Math.ceil(this.fields.length / this.terrainsPerPage);
+      },
+      paginatedFields() {
+        if (this.showAllTerrains) {
+          return this.fields; // Affiche tous les terrains si l'option est activée
+        }
+        const start = (this.currentPage - 1) * this.terrainsPerPage;
+        const end = start + this.terrainsPerPage;
+        return this.fields.slice(start, end);
+      },
+      /**
+       * Options du calendrier FullCalendar avec les ressources (terrains)
+       */
+      calendarOptions() {
+        if (!this.tourney.dateTourney) {
+          console.error('La date du tournoi n’est pas disponible');
+          return {};
+        }
 
+        const events = [];
+
+        // Ajouter les sportsFields en tant qu'événements
+        this.fields.forEach((field) => {
+          if (field.sportsFields && field.sportsFields.length > 0) {
+            field.sportsFields.forEach((sportsField) => {
+              events.push({
+                id: sportsField.id.toString(),
+                title: sportsField.sport.name,
+                start: `${this.tourney.dateTourney}T${sportsField.startTime}`,
+                end: `${this.tourney.dateTourney}T${sportsField.endTime}`,
+                resourceId: field.id.toString(),
+                backgroundColor: sportsField.sport.color || '#cccccc',
+                extendedProps: {
+                  fieldId: field.id,
+                  sportId: sportsField.sport.id,
+                },
+              });
+            });
+          }
+        });
+
+        return {
+          plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
+          schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial
+          initialView: 'resourceTimeGridDay',
+          timeZone: 'local',
+          initialDate: this.tourney.dateTourney,
+          editable: this.isEditable,
+          droppable: true,
+          headerToolbar: false,
+          height: '600px',
+          defaultTimedEventDuration: '04:00',
+          slotMinTime: '00:00:00',
+          slotMaxTime: '24:00:00',
+          slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          },
+          allDaySlot: false,
+          resources: this.paginatedFields.map((field) => ({
+            id: field.id.toString(),
+            title: field.name,
+          })),
+          events: events,
+          eventReceive: this.handleEventReceive,
+          eventDrop: this.handleEventDrop,
+          eventResize: this.handleEventResize,
+          eventContent: this.renderEventContent,
+        };
+      },
+    },
+    watch: {
+      currentPage() {
+        if (this.$refs.fullCalendar) {
+          const calendarApi = this.$refs.fullCalendar.getApi();
+          calendarApi.refetchResources();
+        }
+      },
+    },
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
@@ -239,7 +320,7 @@
         }
 
         const containerEl = document.getElementById('external-events');
-        new Draggable(containerEl, {
+        this.externalDraggableInstance = new Draggable(containerEl, {
           itemSelector: '.external-event',
           eventData(eventEl) {
             return {
@@ -252,53 +333,6 @@
             };
           },
         });
-      },
-
-      /**
-       * Génère les options pour FullCalendar en fonction des sports assignés à chaque terrain.
-       * @param {Object} field - Le terrain pour lequel on génère le calendrier.
-       * @returns {Object} Options configurées pour FullCalendar
-       */
-      getFieldCalendarOptions(field) {
-        if (!this.tourney.dateTourney) {
-          console.error('La date du tournoi n’est pas disponible');
-          return {};
-        }
-
-        const events = field.sportsFields.map((sportField) => ({
-          id: sportField.id,
-          title: sportField.sport.name,
-          start: `${this.tourney.dateTourney}T${sportField.startTime}`,
-          end: `${this.tourney.dateTourney}T${sportField.endTime}`,
-          backgroundColor: sportField.sport.color || '#cccccc',
-          extendedProps: {
-            fieldId: field.id,
-            sportId: sportField.sport.id,
-          },
-        }));
-
-        return {
-          plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
-          initialView: 'timeGridDay', // Peut être modifié en 'dayGridMonth'
-          timeZone: 'local',
-          initialDate: this.tourney.dateTourney,
-          editable: this.isEditable,
-          eventContent: this.renderEventContent,
-          droppable: true,
-          allDaySlot: false,
-          headerToolbar: false,
-          defaultTimedEventDuration: '04:00',
-          height: 600,
-          slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          },
-          eventReceive: (info) => this.handleEventReceive(info, field.id),
-          eventDrop: (info) => this.handleEventDrop(info, field.id),
-          eventResize: (info) => this.handleEventResize(info, field.id),
-          events: events,
-        };
       },
 
       /**
@@ -364,13 +398,9 @@
         return { domNodes: [container] };
       },
 
-      /**
-       * Gestion de l'ajout d'un événement lorsqu'il est glissé depuis les sports externes.
-       * Crée ou met à jour l'événement selon qu'il existe déjà.
-       * @param {Object} info - Informations sur l'événement reçu
-       * @param {Number} newFieldId - ID du terrain où l'événement est assigné
-       */
-      async handleEventReceive(info, newFieldId) {
+      // Les méthodes handleEventReceive, handleEventDrop, handleEventResize, deleteEvent sont celles modifiées précédemment
+
+      async handleEventReceive(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -378,6 +408,7 @@
         const event = info.event;
         try {
           const sportId = event.extendedProps.sportId;
+          const newFieldId = event.getResources()[0]?.id;
 
           if (!newFieldId) {
             console.error("Problème d'ID : Terrain mal identifié.");
@@ -392,47 +423,31 @@
             event.setEnd(endDate);
           }
 
-          if (event.id) {
-            const eventId = event.id;
-            const data = {
-              fieldId: newFieldId,
-              startTime: this.formatTime(event.start),
-              endTime: this.formatTime(event.end),
-            };
+          const data = {
+            fieldId: newFieldId,
+            sportId: sportId,
+            startTime: this.formatTime(event.start),
+            endTime: this.formatTime(event.end),
+          };
 
-            await apiService.put(
-              `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
-              data
-            );
-          } else {
-            const data = {
-              fieldId: newFieldId,
-              sportId: sportId,
-              startTime: this.formatTime(event.start),
-              endTime: this.formatTime(event.end),
-            };
+          const response = await apiService.post(
+            `/tourneys/${this.tourneyId}/sports-fields`,
+            data
+          );
 
-            const response = await apiService.post(
-              `/tourneys/${this.tourneyId}/sports-fields`,
-              data
-            );
+          event.setProp('id', response.data.id);
 
-            event.setProp('id', response.data.id);
-          }
-
-          await this.fetchTourneySportsFields();
+          // Mettre à jour les propriétés de l'événement
+          event.setExtendedProp('fieldId', newFieldId);
+          event.setExtendedProp('sportId', sportId);
+          event.setProp('backgroundColor', event.backgroundColor);
         } catch (error) {
           console.error("Erreur lors du traitement de l'événement :", error);
           info.revert();
         }
       },
 
-      /**
-       * Gestion du déplacement d'un événement d'un terrain à un autre dans le calendrier.
-       * @param {Object} info - Informations sur l'événement déplacé
-       * @param {Number} fieldId - ID du terrain où l'événement a été déplacé
-       */
-      async handleEventDrop(info, fieldId) {
+      async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -440,8 +455,9 @@
         const event = info.event;
         try {
           const eventId = event.id;
+          const newFieldId = event.getResources()[0]?.id;
 
-          if (!eventId || !fieldId) {
+          if (!eventId || !newFieldId) {
             console.error(
               "Problème d'ID : Terrain ou événement mal identifié."
             );
@@ -450,7 +466,7 @@
           }
 
           const data = {
-            fieldId: fieldId,
+            fieldId: newFieldId,
             startTime: this.formatTime(event.start),
             endTime: this.formatTime(event.end),
           };
@@ -459,19 +475,16 @@
             `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
             data
           );
-          await this.fetchTourneySportsFields();
+
+          // Mettre à jour les propriétés de l'événement
+          event.setExtendedProp('fieldId', newFieldId);
         } catch (error) {
           console.error("Erreur lors du déplacement de l'événement :", error);
           info.revert();
         }
       },
 
-      /**
-       * Gestion du redimensionnement d'un événement (changement de durée).
-       * @param {Object} info - Informations sur l'événement redimensionné
-       * @param {Number} fieldId - ID du terrain de l'événement
-       */
-      async handleEventResize(info, fieldId) {
+      async handleEventResize(info) {
         if (!this.isEditable) {
           info.revert();
           return;
@@ -479,6 +492,7 @@
         const event = info.event;
         try {
           const eventId = event.id;
+          const fieldId = event.extendedProps.fieldId;
 
           if (!eventId || !fieldId) {
             console.error(
@@ -497,30 +511,12 @@
             `/tourneys/${this.tourneyId}/sports-fields/${eventId}`,
             data
           );
-          await this.fetchTourneySportsFields();
         } catch (error) {
           console.error(
             "Erreur lors du redimensionnement de l'événement :",
             error
           );
           info.revert();
-        }
-      },
-
-      /**
-       * Supprime un événement du calendrier et de la base de données.
-       * @param {Object} event - Événement à supprimer
-       */
-      async deleteEvent(event) {
-        if (!this.isEditable) return;
-        try {
-          await apiService.delete(
-            `/tourneys/${this.tourneyId}/sports-fields/${event.id}`
-          );
-          event.remove();
-          await this.fetchTourneySportsFields();
-        } catch (error) {
-          console.error('Erreur lors de la suppression du sport :', error);
         }
       },
 
@@ -536,6 +532,17 @@
         return `${hours}:${minutes}`;
       },
 
+      async deleteEvent(event) {
+        if (!this.isEditable) return;
+        try {
+          await apiService.delete(
+            `/tourneys/${this.tourneyId}/sports-fields/${event.id}`
+          );
+          event.remove();
+        } catch (error) {
+          console.error('Erreur lors de la suppression du sport :', error);
+        }
+      },
       /**
        * Formatte une date en format HH:MM:SS.
        * @param {Date} date - La date à formater
@@ -548,7 +555,27 @@
         const seconds = d.getSeconds().toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
       },
+
+      /**
+       * Ajuste le nombre de terrains à afficher par page en fonction de la largeur de l'écran.
+       */
+      adjustTerrainsPerPage() {
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth >= 1200) {
+          this.terrainsPerPage = 10; // 1200px et plus : 10 terrains
+        } else if (screenWidth >= 1000) {
+          this.terrainsPerPage = 8; // 1000px - 1200px : 8 terrains
+        } else if (screenWidth >= 800) {
+          this.terrainsPerPage = 7; // 800px - 1000px : 7 terrains
+        } else if (screenWidth >= 600) {
+          this.terrainsPerPage = 5; // 600px - 800px : 5 terrains
+        } else {
+          this.terrainsPerPage = 3; // Moins de 600px : 3 terrains
+        }
+      },
     },
+
     async mounted() {
       // Méthode appelée lorsque le composant est monté
       await this.fetchTourneySportsFields(); // Récupérer les sports associés aux terrains du tournoi
@@ -556,16 +583,15 @@
 
       // Rendre les éléments de sport externes "draggables"
       this.initializeExternalEvents();
+
+      // Ajuster la pagination
+      this.adjustTerrainsPerPage();
+      window.addEventListener('resize', this.adjustTerrainsPerPage);
     },
   };
 </script>
 
 <style scoped>
-  .fields-grid {
-    display: grid;
-    gap: 1.5rem;
-  }
-
   .sport-item {
     display: flex;
     justify-content: center;
@@ -573,6 +599,14 @@
     text-align: center;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .navigation-button {
+    transition: transform 0.2s;
+  }
+
+  .navigation-button:hover {
+    transform: scale(1.2);
   }
 
   @import '@/assets/fullcalendar.css';
