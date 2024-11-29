@@ -1,11 +1,10 @@
 // store/modules/user.js
-import apiService from '@/services/apiService';
 
+import apiService from '@/services/apiService';
 export default {
   namespaced: true,
   state: {
     activeTourney: null,
-    // ... autres états
   },
   mutations: {
     SET_ACTIVE_TOURNEY(state, tourney) {
