@@ -162,7 +162,7 @@ exports.deleteSport = async (req, res) => {
           }
         });
       } else {
-        console.log(
+        console.warn(
           `L'image ${imageName} est protégée et ne sera pas supprimée.`
         );
       }

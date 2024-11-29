@@ -220,14 +220,14 @@ exports.exportExcel = async (req, res) => {
         }
 
         const filePath = await generateExcelFile(data, tourneyId);
-        console.log('Fichier Excel généré :', filePath);
+        console.warn('Fichier Excel généré :', filePath);
 
         res.download(filePath, `tournament_${tourneyId}.xlsx`, (err) => {
             if (err) {
                 console.error('Erreur lors du téléchargement du fichier :', err);
                 return res.status(500).json({ message: 'Erreur lors du téléchargement du fichier.' });
             } else {
-                console.log('Fichier téléchargé avec succès.');
+                console.warn('Fichier téléchargé avec succès.');
                 fs.unlinkSync(filePath);
             }
         });

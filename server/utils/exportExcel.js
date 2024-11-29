@@ -249,7 +249,7 @@ function generatePoolCalendarSheet(workbook, data) {
 
     // Récupérer la date du tournoi
     const tourneyDate = data.tourney.dateTourney;
-    console.warn("poolShchedules", data.poolSchedules);
+
     // Récupérer les horaires de début et de fin du planning global
     const scheduleStartTime = new Date(`${tourneyDate}T${poolSchedule.startTime || '08:00:00'}`);
     const scheduleEndTime = new Date(`${tourneyDate}T${poolSchedule.endTime || '18:00:00'}`);

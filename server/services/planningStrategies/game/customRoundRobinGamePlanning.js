@@ -111,14 +111,11 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 },
             ],
         });
-        console.log(`AVANT IF !POOLS.LENGTH`);
         if (!pools.length) {
             throw new Error('Aucune pool disponible pour générer les matchs.');
         }
-        console.log(`APRES IF !POOLS.LENGTH`);
         // Générer les matchs pour chaque pool
         for (const pool of pools) {
-            console.log("Dans la boucle for de generateGamesForPool");
             await this.generateGamesForPool(pool, scheduleTourney, tourney);
         }
 
@@ -134,27 +131,20 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
     async generateGamesForPool(pool, scheduleTourney, tourney) {
         let teams = pool.teams;
         const poolSchedules = pool.schedules;
-        console.warn(`Génération des matchs pour la pool ${pool.name} avec ${teams.length} équipes et ${poolSchedules.length} créneaux horaires.`);
 
         // Vérifier si la pool a des équipes et des créneaux horaires
         if (!teams || teams.length < 2) {
-            console.warn(`La pool ${pool.id} n'a pas assez d'équipes pour générer des matchs.`);
-            console.log(`La pool ${pool.id} n'a pas assez d'équipes pour générer des matchs.`);
             return;
         }
 
         if (!poolSchedules || poolSchedules.length === 0) {
-            console.warn(`La pool ${pool.id} n'a pas de créneaux horaires assignés.`);
-            console.log(`La pool ${pool.id} n'a pas de créneaux horaires assignés.`);
             return;
         }
 
         if (teams.length === 3) {
-            console.warn(`Génération des matchs pour une pool de 3 équipes.`);
             // Utiliser une méthode spécifique pour les pools de 3 équipes
             await this.generateGamesForThreeTeamPool(pool, scheduleTourney, tourney);
         } else if (teams.length === 4) {
-            console.warn(`Génération des matchs pour une pool de 4 équipes.`);
             // Utiliser une méthode spécifique pour les pools de 4 équipes
             await this.generateGamesForFourTeamPool(pool, scheduleTourney, tourney);
         } else {
@@ -204,11 +194,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
         const totalMatchesBetweenTeams = Math.max(1, Math.ceil(
             (matchesPerTeam * totalTeams) / totalPossiblePairings
         ));
-        console.warn(`Total available time: ${totalAvailableTime} minutes`);
-        console.warn(`Total matches possible: ${totalMatchesPossible}`);
-        console.warn(`Matches per team: ${matchesPerTeam}`);
-        console.warn(`Total possible pairings: ${totalPossiblePairings}`);
-        console.warn(`Total matches between teams: ${totalMatchesBetweenTeams}`);
+
         // Initialiser les compteurs de matchs par équipe
         const teamTotalMatchCounts = new Map();
         teams.forEach((team) => {

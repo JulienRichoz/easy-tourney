@@ -114,9 +114,6 @@ class CustomRoundRobin extends PoolStrategy {
     const minTeamPerPool = tourney?.defaultMinTeamPerPool || 3; // Valeur par défaut
     const maxTeamPerPool = tourney?.defaultMaxTeamPerPool || 5; // Valeur par défaut
 
-    console.log('minTeamPerPool', minTeamPerPool);
-    console.log('maxTeamPerPool', maxTeamPerPool);
-
     if (existingPoolCount >= maxPools) {
       throw new Error('Nombre maximal de pools déjà atteint.');
     }
