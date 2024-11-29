@@ -9,6 +9,7 @@ import TourneyPlanning from '@/views/user/tourneys/TourneyPlanning.vue';
 import TourneyMatchDetails from '@/views/user/tourneys/TourneyGameDetails.vue';
 import TourneyScores from '@/views/user/tourneys/TourneyScores.vue';
 import TourneyStatistics from '@/views/user/tourneys/TourneyStatistics.vue';
+import TourneyDetails from '@/views/user/tourneys/TourneyDetails.vue';
 
 export default [
   {
@@ -63,6 +64,12 @@ export default [
     path: '/tourneys/:tourneyId/statistics',
     name: 'UserTourneyStatistics',
     component: TourneyStatistics,
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
+  },
+  {
+    path: '/tourneys/:tourneyId/details',
+    name: 'UserTourneyDetails',
+    component: TourneyDetails,
     meta: { requiresAuth: true, permission: 'viewUserPage' },
   },
 ];

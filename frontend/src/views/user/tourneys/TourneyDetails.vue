@@ -1,12 +1,11 @@
-<!-- src/views/user/tourneys/TourneyPlanning.vue -->
+<!-- src/views/user/tourneys/TourneyDetails.vue -->
 <template>
   <div>
     <SubMenuComponent :tourneyId="tourneyId" />
 
     <!-- Contenu de la page -->
     <div class="p-6">
-      <TitleComponent title="Scores du Tournoi" />
-      <!-- Afficher les scores -->
+      <TitleComponent title="Informations" />
     </div>
   </div>
 </template>
