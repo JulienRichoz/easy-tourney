@@ -5,12 +5,15 @@ export default {
   namespaced: true,
   state: {
     activeTourney: null,
+    tourneyRole: null,
   },
   mutations: {
     SET_ACTIVE_TOURNEY(state, tourney) {
       state.activeTourney = tourney;
     },
-    // ... autres mutations
+    SET_TOURNEY_ROLE(state, role) {
+      state.tourneyRole = role;
+    },
   },
   actions: {
     async fetchActiveTourney({ commit }) {
@@ -24,6 +27,23 @@ export default {
         );
       }
     },
+    async fetchTourneyRole({ commit }, tourneyId) {
+      try {
+        const response = await apiService.get(
+          `/users/me/tourneys/${tourneyId}/role`
+        );
+        commit('SET_TOURNEY_ROLE', response.data.tourneyRole);
+      } catch (error) {
+        console.error(
+          'Erreur lors de la récupération du rôle dans le tournoi :',
+          error
+        );
+      }
+    },
   },
-  getters: {},
+  getters: {
+    isAssistant(state) {
+      return state.tourneyRole === 'assistant';
+    },
+  },
 };
