@@ -31,6 +31,13 @@
       </h2>
     </div>
 
+    <!-- Afficher le statut en texte -->
+    <div v-if="registrationStatus" class="mb-4">
+      <span class="text-base font-medium text-gray-700 dark:text-gray-300">
+        {{ statusText }}
+      </span>
+    </div>
+
     <!-- Affichage de la liste des utilisateurs si le slot "user-list" est utilisé -->
     <div v-if="$slots['user-list']">
       <slot name="user-list"></slot>
@@ -142,6 +149,11 @@
         type: String,
         default: '',
       },
+      registrationStatus: {
+        type: String,
+        required: false,
+        default: null,
+      },
       isEditable: {
         type: Boolean,
         default: true,
@@ -154,6 +166,26 @@
           return new Date(this.date).toLocaleDateString();
         }
         return '';
+      },
+      statusText() {
+        console.log(this.status);
+        console.log(this.registrationStatus);
+        if (this.status === 'active') {
+          return 'Tournoi en cours';
+        } else if (this.status === 'completed') {
+          return 'Tournoi terminé';
+        } else {
+          if (this.registrationStatus === 'active') {
+            return 'Inscriptions ouvertes';
+          } else if (
+            this.registrationStatus === 'notStarted' ||
+            this.registrationStatus === 'completed'
+          ) {
+            return 'Inscriptions fermées';
+          } else {
+            return 'Statut inconnu';
+          }
+        }
       },
     },
     methods: {
@@ -196,5 +228,5 @@
 </script>
 
 <style scoped>
-  /* Minimal CSS, almost all handled by Tailwind */
+  /* Les styles sont principalement gérés par Tailwind CSS */
 </style>
