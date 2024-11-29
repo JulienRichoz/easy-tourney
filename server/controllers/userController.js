@@ -9,6 +9,8 @@ const {
 } = require('../models');
 const { roles } = require('../config/roles');
 const authService = require('../services/authService');
+const { Op } = require('sequelize');
+
 
 // Récupérer tous les utilisateurs avec leurs tournois et équipes (admin seulement)
 // DOC: PROBLEM https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping
@@ -500,25 +502,52 @@ exports.deleteUser = async (req, res) => {
 
 exports.getActiveTourney = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'name', 'email', 'phone', 'roleId'],
+    const userId = req.user.id;
+
+    // Récupérer le tournoi actif auquel l'utilisateur participe
+    const userTourney = await UsersTourneys.findOne({
+      where: { userId },
       include: [
         {
-          model: Role,
-          as: 'role',
-          attributes: ['id', 'name'],
+          model: Tourney,
+          as: 'tourney',
+          where: {
+            status: 'active', // Tournoi avec le statut 'active'
+          },
+          attributes: ['id', 'name', 'location', 'dateTourney', 'status'],
         },
       ],
     });
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+
+    if (!userTourney) {
+      return res.status(200).json(null); // Aucun tournoi actif
     }
-    res.json(user);
+
+    const activeTourney = userTourney.tourney;
+    res.status(200).json(activeTourney);
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération des informations utilisateur:',
-      error
-    );
-    res.status(500).json({ message: 'Erreur serveur.' });
+    console.error('Erreur lors de la récupération du tournoi actif :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+
+exports.getUserRoleInTourney = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const tourneyId = parseInt(req.params.tourneyId, 10);
+
+    const userTourney = await UsersTourneys.findOne({
+      where: { userId, tourneyId },
+      attributes: ['tourneyRole'],
+    });
+
+    if (!userTourney) {
+      return res.status(404).json({ message: 'Rôle dans le tournoi non trouvé.' });
+    }
+
+    res.json({ tourneyRole: userTourney.tourneyRole });
+  } catch (error) {
+    console.error('Erreur lors de la récupération du rôle dans le tournoi:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+}

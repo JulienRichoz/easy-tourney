@@ -13,6 +13,7 @@ const {
   addUserToTourney,
   getOwnData,
   getActiveTourney,
+  getUserRoleInTourney
 } = require('../controllers/userController');
 const {
   isAdmin,
@@ -24,6 +25,8 @@ const {
 
 // Specific user routes
 router.get('/active-tourney', isAuthenticated, getActiveTourney); // Récupérer le tournoi actif pour un utilisateur donné
+router.get('me/tourneys/:tourneyId/role', isAuthenticated, getUserRoleInTourney); // Récupérer le rôle de l'utilisateur dans un tournoi donné
+
 
 // Admin routes
 router.get('/me', isAuthenticated, getOwnData);
