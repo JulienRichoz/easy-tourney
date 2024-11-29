@@ -1,5 +1,5 @@
 // server/cronJobs.js
-// Tâche planifiée pour mettre à jour le statut des tournois une fois par heure
+// Tâche planifiée pour mettre activer/desactiver automatiquement les statuts tournois
 const cron = require('node-cron');
 const { Tourney } = require('./models');
 const { Op } = require('sequelize');
@@ -8,6 +8,7 @@ const { Op } = require('sequelize');
 cron.schedule('0 * * * *', async () => { // Toutes les heures
     try {
         const today = new Date();
+        console.warn('Vérification des statuts des tournois en cours...');
 
         // Mettre à jour les tournois 'ready' dont la date est aujourd'hui en 'active'
         await Tourney.update(
