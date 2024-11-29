@@ -1,3 +1,4 @@
+<!-- src/views/user/TourneyJoinTeam.vue -->
 <template>
   <div>
     <div class="p-6">
@@ -75,9 +76,12 @@
           v-model="searchQuery"
           type="text"
           placeholder="Rechercher un groupe ou un utilisateur"
-          class="border p-2 rounded w-full md:w-1/3"
+          class="border p-2 rounded w-full md:w-1/3 dark:bg-dark-menu"
         />
-        <select v-model="selectedFilter" class="border p-2 rounded">
+        <select
+          v-model="selectedFilter"
+          class="border p-2 rounded dark:bg-dark-menu"
+        >
           <option value="">Tous les groupes</option>
           <option value="non-full">Groupes partiels</option>
           <option value="full">Groupes pleins</option>

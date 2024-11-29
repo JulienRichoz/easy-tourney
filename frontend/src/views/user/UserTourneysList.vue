@@ -1,4 +1,4 @@
-<!-- src/views/UserTourneys.vue -->
+<!-- src/views/user/UserTourneys.vue -->
 <template>
   <div class="p-6">
     <div class="flex items-center justify-between mb-8">

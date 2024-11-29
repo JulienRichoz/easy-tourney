@@ -1,4 +1,4 @@
-<!-- TourneyTeamDetailsUser.vue -->
+<!-- src/views/user/TourneyTeamDetails.vue -->
 <template>
   <div class="p-6">
     <div v-if="team">
