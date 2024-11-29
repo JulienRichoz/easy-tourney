@@ -6,13 +6,24 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [];
     const password = await authService.hashPassword('password'); // Faille sécurité car tjr meme password encrypté affiché mais allege generation seeder.. (0.2 seconde vs 14 secondes)
-    // Admin user
+    // Admin
     users.push({
       id: 1,
       name: 'a',
       email: 'a@a.a',
       password: await authService.hashPassword('a'),
       roleId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // User Assistant tournoi 1
+    users.push({
+      id: 1000,
+      name: 'b',
+      email: 'b@b.b',
+      password: await authService.hashPassword('b'),
+      roleId: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
