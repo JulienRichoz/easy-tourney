@@ -107,13 +107,14 @@ router.beforeEach(async (to, from, next) => {
       const activeTourney = store.state.user.activeTourney;
 
       if (activeTourney) {
+        console.log('Tournoi actif:', activeTourney);
         // Si l'utilisateur a un tournoi actif, redirigez vers la page de planning
         if (to.name === 'UserDashboard' || to.name === 'UserTourneys') {
           return next(`/tourneys/${activeTourney.id}/planning`);
         }
       } else {
         // Si pas de tournoi actif, redirigez vers la liste des tournois
-        if (to.name === 'UserDashboard') {
+        if (to.name === 'UserTourneys') {
           return next('/tourneys');
         }
       }
