@@ -287,7 +287,7 @@ exports.getTourneysByUser = async (req, res) => {
         {
           model: Tourney,
           as: 'tourney',
-          attributes: ['id', 'name', 'location', 'dateTourney'],
+          attributes: ['id', 'name', 'location', 'dateTourney', 'status', 'registrationStatus'],
         },
       ],
     });
