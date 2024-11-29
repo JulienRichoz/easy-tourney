@@ -338,60 +338,6 @@
         // Configuration des champs du formulaire de configuration du planning
         scheduleFormFields: [
           {
-            name: 'startTime',
-            type: 'time',
-            label: 'Heure de début',
-            required: true,
-          },
-          {
-            name: 'endTime',
-            type: 'time',
-            label: 'Heure de fin',
-            required: true,
-          },
-          {
-            name: 'introStart',
-            type: 'time',
-            label: "Début de l'introduction",
-          },
-          {
-            name: 'introEnd',
-            type: 'time',
-            label: "Fin de l'introduction",
-          },
-          {
-            name: 'lunchStart',
-            type: 'time',
-            label: 'Début du déjeuner',
-          },
-          {
-            name: 'lunchEnd',
-            type: 'time',
-            label: 'Fin du déjeuner',
-          },
-          {
-            name: 'outroStart',
-            type: 'time',
-            label: 'Début de la conclusion',
-          },
-          {
-            name: 'outroEnd',
-            type: 'time',
-            label: 'Fin de la conclusion',
-          },
-          {
-            name: 'poolDuration',
-            type: 'number',
-            label: 'Durée d’une pool (en minutes)',
-            required: true,
-          },
-          {
-            name: 'transitionPoolTime',
-            type: 'number',
-            label: 'Transition entre les pools (en minutes)',
-            required: true,
-          },
-          {
             name: 'gameDuration',
             type: 'number',
             label: 'Durée d’un match (en minutes)',

@@ -236,13 +236,14 @@ file-selected: Lorsqu'un fichier est sélectionné.
         return `grid grid-cols-1 sm:grid-cols-${this.columns} gap-4`;
       },
       isFormValid() {
-        // Check if there are any errors and all required fields are filled
         return (
           Object.keys(this.errors).length === 0 &&
           this.fields.every(
             (field) =>
               !field.required ||
-              (this.formData[field.name] && this.formData[field.name] !== '')
+              (this.formData[field.name] !== null &&
+                this.formData[field.name] !== undefined &&
+                this.formData[field.name] !== '')
           )
         );
       },
@@ -266,7 +267,12 @@ file-selected: Lorsqu'un fichier est sélectionné.
             delete this.errors.location;
           }
         }
-        if (field.required && !this.formData[field.name]) {
+        if (
+          field.required &&
+          (this.formData[field.name] === null ||
+            this.formData[field.name] === undefined ||
+            this.formData[field.name] === '')
+        ) {
           this.errors[field.name] = 'Ce champ est obligatoire';
         } else if (field.type === 'date') {
           const dateValue = new Date(this.formData[field.name]);
