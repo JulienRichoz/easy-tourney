@@ -30,7 +30,6 @@ const {
     timeDifferenceInMinutes,
     addMinutesToTime,
     combineDateAndTime,
-    formatTime,
 } = require('../../../utils/dateUtils');
 
 class CustomRoundRobinGamePlanning extends GameStrategy {
@@ -74,9 +73,11 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             );
         }
 
-        // Récupérer les pools avec leurs équipes et leurs plannings
+        // Récupérer les pools avec leurs équipes et leurs plannings, seulement si elles ont des PoolSchedule associés
         const pools = await Pool.findAll({
-            where: { tourneyId: this.tourneyId },
+            where: {
+                tourneyId: this.tourneyId,
+            },
             include: [
                 {
                     model: Team,
@@ -86,6 +87,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 {
                     model: PoolSchedule,
                     as: 'schedules',
+                    required: true, // Cette ligne assure que seules les pools avec des PoolSchedule sont récupérées
                     include: [
                         {
                             model: Field,
@@ -109,13 +111,14 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 },
             ],
         });
-
+        console.log(`AVANT IF !POOLS.LENGTH`);
         if (!pools.length) {
             throw new Error('Aucune pool disponible pour générer les matchs.');
         }
-
+        console.log(`APRES IF !POOLS.LENGTH`);
         // Générer les matchs pour chaque pool
         for (const pool of pools) {
+            console.log("Dans la boucle for de generateGamesForPool");
             await this.generateGamesForPool(pool, scheduleTourney, tourney);
         }
 
@@ -131,16 +134,27 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
     async generateGamesForPool(pool, scheduleTourney, tourney) {
         let teams = pool.teams;
         const poolSchedules = pool.schedules;
+        console.warn(`Génération des matchs pour la pool ${pool.name} avec ${teams.length} équipes et ${poolSchedules.length} créneaux horaires.`);
 
-        if (teams.length < 2 || poolSchedules.length === 0) {
-            // Impossible de générer des matchs
+        // Vérifier si la pool a des équipes et des créneaux horaires
+        if (!teams || teams.length < 2) {
+            console.warn(`La pool ${pool.id} n'a pas assez d'équipes pour générer des matchs.`);
+            console.log(`La pool ${pool.id} n'a pas assez d'équipes pour générer des matchs.`);
+            return;
+        }
+
+        if (!poolSchedules || poolSchedules.length === 0) {
+            console.warn(`La pool ${pool.id} n'a pas de créneaux horaires assignés.`);
+            console.log(`La pool ${pool.id} n'a pas de créneaux horaires assignés.`);
             return;
         }
 
         if (teams.length === 3) {
+            console.warn(`Génération des matchs pour une pool de 3 équipes.`);
             // Utiliser une méthode spécifique pour les pools de 3 équipes
             await this.generateGamesForThreeTeamPool(pool, scheduleTourney, tourney);
         } else if (teams.length === 4) {
+            console.warn(`Génération des matchs pour une pool de 4 équipes.`);
             // Utiliser une méthode spécifique pour les pools de 4 équipes
             await this.generateGamesForFourTeamPool(pool, scheduleTourney, tourney);
         } else {
@@ -149,6 +163,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             if (this.randomMode) {
                 this.shuffleArray(teams);
             }
+            console.error(`Génération des matchs pour une pool de plus de 4 équipes.`);
             await this.generateGamesForLargerPool(pool, scheduleTourney, tourney, teams);
         }
     }
@@ -182,14 +197,18 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
         // Calculer le nombre idéal de matchs par équipe
         const totalTeams = teams.length;
         const totalTeamAppearances = totalMatchesPossible * 2; // Chaque match implique 2 équipes
-        const matchesPerTeam = Math.floor(totalTeamAppearances / totalTeams);
+        const matchesPerTeam = Math.max(1, Math.ceil(totalTeamAppearances / totalTeams));
 
         // Calculer le nombre maximal de confrontations entre paires d'équipes
         const totalPossiblePairings = (totalTeams * (totalTeams - 1)) / 2;
-        const totalMatchesBetweenTeams = Math.floor(
+        const totalMatchesBetweenTeams = Math.max(1, Math.ceil(
             (matchesPerTeam * totalTeams) / totalPossiblePairings
-        );
-
+        ));
+        console.warn(`Total available time: ${totalAvailableTime} minutes`);
+        console.warn(`Total matches possible: ${totalMatchesPossible}`);
+        console.warn(`Matches per team: ${matchesPerTeam}`);
+        console.warn(`Total possible pairings: ${totalPossiblePairings}`);
+        console.warn(`Total matches between teams: ${totalMatchesBetweenTeams}`);
         // Initialiser les compteurs de matchs par équipe
         const teamTotalMatchCounts = new Map();
         teams.forEach((team) => {
@@ -256,7 +275,8 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
         if (!pool || !pool.id) {
             throw new Error('Pool invalide lors de la génération du match.');
         }
-
+        console.error(`Enregistrement des matchs planifiés pour la pool ${pool.id}.`);
+        console.error("MATCHES SCHEDULED: ", matchesScheduled);
         // Enregistrer les matchs planifiés dans la base de données
         for (const match of matchesScheduled) {
             await Game.create({
@@ -271,6 +291,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                 endTime: match.endTime,
                 status: 'scheduled',
             });
+            console.error(`Match planifié entre ${match.teamA.teamName} et ${match.teamB.teamName} à ${match.startTime}.`);
         }
     }
 
@@ -348,8 +369,9 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
             const availableMatchups = allPossibleMatchups.filter(
                 ({ teamA, teamB, matchCount }) =>
                     teamTotalMatchCounts.get(teamA.id) < matchesPerTeam &&
-                    teamTotalMatchCounts.get(teamB.id) < matchesPerTeam &&
-                    matchCount < totalMatchesBetweenTeams
+                    teamTotalMatchCounts.get(teamB.id) < matchesPerTeam
+                // Supprimer ou ajuster la condition suivante :
+                // (totalMatchesBetweenTeams === 0 || matchCount < totalMatchesBetweenTeams)
             );
 
             if (availableMatchups.length === 0) {
@@ -438,15 +460,29 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                     globalRound++;
 
                     matchScheduled = true;
-
+                    lastTeamsPlayed = new Set([teamA.id, teamB.id]);
                     // Passer au prochain match
                     break;
                 }
             }
 
+            // Si aucun match n'a été planifié, relâcher la restriction
             if (!matchScheduled) {
-                // Aucun match supplémentaire ne peut être planifié dans ce créneau
-                break;
+                for (const matchup of matchupsToTry) {
+                    const { teamA, teamB } = matchup;
+
+                    // Vérifier uniquement la disponibilité des équipes
+                    if (
+                        isTeamAvailable(teamA, teamB, new Date(matchStartTime), new Date(addMinutesToTime(matchStartTime, matchDuration)))
+                    ) {
+                        // Planifier le match
+                        // ... (votre code pour planifier le match)
+                        matchScheduled = true;
+                        // Mettre à jour lastTeamsPlayed (ou pas, selon votre préférence)
+                        lastTeamsPlayed = new Set([teamA.id, teamB.id]);
+                        break;
+                    }
+                }
             }
         }
     }
