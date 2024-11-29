@@ -24,8 +24,8 @@ const {
 // Base URL: http://localhost:3000/api/users
 
 // Specific user routes
-router.get('/active-tourney', isAuthenticated, getActiveTourney); // Récupérer le tournoi actif pour un utilisateur donné
-router.get('me/tourneys/:tourneyId/role', isAuthenticated, getUserRoleInTourney); // Récupérer le rôle de l'utilisateur dans un tournoi donné
+router.get('/active-tourney', isAuthenticated, getActiveTourney); // Récupérer le tournoi actif pour l'utilisateur actuel
+router.get('/me/tourneys/:tourneyId/role', isAuthenticated, getUserRoleInTourney); // Récupérer le rôle de l'utilisateur dans un tournoi donné
 
 
 // Admin routes

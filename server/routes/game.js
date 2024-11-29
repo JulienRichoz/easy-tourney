@@ -22,7 +22,7 @@ const {
 const { authorizeTourneyRoles } = require('../middlewares/authorizeTourneyRole');
 
 
-// Base URL: http://localhost:8080/api/tourneys/:tourneyId/games
+// Base URL: http://localhost:3000/api/tourneys/:tourneyId/games
 router.get('/by-pool-schedule/:poolScheduleId', isAuthenticated, authorizeTournamentAccess, getGamesByPoolSchedule); // Récupérer les matchs par poolSchedule
 router.get('/by-pool/:poolId', isAuthenticated, authorizeTournamentAccess, getGamesByPool); // Récupérer les matchs par pool
 
