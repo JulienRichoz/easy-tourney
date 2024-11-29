@@ -7,7 +7,7 @@
     </div>
 
     <!-- Section de mise à jour des scores (assistants seulement) -->
-    <div v-if="$store.getters['user/isAssistant']">
+    <div class="p-6" v-if="isAssistant">
       Bonjour assistant
       <!-- Formulaire de mise à jour des scores -->
     </div>
@@ -24,11 +24,9 @@
     },
     computed: {
       isAssistant() {
-        return this.$store.state.user.user.roleId === 'assistant'; // Adaptez selon votre structure
+        return this.$store.getters['userTourney/isAssistant'];
       },
     },
-    methods: {
-      // ... vos méthodes
-    },
+    methods: {},
   };
 </script>
