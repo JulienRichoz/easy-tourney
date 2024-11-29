@@ -465,6 +465,10 @@
           return 'PendingIcon';
         }
       },
+      openGoogleMaps() {
+        const url = this.googleMapsLink;
+        window.open(url, '_blank');
+      },
     },
     computed: {
       ...mapState('tourney', {
