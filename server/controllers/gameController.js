@@ -841,12 +841,26 @@ exports.getNextGamesForUser = async (req, res) => {
       where: { tourneyId, userId },
     });
 
+    if (!userTourney) {
+      return res.status(404).json({
+        message: "Vous ne participez pas à ce tournoi.",
+      });
+    }
+
+    if (userTourney.tourneyRole === 'assistant') {
+      // Retourner un message spécifique pour les assistants
+      return res.status(200).json({
+        message: "Vous êtes assistant. Vous devez arbitrer des matchs.",
+      });
+    }
+
     if (!userTourney || !userTourney.teamId) {
       return res.status(404).json({
         message:
           "Vous n'êtes pas associé à une équipe pour ce tournoi.",
       });
     }
+
 
     const teamId = userTourney.teamId;
 
