@@ -23,12 +23,17 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // R�
 module.exports = router;
 
 /**
- * TODO: Page planning + PWA responsive user. Verifier si besoin de composant pour calendar/pagination ? 
+ * TODO : Implémenter websocket pour les matchs
+ * TODOptionel: Page rejoindre token invitation : rediriger sur page inscription fermées plutot que erreur 403 si les inscriptions sont fermées ou lien non valide
  * TODOptionnel : Ajouter systeme de gestion statuts dans page admin/info (details)
  * REFLECHIR a la vue planning pool <-> game => final
  * IMPLEMENTATION : Partie arbitre des matchs. Websocket ou pas ?
  * IMPLEMENTATION : Vue utilisateur et reflechir au workflow
- 
- * OPTIONNEL: Composant entre planning games et planning pools (reduction code, + clean)
+ * Une fois fini : implémenter PWA ? Heberger app sur serveur ?
+ * 
+ * AMELIORATIONS
+ * Composant entre planning games et planning pools (reduction code, + clean)
+ * Utiliser nom des routes pour les requetes axios
+ * Refactor composant entre composant custom et composant de base
  */
 
