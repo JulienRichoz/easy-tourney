@@ -828,3 +828,71 @@ exports.validateGames = async (req, res) => {
   }
 };
 
+/**
+ * Récupérer les prochains matchs pour l'utilisateur connecté
+ */
+exports.getNextGamesForUser = async (req, res) => {
+  const { tourneyId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Récupérer l'équipe de l'utilisateur dans le tournoi
+    const userTourney = await UsersTourneys.findOne({
+      where: { tourneyId, userId },
+    });
+
+    if (!userTourney || !userTourney.teamId) {
+      return res.status(404).json({
+        message:
+          "Vous n'êtes pas associé à une équipe pour ce tournoi.",
+      });
+    }
+
+    const teamId = userTourney.teamId;
+
+    // Récupérer les prochains matchs de l'équipe
+    const upcomingGames = await Game.findAll({
+      where: {
+        tourneyId,
+        [Op.or]: [{ teamAId: teamId }, { teamBId: teamId }],
+        startTime: {
+          [Op.gte]: new Date(), // Matchs à venir
+        },
+      },
+      include: [
+        {
+          model: Team,
+          as: 'teamA',
+          attributes: ['id', 'teamName'],
+        },
+        {
+          model: Team,
+          as: 'teamB',
+          attributes: ['id', 'teamName'],
+        },
+        {
+          model: Pool,
+          as: 'pool',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Field,
+          as: 'field',
+          attributes: ['id', 'name'],
+        },
+      ],
+      order: [['startTime', 'ASC']],
+    });
+
+    res.status(200).json(upcomingGames);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des prochains matchs de l'utilisateur :",
+      error
+    );
+    res.status(500).json({
+      message:
+        'Erreur serveur lors de la récupération des prochains matchs.',
+    });
+  }
+};
