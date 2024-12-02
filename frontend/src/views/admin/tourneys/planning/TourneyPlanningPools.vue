@@ -105,7 +105,7 @@
             :disabled="!pools.length"
             class="w-auto"
           >
-            <span class="hidden md:inline">Générer Pools</span>
+            <span class="hidden md:inline">Générer Planning Pools</span>
             <span class="md:hidden">Gen.</span>
           </ButtonComponent>
 

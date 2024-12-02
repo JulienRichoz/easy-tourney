@@ -25,7 +25,7 @@
           label="Générer les Matchs"
           variant="algo"
           :disabled="!isEditable"
-          >Générer Match</ButtonComponent
+          >Générer Planning Match</ButtonComponent
         >
         <ButtonComponent
           @click="validateGames"
