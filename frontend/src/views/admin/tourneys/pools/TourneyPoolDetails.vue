@@ -441,8 +441,6 @@
 </script>
 
 <style scoped>
-  /* Vos styles ici */
-
   /* Style pour les lignes sélectionnées */
   table tr.selected {
     background-color: #e0f7fa;

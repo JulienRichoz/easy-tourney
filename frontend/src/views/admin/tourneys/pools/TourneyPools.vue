@@ -796,7 +796,7 @@
             `/tourneys/${this.tourneyId}`,
             this.localPoolSetup
           );
-          // Mettez à jour tourneySetup avec les nouvelles valeurs
+          // Mettre à jour tourneySetup avec les nouvelles valeurs
           this.tourneySetup = { ...this.tourneySetup, ...this.localPoolSetup };
           toast.success('Réglages des pools mis à jour avec succès !');
           this.closePoolSetupModal();

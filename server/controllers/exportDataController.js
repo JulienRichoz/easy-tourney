@@ -200,10 +200,16 @@ exports.getFullExportDataForExcel = async (tourneyId) => {
             users,
         };
     } catch (error) {
-        console.error('Erreur lors de la récupération des données pour l\'exportation :', error);
         throw error;
     }
 };
+
+/**
+ * Route utilisée dans la vue d'administration pour exporter toutes les données du tournoi en format Excel.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.exportExcel = async (req, res) => {
     try {
         const { tourneyId } = req.params;
@@ -236,5 +242,3 @@ exports.exportExcel = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur.' });
     }
 };
-
-

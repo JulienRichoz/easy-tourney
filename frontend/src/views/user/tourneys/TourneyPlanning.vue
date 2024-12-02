@@ -3,6 +3,9 @@
   <div>
     <!-- Sous-menu du tournoi -->
     <SubMenuComponent :tourneyId="tourneyId" />
+    <h1 class="text-2xl font-bold my-4 px-4">
+      {{ tourney.name }} - {{ userTeam?.teamName }} - {{ userPool?.name }}
+    </h1>
 
     <!-- Filtres et options d'affichage -->
     <div class="flex flex-wrap items-center gap-4 my-2 px-4">
@@ -10,7 +13,7 @@
       <v-select
         :options="poolOptions"
         v-model="selectedPoolId"
-        placeholder="Toutes les Poules"
+        placeholder="All Pools"
         :clearable="true"
         :searchable="true"
         label="name"
@@ -23,7 +26,7 @@
       <v-select
         :options="fieldOptions"
         v-model="selectedFieldId"
-        placeholder="Tous les Terrains"
+        placeholder="All Terrains"
         :clearable="true"
         :searchable="true"
         label="name"
@@ -55,27 +58,72 @@
       </label>
 
       <!-- Bouton pour basculer entre l'affichage des matchs et des pools -->
-      <!-- Bouton pour basculer entre l'affichage des matchs et des pools -->
       <ButtonComponent
         @click="toggleDisplayMode"
-        :variant="'secondary'"
+        variant="'secondary'"
         :fontAwesomeIcon="displayMode === 'games' ? 'th' : 'futbol'"
       >
         Afficher {{ displayMode === 'games' ? 'les Pools' : 'les Matchs' }}
       </ButtonComponent>
+
+      <!-- Pagination -->
+      <div class="flex justify-end items-center gap-2 my-2 px-4">
+        <button
+          v-if="currentPage > 1"
+          @click="currentPage--"
+          class="text-2xl px-2 py-1 rounded navigation-button"
+        >
+          &lt;
+        </button>
+        <select
+          v-model="currentPage"
+          class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
+        >
+          <option v-for="page in totalPages" :key="page" :value="page">
+            Page {{ page }} / {{ totalPages }}
+          </option>
+        </select>
+        <button
+          v-if="currentPage < totalPages"
+          @click="currentPage++"
+          class="text-2xl px-2 py-1 rounded navigation-button"
+        >
+          &gt;
+        </button>
+
+        <!-- Bouton Show All Fields -->
+        <button
+          @click="
+            showAllTerrains = !showAllTerrains;
+            currentPage = 1;
+          "
+          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          {{ showAllTerrains ? 'Reduce' : 'Show All Fields' }}
+        </button>
+      </div>
     </div>
+
     <!-- Affichage des prochains matchs de l'utilisateur -->
-    <div v-if="userNextGames.length" class="my-4 px-4">
-      <h2 class="text-xl font-semibold mb-2">Mes prochains matchs :</h2>
+    <CollapsibleBox v-if="userNextGames.length" title="Mes prochains matchs :">
       <ul class="list-disc pl-5">
         <li v-for="game in userNextGames" :key="game.id">
           <span class="font-semibold"
             >{{ formatDateTimeDisplay(game.startTime) }} :</span
           >
-          {{ game.teamA.teamName }} vs {{ game.teamB.teamName }} sur le terrain
+          Team: {{ game.teamANumber }} vs {{ game.teamBNumber }} sur le terrain
           {{ game.field.name }}
         </li>
       </ul>
+    </CollapsibleBox>
+
+    <!-- Message pour les assistants -->
+    <div v-if="assistantMessage" class="my-4 px-4">
+      <div
+        class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
+      >
+        <p>{{ assistantMessage }}</p>
+      </div>
     </div>
 
     <!-- Calendrier avec les Terrains comme ressources -->
@@ -100,6 +148,8 @@
   import vSelect from 'vue-select';
   import 'vue-select/dist/vue-select.css';
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import CollapsibleBox from '@/components/user/CollapsibleBox.vue';
+  import { extractTeamNumber } from '@/utils/format.js';
 
   export default {
     components: {
@@ -107,6 +157,7 @@
       SubMenuComponent,
       vSelect,
       ButtonComponent,
+      CollapsibleBox,
     },
     data() {
       return {
@@ -124,6 +175,17 @@
         useUnifiedColors: true,
         colorMap: {},
         displayMode: 'games', // 'games' ou 'pools'
+        isSmallScreen: false, // Détecte si l'écran est petit
+        currentPage: 1, // Page actuelle pour la pagination
+        terrainsPerPage: 10, // Nombre de terrains visibles par page
+        showAllTerrains: false, // Permet d'afficher tous les terrains
+        breakpoints: {
+          large: 1150,
+          medium: 640,
+        },
+        assistantMessage: '',
+        userTeam: null,
+        userPool: null,
       };
     },
     computed: {
@@ -148,6 +210,20 @@
           this.colorMap[id] = color;
           return color;
         };
+      },
+      paginatedFields() {
+        if (this.showAllTerrains) {
+          return this.fields; // Affiche tous les terrains si l'option est activée
+        }
+        const start = (this.currentPage - 1) * this.terrainsPerPage;
+        const end = start + this.terrainsPerPage;
+        return this.fields.slice(start, end);
+      },
+      totalPages() {
+        if (this.showAllTerrains) {
+          return 1; // Si tous les terrains sont affichés, une seule "page"
+        }
+        return Math.ceil(this.fields.length / this.terrainsPerPage);
       },
       calendarOptions() {
         if (!this.tourney.dateTourney) {
@@ -187,7 +263,7 @@
           slotLabelInterval:
             this.displayMode === 'games' ? '00:15:00' : '01:00:00',
           allDaySlot: false,
-          resources: this.filteredFields.map((field) => ({
+          resources: this.paginatedFields.map((field) => ({
             id: field.id.toString(),
             title: field.name,
           })),
@@ -210,6 +286,13 @@
           );
         }
         return this.fields;
+      },
+    },
+    watch: {
+      currentPage() {
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchResources();
+        }
       },
     },
     methods: {
@@ -261,12 +344,64 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/games/next`
           );
-          this.userNextGames = response.data;
+
+          if (Array.isArray(response.data)) {
+            this.userNextGames = response.data.map((game) => {
+              // Extraire les numéros d'équipe
+              const teamA = this.teams.find((team) => team.id === game.teamAId);
+              const teamB = this.teams.find((team) => team.id === game.teamBId);
+
+              return {
+                ...game,
+                teamANumber: teamA?.teamName
+                  ? extractTeamNumber(teamA.teamName, 'A')
+                  : 'A',
+                teamBNumber: teamB?.teamName
+                  ? extractTeamNumber(teamB.teamName, 'B')
+                  : 'B',
+              };
+            });
+          } else if (response.data.message) {
+            this.assistantMessage = response.data.message;
+          }
         } catch (error) {
           console.error(
             "Erreur lors de la récupération des prochains matchs de l'utilisateur :",
             error
           );
+        }
+      },
+      async fetchUserTeamAndPool() {
+        try {
+          const userId = this.$store.state.user.id; // Récupérer l'ID de l'utilisateur connecté
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/users/${userId}`
+          );
+          this.userTeam = response.data.team;
+          this.userPool = response.data.team.pool;
+        } catch (error) {
+          console.error(
+            "Erreur lors de la récupération de l'équipe de l'utilisateur :",
+            error
+          );
+        }
+      },
+      /**
+       * Calcul le nombre de terrains à afficher par page en fonction de la largeur de l'écran.
+       */
+      adjustTerrainsPerPage() {
+        const screenWidth = window.innerWidth;
+
+        if (screenWidth >= 1200) {
+          this.terrainsPerPage = 10; // 1200px et plus : 10 terrains
+        } else if (screenWidth >= 1000) {
+          this.terrainsPerPage = 8; // 1000px - 1200px : 8 terrains
+        } else if (screenWidth >= 800) {
+          this.terrainsPerPage = 7; // 800px - 1000px : 7 terrains
+        } else if (screenWidth >= 600) {
+          this.terrainsPerPage = 5; // 600px - 800px : 5 terrains
+        } else {
+          this.terrainsPerPage = 3; // Moins de 600px : 3 terrains
         }
       },
       renderEventContent(arg) {
@@ -293,33 +428,32 @@
           ? this.formatDisplayTime(arg.event.end)
           : '';
         const timeRange = document.createElement('div');
-        if (startTime && endTime) {
+        if (startTime && endTime && arg.event.title !== 'Transition') {
           timeRange.innerText = `${startTime} - ${endTime}`;
           timeRange.classList.add('text-sm', 'text-white');
         }
 
-        const extendedProps = arg.event.extendedProps;
-        if (extendedProps.game || extendedProps.poolSchedule) {
-          const info = document.createElement('div');
-          if (extendedProps.game) {
-            const game = extendedProps.game;
-            const poolName = game.pool ? game.pool.name : '';
-            const sportName = game.sport ? game.sport.name : '';
-            info.innerText = `${poolName} - ${sportName}`;
-          } else if (extendedProps.poolSchedule) {
-            const poolSchedule = extendedProps.poolSchedule;
-            const poolName = poolSchedule.pool ? poolSchedule.pool.name : '';
-            const sportName = poolSchedule.sport ? poolSchedule.sport.name : '';
-            info.innerText = `${poolName} - ${sportName}`;
-          }
-          info.classList.add('text-xs', 'text-white');
+        container.appendChild(headerContainer);
+        if (startTime && endTime) {
+          container.appendChild(timeRange);
+        }
+
+        // Display sport and pool information if 'game' exists
+        const game = arg.event.extendedProps.game;
+        if (game) {
+          const sportPoolInfo = document.createElement('div');
+          const poolName = game.pool ? game.pool.name : '';
+          const sportName = game.sport ? game.sport.name : '';
+          sportPoolInfo.innerText = `${poolName} - ${sportName}`;
+          sportPoolInfo.classList.add('text-xs', 'text-white');
 
           container.appendChild(headerContainer);
           container.appendChild(timeRange);
-          container.appendChild(info);
+          container.appendChild(sportPoolInfo);
         } else {
+          // For events without 'game' (e.g., background events), only show the title and time range if available
           container.appendChild(headerContainer);
-          if (startTime && endTime) {
+          if (startTime && endTime && arg.event.title !== 'Transition') {
             container.appendChild(timeRange);
           }
         }
@@ -350,6 +484,7 @@
         this.displayMode = this.displayMode === 'games' ? 'pools' : 'games';
       },
       addGamesToEvents(events) {
+        const now = new Date();
         this.games.forEach((game) => {
           // Filtrer par poule sélectionnée
           if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
@@ -365,16 +500,32 @@
             );
             return;
           }
+
+          const gameStart = new Date(game.startTime);
+          const gameEnd = new Date(game.endTime);
+          const isCurrentGame = now >= gameStart && now <= gameEnd;
+
+          // Check if game.teamA and game.teamB are defined
           const teamATeamName = game.teamA?.teamName || 'Équipe A';
           const teamBTeamName = game.teamB?.teamName || 'Équipe B';
+
+          // Extraire les numéros des équipes
+          const teamANumber = teamATeamName
+            ? extractTeamNumber(teamATeamName, 'A')
+            : 'A';
+          const teamBNumber = teamBTeamName
+            ? extractTeamNumber(teamBTeamName, 'B')
+            : 'B';
 
           events.push({
             id: game.id.toString(),
             resourceId: game.field.id.toString(),
-            title: `${teamATeamName} vs ${teamBTeamName}`,
-            start: new Date(game.startTime),
-            end: new Date(game.endTime),
-            backgroundColor: this.useUnifiedColors
+            title: `Team: ${teamANumber} vs ${teamBNumber}`,
+            start: gameStart,
+            end: gameEnd,
+            backgroundColor: isCurrentGame
+              ? '#FF0000' // Rouge pour le match en cours
+              : this.useUnifiedColors
               ? this.generateUniqueColor(game.pool?.id)
               : game.sport?.color || '#3B82F6',
             textColor: '#FFFFFF',
@@ -382,6 +533,7 @@
           });
         });
       },
+
       addPoolSchedulesToEvents(events) {
         this.pools.forEach((pool) => {
           if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
@@ -472,7 +624,8 @@
               title: breakTime.title,
               start: `${this.tourney.dateTourney}T${breakTime.startTime}`,
               end: `${this.tourney.dateTourney}T${breakTime.endTime}`,
-              backgroundColor: '#a5e1ff', // bleu clair
+              backgroundColor: '#965612', // Couleur or
+              textColor: '#000000', // Texte noir
               display: 'background',
             });
           }
@@ -522,8 +675,11 @@
       },
     },
     async mounted() {
+      this.adjustTerrainsPerPage();
+      window.addEventListener('resize', this.adjustTerrainsPerPage);
       await this.fetchPlanningDetails();
       await this.fetchUserNextGames();
+      await this.fetchUserTeamAndPool();
     },
   };
 </script>

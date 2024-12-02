@@ -292,7 +292,7 @@
         return this.teamSetup ? this.teamSetup.playerPerTeam : 0;
       },
       getStatusColor(team) {
-        // Vérifiez si usersTourneys est défini avant d'accéder à sa propriété length
+        // Vérifier si usersTourneys est défini avant d'accéder à sa propriété length
         const teamSize = team.usersTourneys ? team.usersTourneys.length : 0;
 
         const minPlayers = this.teamSetup ? this.teamSetup.minPlayerPerTeam : 0;

@@ -1,3 +1,4 @@
+// utils/exportExcel.js
 const ExcelJS = require('exceljs');
 const path = require('path');
 
@@ -22,7 +23,6 @@ function generateCalendarSheet(workbook, data) {
         new Date(game.startTime),
         new Date(game.endTime)
     ]);
-
     // Récupérer les horaires de début et de fin des transitions
     const transitionTimes = [];
     if (poolSchedule.introStart && poolSchedule.introEnd) {
@@ -504,13 +504,11 @@ function generatePoolCalendarSheet(workbook, data) {
 async function generateExcelFile(data, tourneyId) {
     const workbook = new ExcelJS.Workbook();
 
-    // Feuille 1: Génération de la feuille calendrier
+    // Feuille 1: Génération de la feuille des pools
+    generatePoolCalendarSheet(workbook, data);
+    // Feuille 2: Génération de la feuille calendrier
     generateCalendarSheet(workbook, data);
 
-    // Feuille 2: Génération de la feuille des pools
-    generatePoolCalendarSheet(workbook, data);
-
-    // Feuille 3: Informations générales
     const generalSheet = workbook.addWorksheet('Informations générales');
     generalSheet.columns = [
         { header: "Nom du tournoi", key: "name", width: 20 },
