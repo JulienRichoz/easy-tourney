@@ -1,5 +1,5 @@
 // server/controllers/usersTourneysController.js
-const { UsersTourneys, User, Tourney, Team, Role } = require('../models');
+const { UsersTourneys, User, Pool, Team, Role } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -262,6 +262,14 @@ exports.getUserInfoByTourney = async (req, res) => {
           model: Team,
           as: 'team',
           attributes: ['id', 'teamName', 'type'],
+          include: [
+            {
+              model: Pool,
+              as: 'pool',
+              attributes: ['id', 'name'],
+            },
+          ],
+
         },
       ],
     });
