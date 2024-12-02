@@ -5,6 +5,8 @@
     <SubMenuComponent :tourneyId="tourneyId" />
     <h1 class="text-2xl font-bold my-4 px-4">
       {{ tourney.name }} - {{ userTeam?.teamName }} - {{ userPool?.name }}
+      <!-- Message pour les assistants -->
+      <span v-if="assistantMessage"> Arbitrage des matchs </span>
     </h1>
 
     <!-- Filtres et options d'affichage -->
@@ -116,15 +118,6 @@
         </li>
       </ul>
     </CollapsibleBox>
-
-    <!-- Message pour les assistants -->
-    <div v-if="assistantMessage" class="my-4 px-4">
-      <div
-        class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
-      >
-        <p>{{ assistantMessage }}</p>
-      </div>
-    </div>
 
     <!-- Calendrier avec les Terrains comme ressources -->
     <div v-if="tourney.dateTourney && fields.length">
@@ -406,7 +399,13 @@
       },
       renderEventContent(arg) {
         const container = document.createElement('div');
-        container.classList.add('flex', 'flex-col', 'space-y-1');
+        container.classList.add(
+          'flex',
+          'flex-col',
+          'space-y-1',
+          'cursor-pointer',
+          'hover:invert'
+        );
 
         const headerContainer = document.createElement('div');
         headerContainer.classList.add(
@@ -472,7 +471,7 @@
         if (game) {
           // Rediriger vers la page du match (à implémenter)
           this.$router.push({
-            name: 'MatchDetail',
+            name: 'UserTourneyGameDetails',
             params: {
               tourneyId: this.tourneyId,
               gameId: game.id,
