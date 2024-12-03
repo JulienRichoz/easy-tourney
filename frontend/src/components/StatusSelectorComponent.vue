@@ -50,6 +50,10 @@
         type: String,
         default: '',
       },
+      onStatusChange: {
+        type: Function,
+        required: false,
+      },
     },
     computed: {
       currentStatus() {
@@ -68,11 +72,15 @@
         },
         set(value) {
           this.$emit('update:modelValue', value);
-          this.$store.dispatch('tourney/updateStatus', {
-            tourneyId: this.tourneyId,
-            key: this.statusKey,
-            value: value,
-          });
+          if (this.onStatusChange) {
+            this.onStatusChange(value);
+          } else {
+            this.$store.dispatch('tourney/updateStatus', {
+              tourneyId: this.tourneyId,
+              key: this.statusKey,
+              value: value,
+            });
+          }
         },
       },
     },
