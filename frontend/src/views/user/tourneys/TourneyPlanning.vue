@@ -3,7 +3,7 @@
   <div>
     <!-- Sous-menu du tournoi -->
     <SubMenuComponent :tourneyId="tourneyId" />
-    <h1 class="text-2xl font-bold my-4 px-4">
+    <h1 v-if="!isAdmin" class="text-2xl font-bold my-4 px-4">
       {{ tourney.name }} - {{ userTeam?.teamName }} - {{ userPool?.name }}
       <!-- Message pour les assistants -->
       <span v-if="assistantMessage"> Arbitrage des matchs </span>
@@ -189,6 +189,9 @@
       poolOptions() {
         return [{ id: null, name: 'All Pools' }, ...this.pools];
       },
+      isAdmin() {
+        return this.$store.state.user && this.$store.state.user.roleId === 1;
+      },
       fieldOptions() {
         return [{ id: null, name: 'All Terrains' }, ...this.fields];
       },
@@ -333,6 +336,9 @@
         }
       },
       async fetchUserNextGames() {
+        if (this.isAdmin) {
+          return;
+        }
         try {
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/games/next`
@@ -365,6 +371,9 @@
         }
       },
       async fetchUserTeamAndPool() {
+        if (this.isAdmin) {
+          return;
+        }
         try {
           const userId = this.$store.state.user.id; // Récupérer l'ID de l'utilisateur connecté
           const response = await apiService.get(
