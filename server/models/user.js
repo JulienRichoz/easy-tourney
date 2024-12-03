@@ -20,6 +20,13 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'tourneyId',
         as: 'tourneys',
       });
+
+      User.belongsToMany(models.Team, {
+        through: models.UsersTourneys,
+        foreignKey: 'userId',
+        otherKey: 'teamId',
+        as: 'teams',
+      });
     }
   }
 

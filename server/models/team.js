@@ -16,6 +16,14 @@ module.exports = (sequelize, DataTypes) => {
       });
       // Une équipe peut appartenir à une Pool
       Team.belongsTo(models.Pool, { foreignKey: 'poolId', as: 'pool' });
+
+      // Une équipe peut avoir plusieurs joueurs
+      Team.belongsToMany(models.User, {
+        through: models.UsersTourneys,
+        foreignKey: 'teamId',
+        otherKey: 'userId',
+        as: 'players',
+      });
     }
   }
 
