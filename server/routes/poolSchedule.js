@@ -23,7 +23,9 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // R�
 module.exports = router;
 
 /**
- * TODO : Implémenter websocket pour les matchs
+ * TODO : Implémenter page websocket SCORE et page statistique (non websocket.. si page vraiment utile?)
+ * TODO : IMplémenter page détail du tournoi (très facile et rapide)
+ * TODO : Lors des inscriptions, donner la chance à l'utilisateur de pouvoir quitter le tournoi.
  * TODOptionel: Page rejoindre token invitation : rediriger sur page inscription fermées plutot que erreur 403 si les inscriptions sont fermées ou lien non valide
  * TODOptionnel : Ajouter systeme de gestion statuts dans page admin/info (details)
  * REFLECHIR a la vue planning pool <-> game => final
