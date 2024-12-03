@@ -401,11 +401,42 @@ exports.getGamesByTourney = async (req, res) => {
 exports.getGameById = async (req, res) => {
   try {
     const { gameId } = req.params;
+    const tourneyId = req.params.tourneyId;
 
     const game = await Game.findByPk(gameId, {
       include: [
-        { model: Team, as: 'teamA', attributes: ['id', 'teamName'] },
-        { model: Team, as: 'teamB', attributes: ['id', 'teamName'] },
+        {
+          model: Team,
+          as: 'teamA',
+          attributes: ['id', 'teamName'],
+          include: [
+            {
+              model: User,
+              as: 'players',
+              attributes: ['id', 'name'],
+              through: {
+                attributes: ['tourneyRole'],
+                where: { tourneyId: tourneyId },
+              },
+            },
+          ],
+        },
+        {
+          model: Team,
+          as: 'teamB',
+          attributes: ['id', 'teamName'],
+          include: [
+            {
+              model: User,
+              as: 'players',
+              attributes: ['id', 'name'],
+              through: {
+                attributes: ['tourneyRole'],
+                where: { tourneyId: tourneyId },
+              },
+            },
+          ],
+        },
         { model: Field, as: 'field', attributes: ['id', 'name'] },
         { model: Sport, as: 'sport', attributes: ['id', 'name'] },
         {
@@ -434,6 +465,7 @@ exports.getGameById = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
+
 
 /**
  * Récupérer les matchs par PoolSchedule
@@ -555,7 +587,7 @@ exports.updateGame = async (req, res) => {
       return res.status(404).json({ message: 'Match non trouvé.' });
     }
 
-    // Si poolScheduleId est mis à jour
+    // Si poolScheduleId est mis à jour, verifier les conflits
     if ('poolScheduleId' in updates) {
       const newPoolScheduleId = updates.poolScheduleId;
 
@@ -610,6 +642,7 @@ exports.updateGame = async (req, res) => {
         updates.poolScheduleId = poolSchedule.id;
       }
     }
+    // Vériofioer les conflits d'équipes
     if ('teamAId' in updates || 'teamBId' in updates || 'startTime' in updates || 'endTime' in updates) {
       const newTeamAId = updates.teamAId || game.teamAId;
       const newTeamBId = updates.teamBId || game.teamBId;
@@ -662,6 +695,18 @@ exports.updateGame = async (req, res) => {
       return res.status(400).json({
         message: "L'équipe A et l'équipe B doivent être différentes.",
       });
+    }
+
+    // Mettre à jour le statut et l'assistantId si terminé
+    const status = updates.status;
+    if (updates.status) {
+      game.status = status;
+      if (status === 'completed') {
+        const userTourney = req.user.tourneyRoles.find(
+          (tr) => tr.tourneyId === parseInt(tourneyId)
+        );
+        game.assistantId = userTourney.id;
+      }
     }
 
     // Mettre à jour les champs du match
@@ -908,5 +953,67 @@ exports.getNextGamesForUser = async (req, res) => {
       message:
         'Erreur serveur lors de la récupération des prochains matchs.',
     });
+  }
+};
+
+/**
+ * Récupérer les détails complets d'un match, y compris les joueurs
+ */
+exports.getGameDetails = async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    const game = await Game.findByPk(gameId, {
+      include: [
+        {
+          model: Team,
+          as: 'teamA',
+          attributes: ['id', 'teamName'],
+          include: [
+            {
+              model: User,
+              as: 'players',
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
+        {
+          model: Team,
+          as: 'teamB',
+          attributes: ['id', 'teamName'],
+          include: [
+            {
+              model: User,
+              as: 'players',
+              attributes: ['id', 'name'],
+            },
+          ],
+        },
+        { model: Field, as: 'field', attributes: ['id', 'name'] },
+        { model: Sport, as: 'sport', attributes: ['id', 'name'] },
+        {
+          model: UsersTourneys,
+          as: 'assistant',
+          attributes: ['userId', 'tourneyRole'],
+          required: false,
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!game) {
+      return res.status(404).json({ message: 'Match non trouvé.' });
+    }
+
+    res.status(200).json(game);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des détails du match :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
