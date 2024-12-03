@@ -1,3 +1,4 @@
+<!-- components/user/TimelineComponent.vue -->
 <template>
   <li class="relative flex items-center">
     <div
@@ -15,8 +16,7 @@
         :class="{
           'bg-yellow-500': icon === 'yellow_card',
           'bg-red-500': icon === 'red_card',
-          'bg-green-500': icon === 'goal',
-          'bg-blue-500': icon === 'foul',
+          'bg-blue-500': icon === 'goal',
           'bg-gray-500': icon === 'default',
         }"
         class="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg shadow-lg"
@@ -24,10 +24,6 @@
         <font-awesome-icon :icon="getIcon(icon)" />
       </div>
     </div>
-    <!-- Ligne verticale connectant les événements -->
-    <div
-      class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gray-300 z-0"
-    ></div>
   </li>
 </template>
 
@@ -52,8 +48,6 @@
             return ['fas', 'square'];
           case 'red_card':
             return ['fas', 'square-full'];
-          case 'foul':
-            return ['fas', 'exclamation-circle'];
           default:
             return ['fas', 'question-circle'];
         }
