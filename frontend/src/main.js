@@ -10,85 +10,14 @@ import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import './assets/vue-select-custom.css'; // Import des styles personnalisés pour vue-select
 import '@fortawesome/fontawesome-free/css/all.css';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import {
-  faQuestionCircle,
-  faMapMarkerAlt,
-  faCalendarAlt,
-  faCalendar,
-  faSun,
-  faMoon,
-  faUser,
-  faPowerOff,
-  faSignInAlt,
-  faInfoCircle,
-  faMap,
-  faFutbol,
-  faFilter,
-  faCog,
-  faPeopleGroup,
-  faTrash,
-  faPen,
-  faPenAlt,
-  faUsers,
-  faEye,
-  faPlus,
-  faArrowLeft,
-  faBan,
-  faEnvelope,
-  faTimes,
-  faCheck,
-  faLink,
-  faCopy,
-  faBars,
-  faUsersSlash,
-  faSpinner,
-  faFileExcel,
-  faListOl,
-  faTh,
-} from '@fortawesome/free-solid-svg-icons';
+import { registerIcons } from './components/icons/fontAwesomeIcons'; // Liste des icônes à enregistrer
 import './assets/tailwind.css'; // Import Tailwind CSS
 import 'leaflet/dist/leaflet.css';
 //import './registerServiceWorker';
 
 // Ajouter les icônes supplémentaires
-library.add(
-  faTh,
-  faListOl,
-  faFileExcel,
-  faSpinner,
-  faUsersSlash,
-  faBars,
-  faCopy,
-  faLink,
-  faCheck,
-  faPenAlt,
-  faTimes,
-  faEnvelope,
-  faBan,
-  faArrowLeft,
-  faPlus,
-  faEye,
-  faUsers,
-  faPen,
-  faTrash,
-  faPeopleGroup,
-  faCog,
-  faQuestionCircle,
-  faMapMarkerAlt,
-  faCalendar,
-  faCalendarAlt,
-  faSun,
-  faMoon,
-  faUser,
-  faPowerOff,
-  faSignInAlt,
-  faInfoCircle,
-  faMap,
-  faFutbol,
-  faFilter
-);
+registerIcons(); // Enregistrer les icônes dans FontAwesome
 
 const app = createApp(App);
 
