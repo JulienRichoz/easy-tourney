@@ -32,9 +32,9 @@ exports.createGameEvent = async (req, res) => {
 /**
  * Récupérer les événements d'un match
  */
-exports.getGameEventsByGame = async (req, res) => {
+exports.getGameEvents = async (req, res) => {
   try {
-    const { gameId } = req.params;
+    const { tourneyId, gameId } = req.params;
 
     const events = await GameEvent.findAll({
       where: { gameId },
@@ -50,8 +50,13 @@ exports.getGameEventsByGame = async (req, res) => {
 
     res.status(200).json(events);
   } catch (error) {
-    console.error('Erreur lors de la récupération des événements du match :', error);
-    res.status(500).json({ message: 'Erreur serveur.', error });
+    console.error(
+      'Erreur lors de la récupération des événements du match :',
+      error
+    );
+    res
+      .status(500)
+      .json({ message: 'Erreur serveur.', error: error.message });
   }
 };
 
