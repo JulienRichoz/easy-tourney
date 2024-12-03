@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       description: { type: DataTypes.STRING, allowNull: true },
+      matchTime: { type: DataTypes.INTEGER, allowNull: true },
     },
     {
       sequelize,
