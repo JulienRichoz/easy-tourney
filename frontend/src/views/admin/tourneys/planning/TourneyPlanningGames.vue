@@ -61,7 +61,7 @@
             variant="algo"
             class="w-auto"
           >
-            <span class="hidden md:inline">Générer Matchs</span>
+            <span class="hidden md:inline">Générer Planning Matchs</span>
             <span class="md:hidden">Gen.</span>
           </ButtonComponent>
 
