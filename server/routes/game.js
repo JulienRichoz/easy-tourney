@@ -13,6 +13,7 @@ const {
   getGamesByPoolSchedule,
   getGamesByPool,
   getNextGamesForUser,
+  getGameDetails,
 } = require('../controllers/gameController');
 const {
   isAuthenticated,
@@ -34,5 +35,6 @@ router.get('/:gameId', isAuthenticated, authorizeTournamentAccess, getGameById);
 router.put('/:gameId', isAuthenticated, authorizeTournamentAccess, authorizeTourneyRoles([tourneyRoles.ASSISTANT]), updateGame); // Mettre à jour un match
 router.delete('/:gameId', isAuthenticated, isAdmin, deleteGame); // Supprimer un match
 router.post('/validate', isAuthenticated, isAdmin, validateGames); // Valider les contraintes des matchs
+router.get('/:gameId/details', isAuthenticated, authorizeTournamentAccess, getGameDetails); // Récupérer les détails d'un match
 
 module.exports = router;
