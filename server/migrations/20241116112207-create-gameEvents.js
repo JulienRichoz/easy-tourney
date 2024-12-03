@@ -25,6 +25,7 @@ module.exports = {
         allowNull: false,
       },
       description: { type: Sequelize.STRING, allowNull: true },
+      matchTime: { type: Sequelize.INTEGER, allowNull: true },
       createdAt: { allowNull: false, type: Sequelize.DATE },
       updatedAt: { allowNull: false, type: Sequelize.DATE },
     });

@@ -76,6 +76,7 @@ module.exports = (io) => {
                 teamId: event.teamId,
                 type: event.type,
                 description: event.description,
+                matchTime: event.matchTime,
             });
 
             // Diffuser l'événement aux utilisateurs
