@@ -83,21 +83,21 @@
             v-if="isAuthorized && match.status === 'in_progress'"
           >
             <button
-              v-if="!timerRunning && !timerPaused"
+              v-if="!timerRunning && !isPaused"
               @click="startTimer"
               class="px-4 py-2 bg-green-500 text-white rounded"
             >
               Démarrer
             </button>
             <button
-              v-else-if="timerRunning && !timerPaused"
+              v-else-if="timerRunning && !isPaused"
               @click="pauseTimer"
               class="px-4 py-2 bg-yellow-500 text-white rounded"
             >
               Pause
             </button>
             <button
-              v-else-if="timerPaused"
+              v-else-if="isPaused"
               @click="startTimer"
               class="px-4 py-2 bg-green-500 text-white rounded"
             >
@@ -157,7 +157,7 @@
       </div>
 
       <!-- Timeline des événements -->
-      <div class="relative w-full max-w-4xl mx-auto mt-8">
+      <div class="relative w-full max-w-2xl mx-auto mt-8">
         <div class="max-h-96 overflow-y-auto">
           <ul class="timeline w-full mx-auto relative">
             <li
@@ -189,7 +189,10 @@
                 class="timeline-box bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shadow-md w-64"
               >
                 <p class="font-semibold">{{ getEventDescription(event) }}</p>
-                <p v-if="event.description" class="text-sm text-gray-700">
+                <p
+                  v-if="event.description"
+                  class="text-sm text-gray-700 dark:text-gray-400"
+                >
                   {{ event.description }}
                 </p>
                 <p class="text-sm text-gray-500">
@@ -254,20 +257,19 @@
         timer: null,
         timerRunning: false,
         elapsedTime: 0,
-        matchStartTime: null,
-        pausedAt: null, // Pour stocker l'heure à laquelle le timer a été mis en pause
+        totalPausedTime: 0,
+        pausedAt: null,
+        isPaused: false,
         teamAPlayers: [],
         teamBPlayers: [],
         gameEvents: [],
         showEventModal: false,
         eventType: '',
-        eventTeamId: null,
-        eventDescription: '',
-        socketError: null,
         eventFormData: {
           teamId: null,
           description: '',
         },
+        socketError: null,
         gameStatusOptions: [
           { value: 'scheduled', label: 'Prévu' },
           { value: 'in_progress', label: 'En cours' },
@@ -277,7 +279,7 @@
     },
     computed: {
       eventFormFields() {
-        if (!this.match) return []; // Assurez-vous que match est chargé
+        if (!this.match) return [];
         return [
           {
             name: 'teamId',
@@ -307,13 +309,11 @@
         return this.$store.state.user.roleId === 1;
       },
       isAuthorized() {
-        // Vérifier si l'utilisateur est assistant ou admin du tournoi
         const isAssistant = this.$store.getters['userTourney/isAssistant'];
-        const isAdmin = this.$store.state.user.roleId === 1;
+        const isAdmin = this.$store.state.user?.roleId === 1;
         return isAssistant || isAdmin;
       },
       sortedGameEvents() {
-        // Trier les événements par ordre décroissant (plus récents en haut)
         return [...this.gameEvents].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
@@ -325,13 +325,12 @@
         const seconds = (this.elapsedTime % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
       },
-      // Admin can always edit the match
-      canEdit() {
-        if (this.isAdmin) return true;
-        return this.isAuthorized && this.match.status !== 'completed';
-      },
     },
     methods: {
+      /**
+       * Récupère les détails du match depuis l'API et initialise le timer et les sockets.
+       * @returns {Promise<void>}
+       */
       async fetchMatchDetails() {
         try {
           const { tourneyId, gameId } = this.$route.params;
@@ -346,84 +345,30 @@
           this.teamAPlayers = this.match.teamA.players || [];
           this.teamBPlayers = this.match.teamB.players || [];
 
-          // Récupérer l'heure de début du match
+          // Initialiser le timer
           if (this.match.realStartTime) {
-            this.matchStartTime = new Date(this.match.startTime);
-            this.timerRunning = true;
-            this.elapsedTime = Math.floor(
-              (Date.now() - this.matchStartTime.getTime()) / 1000
-            );
-            if (!this.timer) {
+            this.timerRunning = !this.match.isPaused && !this.match.realEndTime;
+            this.totalPausedTime =
+              parseInt(this.match.totalPausedTime, 10) || 0;
+            this.pausedAt = this.match.pausedAt
+              ? new Date(this.match.pausedAt)
+              : null;
+            this.isPaused = this.match.isPaused;
+
+            this.calculateElapsedTime();
+
+            if (this.timerRunning && !this.timer) {
               this.timer = setInterval(() => {
-                this.elapsedTime++;
+                this.calculateElapsedTime();
               }, 1000);
             }
           }
-
-          const socket = getSocket();
-          if (!socket) {
-            console.warn(
-              "Socket non disponible. L'utilisateur est peut-être déconnecté."
-            );
-            return;
-          }
-
-          // Rejoindre la salle du match via Socket.IO
-          socket.emit('joinGame', this.match.id);
-
-          // Écouter les mises à jour du score
-          socket.on('scoreUpdated', (data) => {
-            this.scoreTeamA = data.scoreTeamA;
-            this.scoreTeamB = data.scoreTeamB;
-          });
-
-          // Écouter les événements du match
-          socket.on('gameEvent', (event) => {
-            this.gameEvents.push(event);
-          });
-
-          // Écouter le démarrage du timer
-          socket.on('startMatchTimer', (data) => {
-            if (data.matchId === this.match.id) {
-              this.matchStartTime = new Date(data.startTime);
-              this.timerRunning = true;
-              this.elapsedTime = Math.floor(
-                (Date.now() - this.matchStartTime.getTime()) / 1000
-              );
-              if (!this.timer) {
-                this.timer = setInterval(() => {
-                  this.elapsedTime++;
-                }, 1000);
-              }
-            }
-          });
-
-          // Écouter la suppression d'un événement
-          socket.on('deleteGameEvent', (data) => {
-            this.gameEvents = this.gameEvents.filter(
-              (event) => event.id !== data.eventId
-            );
-          });
 
           // Récupérer les événements du match
-          const eventsResponse = await apiService.get(
-            `/tourneys/${tourneyId}/games/${gameId}/events`
-          );
-          this.gameEvents = eventsResponse.data;
+          await this.fetchGameEvents();
 
-          // Si le match a démarré et que realStartTime existe, initialiser le timer
-          if (this.match.realStartTime) {
-            this.matchStartTime = new Date(this.match.realStartTime);
-            this.elapsedTime = Math.floor(
-              (Date.now() - this.matchStartTime.getTime()) / 1000
-            );
-            this.timerRunning = true;
-            if (!this.timer) {
-              this.timer = setInterval(() => {
-                this.elapsedTime++;
-              }, 1000);
-            }
-          }
+          // Configurer les sockets
+          this.setupSocket();
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du match :',
@@ -431,15 +376,305 @@
           );
         }
       },
-      getEventPositionClass(event) {
-        if (event.teamId === this.match.teamA.id) {
-          return 'mr-auto text-right pr-10';
-        } else if (event.teamId === this.match.teamB.id) {
-          return 'ml-auto text-left pl-10';
-        } else {
-          return 'mx-auto text-center';
+
+      /**
+       * Récupère les événements du match depuis l'API.
+       * @returns {Promise<void>}
+       */
+      async fetchGameEvents() {
+        try {
+          const { tourneyId, gameId } = this.$route.params;
+          const eventsResponse = await apiService.get(
+            `/tourneys/${tourneyId}/games/${gameId}/events`
+          );
+          this.gameEvents = eventsResponse.data;
+        } catch (error) {
+          console.error(
+            'Erreur lors de la récupération des événements du match :',
+            error
+          );
         }
       },
+
+      /**
+       * Calcule le temps écoulé du match en tenant compte des pauses.
+       */
+      calculateElapsedTime() {
+        if (!this.match.realStartTime) {
+          this.elapsedTime = 0;
+          return;
+        }
+
+        let currentTime = new Date();
+        if (this.isPaused && this.pausedAt) {
+          currentTime = this.pausedAt;
+        } else if (this.match.realEndTime) {
+          currentTime = new Date(this.match.realEndTime);
+        }
+
+        const realStart = new Date(this.match.realStartTime);
+        const totalPaused = parseInt(this.totalPausedTime, 10) || 0;
+
+        const elapsedMilliseconds = currentTime - realStart - totalPaused;
+
+        if (isNaN(elapsedMilliseconds)) {
+          this.elapsedTime = 0;
+          console.error(
+            'Calcul du temps écoulé a échoué : elapsedMilliseconds est NaN'
+          );
+        } else {
+          this.elapsedTime = Math.floor(elapsedMilliseconds / 1000);
+        }
+      },
+
+      /**
+       * Démarre ou reprend le timer du match.
+       */
+      startTimer() {
+        if (!this.isAuthorized) return;
+
+        const socket = getSocket();
+
+        if (!this.match.realStartTime) {
+          // Démarrage initial du match
+          socket.emit('startMatchTimer', {
+            matchId: this.match.id,
+          });
+        } else if (this.isPaused) {
+          // Reprise après une pause
+          socket.emit('startMatchTimer', {
+            matchId: this.match.id,
+          });
+        }
+      },
+
+      /**
+       * Met en pause le timer du match.
+       */
+      pauseTimer() {
+        if (!this.isAuthorized) return;
+        if (!this.timerRunning) return;
+
+        const socket = getSocket();
+        socket.emit('pauseMatchTimer', {
+          matchId: this.match.id,
+        });
+      },
+
+      /**
+       * Réinitialise le timer du match.
+       */
+      resetTimer() {
+        if (!this.isAuthorized) return;
+
+        const socket = getSocket();
+        socket.emit('resetMatchTimer', {
+          matchId: this.match.id,
+        });
+      },
+
+      /**
+       * Arrête le timer du match (par exemple, lorsque le match est terminé).
+       */
+      stopTimer() {
+        if (!this.timer) return;
+
+        const socket = getSocket();
+        socket.emit('stopMatchTimer', {
+          matchId: this.match.id,
+        });
+      },
+
+      /**
+       * Met à jour le statut du match et arrête le timer si nécessaire.
+       */
+      updateMatchStatus() {
+        const socket = getSocket();
+        socket.emit('updateMatchStatus', {
+          matchId: this.match.id,
+          status: this.match.status,
+        });
+
+        // Si le statut est 'completed' ou 'scheduled', arrêter le timer
+        if (
+          this.match.status === 'completed' ||
+          this.match.status === 'scheduled'
+        ) {
+          this.stopTimer();
+        }
+      },
+
+      /**
+       * Configure les écouteurs Socket.IO pour les mises à jour en temps réel.
+       */
+      setupSocket() {
+        const socket = getSocket();
+        if (!socket) {
+          console.warn(
+            "Socket non disponible. L'utilisateur est peut-être déconnecté."
+          );
+          return;
+        }
+
+        // Rejoindre la salle du match via Socket.IO
+        socket.emit('joinGame', this.match.id);
+
+        // Écouter les mises à jour du score
+        socket.on('scoreUpdated', (data) => {
+          this.scoreTeamA = data.scoreTeamA;
+          this.scoreTeamB = data.scoreTeamB;
+        });
+
+        // Écouter les événements du match
+        socket.on('gameEvent', (event) => {
+          this.gameEvents.push(event);
+        });
+
+        // Écouter le démarrage ou la reprise du timer
+        socket.on('startMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            // Ne définissez realStartTime que s'il n'est pas déjà défini
+            if (!this.match.realStartTime) {
+              this.match.realStartTime = new Date(data.realStartTime);
+            }
+            this.totalPausedTime = parseInt(data.totalPausedTime, 10) || 0;
+            this.pausedAt = data.pausedAt ? new Date(data.pausedAt) : null;
+            this.isPaused = data.isPaused;
+            this.timerRunning = true;
+
+            if (!this.timer) {
+              this.timer = setInterval(() => {
+                this.calculateElapsedTime();
+              }, 1000);
+            }
+          }
+        });
+
+        // Écouter la mise en pause du timer
+        socket.on('pauseMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            clearInterval(this.timer);
+            this.timer = null;
+            this.pausedAt = new Date(data.pausedAt);
+            this.isPaused = data.isPaused;
+            this.timerRunning = false;
+            this.calculateElapsedTime();
+          }
+        });
+
+        // Écouter l'arrêt du timer
+        socket.on('stopMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            clearInterval(this.timer);
+            this.timer = null;
+            this.match.realEndTime = new Date(data.realEndTime);
+            this.isPaused = data.isPaused;
+            this.timerRunning = false;
+            this.calculateElapsedTime();
+          }
+        });
+
+        // Écouter la réinitialisation du timer
+        socket.on('resetMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            this.timerRunning = false;
+            this.elapsedTime = 0;
+            this.match.realStartTime = null;
+            this.match.realEndTime = null;
+            this.totalPausedTime = 0;
+            this.pausedAt = null;
+            this.isPaused = false;
+
+            if (this.timer) {
+              clearInterval(this.timer);
+              this.timer = null;
+            }
+          }
+        });
+
+        // Écouter les mises à jour du statut du match
+        socket.on('matchStatusUpdated', (data) => {
+          if (data.matchId === this.match.id) {
+            this.match.status = data.status;
+            if (data.status === 'completed' || data.status === 'scheduled') {
+              this.stopTimer();
+            }
+          }
+        });
+
+        // Écouter la suppression d'un événement
+        socket.on('deleteGameEvent', (data) => {
+          this.gameEvents = this.gameEvents.filter(
+            (event) => event.id !== data.eventId
+          );
+        });
+      },
+
+      /**
+       * Soumet un nouvel événement de match.
+       */
+      submitEvent() {
+        const { tourneyId } = this.$route.params;
+        const event = {
+          type: this.eventType,
+          teamId: this.eventFormData.teamId,
+          description: this.eventFormData.description,
+          matchTime: this.elapsedTime,
+        };
+        // Envoyer l'événement via Socket.IO
+        const socket = getSocket();
+        socket.emit('gameEvent', {
+          tourneyId: parseInt(tourneyId),
+          gameId: this.match.id,
+          event,
+        });
+        // Fermer la modal
+        this.closeEventModal();
+      },
+
+      /**
+       * Ouvre la modal pour ajouter un nouvel événement.
+       * @param {string} eventType - Le type d'événement à ajouter.
+       */
+      openEventModal(eventType) {
+        this.eventType = eventType;
+        this.eventFormData = {
+          teamId: this.match.teamA.id,
+          description: '',
+        };
+        this.showEventModal = true;
+      },
+
+      /**
+       * Ferme la modal d'ajout d'événement.
+       */
+      closeEventModal() {
+        this.eventFormData = {
+          teamId: null,
+          description: '',
+        };
+        this.showEventModal = false;
+      },
+
+      /**
+       * Met à jour les scores et notifie les autres clients.
+       */
+      updateScores() {
+        if (!this.isAuthorized) return;
+        const { tourneyId } = this.$route.params;
+        const socket = getSocket();
+        socket.emit('updateScore', {
+          tourneyId: parseInt(tourneyId),
+          gameId: this.match.id,
+          scoreTeamA: this.scoreTeamA,
+          scoreTeamB: this.scoreTeamB,
+        });
+      },
+
+      /**
+       * Supprime un événement de match.
+       * @param {number} eventId - L'ID de l'événement à supprimer.
+       */
       async deleteEvent(eventId) {
         try {
           const { tourneyId, gameId } = this.$route.params;
@@ -465,278 +700,27 @@
           );
         }
       },
-      updateScores() {
-        if (!this.isAuthorized) return;
-        const { tourneyId } = this.$route.params;
-        // Envoyer les nouvelles données de score via Socket.IO
-        const socket = getSocket();
-        socket.emit('updateScore', {
-          tourneyId: parseInt(tourneyId),
-          gameId: this.match.id,
-          scoreTeamA: this.scoreTeamA,
-          scoreTeamB: this.scoreTeamB,
-        });
-      },
-      getEventTitle(eventType) {
-        switch (eventType) {
-          case 'goal':
-            return 'Ajouter un But';
-          case 'foul':
-            return 'Ajouter une Faute';
-          case 'yellow_card':
-            return 'Ajouter un Carton Jaune';
-          case 'red_card':
-            return 'Ajouter un Carton Rouge';
-          default:
-            return 'Ajouter un Événement';
-        }
-      },
-      onMatchStatusChange(newStatus) {
-        this.match.status = newStatus;
-        this.updateMatchStatus();
-      },
-      startTimer() {
-        if (!this.isAuthorized) return;
 
-        const socket = getSocket();
-
-        if (this.timerPaused) {
-          // Reprendre le timer
-          this.timerPaused = false;
-          this.matchStartTime = new Date(
-            this.matchStartTime.getTime() + (Date.now() - this.pausedAt)
-          );
-          // Envoyer l'événement de reprise du timer
-          socket.emit('resumeMatchTimer', {
-            matchId: this.match.id,
-            startTime: this.matchStartTime,
-          });
+      /**
+       * Obtient la classe CSS pour positionner l'événement dans la timeline.
+       * @param {Object} event - L'objet événement.
+       * @returns {string} - La classe CSS.
+       */
+      getEventPositionClass(event) {
+        if (event.teamId === this.match.teamA.id) {
+          return 'mr-auto text-right pr-10';
+        } else if (event.teamId === this.match.teamB.id) {
+          return 'ml-auto text-left pl-10';
         } else {
-          if (this.timerRunning) return; // Empêcher de démarrer le timer s'il tourne déjà
-          // Démarrer le timer
-          this.timerRunning = true;
-          this.matchStartTime = new Date();
-          this.elapsedTime = 0;
-          // Envoyer l'heure de début réelle du match aux autres clients
-          socket.emit('startMatchTimer', {
-            matchId: this.match.id,
-            startTime: this.matchStartTime,
-          });
-        }
-
-        if (!this.timer) {
-          this.timer = setInterval(() => {
-            this.elapsedTime = Math.floor(
-              (Date.now() - this.matchStartTime.getTime()) / 1000
-            );
-          }, 1000);
+          return 'mx-auto text-center';
         }
       },
 
-      pauseTimer() {
-        if (!this.isAuthorized) return;
-        if (!this.timerRunning || this.timerPaused) return;
-
-        clearInterval(this.timer);
-        this.timer = null;
-        this.timerRunning = false; // Ajouter cette ligne
-        this.timerPaused = true;
-        this.pausedAt = Date.now(); // Enregistrer l'heure à laquelle le timer a été mis en pause
-
-        // Envoyer l'événement de pause du timer aux autres clients
-        const socket = getSocket();
-        socket.emit('pauseMatchTimer', {
-          matchId: this.match.id,
-        });
-      },
-
-      resetTimer() {
-        if (!this.isAuthorized) return;
-
-        // Réinitialiser les états du timer
-        this.timerRunning = false;
-        this.timerPaused = false;
-        this.elapsedTime = 0;
-        this.matchStartTime = null;
-        this.pausedAt = null;
-
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-        }
-
-        // Envoyer l'événement de réinitialisation du timer aux autres clients
-        const socket = getSocket();
-        socket.emit('resetMatchTimer', {
-          matchId: this.match.id,
-        });
-      },
-
-      stopTimer() {
-        if (!this.isAuthorized) return;
-
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-          this.timerRunning = false;
-          this.timerPaused = false;
-          this.pausedAt = null;
-        }
-      },
-      formatElapsedTime(seconds) {
-        const minutes = Math.floor(seconds / 60).toString();
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        if (minutes === '0') {
-          return `${secs}''`;
-        }
-        return `${minutes}'${secs}''`;
-      },
-      getMatchStatusLabel(status) {
-        switch (status) {
-          case 'scheduled':
-            return 'Prévu';
-          case 'in_progress':
-            return 'En cours';
-          case 'completed':
-            return 'Terminé';
-          default:
-            return 'Inconnu';
-        }
-      },
-      openEventModal(eventType) {
-        this.eventType = eventType;
-        this.eventFormData = {
-          teamId: this.match.teamA.id, // Sélectionne par défaut l'équipe A
-          description: '',
-        };
-        this.showEventModal = true;
-      },
-      closeEventModal() {
-        this.eventFormData = {
-          teamId: null,
-          description: '',
-        };
-        this.showEventModal = false;
-      },
-
-      resetTimerLocal() {
-        this.timerRunning = false;
-        this.timerPaused = false;
-        this.elapsedTime = 0;
-        this.matchStartTime = null;
-        this.pausedAt = null;
-
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-        }
-      },
-      updateMatchStatus() {
-        const socket = getSocket();
-        socket.emit('updateMatchStatus', {
-          matchId: this.match.id,
-          status: this.match.status,
-        });
-
-        // Si le statut est 'completed' ou 'scheduled', arrêter le timer
-        if (
-          this.match.status === 'completed' ||
-          this.match.status === 'scheduled'
-        ) {
-          this.stopTimer();
-        }
-      },
-
-      setupSocket() {
-        const socket = getSocket();
-        if (!socket) {
-          return;
-        }
-        // Gérer le timer
-        socket.on('pauseMatchTimer', (data) => {
-          if (data.matchId === this.match.id) {
-            if (this.timer) {
-              clearInterval(this.timer);
-              this.timer = null;
-            }
-            this.timerPaused = true;
-            this.timerRunning = false; // Ajouter cette ligne
-            this.pausedAt = Date.now();
-          }
-        });
-
-        socket.on('resumeMatchTimer', (data) => {
-          if (data.matchId === this.match.id) {
-            this.timerPaused = false;
-            this.timerRunning = true; // Ajouter cette ligne
-            this.matchStartTime = new Date(data.startTime);
-            this.elapsedTime = Math.floor(
-              (Date.now() - this.matchStartTime.getTime()) / 1000
-            );
-
-            if (!this.timer) {
-              this.timer = setInterval(() => {
-                this.elapsedTime = Math.floor(
-                  (Date.now() - this.matchStartTime.getTime()) / 1000
-                );
-              }, 1000);
-            }
-          }
-        });
-
-        socket.on('resetMatchTimer', (data) => {
-          if (data.matchId === this.match.id) {
-            this.resetTimerLocal();
-          }
-        });
-        socket.on('matchStatusUpdated', (data) => {
-          if (data.matchId === this.match.id) {
-            this.match.status = data.status;
-            // Si le statut est 'completed' ou 'scheduled', arrêter le timer
-            if (data.status === 'completed' || data.status === 'scheduled') {
-              this.stopTimer();
-            }
-          }
-        });
-      },
-      submitEvent() {
-        const { tourneyId } = this.$route.params;
-        const event = {
-          type: this.eventType,
-          teamId: this.eventFormData.teamId,
-          description: this.eventFormData.description,
-          matchTime: this.elapsedTime,
-        };
-        // Envoyer l'événement via Socket.IO
-        const socket = getSocket();
-        socket.emit('gameEvent', {
-          tourneyId: parseInt(tourneyId),
-          gameId: this.match.id,
-          event,
-        });
-        // Fermer la modal
-        this.closeEventModal();
-      },
-
-      /*submitEvent() {
-        const { tourneyId } = this.$route.params;
-        const event = {
-          type: this.eventType,
-          teamId: this.eventTeamId,
-          description: this.eventDescription,
-          matchTime: this.elapsedTime,
-        };
-        // Envoyer l'événement via Socket.IO
-        const socket = getSocket();
-        socket.emit('gameEvent', {
-          tourneyId: parseInt(tourneyId),
-          gameId: this.match.id,
-          event,
-        });
-        // Ajouter l'événement localement
-        this.closeEventModal();
-      },*/
-      // Mapping des types d'événements aux icônes FontAwesome
+      /**
+       * Obtient l'icône de l'événement en fonction de son type.
+       * @param {string} eventType - Le type d'événement.
+       * @returns {Array} - L'icône FontAwesome.
+       */
       getEventIcon(eventType) {
         switch (eventType) {
           case 'goal':
@@ -751,6 +735,12 @@
             return ['fas', 'question-circle'];
         }
       },
+
+      /**
+       * Obtient la description de l'événement pour l'affichage.
+       * @param {Object} event - L'objet événement.
+       * @returns {string} - La description de l'événement.
+       */
       getEventDescription(event) {
         let teamName = 'Inconnu';
         if (event.teamId === this.match.teamA.id) {
@@ -771,6 +761,12 @@
             return `${teamName} - Événement`;
         }
       },
+
+      /**
+       * Formate un timestamp en HH:MM:SS.
+       * @param {string|number} timestamp - Le timestamp à formater.
+       * @returns {string} - L'heure formatée.
+       */
       formatEventTime(timestamp) {
         const date = new Date(timestamp);
         const hours = date.getHours().toString().padStart(2, '0');
@@ -778,12 +774,79 @@
         const seconds = date.getSeconds().toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
       },
+
+      /**
+       * Formate le temps du match en HH:MM.
+       * @param {string|number} timestamp - Le timestamp à formater.
+       * @returns {string} - L'heure formatée.
+       */
       formatTime(timestamp) {
         if (!timestamp) return 'N/A';
         const date = new Date(timestamp);
         const hours = date.getHours().toString().padStart(2, '0');
         const minutes = date.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;
+      },
+
+      /**
+       * Formate le temps écoulé en MM:SS.
+       * @param {number} seconds - Le temps écoulé en secondes.
+       * @returns {string} - Le temps écoulé formaté.
+       */
+      formatElapsedTime(seconds) {
+        const minutes = Math.floor(seconds / 60).toString();
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        if (minutes === '0') {
+          return `${secs}''`;
+        }
+        return `${minutes}'${secs}''`;
+      },
+
+      /**
+       * Obtient le libellé du statut du match.
+       * @param {string} status - Le code du statut.
+       * @returns {string} - Le libellé du statut.
+       */
+      getMatchStatusLabel(status) {
+        switch (status) {
+          case 'scheduled':
+            return 'Prévu';
+          case 'in_progress':
+            return 'En cours';
+          case 'completed':
+            return 'Terminé';
+          default:
+            return 'Inconnu';
+        }
+      },
+
+      /**
+       * Gère le changement de statut du match.
+       * @param {string} newStatus - Le nouveau statut.
+       */
+      onMatchStatusChange(newStatus) {
+        this.match.status = newStatus;
+        this.updateMatchStatus();
+      },
+
+      /**
+       * Obtient le titre pour la modal d'événement en fonction du type d'événement.
+       * @param {string} eventType - Le type d'événement.
+       * @returns {string} - Le titre de la modal.
+       */
+      getEventTitle(eventType) {
+        switch (eventType) {
+          case 'goal':
+            return 'Ajouter un But';
+          case 'foul':
+            return 'Ajouter une Faute';
+          case 'yellow_card':
+            return 'Ajouter un Carton Jaune';
+          case 'red_card':
+            return 'Ajouter un Carton Rouge';
+          default:
+            return 'Ajouter un Événement';
+        }
       },
     },
     beforeUnmount() {
@@ -794,8 +857,8 @@
         socket.off('gameEvent');
         socket.off('startMatchTimer');
         socket.off('pauseMatchTimer');
-        socket.off('resumeMatchTimer');
         socket.off('resetMatchTimer');
+        socket.off('stopMatchTimer');
         socket.off('deleteGameEvent');
         socket.off('matchStatusUpdated');
       }
@@ -805,7 +868,6 @@
     },
     async mounted() {
       await this.fetchMatchDetails();
-      this.setupSocket();
     },
   };
 </script>
@@ -829,12 +891,12 @@
     transform: translateX(-50%);
   }
 
-  .mr-auto.text-right.pr-16::after {
+  .mr-auto.text-right.pr-10::after {
     right: -20px;
     border-left-color: #edf2f7; /* Couleur du box */
   }
 
-  .ml-auto.text-left.pl-16::after {
+  .ml-auto.text-left.pl-10::after {
     left: -20px;
     border-right-color: #edf2f7; /* Couleur du box */
   }
