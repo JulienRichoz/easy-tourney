@@ -190,7 +190,7 @@
         return [{ id: null, name: 'All Pools' }, ...this.pools];
       },
       isAdmin() {
-        return this.$store.state.user && this.$store.state.user.roleId === 1;
+        return this.$store.state?.user && this.$store.state.user?.roleId === 1;
       },
       fieldOptions() {
         return [{ id: null, name: 'All Terrains' }, ...this.fields];

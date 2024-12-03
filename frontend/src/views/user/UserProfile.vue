@@ -20,7 +20,7 @@
       },
       isAdmin() {
         // Vérifier si l'utilisateur est admin en fonction de son roleId
-        return this.$store.state.user && this.$store.state.user.roleId === 1;
+        return this.$store.state?.user && this.$store.state.user?.roleId === 1;
       },
     },
     watch: {
