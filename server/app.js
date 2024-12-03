@@ -3,6 +3,8 @@
 
 const express = require('express');
 const cors = require('cors');
+const http = require('http'); // Nécessaire pour créer le serveur HTTP
+const socketIo = require('socket.io'); // Pour Socket.IO
 require('dotenv').config();
 require('./cronJobs');
 const path = require('path');
@@ -70,10 +72,32 @@ app.use(errorHandler);
 // Route pour exporter les données d'un tournoi
 app.use('/api/tourneys/:tourneyId/export-data', exportDataRoutes);
 
+/**
+ * WEB SOCKET
+ */
+// Création du serveur HTTP
+const server = http.createServer(app);
+
+// Configuration de Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: ['http://localhost:8080', 'http://192.168.1.42:8080', '*'],
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
+
+// Middleware d'authentification pour Socket.IO
+const authenticateSocket = require('./socketHandlers/authenticateSocket');
+io.use(authenticateSocket);
+
+// Gestionnaires de sockets
+require('./socketHandlers/gameSockets')(io);
+
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
 sequelize.sync().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
   });
 });
