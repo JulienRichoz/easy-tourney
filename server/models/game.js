@@ -76,6 +76,14 @@ module.exports = (sequelize, DataTypes) => {
         references: { model: 'UsersTourneys', key: 'id' },
         onDelete: 'SET NULL',
       },
+      realStartTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      realEndTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       sequelize,

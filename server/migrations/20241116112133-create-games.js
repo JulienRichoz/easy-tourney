@@ -73,6 +73,8 @@ module.exports = {
         references: { model: 'UsersTourneys', key: 'id' },
         onDelete: 'SET NULL',
       },
+      realStartTime: { type: Sequelize.DATE, allowNull: true },
+      realEndTime: { type: Sequelize.DATE, allowNull: true },
       createdAt: { allowNull: false, type: Sequelize.DATE },
       updatedAt: { allowNull: false, type: Sequelize.DATE },
     });
