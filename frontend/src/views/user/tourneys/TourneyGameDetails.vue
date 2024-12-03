@@ -5,9 +5,16 @@
   </div>
   <div v-if="match" class="p-6">
     <div class="text-center mb-4">
-      <span class="text-lg font-semibold">
+      <h2 class="text-2xl font-bold mb-2">
+        {{ match.field.name }} | {{ match.sport.name }}
+      </h2>
+      <p class="text-lg">
+        Heure : {{ formatTime(match.startTime) }} -
+        {{ formatTime(match.endTime) }}
+      </p>
+      <p class="text-lg font-semibold">
         Statut du match : {{ getMatchStatusLabel(match.status) }}
-      </span>
+      </p>
     </div>
 
     <!-- Affichage du match -->
@@ -114,21 +121,53 @@
       </div>
 
       <!-- Timeline des événements -->
-      <div
-        class="relative max-w-4xl mx-auto mt-6 h-96 overflow-y-auto border border-gray-200 rounded-lg shadow"
-      >
-        <ul class="relative">
-          <TimelineEvent
+      <div class="relative w-full max-w-4xl mx-auto mt-8">
+        <ul class="timeline w-full mx-auto relative">
+          <li
             v-for="event in sortedGameEvents"
             :key="event.id"
-            :position="getEventPosition(event)"
-            :icon="event.type"
+            class="relative mb-6 flex items-center"
           >
-            <p class="font-semibold">{{ getEventDescription(event) }}</p>
-            <p class="text-sm text-gray-500">
-              {{ formatEventTime(event.createdAt) }}
-            </p>
-          </TimelineEvent>
+            <!-- Icône pour chaque événement -->
+            <div
+              class="absolute left-1/2 transform -translate-x-1/2"
+              style="top: 0"
+            >
+              <div
+                :class="{
+                  'bg-yellow-500': event.type === 'yellow_card',
+                  'bg-red-500': event.type === 'red_card',
+                  'bg-green-500': event.type === 'goal',
+                  'bg-blue-500': event.type === 'foul',
+                }"
+                class="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg shadow-md"
+              >
+                <font-awesome-icon :icon="getEventIcon(event.type)" />
+              </div>
+            </div>
+
+            <!-- Box contenant les détails de l'événement -->
+            <div
+              :class="getEventPositionClass(event)"
+              class="timeline-box bg-gray-100 p-4 rounded-lg shadow-md w-60"
+            >
+              <p class="font-semibold">{{ getEventDescription(event) }}</p>
+              <p class="text-sm text-gray-500">
+                {{ formatEventTime(event.createdAt) }}
+                <span v-if="event.matchTime !== undefined">
+                  - {{ formatElapsedTime(event.matchTime) }}
+                </span>
+              </p>
+              <!-- Bouton de suppression -->
+              <button
+                v-if="isAuthorized"
+                @click="deleteEvent(event.id)"
+                class="mt-2 text-red-500 hover:text-red-700"
+              >
+                <font-awesome-icon icon="trash" />
+              </button>
+            </div>
+          </li>
         </ul>
       </div>
     </div>
@@ -187,12 +226,8 @@
 <script>
   import apiService from '@/services/apiService';
   import { getSocket } from '@/services/socketService';
-  import TimelineEvent from '@/components/user/TimelineEvent.vue';
 
   export default {
-    components: {
-      TimelineEvent,
-    },
     data() {
       return {
         match: null,
@@ -201,6 +236,7 @@
         timer: null,
         timerRunning: false,
         elapsedTime: 0,
+        matchStartTime: null,
         teamAPlayers: [],
         teamBPlayers: [],
         gameEvents: [],
@@ -234,7 +270,6 @@
         const seconds = (this.elapsedTime % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
       },
-
       // Admin can always edit the match
       canEdit() {
         if (this.isAdmin) return true;
@@ -255,6 +290,21 @@
           // Récupérer les joueurs des équipes
           this.teamAPlayers = this.match.teamA.players || [];
           this.teamBPlayers = this.match.teamB.players || [];
+
+          // Récupérer l'heure de début du match
+          if (this.match.startTime) {
+            this.matchStartTime = new Date(this.match.startTime);
+            this.timerRunning = true;
+            this.elapsedTime = Math.floor(
+              (Date.now() - this.matchStartTime.getTime()) / 1000
+            );
+            if (!this.timer) {
+              this.timer = setInterval(() => {
+                this.elapsedTime++;
+              }, 1000);
+            }
+          }
+
           const socket = getSocket();
           if (!socket) {
             console.warn(
@@ -277,15 +327,71 @@
             this.gameEvents.push(event);
           });
 
+          // Écouter le démarrage du timer
+          socket.on('startMatchTimer', (data) => {
+            if (data.matchId === this.match.id) {
+              this.matchStartTime = new Date(data.startTime);
+              this.timerRunning = true;
+              this.elapsedTime = Math.floor(
+                (Date.now() - this.matchStartTime.getTime()) / 1000
+              );
+              if (!this.timer) {
+                this.timer = setInterval(() => {
+                  this.elapsedTime++;
+                }, 1000);
+              }
+            }
+          });
+
+          // Écouter la suppression d'un événement
+          socket.on('deleteGameEvent', (data) => {
+            this.gameEvents = this.gameEvents.filter(
+              (event) => event.id !== data.eventId
+            );
+          });
+
           // Récupérer les événements du match
           const eventsResponse = await apiService.get(
             `/tourneys/${tourneyId}/games/${gameId}/events`
           );
           this.gameEvents = eventsResponse.data;
-          console.log('this.gameEvents', this.gameEvents);
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du match :',
+            error
+          );
+        }
+      },
+      getEventPositionClass(event) {
+        if (event.teamId === this.match.teamA.id) {
+          return 'mr-auto text-right pr-16';
+        } else if (event.teamId === this.match.teamB.id) {
+          return 'ml-auto text-left pl-16';
+        } else {
+          return 'mx-auto text-center';
+        }
+      },
+      async deleteEvent(eventId) {
+        try {
+          const { tourneyId, gameId } = this.$route.params;
+          // Envoyer la requête pour supprimer l'événement
+          await apiService.delete(
+            `/tourneys/${tourneyId}/games/${gameId}/events/${eventId}`
+          );
+          // Supprimer l'événement localement
+          this.gameEvents = this.gameEvents.filter(
+            (event) => event.id !== eventId
+          );
+          // Informer les autres clients via Socket.IO
+          const socket = getSocket();
+          socket.emit('deleteGameEvent', {
+            tourneyId: parseInt(tourneyId),
+            gameId: this.match.id,
+            eventId,
+          });
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression de l'événement :",
             error
           );
         }
@@ -306,6 +412,14 @@
         if (!this.isAuthorized) return;
         if (this.timer) return;
         this.timerRunning = true;
+        this.matchStartTime = new Date();
+        this.elapsedTime = 0;
+        // Envoyer l'heure de début du match aux autres clients
+        const socket = getSocket();
+        socket.emit('startMatchTimer', {
+          matchId: this.match.id,
+          startTime: this.matchStartTime,
+        });
         this.timer = setInterval(() => {
           this.elapsedTime++;
         }, 1000);
@@ -319,6 +433,14 @@
           this.timerRunning = false;
         }
       },
+      formatElapsedTime(seconds) {
+        const minutes = Math.floor(seconds / 60).toString();
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        if (minutes === '0') {
+          return `${secs}''`;
+        }
+        return `${minutes}'${secs}''`;
+      },
       getMatchStatusLabel(status) {
         switch (status) {
           case 'scheduled':
@@ -331,7 +453,6 @@
             return 'Inconnu';
         }
       },
-
       openEventModal(eventType) {
         this.eventType = eventType;
         this.eventTeamId = this.match.teamA.id;
@@ -346,14 +467,7 @@
         if (!socket) {
           return;
         }
-        socket.on('connect_error', () => {
-          this.socketError =
-            'Impossible de se connecter au serveur en temps réel.';
-        });
-
-        socket.on('disconnect', () => {
-          this.socketError = 'Connexion au serveur en temps réel perdue.';
-        });
+        // Les écouteurs Socket.IO ont été déplacés dans fetchMatchDetails()
       },
       submitEvent() {
         const { tourneyId } = this.$route.params;
@@ -361,8 +475,8 @@
           type: this.eventType,
           teamId: this.eventTeamId,
           description: this.eventDescription,
+          matchTime: this.elapsedTime,
         };
-        console.log('event', event);
         // Envoyer l'événement via Socket.IO
         const socket = getSocket();
         socket.emit('gameEvent', {
@@ -370,6 +484,8 @@
           gameId: this.match.id,
           event,
         });
+        // Ajouter l'événement localement
+        this.gameEvents.push(event);
         this.closeEventModal();
       },
       // Mapping des types d'événements aux icônes FontAwesome
@@ -386,11 +502,6 @@
           default:
             return ['fas', 'question-circle'];
         }
-      },
-      getEventPosition(event) {
-        if (event.team?.id === this.match.teamA.id) return 'left';
-        if (event.team?.id === this.match.teamB.id) return 'right';
-        return 'center';
       },
       getEventDescription(event) {
         switch (event.type) {
@@ -413,12 +524,22 @@
         const seconds = date.getSeconds().toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
       },
+      formatTime(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      },
     },
     beforeUnmount() {
       // Quitter la salle du match lorsque le composant est détruit
       const socket = getSocket();
       if (socket) {
         socket.emit('leaveGame', this.match.id);
+      }
+      if (this.timer) {
+        clearInterval(this.timer);
       }
     },
     async mounted() {
@@ -429,31 +550,42 @@
 </script>
 
 <style scoped>
-  /* Alignement des événements et ligne centrale */
-  .timeline-box {
+  .timeline {
     position: relative;
-    z-index: 10;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .timeline-box::before {
+  .timeline::before {
     content: '';
     position: absolute;
-    height: 2px;
-    background: #d1d5db; /* Tailwind's gray-300 */
-    top: 50%;
-    left: -30px;
-    right: -30px;
-    z-index: -1;
-  }
-
-  .timeline li::after {
-    content: '';
-    position: absolute;
+    top: 0;
+    bottom: 0;
     left: 50%;
-    transform: translateX(-50%);
-    height: 100%;
     width: 2px;
-    background: #cbd5e1; /* Tailwind's gray-400 */
-    z-index: -1;
+    background-color: #6c6c6c;
+    transform: translateX(-50%);
+  }
+
+  .mr-auto.text-right.pr-16::after {
+    right: -20px;
+    border-left-color: #edf2f7; /* Couleur du box */
+  }
+
+  .ml-auto.text-left.pl-16::after {
+    left: -20px;
+    border-right-color: #edf2f7; /* Couleur du box */
+  }
+
+  .mx-auto.text-center::after {
+    left: -10px;
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+
+  li {
+    display: flex;
+    justify-content: center;
   }
 </style>
