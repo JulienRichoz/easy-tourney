@@ -3,6 +3,7 @@ import apiService from '@/services/apiService';
 import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
 import tourney from './modules/tourney';
 import userTourney from './modules/userTourney';
+import { getSocket } from '@/services/socketService';
 
 export default createStore({
   modules: {
@@ -73,6 +74,12 @@ export default createStore({
     },
     logout({ commit }) {
       localStorage.removeItem('token'); // Supprime le token de localStorage
+      // Déconnecter le socket
+      let socket = getSocket();
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
       delete apiService.defaults.headers.common['Authorization']; // Supprime l'en-tête d'autorisation
 
       commit('LOGOUT'); // Réinitialise l'état
