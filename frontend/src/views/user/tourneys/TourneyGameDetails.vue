@@ -4,17 +4,35 @@
     {{ socketError }}
   </div>
   <div v-if="match" class="p-6">
-    <div class="text-center mb-4">
-      <h2 class="text-2xl font-bold mb-2">
-        {{ match.field.name }} | {{ match.sport.name }}
-      </h2>
-      <p class="text-lg">
-        Heure : {{ formatTime(match.startTime) }} -
-        {{ formatTime(match.endTime) }}
-      </p>
-      <p class="text-lg font-semibold">
-        Statut du match : {{ getMatchStatusLabel(match.status) }}
-      </p>
+    <div class="flex items-center justify-center mb-4 relative">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold">
+          {{ match.field.name }} | {{ match.sport.name }}
+        </h2>
+        <p class="text-lg">
+          Heure : {{ formatTime(match.startTime) }} -
+          {{ formatTime(match.endTime) }}
+        </p>
+      </div>
+      <!-- Sélecteur de statut du match -->
+      <div v-if="isAuthorized" class="absolute right-0">
+        <label class="block mb-1">Statut du match :</label>
+        <select
+          v-model="match.status"
+          @change="updateMatchStatus"
+          class="border rounded px-3 py-2"
+        >
+          <option value="scheduled">Prévu</option>
+          <option value="in_progress">En cours</option>
+          <option value="completed">Terminé</option>
+        </select>
+      </div>
+      <!-- Afficher le statut pour les players -->
+      <div v-else class="absolute right-0">
+        <p class="text-lg font-semibold">
+          {{ getMatchStatusLabel(match.status) }}
+        </p>
+      </div>
     </div>
 
     <!-- Affichage du match -->
@@ -34,7 +52,7 @@
         <div class="flex flex-col items-center mx-8">
           <div class="flex items-center">
             <!-- Pour les assistants/admins : inputs modifiables -->
-            <div v-if="isAuthorized">
+            <div v-if="isAuthorized && match.status === 'in_progress'">
               <input
                 v-model.number="scoreTeamA"
                 type="number"
@@ -56,27 +74,43 @@
               <span class="text-4xl font-bold">{{ scoreTeamB }}</span>
             </div>
           </div>
+          <!-- Centrer le timer pour tous les utilisateurs -->
+          <div class="mt-2 text-lg font-semibold text-center">
+            {{ formattedTime }}
+          </div>
           <!-- Boutons de contrôle du timer -->
-          <div class="mt-2" v-if="isAuthorized">
+          <div
+            class="mt-2"
+            v-if="isAuthorized && match.status === 'in_progress'"
+          >
             <button
-              v-if="!timerRunning"
+              v-if="!timerRunning && !timerPaused"
               @click="startTimer"
               class="px-4 py-2 bg-green-500 text-white rounded"
             >
               Démarrer
             </button>
             <button
-              v-else
-              @click="stopTimer"
-              class="px-4 py-2 bg-red-500 text-white rounded"
+              v-else-if="timerRunning && !timerPaused"
+              @click="pauseTimer"
+              class="px-4 py-2 bg-yellow-500 text-white rounded"
             >
-              Arrêter
+              Pause
             </button>
-            <div class="mt-2 text-lg font-semibold">{{ formattedTime }}</div>
-          </div>
-          <!-- Affichage du timer pour les joueurs -->
-          <div class="mt-2 text-lg font-semibold" v-else>
-            {{ formattedTime }}
+            <button
+              v-else-if="timerPaused"
+              @click="startTimer"
+              class="px-4 py-2 bg-green-500 text-white rounded"
+            >
+              Reprendre
+            </button>
+            <!-- Bouton Reset -->
+            <button
+              @click="resetTimer"
+              class="px-4 py-2 bg-red-500 text-white rounded ml-2"
+            >
+              Réinitialiser
+            </button>
           </div>
         </div>
 
@@ -92,7 +126,10 @@
       </div>
 
       <!-- Événements du match (pour les arbitres et admins) -->
-      <div v-if="isAuthorized" class="flex flex-wrap justify-center mt-4 gap-4">
+      <div
+        v-if="isAuthorized && match.status === 'in_progress'"
+        class="flex flex-wrap justify-center mt-4 gap-4"
+      >
         <!-- Boutons d'événements -->
         <button
           @click="openEventModal('goal')"
@@ -122,53 +159,58 @@
 
       <!-- Timeline des événements -->
       <div class="relative w-full max-w-4xl mx-auto mt-8">
-        <ul class="timeline w-full mx-auto relative">
-          <li
-            v-for="event in sortedGameEvents"
-            :key="event.id"
-            class="relative mb-6 flex items-center"
-          >
-            <!-- Icône pour chaque événement -->
-            <div
-              class="absolute left-1/2 transform -translate-x-1/2"
-              style="top: 0"
+        <div class="max-h-96 overflow-y-auto">
+          <ul class="timeline w-full mx-auto relative">
+            <li
+              v-for="event in sortedGameEvents"
+              :key="event.id"
+              class="relative mb-6 flex items-center"
             >
+              <!-- Icône pour chaque événement -->
               <div
-                :class="{
-                  'bg-yellow-500': event.type === 'yellow_card',
-                  'bg-red-500': event.type === 'red_card',
-                  'bg-green-500': event.type === 'goal',
-                  'bg-blue-500': event.type === 'foul',
-                }"
-                class="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg shadow-md"
+                class="absolute left-1/2 transform -translate-x-1/2"
+                style="top: 0"
               >
-                <font-awesome-icon :icon="getEventIcon(event.type)" />
+                <div
+                  :class="{
+                    'bg-yellow-500': event.type === 'yellow_card',
+                    'bg-red-500': event.type === 'red_card',
+                    'bg-green-500': event.type === 'goal',
+                    'bg-blue-500': event.type === 'foul',
+                  }"
+                  class="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg shadow-md"
+                >
+                  <font-awesome-icon :icon="getEventIcon(event.type)" />
+                </div>
               </div>
-            </div>
 
-            <!-- Box contenant les détails de l'événement -->
-            <div
-              :class="getEventPositionClass(event)"
-              class="timeline-box bg-gray-100 p-4 rounded-lg shadow-md w-60"
-            >
-              <p class="font-semibold">{{ getEventDescription(event) }}</p>
-              <p class="text-sm text-gray-500">
-                {{ formatEventTime(event.createdAt) }}
-                <span v-if="event.matchTime !== undefined">
-                  - {{ formatElapsedTime(event.matchTime) }}
-                </span>
-              </p>
-              <!-- Bouton de suppression -->
-              <button
-                v-if="isAuthorized"
-                @click="deleteEvent(event.id)"
-                class="mt-2 text-red-500 hover:text-red-700"
+              <!-- Box contenant les détails de l'événement -->
+              <div
+                :class="getEventPositionClass(event)"
+                class="timeline-box bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shadow-md w-64"
               >
-                <font-awesome-icon icon="trash" />
-              </button>
-            </div>
-          </li>
-        </ul>
+                <p class="font-semibold">{{ getEventDescription(event) }}</p>
+                <p v-if="event.description" class="text-sm text-gray-700">
+                  {{ event.description }}
+                </p>
+                <p class="text-sm text-gray-500">
+                  {{ formatEventTime(event.createdAt) }}
+                  <span v-if="event.matchTime !== undefined">
+                    - {{ formatElapsedTime(event.matchTime) }}
+                  </span>
+                </p>
+                <!-- Bouton de suppression -->
+                <button
+                  v-if="isAuthorized && match.status === 'in_progress'"
+                  @click="deleteEvent(event.id)"
+                  class="mt-2 text-red-500 hover:text-red-700"
+                >
+                  <font-awesome-icon icon="trash" />
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -237,6 +279,7 @@
         timerRunning: false,
         elapsedTime: 0,
         matchStartTime: null,
+        pausedAt: null, // Pour stocker l'heure à laquelle le timer a été mis en pause
         teamAPlayers: [],
         teamBPlayers: [],
         gameEvents: [],
@@ -292,7 +335,7 @@
           this.teamBPlayers = this.match.teamB.players || [];
 
           // Récupérer l'heure de début du match
-          if (this.match.startTime) {
+          if (this.match.realStartTime) {
             this.matchStartTime = new Date(this.match.startTime);
             this.timerRunning = true;
             this.elapsedTime = Math.floor(
@@ -355,6 +398,20 @@
             `/tourneys/${tourneyId}/games/${gameId}/events`
           );
           this.gameEvents = eventsResponse.data;
+
+          // Si le match a démarré et que realStartTime existe, initialiser le timer
+          if (this.match.realStartTime) {
+            this.matchStartTime = new Date(this.match.realStartTime);
+            this.elapsedTime = Math.floor(
+              (Date.now() - this.matchStartTime.getTime()) / 1000
+            );
+            this.timerRunning = true;
+            if (!this.timer) {
+              this.timer = setInterval(() => {
+                this.elapsedTime++;
+              }, 1000);
+            }
+          }
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du match :',
@@ -364,9 +421,9 @@
       },
       getEventPositionClass(event) {
         if (event.teamId === this.match.teamA.id) {
-          return 'mr-auto text-right pr-16';
+          return 'mr-auto text-right pr-10';
         } else if (event.teamId === this.match.teamB.id) {
-          return 'ml-auto text-left pl-16';
+          return 'ml-auto text-left pl-10';
         } else {
           return 'mx-auto text-center';
         }
@@ -410,20 +467,81 @@
       },
       startTimer() {
         if (!this.isAuthorized) return;
-        if (this.timer) return;
-        this.timerRunning = true;
-        this.matchStartTime = new Date();
-        this.elapsedTime = 0;
-        // Envoyer l'heure de début du match aux autres clients
+
         const socket = getSocket();
-        socket.emit('startMatchTimer', {
-          matchId: this.match.id,
-          startTime: this.matchStartTime,
-        });
-        this.timer = setInterval(() => {
-          this.elapsedTime++;
-        }, 1000);
+
+        if (this.timerPaused) {
+          // Reprendre le timer
+          this.timerPaused = false;
+          this.matchStartTime = new Date(
+            this.matchStartTime.getTime() + (Date.now() - this.pausedAt)
+          );
+          // Envoyer l'événement de reprise du timer
+          socket.emit('resumeMatchTimer', {
+            matchId: this.match.id,
+            startTime: this.matchStartTime,
+          });
+        } else {
+          if (this.timerRunning) return; // Empêcher de démarrer le timer s'il tourne déjà
+          // Démarrer le timer
+          this.timerRunning = true;
+          this.matchStartTime = new Date();
+          this.elapsedTime = 0;
+          // Envoyer l'heure de début réelle du match aux autres clients
+          socket.emit('startMatchTimer', {
+            matchId: this.match.id,
+            startTime: this.matchStartTime,
+          });
+        }
+
+        if (!this.timer) {
+          this.timer = setInterval(() => {
+            this.elapsedTime = Math.floor(
+              (Date.now() - this.matchStartTime.getTime()) / 1000
+            );
+          }, 1000);
+        }
       },
+
+      pauseTimer() {
+        if (!this.isAuthorized) return;
+        if (!this.timerRunning || this.timerPaused) return;
+
+        clearInterval(this.timer);
+        this.timer = null;
+        this.timerRunning = false; // Ajouter cette ligne
+        this.timerPaused = true;
+        this.pausedAt = Date.now(); // Enregistrer l'heure à laquelle le timer a été mis en pause
+
+        // Envoyer l'événement de pause du timer aux autres clients
+        const socket = getSocket();
+        socket.emit('pauseMatchTimer', {
+          matchId: this.match.id,
+        });
+      },
+
+      resetTimer() {
+        if (!this.isAuthorized) return;
+
+        // Réinitialiser les états du timer
+        this.timerRunning = false;
+        this.timerPaused = false;
+        this.elapsedTime = 0;
+        this.matchStartTime = null;
+        this.pausedAt = null;
+
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+
+        // Envoyer l'événement de réinitialisation du timer aux autres clients
+        const socket = getSocket();
+        socket.emit('resetMatchTimer', {
+          matchId: this.match.id,
+        });
+      },
+
       stopTimer() {
         if (!this.isAuthorized) return;
 
@@ -462,12 +580,73 @@
       closeEventModal() {
         this.showEventModal = false;
       },
+      resetTimerLocal() {
+        this.timerRunning = false;
+        this.timerPaused = false;
+        this.elapsedTime = 0;
+        this.matchStartTime = null;
+        this.pausedAt = null;
+
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+      },
+      updateMatchStatus() {
+        const socket = getSocket();
+        socket.emit('updateMatchStatus', {
+          matchId: this.match.id,
+          status: this.match.status,
+        });
+      },
+
       setupSocket() {
         const socket = getSocket();
         if (!socket) {
           return;
         }
-        // Les écouteurs Socket.IO ont été déplacés dans fetchMatchDetails()
+        // Gérer le timer
+        socket.on('pauseMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            if (this.timer) {
+              clearInterval(this.timer);
+              this.timer = null;
+            }
+            this.timerPaused = true;
+            this.timerRunning = false; // Ajouter cette ligne
+            this.pausedAt = Date.now();
+          }
+        });
+
+        socket.on('resumeMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            this.timerPaused = false;
+            this.timerRunning = true; // Ajouter cette ligne
+            this.matchStartTime = new Date(data.startTime);
+            this.elapsedTime = Math.floor(
+              (Date.now() - this.matchStartTime.getTime()) / 1000
+            );
+
+            if (!this.timer) {
+              this.timer = setInterval(() => {
+                this.elapsedTime = Math.floor(
+                  (Date.now() - this.matchStartTime.getTime()) / 1000
+                );
+              }, 1000);
+            }
+          }
+        });
+
+        socket.on('resetMatchTimer', (data) => {
+          if (data.matchId === this.match.id) {
+            this.resetTimerLocal();
+          }
+        });
+        socket.on('matchStatusUpdated', (data) => {
+          if (data.matchId === this.match.id) {
+            this.match.status = data.status;
+          }
+        });
       },
       submitEvent() {
         const { tourneyId } = this.$route.params;
@@ -485,7 +664,6 @@
           event,
         });
         // Ajouter l'événement localement
-        this.gameEvents.push(event);
         this.closeEventModal();
       },
       // Mapping des types d'événements aux icônes FontAwesome
@@ -504,17 +682,23 @@
         }
       },
       getEventDescription(event) {
+        let teamName = 'Inconnu';
+        if (event.teamId === this.match.teamA.id) {
+          teamName = this.match.teamA.teamName;
+        } else if (event.teamId === this.match.teamB.id) {
+          teamName = this.match.teamB.teamName;
+        }
         switch (event.type) {
           case 'goal':
-            return 'But marqué';
+            return `${teamName} - But marqué`;
           case 'foul':
-            return 'Faute commise';
+            return `${teamName} - Faute commise`;
           case 'yellow_card':
-            return 'Carton Jaune';
+            return `${teamName} - Carton Jaune`;
           case 'red_card':
-            return 'Carton Rouge';
+            return `${teamName} - Carton Rouge`;
           default:
-            return 'Événement';
+            return `${teamName} - Événement`;
         }
       },
       formatEventTime(timestamp) {
@@ -533,10 +717,17 @@
       },
     },
     beforeUnmount() {
-      // Quitter la salle du match lorsque le composant est détruit
       const socket = getSocket();
       if (socket) {
         socket.emit('leaveGame', this.match.id);
+        socket.off('scoreUpdated');
+        socket.off('gameEvent');
+        socket.off('startMatchTimer');
+        socket.off('pauseMatchTimer');
+        socket.off('resumeMatchTimer');
+        socket.off('resetMatchTimer');
+        socket.off('deleteGameEvent');
+        socket.off('matchStatusUpdated');
       }
       if (this.timer) {
         clearInterval(this.timer);
