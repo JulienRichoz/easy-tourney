@@ -18,6 +18,62 @@ module.exports = (io) => {
             console.log(`Socket ${socket.id} a quitté la salle game_${gameId}`);
         });
 
+        // Recevoir le démarrage ou la reprise du timer
+        socket.on('startMatchTimer', async (data) => {
+            const { matchId } = data;
+
+            const game = await Game.findByPk(matchId);
+            if (!game) {
+                return socket.emit('error', 'Le match spécifié n\'existe pas.');
+            }
+
+            const tourneyId = game.tourneyId;
+            const isAuthorized = socket.user.tourneyRoles.some(
+                (tr) =>
+                    tr.tourneyId === tourneyId &&
+                    (tr.role === 'admin' || tr.role === 'assistant')
+            );
+
+            if (!isAuthorized) {
+                return socket.emit('error', 'Vous n\'êtes pas autorisé à démarrer ou reprendre le timer du match.');
+            }
+
+            try {
+                if (game.isPaused) {
+                    if (game.pausedAt) {
+                        const now = new Date();
+                        const pauseDuration = now - game.pausedAt;
+                        game.totalPausedTime += pauseDuration;
+                        game.pausedAt = null;
+                        game.isPaused = false;
+                    }
+                } else if (!game.realStartTime) {
+                    // Démarrage initial du match
+                    game.realStartTime = new Date();
+                    game.totalPausedTime = 0;
+                    game.pausedAt = null;
+                    game.isPaused = false;
+                } else {
+                    // Le timer est déjà en cours
+                    return;
+                }
+
+                await game.save();
+
+                // Diffuser le démarrage ou la reprise du timer
+                io.to(`game_${matchId}`).emit('startMatchTimer', {
+                    matchId,
+                    realStartTime: game.realStartTime,
+                    totalPausedTime: game.totalPausedTime,
+                    isPaused: game.isPaused,
+                    pausedAt: game.pausedAt,
+                });
+            } catch (error) {
+                console.error('Erreur lors du démarrage ou de la reprise du timer :', error);
+                socket.emit('error', 'Erreur lors du démarrage ou de la reprise du timer.');
+            }
+        });
+
         // Recevoir la mise en pause du timer
         socket.on('pauseMatchTimer', async (data) => {
             const { matchId } = data;
@@ -39,43 +95,20 @@ module.exports = (io) => {
             }
 
             try {
+                // Mettre à jour les champs pour la pause
+                game.pausedAt = new Date();
+                game.isPaused = true;
+                await game.save();
+
                 // Diffuser l'événement de pause du timer
-                io.to(`game_${matchId}`).emit('pauseMatchTimer', { matchId });
+                io.to(`game_${matchId}`).emit('pauseMatchTimer', {
+                    matchId,
+                    pausedAt: game.pausedAt,
+                    isPaused: game.isPaused,
+                });
             } catch (error) {
                 console.error('Erreur lors de la mise en pause du timer :', error);
                 socket.emit('error', 'Erreur lors de la mise en pause du timer.');
-            }
-        });
-
-        // Recevoir la reprise du timer
-        socket.on('resumeMatchTimer', async (data) => {
-            const { matchId, startTime } = data;
-
-            const game = await Game.findByPk(matchId);
-            if (!game) {
-                return socket.emit('error', 'Le match spécifié n\'existe pas.');
-            }
-
-            const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
-            );
-
-            if (!isAuthorized) {
-                return socket.emit('error', 'Vous n\'êtes pas autorisé à reprendre le timer du match.');
-            }
-
-            try {
-                // Diffuser l'événement de reprise du timer avec la nouvelle `realStartTime`
-                io.to(`game_${matchId}`).emit('resumeMatchTimer', {
-                    matchId,
-                    startTime,
-                });
-            } catch (error) {
-                console.error('Erreur lors de la reprise du timer :', error);
-                socket.emit('error', 'Erreur lors de la reprise du timer.');
             }
         });
 
@@ -100,8 +133,12 @@ module.exports = (io) => {
             }
 
             try {
-                // Réinitialiser `realStartTime` dans la base de données
+                // Réinitialiser les champs du timer
                 game.realStartTime = null;
+                game.realEndTime = null;
+                game.totalPausedTime = 0;
+                game.pausedAt = null;
+                game.isPaused = false;
                 await game.save();
 
                 // Diffuser l'événement de réinitialisation du timer
@@ -112,18 +149,16 @@ module.exports = (io) => {
             }
         });
 
+        // Recevoir l'arrêt du timer
+        socket.on('stopMatchTimer', async (data) => {
+            const { matchId } = data;
 
-        // Recevoir le démarrage du timer
-        socket.on('startMatchTimer', async (data) => {
-            const { matchId, startTime } = data;
-
-            // Vérifier si l'utilisateur est autorisé (assistant ou admin du tournoi)
             const game = await Game.findByPk(matchId);
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
 
-            const tourneyId = game.tourneyId; // Supposant que Game a un champ tourneyId
+            const tourneyId = game.tourneyId;
             const isAuthorized = socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
@@ -131,25 +166,28 @@ module.exports = (io) => {
             );
 
             if (!isAuthorized) {
-                return socket.emit('error', 'Vous n\'êtes pas autorisé à démarrer le timer du match.');
+                return socket.emit('error', 'Vous n\'êtes pas autorisé à arrêter le timer du match.');
             }
 
             try {
-                // Mettre à jour l'heure de début réelle du match et le statut
-                game.realStartTime = new Date(startTime);
+                // Mettre à jour l'heure de fin réelle du match et les champs du timer
+                game.realEndTime = new Date();
+                game.isPaused = false;
+                game.pausedAt = null;
                 await game.save();
 
-                // Diffuser le démarrage du timer à tous les clients de la salle
-                io.to(`game_${matchId}`).emit('startMatchTimer', {
+                // Diffuser l'arrêt du timer à tous les clients de la salle
+                io.to(`game_${matchId}`).emit('stopMatchTimer', {
                     matchId,
-                    startTime: game.realStartTime,
+                    realEndTime: game.realEndTime,
+                    isPaused: game.isPaused,
                 });
             } catch (error) {
-                console.error('Erreur lors du démarrage du timer :', error);
-                socket.emit('error', 'Erreur lors du démarrage du timer.');
+                console.error("Erreur lors de l'arrêt du timer : ", error);
+                socket.emit('error', "Erreur lors de l'arrêt du timer.");
             }
-
         });
+
         // Recevoir les mises à jour de l'arbitre
         socket.on('updateScore', async (data) => {
             const { tourneyId, gameId, scoreTeamA, scoreTeamB } = data;
@@ -224,7 +262,6 @@ module.exports = (io) => {
             }
         });
 
-
         // Recevoir les événements du match
         socket.on('gameEvent', async (data) => {
             const { tourneyId, gameId, event } = data;
@@ -240,17 +277,22 @@ module.exports = (io) => {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à émettre des événements de match.');
             }
 
-            // Enregistrer l'événement en base de données
-            const gameEvent = await GameEvent.create({
-                gameId,
-                teamId: event.teamId,
-                type: event.type,
-                description: event.description,
-                matchTime: event.matchTime,
-            });
+            try {
+                // Enregistrer l'événement en base de données
+                const gameEvent = await GameEvent.create({
+                    gameId,
+                    teamId: event.teamId,
+                    type: event.type,
+                    description: event.description,
+                    matchTime: event.matchTime,
+                });
 
-            // Diffuser l'événement aux utilisateurs
-            io.to(`game_${gameId}`).emit('gameEvent', gameEvent);
+                // Diffuser l'événement aux utilisateurs
+                io.to(`game_${gameId}`).emit('gameEvent', gameEvent);
+            } catch (error) {
+                console.error('Erreur lors de l\'enregistrement de l\'événement :', error);
+                socket.emit('error', 'Erreur lors de l\'enregistrement de l\'événement.');
+            }
         });
 
         socket.on('disconnect', () => {

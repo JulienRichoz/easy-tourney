@@ -75,6 +75,20 @@ module.exports = {
       },
       realStartTime: { type: Sequelize.DATE, allowNull: true },
       realEndTime: { type: Sequelize.DATE, allowNull: true },
+      totalPausedTime: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0, // En millisecondes
+      },
+      pausedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      isPaused: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       createdAt: { allowNull: false, type: Sequelize.DATE },
       updatedAt: { allowNull: false, type: Sequelize.DATE },
     });

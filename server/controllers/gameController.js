@@ -404,8 +404,9 @@ exports.getGameById = async (req, res) => {
     const tourneyId = req.params.tourneyId;
 
     const game = await Game.findByPk(gameId, {
-      attributes: { include: ['realStartTime'] },
-      include: [
+      attributes: {
+        include: ['realStartTime', 'totalPausedTime', 'pausedAt', 'isPaused'],
+      }, include: [
         {
           model: Team,
           as: 'teamA',

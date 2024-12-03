@@ -84,6 +84,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      totalPausedTime: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0, // En millisecondes
+      },
+      pausedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      isPaused: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       sequelize,
