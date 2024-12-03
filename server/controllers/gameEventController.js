@@ -1,5 +1,5 @@
 // server/controllers/gameEventController.js
-const { GameEvent } = require('../models');
+const { GameEvent, Team } = require('../models');
 
 /**
  * Créer un événement pour un match
@@ -38,11 +38,19 @@ exports.getGameEventsByGame = async (req, res) => {
 
     const events = await GameEvent.findAll({
       where: { gameId },
+      include: [
+        {
+          model: Team,
+          as: 'team',
+          attributes: ['id', 'teamName'],
+        },
+      ],
+      order: [['createdAt', 'ASC']],
     });
 
     res.status(200).json(events);
   } catch (error) {
-    console.error('Erreur lors de la récupération des événements :', error);
+    console.error('Erreur lors de la récupération des événements du match :', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
   }
 };
