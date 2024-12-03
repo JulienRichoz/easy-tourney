@@ -57,3 +57,14 @@ exports.generateInviteToken = (tourneyId) => {
     expiresIn: process.env.INVITE_TOKEN_EXPIRATION || '2w',
   });
 };
+
+// Fonction pour vérifier et décoder un token JWT
+exports.verifyToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (error) {
+    console.error('Erreur lors de la vérification du token:', error);
+    return null;
+  }
+};
