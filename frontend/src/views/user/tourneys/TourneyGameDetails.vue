@@ -16,16 +16,15 @@
       </div>
       <!-- Sélecteur de statut du match -->
       <div v-if="isAuthorized" class="absolute right-0">
-        <label class="block mb-1">Statut du match :</label>
-        <select
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="matchStatus"
+          :statusOptions="gameStatusOptions"
           v-model="match.status"
-          @change="updateMatchStatus"
-          class="border rounded px-3 py-2"
-        >
-          <option value="scheduled">Prévu</option>
-          <option value="in_progress">En cours</option>
-          <option value="completed">Terminé</option>
-        </select>
+          label="Statut du match :"
+          :hideWhenNotStarted="false"
+          :onStatusChange="onMatchStatusChange"
+        />
       </div>
       <!-- Afficher le statut pour les players -->
       <div v-else class="absolute right-0">
@@ -215,63 +214,40 @@
     </div>
 
     <!-- Modal pour ajouter un événement -->
-    <div
-      v-if="showEventModal"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+    <ModalComponent
+      :isVisible="showEventModal"
+      :title="getEventTitle(eventType)"
+      @close="closeEventModal"
     >
-      <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-        <h3 class="text-xl font-bold mb-4">Ajouter un événement</h3>
-        <form @submit.prevent="submitEvent">
-          <div class="mb-4">
-            <label class="block mb-1">Équipe :</label>
-            <select
-              v-model="eventTeamId"
-              class="w-full border rounded px-3 py-2"
-            >
-              <option :value="match.teamA.id">
-                {{ match.teamA.teamName }}
-              </option>
-              <option :value="match.teamB.id">
-                {{ match.teamB.teamName }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-4">
-            <label class="block mb-1">Description :</label>
-            <input
-              v-model="eventDescription"
-              type="text"
-              class="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div class="flex justify-end">
-            <button
-              type="button"
-              @click="closeEventModal"
-              class="px-4 py-2 mr-2 bg-gray-300 rounded"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <template #content>
+        <FormComponent
+          v-model="eventFormData"
+          :fields="eventFormFields"
+          @form-submit="submitEvent"
+          @form-cancel="closeEventModal"
+          :isEditable="true"
+        />
+      </template>
+    </ModalComponent>
   </div>
 </template>
 
 <script>
   import apiService from '@/services/apiService';
   import { getSocket } from '@/services/socketService';
+  import ModalComponent from '@/components/ModalComponent.vue';
+  import FormComponent from '@/components/FormComponent.vue';
+  import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
 
   export default {
+    components: {
+      ModalComponent,
+      FormComponent,
+      StatusSelectorComponent,
+    },
     data() {
       return {
+        tourneyId: this.$route.params.tourneyId,
         match: null,
         scoreTeamA: 0,
         scoreTeamB: 0,
@@ -288,9 +264,45 @@
         eventTeamId: null,
         eventDescription: '',
         socketError: null,
+        eventFormData: {
+          teamId: null,
+          description: '',
+        },
+        gameStatusOptions: [
+          { value: 'scheduled', label: 'Prévu' },
+          { value: 'in_progress', label: 'En cours' },
+          { value: 'completed', label: 'Terminé' },
+        ],
       };
     },
     computed: {
+      eventFormFields() {
+        if (!this.match) return []; // Assurez-vous que match est chargé
+        return [
+          {
+            name: 'teamId',
+            label: 'Équipe',
+            type: 'select',
+            options: [
+              {
+                value: this.match.teamA.id,
+                label: this.match.teamA.teamName,
+              },
+              {
+                value: this.match.teamB.id,
+                label: this.match.teamB.teamName,
+              },
+            ],
+            required: true,
+          },
+          {
+            name: 'description',
+            label: 'Description',
+            type: 'text',
+            required: false,
+          },
+        ];
+      },
       isAdmin() {
         return this.$store.state.user.roleId === 1;
       },
@@ -465,6 +477,24 @@
           scoreTeamB: this.scoreTeamB,
         });
       },
+      getEventTitle(eventType) {
+        switch (eventType) {
+          case 'goal':
+            return 'Ajouter un But';
+          case 'foul':
+            return 'Ajouter une Faute';
+          case 'yellow_card':
+            return 'Ajouter un Carton Jaune';
+          case 'red_card':
+            return 'Ajouter un Carton Rouge';
+          default:
+            return 'Ajouter un Événement';
+        }
+      },
+      onMatchStatusChange(newStatus) {
+        this.match.status = newStatus;
+        this.updateMatchStatus();
+      },
       startTimer() {
         if (!this.isAuthorized) return;
 
@@ -549,6 +579,8 @@
           clearInterval(this.timer);
           this.timer = null;
           this.timerRunning = false;
+          this.timerPaused = false;
+          this.pausedAt = null;
         }
       },
       formatElapsedTime(seconds) {
@@ -573,13 +605,20 @@
       },
       openEventModal(eventType) {
         this.eventType = eventType;
-        this.eventTeamId = this.match.teamA.id;
-        this.eventDescription = '';
+        this.eventFormData = {
+          teamId: this.match.teamA.id, // Sélectionne par défaut l'équipe A
+          description: '',
+        };
         this.showEventModal = true;
       },
       closeEventModal() {
+        this.eventFormData = {
+          teamId: null,
+          description: '',
+        };
         this.showEventModal = false;
       },
+
       resetTimerLocal() {
         this.timerRunning = false;
         this.timerPaused = false;
@@ -598,6 +637,14 @@
           matchId: this.match.id,
           status: this.match.status,
         });
+
+        // Si le statut est 'completed' ou 'scheduled', arrêter le timer
+        if (
+          this.match.status === 'completed' ||
+          this.match.status === 'scheduled'
+        ) {
+          this.stopTimer();
+        }
       },
 
       setupSocket() {
@@ -645,10 +692,33 @@
         socket.on('matchStatusUpdated', (data) => {
           if (data.matchId === this.match.id) {
             this.match.status = data.status;
+            // Si le statut est 'completed' ou 'scheduled', arrêter le timer
+            if (data.status === 'completed' || data.status === 'scheduled') {
+              this.stopTimer();
+            }
           }
         });
       },
       submitEvent() {
+        const { tourneyId } = this.$route.params;
+        const event = {
+          type: this.eventType,
+          teamId: this.eventFormData.teamId,
+          description: this.eventFormData.description,
+          matchTime: this.elapsedTime,
+        };
+        // Envoyer l'événement via Socket.IO
+        const socket = getSocket();
+        socket.emit('gameEvent', {
+          tourneyId: parseInt(tourneyId),
+          gameId: this.match.id,
+          event,
+        });
+        // Fermer la modal
+        this.closeEventModal();
+      },
+
+      /*submitEvent() {
         const { tourneyId } = this.$route.params;
         const event = {
           type: this.eventType,
@@ -665,7 +735,7 @@
         });
         // Ajouter l'événement localement
         this.closeEventModal();
-      },
+      },*/
       // Mapping des types d'événements aux icônes FontAwesome
       getEventIcon(eventType) {
         switch (eventType) {
