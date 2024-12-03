@@ -1,4 +1,4 @@
-// models/gameEvent.js
+// server/models/GameEvent.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {

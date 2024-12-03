@@ -35,5 +35,7 @@ module.exports = router;
  * Composant entre planning games et planning pools (reduction code, + clean)
  * Utiliser nom des routes pour les requetes axios
  * Refactor composant entre composant custom et composant de base
+ * Ajouter test unitaire
+ * Ajouter test intégration (deja sur postman)
  */
 
