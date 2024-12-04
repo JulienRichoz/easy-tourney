@@ -197,6 +197,9 @@ module.exports = (io) => {
                 game.totalPausedTime = 0;
                 game.pausedAt = null;
                 game.isPaused = false;
+                // **Réinitialiser les scores**
+                game.scoreTeamA = 0;
+                game.scoreTeamB = 0;
                 await game.save();
 
                 // Diffuser l'événement de réinitialisation du timer avec les infos de l'assistant
