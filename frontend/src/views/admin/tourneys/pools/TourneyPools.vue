@@ -822,7 +822,7 @@
         return errors;
       },
       navigateToAssignTeams() {
-        // Rediriger vers la page pour assigner les équipes aux pools (à implémenter)
+        // Rediriger vers la page pour assigner les équipes aux pools
         this.$router.push(
           `/admin/tourneys/${this.tourneyId}/pools/unassigned-teams`
         );
