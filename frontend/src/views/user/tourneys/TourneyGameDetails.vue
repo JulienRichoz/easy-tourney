@@ -3,7 +3,12 @@
   <div v-if="socketError" class="alert alert-warning">
     {{ socketError }}
   </div>
-  <div v-if="match" class="p-6">
+  <div v-if="match" class="p-6 relative">
+    <!-- Affichage de l'assistant et des spectateurs -->
+    <div class="absolute top-0 left-0 p-4 bg-opacity-75 rounded-lg shadow-md">
+      <p class="text-lg font-semibold">Assistant: {{ assistantName }}</p>
+      <p class="text-lg font-semibold">Spectateurs: {{ spectatorCount }}</p>
+    </div>
     <div class="flex items-center justify-center mb-4 relative">
       <div class="text-center">
         <h2 class="text-2xl font-bold">
@@ -275,6 +280,8 @@
           { value: 'in_progress', label: 'En cours' },
           { value: 'completed', label: 'Terminé' },
         ],
+        spectatorCount: 0,
+        assistantName: '',
       };
     },
     computed: {
@@ -344,6 +351,11 @@
           // Récupérer les joueurs des équipes
           this.teamAPlayers = this.match.teamA.players || [];
           this.teamBPlayers = this.match.teamB.players || [];
+
+          // Définir le nom de l'assistant
+          this.assistantName = this.match.assistant
+            ? this.match.assistant.name
+            : 'N/A';
 
           // Initialiser le timer
           if (this.match.realStartTime) {
@@ -542,6 +554,10 @@
             this.isPaused = data.isPaused;
             this.timerRunning = true;
 
+            // Mettre à jour le nom de l'assistant
+            this.assistantName = data.assistant ? data.assistant : 'N/A';
+            console.log('data.assistant', data.assistant);
+            console.log('Assistant:', this.assistantName);
             if (!this.timer) {
               this.timer = setInterval(() => {
                 this.calculateElapsedTime();
@@ -555,10 +571,13 @@
           if (data.matchId === this.match.id) {
             clearInterval(this.timer);
             this.timer = null;
-            this.pausedAt = new Date(data.pausedAt);
+            this.pausedAt = data.pausedAt ? new Date(data.pausedAt) : null;
             this.isPaused = data.isPaused;
             this.timerRunning = false;
             this.calculateElapsedTime();
+
+            // Mettre à jour le nom de l'assistant
+            this.assistantName = data.assistant ? data.assistant : 'N/A';
           }
         });
 
@@ -571,6 +590,9 @@
             this.isPaused = data.isPaused;
             this.timerRunning = false;
             this.calculateElapsedTime();
+
+            // Mettre à jour le nom de l'assistant
+            this.assistantName = data.assistant ? data.assistant : 'N/A';
           }
         });
 
@@ -584,6 +606,7 @@
             this.totalPausedTime = 0;
             this.pausedAt = null;
             this.isPaused = false;
+            this.assistantName = data.assistant ? data.assistant : 'N/A';
 
             if (this.timer) {
               clearInterval(this.timer);
@@ -607,6 +630,11 @@
           this.gameEvents = this.gameEvents.filter(
             (event) => event.id !== data.eventId
           );
+        });
+
+        // Écouter le spectatorCount
+        socket.on('spectatorCount', (data) => {
+          this.spectatorCount = data.count;
         });
       },
 
