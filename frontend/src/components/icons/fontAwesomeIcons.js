@@ -37,10 +37,16 @@ import {
     faExclamationCircle,
     faSquare,
     faSquareFull,
+    faTrophy,
+    faFlag,
+    faGavel,
 } from '@fortawesome/free-solid-svg-icons';
 
 export function registerIcons() {
     library.add(
+        faGavel,
+        faFlag,
+        faTrophy,
         faSquareFull,
         faSquare,
         faExclamationCircle,
