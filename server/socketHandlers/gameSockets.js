@@ -1,5 +1,5 @@
 // server/socketHandlers/gameSockets.js
-const { Game, GameEvent } = require('../models');
+const { Game, GameEvent, UsersTourneys, User } = require('../models');
 const tourneyRoles = require('../config/tourneyRoles');
 
 module.exports = (io) => {
@@ -7,22 +7,65 @@ module.exports = (io) => {
         console.log('Nouvelle connexion WebSocket :', socket.id);
 
         // Rejoindre une salle spécifique pour un match
-        socket.on('joinGame', (gameId) => {
+        socket.on('joinGame', async (gameId) => {
             socket.join(`game_${gameId}`);
             console.log(`Socket ${socket.id} a rejoint la salle game_${gameId}`);
+
+            // Obtenir le nombre de spectateurs dans la salle
+            const room = io.sockets.adapter.rooms.get(`game_${gameId}`);
+            const spectatorCount = room ? room.size : 0;
+
+            // Émettre le nombre de spectateurs
+            io.to(`game_${gameId}`).emit('spectatorCount', {
+                count: spectatorCount,
+            });
         });
 
         // Quitter la salle du match
         socket.on('leaveGame', (gameId) => {
             socket.leave(`game_${gameId}`);
             console.log(`Socket ${socket.id} a quitté la salle game_${gameId}`);
+
+            // Obtenir le nombre de spectateurs restant dans la salle
+            const room = io.sockets.adapter.rooms.get(`game_${gameId}`);
+            const spectatorCount = room ? room.size : 0;
+
+            // Émettre le nombre de spectateurs mis à jour
+            io.to(`game_${gameId}`).emit('spectatorCount', {
+                count: spectatorCount,
+            });
         });
+
+        // Fonction pour assigner l'assistant
+        const assignAssistant = async (game, userId) => {
+            // Trouver l'enregistrement UsersTourneys correspondant
+            const usersTourney = await UsersTourneys.findOne({
+                where: { userId: userId, tourneyId: game.tourneyId },
+            });
+
+            if (!usersTourney) {
+                throw new Error('Utilisateur non associé au tournoi.');
+            }
+
+            // Assigner assistantId avec UsersTourneys.id
+            game.assistantId = usersTourney.id;
+            await game.save();
+
+            // Récupérer les détails de l'utilisateur
+            const assistant = await User.findByPk(userId, {
+                attributes: ['id', 'name'],
+            });
+
+            return assistant;
+        };
 
         // Recevoir le démarrage ou la reprise du timer
         socket.on('startMatchTimer', async (data) => {
             const { matchId } = data;
 
-            const game = await Game.findByPk(matchId);
+            const game = await Game.findByPk(matchId, {
+                include: [{ model: UsersTourneys, as: 'assistant', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] }],
+            });
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
@@ -39,6 +82,9 @@ module.exports = (io) => {
             }
 
             try {
+                // Assigner l'assistant à l'utilisateur actuel
+                const assistant = await assignAssistant(game, socket.user.id);
+
                 if (game.isPaused) {
                     if (game.pausedAt) {
                         const now = new Date();
@@ -60,13 +106,14 @@ module.exports = (io) => {
 
                 await game.save();
 
-                // Diffuser le démarrage ou la reprise du timer
+                // Diffuser le démarrage ou la reprise du timer avec les infos de l'assistant
                 io.to(`game_${matchId}`).emit('startMatchTimer', {
                     matchId,
                     realStartTime: game.realStartTime,
                     totalPausedTime: game.totalPausedTime,
                     isPaused: game.isPaused,
                     pausedAt: game.pausedAt,
+                    assistant: assistant ? assistant.name : null, // Inclure les informations de l'assistant
                 });
             } catch (error) {
                 console.error('Erreur lors du démarrage ou de la reprise du timer :', error);
@@ -78,7 +125,9 @@ module.exports = (io) => {
         socket.on('pauseMatchTimer', async (data) => {
             const { matchId } = data;
 
-            const game = await Game.findByPk(matchId);
+            const game = await Game.findByPk(matchId, {
+                include: [{ model: UsersTourneys, as: 'assistant', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] }],
+            });
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
@@ -95,16 +144,20 @@ module.exports = (io) => {
             }
 
             try {
+                // Assigner l'assistant à l'utilisateur actuel
+                const assistant = await assignAssistant(game, socket.user.id);
+
                 // Mettre à jour les champs pour la pause
                 game.pausedAt = new Date();
                 game.isPaused = true;
                 await game.save();
 
-                // Diffuser l'événement de pause du timer
+                // Diffuser l'événement de pause du timer avec les infos de l'assistant
                 io.to(`game_${matchId}`).emit('pauseMatchTimer', {
                     matchId,
                     pausedAt: game.pausedAt,
                     isPaused: game.isPaused,
+                    assistant: assistant ? assistant.name : null, // Inclure les informations de l'assistant
                 });
             } catch (error) {
                 console.error('Erreur lors de la mise en pause du timer :', error);
@@ -116,7 +169,9 @@ module.exports = (io) => {
         socket.on('resetMatchTimer', async (data) => {
             const { matchId } = data;
 
-            const game = await Game.findByPk(matchId);
+            const game = await Game.findByPk(matchId, {
+                include: [{ model: UsersTourneys, as: 'assistant', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] }],
+            });
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
@@ -133,6 +188,9 @@ module.exports = (io) => {
             }
 
             try {
+                // Assigner l'assistant à l'utilisateur actuel
+                const assistant = await assignAssistant(game, socket.user.id);
+
                 // Réinitialiser les champs du timer
                 game.realStartTime = null;
                 game.realEndTime = null;
@@ -141,8 +199,11 @@ module.exports = (io) => {
                 game.isPaused = false;
                 await game.save();
 
-                // Diffuser l'événement de réinitialisation du timer
-                io.to(`game_${matchId}`).emit('resetMatchTimer', { matchId });
+                // Diffuser l'événement de réinitialisation du timer avec les infos de l'assistant
+                io.to(`game_${matchId}`).emit('resetMatchTimer', {
+                    matchId,
+                    assistant: assistant ? assistant.name : null, // Inclure les informations de l'assistant
+                });
             } catch (error) {
                 console.error('Erreur lors de la réinitialisation du timer :', error);
                 socket.emit('error', 'Erreur lors de la réinitialisation du timer.');
@@ -153,7 +214,9 @@ module.exports = (io) => {
         socket.on('stopMatchTimer', async (data) => {
             const { matchId } = data;
 
-            const game = await Game.findByPk(matchId);
+            const game = await Game.findByPk(matchId, {
+                include: [{ model: UsersTourneys, as: 'assistant', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] }],
+            });
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
@@ -170,17 +233,21 @@ module.exports = (io) => {
             }
 
             try {
+                // Assigner l'assistant à l'utilisateur actuel
+                const assistant = await assignAssistant(game, socket.user.id);
+
                 // Mettre à jour l'heure de fin réelle du match et les champs du timer
                 game.realEndTime = new Date();
                 game.isPaused = false;
                 game.pausedAt = null;
                 await game.save();
 
-                // Diffuser l'arrêt du timer à tous les clients de la salle
+                // Diffuser l'arrêt du timer à tous les clients de la salle avec les infos de l'assistant
                 io.to(`game_${matchId}`).emit('stopMatchTimer', {
                     matchId,
                     realEndTime: game.realEndTime,
                     isPaused: game.isPaused,
+                    assistant: assistant ? assistant.name : null, // Inclure les informations de l'assistant
                 });
             } catch (error) {
                 console.error("Erreur lors de l'arrêt du timer : ", error);
