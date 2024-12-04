@@ -6,8 +6,21 @@
   <div v-if="match" class="p-6 relative">
     <!-- Affichage de l'assistant et des spectateurs -->
     <div class="absolute top-0 left-0 p-4 bg-opacity-75 rounded-lg shadow-md">
-      <p class="text-lg font-semibold">Assistant: {{ assistantName }}</p>
-      <p class="text-lg font-semibold">Spectateurs: {{ spectatorCount }}</p>
+      <p class="text-lg font-semibold">
+        <font-awesome-icon icon="gavel" class="mr-2" />Arbitre:
+        {{ assistantName }}
+      </p>
+      <p class="text-lg font-semibold">
+        <font-awesome-icon icon="eye" class="mr-2" />Spectateurs:
+        {{ spectatorCount }}
+      </p>
+      <ButtonComponent
+        variant="secondary"
+        fontAwesomeIcon="arrow-left"
+        @click="goBack"
+      >
+        <span class="hidden sm:inline">Retour</span>
+      </ButtonComponent>
     </div>
     <div class="flex items-center justify-center mb-4 relative">
       <div class="text-center">
@@ -44,12 +57,27 @@
       <div class="flex items-center justify-center mb-4">
         <!-- Équipe A -->
         <div class="flex flex-col items-center mr-4">
-          <h2 class="text-xl font-bold">{{ match.teamA.teamName }}</h2>
-          <ul class="mt-2">
-            <li v-for="player in teamAPlayers" :key="player.id">
-              {{ player.name }}
-            </li>
-          </ul>
+          <h2 class="text-xl font-bold flex items-center">
+            {{ match.teamA.teamName }}
+            <font-awesome-icon
+              v-if="teamAResult === 'winner'"
+              icon="trophy"
+              class="text-green-500 ml-2"
+            />
+            <font-awesome-icon
+              v-if="teamAResult === 'loser'"
+              icon="trophy"
+              class="text-red-500 ml-2"
+            />
+          </h2>
+          <div class="player-list max-h-40 overflow-y-auto mt-2">
+            <ul>
+              <li v-for="player in teamAPlayers" :key="player.id">
+                <font-awesome-icon icon="user" class="mr-2" />
+                {{ player.name }}
+              </li>
+            </ul>
+          </div>
         </div>
 
         <!-- Score et chronomètre -->
@@ -110,7 +138,7 @@
             </button>
             <!-- Bouton Reset -->
             <button
-              @click="resetTimer"
+              @click="openResetConfirmation"
               class="px-4 py-2 bg-red-500 text-white rounded ml-2"
             >
               Réinitialiser
@@ -120,13 +148,34 @@
 
         <!-- Équipe B -->
         <div class="flex flex-col items-center ml-4">
-          <h2 class="text-xl font-bold">{{ match.teamB.teamName }}</h2>
-          <ul class="mt-2">
-            <li v-for="player in teamBPlayers" :key="player.id">
-              {{ player.name }}
-            </li>
-          </ul>
+          <h2 class="text-xl font-bold flex items-center">
+            {{ match.teamB.teamName }}
+            <font-awesome-icon
+              v-if="teamBResult === 'winner'"
+              icon="trophy"
+              class="text-green-500 ml-2"
+            />
+            <font-awesome-icon
+              v-if="teamBResult === 'loser'"
+              icon="trophy"
+              class="text-red-500 ml-2"
+            />
+          </h2>
+          <div class="player-list max-h-40 overflow-y-auto mt-2">
+            <ul>
+              <li v-for="player in teamBPlayers" :key="player.id">
+                <font-awesome-icon icon="user" class="mr-2" />
+
+                {{ player.name }}
+              </li>
+            </ul>
+          </div>
         </div>
+      </div>
+
+      <!-- Indication de Match Nul -->
+      <div v-if="isDraw" class="mt-4 text-lg font-semibold text-gray-700">
+        Match Nul
       </div>
 
       <!-- Événements du match (pour les arbitres et admins) -->
@@ -135,30 +184,34 @@
         class="flex flex-wrap justify-center mt-4 gap-4"
       >
         <!-- Boutons d'événements -->
-        <button
+        <ButtonComponent
           @click="openEventModal('goal')"
-          class="px-4 py-2 bg-green-500 text-white rounded"
+          variant="primary"
+          fontAwesomeIcon="futbol"
         >
-          But
-        </button>
-        <button
+          Score
+        </ButtonComponent>
+        <ButtonComponent
           @click="openEventModal('foul')"
-          class="px-4 py-2 bg-blue-500 text-white rounded"
+          variant="info"
+          fontAwesomeIcon="exclamation-circle"
         >
           Faute
-        </button>
-        <button
+        </ButtonComponent>
+        <ButtonComponent
           @click="openEventModal('yellow_card')"
-          class="px-4 py-2 bg-yellow-500 text-white rounded"
+          variant="warning"
+          fontAwesomeIcon="square"
         >
           Carton Jaune
-        </button>
-        <button
+        </ButtonComponent>
+        <ButtonComponent
           @click="openEventModal('red_card')"
-          class="px-4 py-2 bg-red-700 text-white rounded"
+          variant="danger"
+          fontAwesomeIcon="flag"
         >
           Carton Rouge
-        </button>
+        </ButtonComponent>
       </div>
 
       <!-- Timeline des événements -->
@@ -177,10 +230,11 @@
               >
                 <div
                   :class="{
-                    'bg-yellow-500': event.type === 'yellow_card',
-                    'bg-red-500': event.type === 'red_card',
-                    'bg-green-500': event.type === 'goal',
-                    'bg-blue-500': event.type === 'foul',
+                    'bg-yellow-500 dark:bg-yellow-600':
+                      event.type === 'yellow_card',
+                    'bg-red-500 dark:bg-yellow-700': event.type === 'red_card',
+                    'bg-green-600 dark:bg-green-700': event.type === 'goal',
+                    'bg-blue-500 dark:bg-blue-600': event.type === 'foul',
                   }"
                   class="rounded-full w-10 h-10 flex items-center justify-center text-white text-lg shadow-md"
                 >
@@ -219,6 +273,14 @@
           </ul>
         </div>
       </div>
+      <!-- Confirmation de réinitialisation -->
+      <DeleteConfirmationModal
+        :isVisible="showResetConfirmation"
+        title="Confirmer la Réinitialisation"
+        message="Êtes-vous sûr de vouloir réinitialiser les scores et les événements de ce match ? Cette action est irréversible."
+        @form-cancel="closeResetConfirmation"
+        @confirm="handleResetConfirm"
+      />
     </div>
 
     <!-- Modal pour ajouter un événement -->
@@ -246,12 +308,17 @@
   import ModalComponent from '@/components/ModalComponent.vue';
   import FormComponent from '@/components/FormComponent.vue';
   import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
+  import ButtonComponent from '@/components/ButtonComponent.vue';
+  import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
       ModalComponent,
       FormComponent,
       StatusSelectorComponent,
+      ButtonComponent,
+      DeleteConfirmationModal,
     },
     data() {
       return {
@@ -282,6 +349,7 @@
         ],
         spectatorCount: 0,
         assistantName: '',
+        showResetConfirmation: false,
       };
     },
     computed: {
@@ -331,6 +399,24 @@
           .padStart(2, '0');
         const seconds = (this.elapsedTime % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
+      },
+      teamAResult() {
+        if (this.match.status !== 'completed') return null;
+        if (this.scoreTeamA > this.scoreTeamB) return 'winner';
+        if (this.scoreTeamA < this.scoreTeamB) return 'loser';
+        return 'draw';
+      },
+      teamBResult() {
+        if (this.match.status !== 'completed') return null;
+        if (this.scoreTeamB > this.scoreTeamA) return 'winner';
+        if (this.scoreTeamB < this.scoreTeamA) return 'loser';
+        return 'draw';
+      },
+      isDraw() {
+        return (
+          this.match.status === 'completed' &&
+          this.scoreTeamA === this.scoreTeamB
+        );
       },
     },
     methods: {
@@ -516,6 +602,11 @@
         }
       },
 
+      // Go back to planning
+      goBack() {
+        this.$router.push(`/tourneys/${this.tourneyId}/planning`);
+      },
+
       /**
        * Configure les écouteurs Socket.IO pour les mises à jour en temps réel.
        */
@@ -556,8 +647,6 @@
 
             // Mettre à jour le nom de l'assistant
             this.assistantName = data.assistant ? data.assistant : 'N/A';
-            console.log('data.assistant', data.assistant);
-            console.log('Assistant:', this.assistantName);
             if (!this.timer) {
               this.timer = setInterval(() => {
                 this.calculateElapsedTime();
@@ -636,6 +725,19 @@
         socket.on('spectatorCount', (data) => {
           this.spectatorCount = data.count;
         });
+
+        // Ecouter la suppression de tous les events du match
+        socket.on('deleteAllGameEvents', (data) => {
+          if (data.gameId === this.match.id) {
+            this.gameEvents = [];
+            this.scoreTeamA = 0;
+            this.scoreTeamB = 0;
+            console.log('Event Hit');
+            toast.success(
+              'Les scores et les événements ont été réinitialisés.'
+            );
+          }
+        });
       },
 
       /**
@@ -660,6 +762,25 @@
         this.closeEventModal();
       },
 
+      /**
+       * Obtient le titre pour la modal d'événement en fonction du type d'événement.
+       * @param {string} eventType - Le type d'événement.
+       * @returns {string} - Le titre de la modal.
+       */
+      getEventTitle(eventType) {
+        switch (eventType) {
+          case 'goal':
+            return 'Ajouter un But';
+          case 'foul':
+            return 'Ajouter une Faute';
+          case 'yellow_card':
+            return 'Ajouter un Carton Jaune';
+          case 'red_card':
+            return 'Ajouter un Carton Rouge';
+          default:
+            return 'Ajouter un Événement';
+        }
+      },
       /**
        * Ouvre la modal pour ajouter un nouvel événement.
        * @param {string} eventType - Le type d'événement à ajouter.
@@ -758,7 +879,7 @@
           case 'yellow_card':
             return ['fas', 'square'];
           case 'red_card':
-            return ['fas', 'square-full'];
+            return ['fas', 'flag'];
           default:
             return ['fas', 'question-circle'];
         }
@@ -778,7 +899,7 @@
         }
         switch (event.type) {
           case 'goal':
-            return `${teamName} - But marqué`;
+            return `${teamName} - Score marqué`;
           case 'foul':
             return `${teamName} - Faute commise`;
           case 'yellow_card':
@@ -856,24 +977,93 @@
         this.match.status = newStatus;
         this.updateMatchStatus();
       },
+      /**
+       * Ouvre la modale de confirmation de réinitialisation.
+       */
+      openResetConfirmation() {
+        this.showResetConfirmation = true;
+      },
 
       /**
-       * Obtient le titre pour la modal d'événement en fonction du type d'événement.
-       * @param {string} eventType - Le type d'événement.
-       * @returns {string} - Le titre de la modal.
+       * Ferme la modale de confirmation de réinitialisation.
        */
-      getEventTitle(eventType) {
-        switch (eventType) {
-          case 'goal':
-            return 'Ajouter un But';
-          case 'foul':
-            return 'Ajouter une Faute';
-          case 'yellow_card':
-            return 'Ajouter un Carton Jaune';
-          case 'red_card':
-            return 'Ajouter un Carton Rouge';
-          default:
-            return 'Ajouter un Événement';
+      closeResetConfirmation() {
+        this.showResetConfirmation = false;
+      },
+
+      /**
+       * Gère la confirmation de la réinitialisation.
+       * Réinitialise les scores et les événements du match.
+       */
+      handleResetConfirm() {
+        this.showResetConfirmation = false;
+        this.resetMatch();
+      },
+
+      /**
+       * Réinitialise les scores et les événements du match.
+       */
+      async resetMatch() {
+        if (!this.isAuthorized) return;
+
+        const socket = getSocket();
+
+        try {
+          // Réinitialiser les scores via Socket.IO
+          socket.emit('resetMatchTimer', {
+            matchId: this.match.id,
+          });
+
+          // Supprimer tous les événements du match via API
+          await this.deleteAllEvents();
+
+          // Émettre 'deleteAllGameEvents' après suppression réussie
+          socket.emit('deleteAllGameEvents', {
+            tourneyId: parseInt(this.tourneyId),
+            gameId: this.match.id,
+          });
+        } catch (error) {
+          console.error('Erreur lors de la réinitialisation du match :', error);
+          toast.error('Erreur lors de la réinitialisation du match.');
+        }
+      },
+
+      /**
+       * Supprime tous les événements du match via l'API.
+       */
+      async deleteAllEvents() {
+        try {
+          const { tourneyId, gameId } = this.$route.params;
+
+          // Récupérer tous les événements du match
+          const eventsResponse = await apiService.get(
+            `/tourneys/${tourneyId}/games/${gameId}/events`
+          );
+          const events = eventsResponse.data;
+
+          // Supprimer chaque événement
+          const deletePromises = events.map((event) =>
+            apiService.delete(
+              `/tourneys/${tourneyId}/games/${gameId}/events/${event.id}`
+            )
+          );
+
+          await Promise.all(deletePromises);
+
+          // Informer les autres clients via Socket.IO
+          const socket = getSocket();
+          socket.emit('deleteAllGameEvents', {
+            tourneyId: parseInt(tourneyId),
+            gameId: this.match.id,
+          });
+
+          // Mettre à jour localement
+          this.gameEvents = [];
+
+          toast.success('Le match a été réinitialisé avec succès !');
+        } catch (error) {
+          console.error('Erreur lors de la réinitialisation du match :', error);
+          toast.error('Erreur lors de la réinitialisation du match.');
         }
       },
     },
