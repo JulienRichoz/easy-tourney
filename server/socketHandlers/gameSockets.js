@@ -362,6 +362,28 @@ module.exports = (io) => {
             }
         });
 
+        // Recevoir la suppression de tous les événements
+        socket.on('deleteAllGameEvents', async (data) => {
+            const { tourneyId, gameId } = data;
+
+            try {
+                // Supprimer tous les événements dans la base de données
+                await GameEvent.destroy({
+                    where: { gameId },
+                });
+
+                // Informer tous les clients dans la salle
+                io.to(`game_${gameId}`).emit('deleteAllGameEvents', {
+                    tourneyId,
+                    gameId, // Assurez-vous que 'gameId' est inclus
+                });
+                console.log(`Événement 'deleteAllGameEvents' émis pour gameId: ${gameId}`);
+
+            } catch (error) {
+                console.error('Erreur lors de la suppression de tous les événements :', error);
+                socket.emit('error', 'Erreur lors de la suppression de tous les événements.');
+            }
+        });
         socket.on('disconnect', () => {
             console.log('Un utilisateur est déconnecté :', socket.id);
         });
