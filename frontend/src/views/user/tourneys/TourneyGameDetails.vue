@@ -636,7 +636,6 @@
         // Écouter le démarrage ou la reprise du timer
         socket.on('startMatchTimer', (data) => {
           if (data.matchId === this.match.id) {
-            // Ne définissez realStartTime que s'il n'est pas déjà défini
             if (!this.match.realStartTime) {
               this.match.realStartTime = new Date(data.realStartTime);
             }
@@ -732,10 +731,6 @@
             this.gameEvents = [];
             this.scoreTeamA = 0;
             this.scoreTeamB = 0;
-            console.log('Event Hit');
-            toast.success(
-              'Les scores et les événements ont été réinitialisés.'
-            );
           }
         });
       },
@@ -1016,12 +1011,6 @@
 
           // Supprimer tous les événements du match via API
           await this.deleteAllEvents();
-
-          // Émettre 'deleteAllGameEvents' après suppression réussie
-          socket.emit('deleteAllGameEvents', {
-            tourneyId: parseInt(this.tourneyId),
-            gameId: this.match.id,
-          });
         } catch (error) {
           console.error('Erreur lors de la réinitialisation du match :', error);
           toast.error('Erreur lors de la réinitialisation du match.');
@@ -1079,6 +1068,7 @@
         socket.off('stopMatchTimer');
         socket.off('deleteGameEvent');
         socket.off('matchStatusUpdated');
+        socket.off('deleteAllGameEvents');
       }
       if (this.timer) {
         clearInterval(this.timer);
