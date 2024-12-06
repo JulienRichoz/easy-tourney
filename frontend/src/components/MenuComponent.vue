@@ -29,6 +29,11 @@
           Utilisateurs
         </router-link>
       </li>
+      <li v-if="isAdmin" class="mr-6">
+        <router-link to="/tourneys" :class="getLinkClass('/users')">
+          Vue utilisateur
+        </router-link>
+      </li>
     </ul>
 
     <!-- Section du nom du tournoi (visible uniquement sur les pages de tournoi) -->
