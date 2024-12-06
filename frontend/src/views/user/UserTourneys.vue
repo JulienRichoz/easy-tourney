@@ -1,18 +1,28 @@
 <!-- src/views/user/UserTourneys.vue -->
 <template>
   <div class="p-6">
-    <div class="flex items-center justify-between mb-8">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
+    >
       <!-- Titre de la page -->
       <TitleComponent title="Mes tournois" />
+
+      <!-- Filtres -->
+      <div class="flex flex-wrap items-center gap-4 sm:gap-8 mt-4 sm:mt-0">
+        <FilterComponent
+          :filters="filters"
+          @filter-change="handleFilterChange"
+        />
+      </div>
     </div>
 
     <!-- Grille des tournois -->
     <div
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
     >
-      <!-- Affichage des tournois de l'utilisateur -->
+      <!-- Cartes des tournois existants -->
       <CardEditComponent
-        v-for="tourney in userTourneys"
+        v-for="tourney in filteredTourneys"
         :key="tourney.id"
         :title="tourney.name"
         :location="tourney.location"
@@ -30,16 +40,60 @@
   import apiService from '@/services/apiService';
   import CardEditComponent from '@/components/CardEditComponent.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
+  import FilterComponent from '@/components/FilterComponent.vue';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
       CardEditComponent,
       TitleComponent,
+      FilterComponent,
     },
     data() {
       return {
         userTourneys: [],
+        filterStatus: '',
+        filterDate: '',
+        filters: [
+          {
+            label: 'Filtrer par statut',
+            value: this.filterStatus || '',
+            placeholder: 'Tous les statuts',
+            options: [
+              { label: 'Tous les statuts', value: '' },
+              { label: 'Brouillon', value: 'draft' },
+              { label: 'Prêt', value: 'ready' },
+              { label: 'En cours', value: 'active' },
+              { label: 'Terminé', value: 'completed' },
+            ],
+          },
+          {
+            label: 'Filtrer par date',
+            value: this.filterDate || '',
+            options: [
+              { label: 'Toutes les dates', value: '' },
+              { label: 'À venir', value: 'upcoming' },
+              { label: 'Passés', value: 'past' },
+            ],
+          },
+        ],
       };
+    },
+    computed: {
+      filteredTourneys() {
+        return this.userTourneys.filter((tourney) => {
+          const statusMatches = this.filterStatus
+            ? tourney.status === this.filterStatus
+            : true;
+          const dateMatches =
+            this.filterDate === 'upcoming'
+              ? new Date(tourney.dateTourney) >= new Date()
+              : this.filterDate === 'past'
+              ? new Date(tourney.dateTourney) < new Date()
+              : true;
+          return statusMatches && dateMatches;
+        });
+      },
     },
     methods: {
       async fetchUserTourneys() {
@@ -56,10 +110,19 @@
           this.userTourneys = response.data;
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
+          toast.error('Erreur lors de la récupération des tournois!');
         }
       },
       isAdmin() {
         return this.$store.state.user?.roleId === 1;
+      },
+      handleFilterChange(filter) {
+        // Mettre à jour les filtres sélectionnés
+        if (filter.label === 'Filtrer par statut') {
+          this.filterStatus = filter.value;
+        } else if (filter.label === 'Filtrer par date') {
+          this.filterDate = filter.value;
+        }
       },
       getTitleColor(tourney) {
         if (tourney.status === 'active') {
@@ -79,22 +142,6 @@
           }
         }
       },
-      isCardClickable(tourney) {
-        if (this.isAdmin()) {
-          return true; // Toujours cliquable pour un administrateur
-        }
-        // Si les inscriptions sont fermées et le tournoi n'est ni actif ni terminé
-        if (
-          (tourney.registrationStatus === 'draft' ||
-            tourney.registrationStatus === 'notStarted') &&
-          tourney.status !== 'active' &&
-          tourney.status !== 'completed'
-        ) {
-          return false; // Ne pas permettre le clic
-        }
-        return true; // Permettre le clic
-      },
-
       viewTourneyDetails(tourney) {
         if (!this.isCardClickable(tourney)) {
           return; // Ne pas rediriger si la carte n'est pas cliquable
@@ -113,12 +160,25 @@
           tourney.registrationStatus === 'completed'
         ) {
           // Rediriger vers 'join-team'
-          ('Redirection vers join-team');
-
           this.$router.push(`/tourneys/${tourney.id}/join-team`);
         } else {
           return; // Ne pas rediriger si le statut est inconnu
         }
+      },
+      isCardClickable(tourney) {
+        if (this.isAdmin()) {
+          return true; // Toujours cliquable pour un administrateur
+        }
+        // Si les inscriptions sont fermées et le tournoi n'est ni actif ni terminé
+        if (
+          (tourney.registrationStatus === 'draft' ||
+            tourney.registrationStatus === 'notStarted') &&
+          tourney.status !== 'active' &&
+          tourney.status !== 'completed'
+        ) {
+          return false; // Ne pas permettre le clic
+        }
+        return true; // Permettre le clic
       },
     },
     mounted() {
