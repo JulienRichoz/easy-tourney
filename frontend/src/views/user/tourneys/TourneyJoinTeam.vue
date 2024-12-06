@@ -17,6 +17,12 @@
           Les inscriptions sont terminées. Vous ne pouvez pas rejoindre ou
           quitter un groupe.
         </p>
+        <!-- Section "Quitter le Tournoi" -->
+        <div v-if="isRegistrationActive" class="mb-8">
+          <ButtonComponent variant="danger" @click="confirmQuitTournament">
+            Quitter le Tournoi
+          </ButtonComponent>
+        </div>
       </div>
 
       <!-- Section de votre équipe -->
@@ -134,6 +140,18 @@
           rejoindre un groupe.
         </p>
       </div>
+
+      <!-- Confirmation de suppression pour quitter le tournoi -->
+      <DeleteConfirmationModal
+        :title="'Quitter le Tournoi'"
+        :message="'Quitter le tournoi vous supprimera de votre équipe. Avertissez vos coéquipiers afin que leur équipe reste valide.'"
+        :hardDeleteMessage="'Cette action est définitive. Vous pourrez rejoindre le tournoi à nouveau avec un token d\'invitation tant que les inscriptions sont ouvertes.'"
+        :isVisible="showQuitConfirmation"
+        :isHardDelete="true"
+        :textButton="'Quitter'"
+        @form-cancel="closeQuitConfirmation"
+        @confirm="leaveTournament"
+      />
     </div>
   </div>
 </template>
@@ -164,6 +182,9 @@
         searchQuery: '', // Variable pour la recherche
         selectedFilter: '', // Variable pour le filtre
         showDeleteConfirmation: false,
+        hardDeleteMessage:
+          'Êtes-vous sûr de vouloir quitter le tournoi ? Cette action est irréversible. Vous pourrez le rejoindre à nouveau avec un token invit tant que les inscriptions sont ouvertes.',
+        showQuitConfirmation: false,
       };
     },
     computed: {
@@ -374,6 +395,39 @@
         this.$router.push(
           `/tourneys/${this.tourneyId}/teams/${team.id}/details`
         );
+      },
+      // Méthodes pour quitter le tournoi
+      confirmQuitTournament() {
+        this.showQuitConfirmation = true;
+      },
+      closeQuitConfirmation() {
+        this.showQuitConfirmation = false;
+      },
+      async leaveTournament() {
+        try {
+          await apiService.delete(
+            `/tourneys/${this.tourneyId}/users/${this.currentUserId}`
+          );
+
+          // Rediriger l'utilisateur vers une autre page, par exemple la liste des tournois
+          this.$router.push('/tourneys');
+        } catch (error) {
+          console.error(
+            'Erreur lors de la tentative de quitter le tournoi:',
+            error
+          );
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
+            toast.error(error.response.data.message);
+          } else {
+            toast.error('Erreur lors de la tentative de quitter le tournoi.');
+          }
+        } finally {
+          this.closeQuitConfirmation();
+        }
       },
     },
     mounted() {
