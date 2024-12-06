@@ -1,12 +1,23 @@
-<!-- TourneyPlayerPlanning.vue -->
+<!-- src/views/user/tourneys/TourneyPlanning.vue -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
     <SubMenuComponent :tourneyId="tourneyId" />
+    <!-- Titre principal -->
     <h1 v-if="!isAdmin" class="text-2xl font-bold my-4 px-4">
-      {{ tourney.name }} - {{ userTeam?.teamName }} - {{ userPool?.name }}
+      {{ tourney.name }}
+      <!-- Affichage du nom d'équipe et de la pool si player -->
+      <span v-if="userRoleInTourney === 'player' && userTeam && userPool">
+        - {{ userTeam?.teamName }} - {{ userPool?.name }}
+      </span>
       <!-- Message pour les assistants -->
-      <span v-if="assistantMessage"> Arbitrage des matchs </span>
+      <span v-if="userRoleInTourney === 'assistant'">
+        - Arbitrage des matchs
+      </span>
+      <!-- Message pour les guests -->
+      <span v-if="userRoleInTourney === 'guest'">
+        (Vous êtes invité - accès en lecture seule)
+      </span>
     </h1>
 
     <!-- Filtres et options d'affichage -->
@@ -65,7 +76,7 @@
         variant="'secondary'"
         :fontAwesomeIcon="displayMode === 'games' ? 'th' : 'futbol'"
       >
-        Afficher {{ displayMode === 'games' ? 'les Pools' : 'les Matchs' }}
+        Show {{ displayMode === 'games' ? 'Pools' : 'Matchs' }}
       </ButtonComponent>
 
       <!-- Pagination -->
@@ -103,11 +114,28 @@
         >
           {{ showAllTerrains ? 'Reduce' : 'Show All Fields' }}
         </button>
+
+        <!-- Bouton pour terminer tous les matchs (uniquement admin) -->
+        <ButtonComponent
+          v-if="isAdmin"
+          variant="danger"
+          fontAwesomeIcon="ban"
+          @click="completeAllMatches"
+        >
+          Stop Games
+        </ButtonComponent>
       </div>
     </div>
 
-    <!-- Affichage des prochains matchs de l'utilisateur -->
-    <CollapsibleBox v-if="userNextGames.length" title="Mes prochains matchs :">
+    <!-- Affichage des prochains matchs de l'utilisateur (uniquement si player ou assistant) -->
+    <CollapsibleBox
+      v-if="
+        userRoleInTourney !== 'admin' &&
+        userRoleInTourney !== 'guest' &&
+        userNextGames.length
+      "
+      title="Mes prochains matchs :"
+    >
       <ul class="list-disc pl-5">
         <li v-for="game in userNextGames" :key="game.id">
           <span class="font-semibold"
@@ -168,14 +196,9 @@
         useUnifiedColors: true,
         colorMap: {},
         displayMode: 'games', // 'games' ou 'pools'
-        isSmallScreen: false, // Détecte si l'écran est petit
-        currentPage: 1, // Page actuelle pour la pagination
+        currentPage: 1, // Page actuelle de pagination des terrains
         terrainsPerPage: 10, // Nombre de terrains visibles par page
         showAllTerrains: false, // Permet d'afficher tous les terrains
-        breakpoints: {
-          large: 1150,
-          medium: 640,
-        },
         assistantMessage: '',
         userTeam: null,
         userPool: null,
@@ -186,15 +209,31 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
-      poolOptions() {
-        return [{ id: null, name: 'All Pools' }, ...this.pools];
-      },
+
+      /**
+       * Détermine le rôle global de l'utilisateur (admin global ou non).
+       * @returns {boolean} true si admin global, sinon false.
+       */
       isAdmin() {
         return this.$store.state?.user && this.$store.state.user?.roleId === 1;
       },
+
+      /**
+       * Retourne une liste contenant "All Pools" + pools du tournoi.
+       * @returns {Array} Liste des pools avec option "All Pools".
+       */
+      poolOptions() {
+        return [{ id: null, name: 'All Pools' }, ...this.pools];
+      },
+
+      /**
+       * Retourne une liste contenant "All Terrains" + terrains du tournoi.
+       * @returns {Array} Liste des terrains avec option "All Terrains".
+       */
       fieldOptions() {
         return [{ id: null, name: 'All Terrains' }, ...this.fields];
       },
+
       generateUniqueColor() {
         return (id) => {
           if (!id) return '#888888';
@@ -207,6 +246,45 @@
           return color;
         };
       },
+
+      /**
+       * Détermine le rôle de l'utilisateur dans ce tournoi.
+       * Les rôles possibles sont :
+       * - admin : si roleId === 1
+       * - assistant : si l'utilisateur a le rôle assistant sur ce tournoi (via store)
+       * - player : si l'utilisateur a une userTeam de type 'player'
+       * - guest : sinon
+       *
+       * @returns {string} 'admin', 'assistant', 'player' ou 'guest'
+       */
+      userRoleInTourney() {
+        const isAdmin = this.isAdmin;
+        const isAssistant = this.$store.getters['userTourney/isAssistant'];
+        // Si userTeam existe et de type player -> player
+        // Sinon guest
+        // Note: userTeam et userPool sont récupérés après fetchUserTeamAndPool
+        // On s'assure de vérifier qu'ils existent avant de conclure 'player'.
+        if (isAdmin) return 'admin';
+        if (isAssistant) return 'assistant';
+        if (this.userTeam && this.userTeam.type === 'player') return 'player';
+        return 'guest';
+      },
+
+      /**
+       * Calcule le nombre total de pages pour l'affichage des terrains.
+       * @returns {number} Nombre de pages.
+       */
+      totalPages() {
+        if (this.showAllTerrains) {
+          return 1; // Si tous les terrains sont affichés, une seule page
+        }
+        return Math.ceil(this.fields.length / this.terrainsPerPage);
+      },
+
+      /**
+       * Retourne la liste des terrains à afficher selon la pagination.
+       * @returns {Array} Liste paginée de terrains.
+       */
       paginatedFields() {
         if (this.showAllTerrains) {
           return this.fields; // Affiche tous les terrains si l'option est activée
@@ -215,12 +293,11 @@
         const end = start + this.terrainsPerPage;
         return this.fields.slice(start, end);
       },
-      totalPages() {
-        if (this.showAllTerrains) {
-          return 1; // Si tous les terrains sont affichés, une seule "page"
-        }
-        return Math.ceil(this.fields.length / this.terrainsPerPage);
-      },
+
+      /**
+       * Options du calendrier FullCalendar en fonction du displayMode.
+       * @returns {Object} Options pour FullCalendar.
+       */
       calendarOptions() {
         if (!this.tourney.dateTourney) {
           console.error('La date du tournoi n’est pas disponible');
@@ -229,9 +306,10 @@
 
         const events = [];
 
-        // Afficher les pauses (intro, déjeuner, conclusion) en tant qu'événements de fond
+        // Afficher les pauses (intro, déjeuner, conclusion)
         this.addBreakTimes(events);
 
+        // Selon le mode d'affichage, on ajoute soit les matchs, soit les poolSchedules
         if (this.displayMode === 'games') {
           this.addGamesToEvents(events);
         } else {
@@ -275,14 +353,6 @@
           eventContent: this.renderEventContent,
         };
       },
-      filteredFields() {
-        if (this.selectedFieldId) {
-          return this.fields.filter(
-            (field) => field.id === this.selectedFieldId
-          );
-        }
-        return this.fields;
-      },
     },
     watch: {
       currentPage() {
@@ -297,6 +367,10 @@
         'setTournamentName',
         'clearTournamentName',
       ]),
+
+      /**
+       * Récupère les données de planning (terrains, pools, games, sports...)
+       */
       async fetchPlanningDetails() {
         try {
           await this.fetchTourneyStatuses(this.tourneyId);
@@ -313,7 +387,7 @@
           this.sports = data.sports || [];
           this.scheduleConfig = data.scheduleTourney || {};
 
-          // Récupérer les détails du tournoi pour avoir la date
+          // Récupérer les détails du tournoi (pour la date)
           const tourneyResponse = await apiService.get(
             `/tourneys/${this.tourneyId}`
           );
@@ -335,8 +409,34 @@
           );
         }
       },
+
+      /**
+       * Met fin à tous les matchs (uniquement accessible par un admin)
+       */
+      async completeAllMatches() {
+        try {
+          const response = await apiService.put(
+            `/tourneys/${this.tourneyId}/games/complete-all-games`
+          );
+          if (response.status === 200) {
+            this.$toast.success(response.data.message);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour des matchs :', error);
+          this.$toast.error('Erreur lors de la mise à jour des matchs.');
+        }
+      },
+
+      /**
+       * Récupère les prochains matchs de l'utilisateur.
+       * Ne doit être appelé que si l'utilisateur est player ou assistant.
+       */
       async fetchUserNextGames() {
-        if (this.isAdmin) {
+        // Si l'utilisateur n'est pas player ou assistant, on ne fait pas cette requête
+        if (
+          this.userRoleInTourney === 'admin' ||
+          this.userRoleInTourney === 'guest'
+        ) {
           return;
         }
         try {
@@ -345,8 +445,8 @@
           );
 
           if (Array.isArray(response.data)) {
+            // L'utilisateur a des prochains matchs
             this.userNextGames = response.data.map((game) => {
-              // Extraire les numéros d'équipe
               const teamA = this.teams.find((team) => team.id === game.teamAId);
               const teamB = this.teams.find((team) => team.id === game.teamBId);
 
@@ -361,6 +461,7 @@
               };
             });
           } else if (response.data.message) {
+            // Message pour assistant
             this.assistantMessage = response.data.message;
           }
         } catch (error) {
@@ -368,19 +469,31 @@
             "Erreur lors de la récupération des prochains matchs de l'utilisateur :",
             error
           );
+          // Si 404, c'est peut-être normal si l'utilisateur n'a pas de matchs
         }
       },
+
+      /**
+       * Récupère l'équipe de l'utilisateur et la pool associée.
+       * Ne doit être appelé que si l'utilisateur est player ou assistant.
+       */
       async fetchUserTeamAndPool() {
-        if (this.isAdmin) {
+        // Si l'utilisateur n'est pas player ou assistant, on ne fait pas cette requête
+        if (
+          this.userRoleInTourney === 'admin' ||
+          this.userRoleInTourney === 'guest'
+        ) {
           return;
         }
         try {
-          const userId = this.$store.state.user.id; // Récupérer l'ID de l'utilisateur connecté
+          const userId = this.$store.state.user.id;
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/users/${userId}`
           );
-          this.userTeam = response.data.team;
-          this.userPool = response.data.team.pool;
+          // Vérifier si on a une team, sinon c'est peut-être un assistant sans team
+          this.userTeam = response.data.team || null;
+          this.userPool =
+            this.userTeam && this.userTeam.pool ? this.userTeam.pool : null;
         } catch (error) {
           console.error(
             "Erreur lors de la récupération de l'équipe de l'utilisateur :",
@@ -388,97 +501,35 @@
           );
         }
       },
+
       /**
-       * Calcul le nombre de terrains à afficher par page en fonction de la largeur de l'écran.
+       * Ajuste le nombre de terrains par page en fonction de la largeur de l'écran.
        */
       adjustTerrainsPerPage() {
         const screenWidth = window.innerWidth;
 
         if (screenWidth >= 1200) {
-          this.terrainsPerPage = 10; // 1200px et plus : 10 terrains
+          this.terrainsPerPage = 10;
         } else if (screenWidth >= 1000) {
-          this.terrainsPerPage = 8; // 1000px - 1200px : 8 terrains
+          this.terrainsPerPage = 8;
         } else if (screenWidth >= 800) {
-          this.terrainsPerPage = 7; // 800px - 1000px : 7 terrains
+          this.terrainsPerPage = 7;
         } else if (screenWidth >= 600) {
-          this.terrainsPerPage = 5; // 600px - 800px : 5 terrains
+          this.terrainsPerPage = 5;
         } else {
-          this.terrainsPerPage = 3; // Moins de 600px : 3 terrains
+          this.terrainsPerPage = 3;
         }
       },
-      renderEventContent(arg) {
-        const container = document.createElement('div');
-        container.classList.add(
-          'flex',
-          'flex-col',
-          'space-y-1',
-          'cursor-pointer',
-          'hover:invert'
-        );
 
-        const headerContainer = document.createElement('div');
-        headerContainer.classList.add(
-          'flex',
-          'justify-between',
-          'items-center'
-        );
-
-        const title = document.createElement('span');
-        title.innerText = arg.event.title;
-        title.classList.add('font-semibold', 'text-white');
-
-        headerContainer.appendChild(title);
-
-        const startTime = arg.event.start
-          ? this.formatDisplayTime(arg.event.start)
-          : '';
-        const endTime = arg.event.end
-          ? this.formatDisplayTime(arg.event.end)
-          : '';
-        const timeRange = document.createElement('div');
-        if (startTime && endTime && arg.event.title !== 'Transition') {
-          timeRange.innerText = `${startTime} - ${endTime}`;
-          timeRange.classList.add('text-sm', 'text-white');
-        }
-
-        container.appendChild(headerContainer);
-        if (startTime && endTime) {
-          container.appendChild(timeRange);
-        }
-
-        // Display sport and pool information if 'game' exists
-        const game = arg.event.extendedProps.game;
-        if (game) {
-          const sportPoolInfo = document.createElement('div');
-          const poolName = game.pool ? game.pool.name : '';
-          const sportName = game.sport ? game.sport.name : '';
-          sportPoolInfo.innerText = `${poolName} - ${sportName}`;
-          sportPoolInfo.classList.add('text-xs', 'text-white');
-
-          container.appendChild(headerContainer);
-          container.appendChild(timeRange);
-          container.appendChild(sportPoolInfo);
-        } else {
-          // For events without 'game' (e.g., background events), only show the title and time range if available
-          container.appendChild(headerContainer);
-          if (startTime && endTime && arg.event.title !== 'Transition') {
-            container.appendChild(timeRange);
-          }
-        }
-
-        return { domNodes: [container] };
-      },
-      formatDisplayTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-      },
+      /**
+       * Gère le clic sur un événement du calendrier (redirige vers la page du match).
+       * @param {Object} info Informations sur l'événement cliqué.
+       */
       handleEventClick(info) {
         const event = info.event;
         const game = event.extendedProps.game;
         if (game) {
-          // Rediriger vers la page du match (à implémenter)
+          // Rediriger vers la page du match
           this.$router.push({
             name: 'UserTourneyGameDetails',
             params: {
@@ -488,17 +539,25 @@
           });
         }
       },
+
+      /**
+       * Bascule entre l'affichage 'games' et 'pools'.
+       */
       toggleDisplayMode() {
         this.displayMode = this.displayMode === 'games' ? 'pools' : 'games';
       },
+
+      /**
+       * Ajoute les matchs en tant qu'événements dans le calendrier.
+       * @param {Array} events Tableau d'événements
+       */
       addGamesToEvents(events) {
         const now = new Date();
         this.games.forEach((game) => {
-          // Filtrer par poule sélectionnée
+          // Filtrer par poule et terrain
           if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
             return;
           }
-          // Filtrer par terrain sélectionné
           if (this.selectedFieldId && game.field?.id !== this.selectedFieldId) {
             return;
           }
@@ -513,11 +572,9 @@
           const gameEnd = new Date(game.endTime);
           const isCurrentGame = now >= gameStart && now <= gameEnd;
 
-          // Check if game.teamA and game.teamB are defined
           const teamATeamName = game.teamA?.teamName || 'Équipe A';
           const teamBTeamName = game.teamB?.teamName || 'Équipe B';
 
-          // Extraire les numéros des équipes
           const teamANumber = teamATeamName
             ? extractTeamNumber(teamATeamName, 'A')
             : 'A';
@@ -528,7 +585,9 @@
           events.push({
             id: game.id.toString(),
             resourceId: game.field.id.toString(),
-            title: `Team: ${teamANumber} vs ${teamBNumber}`,
+            title: `${
+              game.pool?.name || 'Team'
+            }: ${teamANumber} vs ${teamBNumber}`,
             start: gameStart,
             end: gameEnd,
             backgroundColor: isCurrentGame
@@ -542,6 +601,10 @@
         });
       },
 
+      /**
+       * Ajoute les poolSchedules en tant qu'événements dans le calendrier.
+       * @param {Array} events Tableau d'événements
+       */
       addPoolSchedulesToEvents(events) {
         this.pools.forEach((pool) => {
           if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
@@ -549,7 +612,6 @@
           }
           if (pool.schedules && pool.schedules.length > 0) {
             pool.schedules.forEach((schedule) => {
-              // Filtrer par terrain sélectionné
               if (
                 this.selectedFieldId &&
                 schedule.fieldId !== this.selectedFieldId
@@ -559,7 +621,7 @@
               events.push({
                 id: `pool-${pool.id}-schedule-${schedule.id}`,
                 resourceId: schedule.fieldId.toString(),
-                title: pool.name,
+                title: `${pool.name} - ${schedule.sport?.name}`,
                 start: `${schedule.date}T${schedule.startTime}`,
                 end: `${schedule.date}T${schedule.endTime}`,
                 backgroundColor: this.useUnifiedColors
@@ -572,30 +634,57 @@
           }
         });
       },
+
+      /**
+       * Ajuste l'heure de début du slot.
+       * @returns {string} Heure minimale du slot.
+       */
       adjustedSlotMinTime() {
         const startTime = this.scheduleConfig.startTime || '07:00:00';
         return this.roundDownTime(startTime);
       },
+
+      /**
+       * Ajuste l'heure de fin du slot.
+       * @returns {string} Heure maximale du slot.
+       */
       adjustedSlotMaxTime() {
         const endTime = this.scheduleConfig.endTime || '23:00:00';
         return this.roundUpTime(endTime);
       },
+
+      /**
+       * Arrondit le temps vers le bas (heures pleines).
+       * @param {string} timeStr Une chaîne HH:MM:SS
+       * @returns {string} Heure arrondie vers le bas.
+       */
       roundDownTime(timeStr) {
         let [hours, minutes, seconds] = timeStr.split(':').map(Number);
         if (minutes > 0 || seconds > 0) {
-          // Arrondir à l'heure inférieure
           hours = Math.max(0, hours);
         }
         return `${hours.toString().padStart(2, '0')}:00:00`;
       },
+
+      /**
+       * Arrondit le temps vers le haut (heures pleines).
+       * @param {string} timeStr Une chaîne HH:MM:SS
+       * @returns {string} Heure arrondie vers le haut.
+       */
       roundUpTime(timeStr) {
         let [hours, minutes, seconds] = timeStr.split(':').map(Number);
         if (minutes > 0 || seconds > 0) {
           hours += 1;
         }
-        if (hours >= 24) hours = 23; // S'assurer que l'heure ne dépasse pas 23h
+        if (hours >= 24) hours = 23;
         return `${hours.toString().padStart(2, '0')}:00:00`;
       },
+
+      /**
+       * Formate la date/heure pour l'affichage.
+       * @param {string|number} dateTime Timestamp/Date
+       * @returns {string} Chaîne formatée JJ/MM/AAAA à HHhMM
+       */
       formatDateTimeDisplay(dateTime) {
         const d = new Date(dateTime);
         const day = d.getDate().toString().padStart(2, '0');
@@ -605,6 +694,11 @@
         const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${day}/${month}/${year} à ${hours}h${minutes}`;
       },
+
+      /**
+       * Ajoute les événements de pauses (introduction, déjeuner, conclusion) au calendrier.
+       * @param {Array} events Tableau d'événements
+       */
       addBreakTimes(events) {
         const breaks = [
           {
@@ -639,6 +733,11 @@
           }
         });
       },
+
+      /**
+       * Ajoute les périodes de transition entre les pools au calendrier.
+       * @param {Array} events Tableau d'événements
+       */
       addPoolTransitions(events) {
         const transitionDuration = parseInt(
           this.scheduleConfig.transitionPoolTime
@@ -653,7 +752,6 @@
           }
           if (pool.schedules && pool.schedules.length > 0) {
             pool.schedules.forEach((schedule) => {
-              // Calculer les heures de début et de fin de la transition
               const transitionStartDateTime = new Date(
                 `${schedule.date}T${schedule.endTime}`
               );
@@ -661,7 +759,6 @@
                 transitionStartDateTime.getTime() + transitionDuration * 60000
               );
 
-              // Filtrer par terrain sélectionné
               if (
                 this.selectedFieldId &&
                 schedule.fieldId !== this.selectedFieldId
@@ -681,13 +778,99 @@
           }
         });
       },
+
+      /**
+       * Rend le contenu des événements du calendrier (affichage custom).
+       * @param {Object} arg Informations sur l'événement
+       * @returns {Object} Des nœuds DOM pour l'affichage
+       */
+      renderEventContent(arg) {
+        // Crée le conteneur principal
+        const container = document.createElement('div');
+        container.classList.add(
+          'flex',
+          'flex-col',
+          'space-y-1',
+          'cursor-pointer',
+          'hover:invert'
+        );
+
+        // Conteneur d'en-tête (titre)
+        const headerContainer = document.createElement('div');
+        headerContainer.classList.add(
+          'flex',
+          'justify-between',
+          'items-center'
+        );
+
+        const title = document.createElement('span');
+        title.innerText = arg.event.title;
+        title.classList.add('font-semibold', 'text-white');
+        headerContainer.appendChild(title);
+
+        // Ajoute l'en-tête
+        container.appendChild(headerContainer);
+
+        const startTime = arg.event.start
+          ? this.formatDisplayTime(arg.event.start)
+          : '';
+        const endTime = arg.event.end
+          ? this.formatDisplayTime(arg.event.end)
+          : '';
+
+        // Ajoute le timeRange si startTime et endTime existent et que ce n'est pas une transition
+        if (startTime && endTime && arg.event.title !== 'Transition') {
+          const timeRange = document.createElement('div');
+          timeRange.innerText = `${startTime} - ${endTime}`;
+          timeRange.classList.add('text-sm', 'text-white');
+          container.appendChild(timeRange);
+        }
+
+        // Si c'est un "game", on affiche le sport et la pool
+        const game = arg.event.extendedProps.game;
+        if (game) {
+          const sportPoolInfo = document.createElement('div');
+          const poolName = game.pool ? game.pool.name : '';
+          const sportName = game.sport ? game.sport.name : '';
+          console.log('sportName', sportName); // Affiche bien le nom du sport dans la console
+
+          sportPoolInfo.innerText = `${poolName} - ${sportName}`;
+          sportPoolInfo.classList.add('text-xs', 'text-white');
+
+          // Ajout du sport/pool info
+          container.appendChild(sportPoolInfo);
+        }
+
+        return { domNodes: [container] };
+      },
+      /**
+       * Formate l'heure d'un événement en HH:MM.
+       * @param {Date} date
+       * @returns {string} Heure formatée
+       */
+      formatDisplayTime(date) {
+        const d = new Date(date);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      },
     },
     async mounted() {
       this.adjustTerrainsPerPage();
       window.addEventListener('resize', this.adjustTerrainsPerPage);
+
+      // Récupérer les données du planning
       await this.fetchPlanningDetails();
-      await this.fetchUserNextGames();
-      await this.fetchUserTeamAndPool();
+
+      // Appeler fetchUserNextGames et fetchUserTeamAndPool
+      // seulement si l'utilisateur est player ou assistant
+      if (
+        this.userRoleInTourney === 'player' ||
+        this.userRoleInTourney === 'assistant'
+      ) {
+        await this.fetchUserNextGames();
+        await this.fetchUserTeamAndPool();
+      }
     },
   };
 </script>
