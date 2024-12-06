@@ -30,6 +30,11 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token'); // Récupération du token JWT
   const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
 
+  // 0. Sauvegarder le inviteToken s'il est présent, quel que soit le type de route
+  if (to.query.inviteToken) {
+    store.dispatch('saveInviteToken', to.query.inviteToken);
+  }
+
   // 1. Gestion des routes publiques (sans authentification requise)
   if (to.meta.requiresAuth === false) {
     if (isAuthenticated) {
@@ -39,12 +44,8 @@ router.beforeEach(async (to, from, next) => {
       if (userRole === 1) {
         return next('/admin/tourneys');
       } else {
-        return next('/user');
+        return next('/tourneys');
       }
-    }
-    if (to.query.inviteToken) {
-      // Si un token d'invitation est présent, le sauvegarde
-      store.dispatch('saveInviteToken', to.query.inviteToken);
     }
     return next(); // Autorise l'accès à la route publique
   }
@@ -57,7 +58,7 @@ router.beforeEach(async (to, from, next) => {
     if (userRole === 1) {
       return next('/admin/tourneys');
     } else {
-      return next('/user');
+      return next('/tourneys');
     }
   }
 
@@ -100,6 +101,28 @@ router.beforeEach(async (to, from, next) => {
       if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
         // Si l'utilisateur n'a pas la permission requise, redirige vers une page d'accès refusé
         return next('/access-denied');
+      }
+
+
+      // 5.5 Vérification de l'inviteToken une fois l'utilisateur authentifié
+      const inviteToken = store.state.inviteToken;
+      if (inviteToken) {
+        try {
+          await apiService.post('/tourneys/join', { token: inviteToken });
+          // Une fois le tournoi rejoint, récupérer l'ID du tournoi depuis le token
+          const decodedInvite = jwtDecode(inviteToken);
+          const tourneyId = decodedInvite.tourneyId;
+          // Nettoyer le token
+          store.dispatch('clearInviteToken');
+          // Rediriger directement vers la page d'association au tournoi
+          return next(`/tourneys/${tourneyId}/join-team`);
+        } catch (err) {
+          console.error('Erreur lors de la jonction au tournoi:', err);
+        }
+        // Nettoyer le token même en cas d'erreur
+        store.dispatch('clearInviteToken');
+        // Puis continuer la navigation normale (vers /tourneys ou autre)
+        return next();
       }
 
       // 6. Gestion des routes spécifiques aux tournois
