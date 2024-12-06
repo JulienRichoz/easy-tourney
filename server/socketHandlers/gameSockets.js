@@ -1,5 +1,5 @@
 // server/socketHandlers/gameSockets.js
-const { Game, GameEvent, UsersTourneys, User } = require('../models');
+const { Game, GameEvent, UsersTourneys, User, Tourney } = require('../models');
 const { roles } = require('../config/roles');
 
 
@@ -8,6 +8,24 @@ function isGlobalAdmin(user) {
     console.log("roles.ADMIN", roles.ADMIN);
     return user && user.roleId === roles.ADMIN;
 }
+
+// utils function isAuthorized
+async function isAuthorized(socket, tourneyId) {
+    const isAdminGlobal = isGlobalAdmin(socket.user);
+    const isAssistant = socket.user.tourneyRoles.some(
+        (tr) => tr.tourneyId === tourneyId && tr.role === 'assistant'
+    );
+
+    // Si assistant et tournoi inactif, ne pas autoriser
+    const tourney = await Tourney.findByPk(tourneyId);
+    const isTournamentActive = tourney && tourney.status === 'active';
+    if (!isTournamentActive && isAssistant) {
+        return false;
+    }
+
+    return isAdminGlobal || isAssistant;
+}
+
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
@@ -84,28 +102,23 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!await isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à démarrer ou reprendre le timer du match.');
             }
 
             try {
-                // Assigner l'assistant à l'utilisateur actuel
+                // Assigner l'assistant
                 const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
                 if (game.isPaused) {
                     if (game.pausedAt) {
                         const now = new Date();
-                        const pauseDuration = now - game.pausedAt;
+                        const pauseDuration = now - game.pausedAt; // Durée en millisecondes
+                        console.log(`pauseDuration: ${pauseDuration} ms`);
                         game.totalPausedTime += pauseDuration;
-                        game.pausedAt = null;
-                        game.isPaused = false;
                     }
+                    game.pausedAt = null;
+                    game.isPaused = false;
                 } else if (!game.realStartTime) {
                     // Démarrage initial du match
                     game.realStartTime = new Date();
@@ -113,20 +126,21 @@ module.exports = (io) => {
                     game.pausedAt = null;
                     game.isPaused = false;
                 } else {
-                    // Le timer est déjà en cours
+                    // Timer déjà en cours, ne rien faire
+                    console.warn(`startMatchTimer appelé alors que le timer est déjà en cours pour matchId=${matchId}`);
                     return;
                 }
 
                 await game.save();
 
-                // Diffuser le démarrage ou la reprise du timer avec les infos de l'assistant
+                // Diffuser l'événement 'startMatchTimer'
                 io.to(`game_${matchId}`).emit('startMatchTimer', {
                     matchId,
                     realStartTime: game.realStartTime,
                     totalPausedTime: game.totalPausedTime,
                     isPaused: game.isPaused,
                     pausedAt: game.pausedAt,
-                    assistant: assistant ? assistant.name : null, // Inclure les informations de l'assistant
+                    assistant: assistant ? assistant.name : null,
                 });
             } catch (error) {
                 console.error('Erreur lors du démarrage ou de la reprise du timer :', error);
@@ -134,25 +148,26 @@ module.exports = (io) => {
             }
         });
 
+
         // Recevoir la mise en pause du timer
         socket.on('pauseMatchTimer', async (data) => {
             const { matchId } = data;
 
             const game = await Game.findByPk(matchId, {
-                include: [{ model: UsersTourneys, as: 'assistant', include: [{ model: User, as: 'user', attributes: ['id', 'name'] }] }],
+                include: [
+                    {
+                        model: UsersTourneys,
+                        as: 'assistant',
+                        include: [{ model: User, as: 'user', attributes: ['id', 'name'] }],
+                    },
+                ],
             });
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à mettre en pause le timer du match.');
             }
 
@@ -160,9 +175,14 @@ module.exports = (io) => {
                 // Assigner l'assistant à l'utilisateur actuel
                 const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
-                // Mettre à jour les champs pour la pause
-                game.pausedAt = new Date();
-                game.isPaused = true;
+                if (!game.isPaused) {
+                    game.pausedAt = new Date();
+                    game.isPaused = true;
+                    console.log(`pauseMatchTimer: Paused matchId=${matchId} at ${game.pausedAt}`);
+                } else {
+                    console.warn(`pauseMatchTimer: Timer already paused for matchId=${matchId}`);
+                }
+
                 await game.save();
 
                 // Diffuser l'événement de pause du timer avec les infos de l'assistant
@@ -190,13 +210,7 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à réinitialiser le timer du match.');
             }
 
@@ -238,12 +252,7 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-            if (!isAuthorized) {
+            if (!isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à arrêter le timer du match.');
             }
 
@@ -275,13 +284,7 @@ module.exports = (io) => {
             const { tourneyId, gameId, scoreTeamA, scoreTeamB } = data;
 
             // Vérifier si l'utilisateur est autorisé
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à mettre à jour le score.');
             }
 
@@ -311,21 +314,30 @@ module.exports = (io) => {
         socket.on('updateMatchStatus', async (data) => {
             const { matchId, status } = data;
 
-            // Vérifier si l'utilisateur est autorisé (assistant ou admin du tournoi)
             const game = await Game.findByPk(matchId);
             if (!game) {
                 return socket.emit('error', 'Le match spécifié n\'existe pas.');
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!await isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à mettre à jour le statut du match.');
+            }
+            console.log(`Changement de statut pour matchId=${matchId}: ${game.status} -> ${status}`);
+
+
+            if (game.status === 'in_progress' && status === 'completed') {
+                // Arrêter le timer en définissant l'heure de fin réelle
+                game.realEndTime = new Date();
+                console.log(`Match ${matchId} terminé à ${game.realEndTime}`);
+
+                // Ne pas modifier isPaused ou pausedAt
+            } else if (game.status === 'completed' && status === 'in_progress') {
+                // Reprendre le timer en réinitialisant realEndTime
+                game.realEndTime = null;
+                console.log(`Match ${matchId} repris, realEndTime réinitialisé.`);
+
+                // Ne pas modifier isPaused ou pausedAt
             }
 
             try {
@@ -333,11 +345,16 @@ module.exports = (io) => {
                 game.status = status;
                 await game.save();
 
-                // Diffuser la mise à jour du statut aux autres clients
+                // Diffuser la mise à jour du statut aux clients
                 io.to(`game_${matchId}`).emit('matchStatusUpdated', {
                     matchId,
                     status,
+                    isPaused: game.isPaused,
+                    pausedAt: game.pausedAt ? game.pausedAt.toISOString() : null,
+                    totalPausedTime: game.totalPausedTime
                 });
+                console.log(`Statut mis à jour pour matchId=${matchId}: ${status}`);
+
             } catch (error) {
                 console.error('Erreur lors de la mise à jour du statut du match :', error);
                 socket.emit('error', 'Erreur lors de la mise à jour du statut du match.');
@@ -349,13 +366,7 @@ module.exports = (io) => {
             const { tourneyId, gameId, event } = data;
 
             // Vérifier si l'utilisateur est autorisé (assistant ou admin du tournoi)
-            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
-                (tr) =>
-                    tr.tourneyId === data.tourneyId &&
-                    tr.role === 'assistant'
-            );
-
-            if (!isAuthorized) {
+            if (!isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à émettre des événements de match.');
             }
 

@@ -33,7 +33,7 @@
         </p>
       </div>
       <!-- Sélecteur de statut du match -->
-      <div v-if="isAuthorized" class="absolute right-0">
+      <div v-if="canEdit" class="absolute right-0">
         <StatusSelectorComponent
           :tourneyId="tourneyId"
           statusKey="matchStatus"
@@ -47,7 +47,7 @@
       <!-- Afficher le statut pour les players -->
       <div v-else class="absolute right-0">
         <p class="text-lg font-semibold">
-          {{ getMatchStatusLabel(match.status) }}
+          {{ getMatchStatusLabel(match.status, isPaused) }}
         </p>
       </div>
     </div>
@@ -84,7 +84,7 @@
         <div class="flex flex-col items-center mx-8">
           <div class="flex items-center">
             <!-- Pour les assistants/admins : inputs modifiables -->
-            <div v-if="isAuthorized && match.status === 'in_progress'">
+            <div v-if="canEdit && match.status === 'in_progress'">
               <input
                 v-model.number="scoreTeamA"
                 type="number"
@@ -101,9 +101,9 @@
             </div>
             <!-- Pour les joueurs : affichage en lecture seule -->
             <div v-else>
-              <span class="text-4xl font-bold">{{ scoreTeamA }}</span>
+              <span class="text-4xl font-bold">{{ scoreTeamA || 0 }}</span>
               <span class="text-4xl font-bold mx-2">-</span>
-              <span class="text-4xl font-bold">{{ scoreTeamB }}</span>
+              <span class="text-4xl font-bold">{{ scoreTeamB || 0 }}</span>
             </div>
           </div>
           <!-- Centrer le timer pour tous les utilisateurs -->
@@ -111,10 +111,7 @@
             {{ formattedTime }}
           </div>
           <!-- Boutons de contrôle du timer -->
-          <div
-            class="mt-2"
-            v-if="isAuthorized && match.status === 'in_progress'"
-          >
+          <div class="mt-2" v-if="canEdit && match.status === 'in_progress'">
             <button
               v-if="!timerRunning && !isPaused"
               @click="startTimer"
@@ -180,7 +177,7 @@
 
       <!-- Événements du match (pour les arbitres et admins) -->
       <div
-        v-if="isAuthorized && match.status === 'in_progress'"
+        v-if="canEdit && match.status === 'in_progress'"
         class="flex flex-wrap justify-center mt-4 gap-4"
       >
         <!-- Boutons d'événements -->
@@ -323,6 +320,7 @@
     data() {
       return {
         tourneyId: this.$route.params.tourneyId,
+        tourney: null,
         match: null,
         scoreTeamA: 0,
         scoreTeamB: 0,
@@ -331,6 +329,7 @@
         elapsedTime: 0,
         totalPausedTime: 0,
         pausedAt: null,
+        actionInProgress: false, // Verrou pour empêcher le spam des actions
         isPaused: false,
         teamAPlayers: [],
         teamBPlayers: [],
@@ -353,6 +352,18 @@
       };
     },
     computed: {
+      canEdit() {
+        const isAdmin = this.$store.state.user?.roleId === 1;
+        const isAssistant = this.$store.getters['userTourney/isAssistant'];
+
+        // On utilise now this.tourney, chargée via fetchTourneyStatus
+        const isTournamentActive =
+          this.tourney && this.tourney.status === 'active';
+
+        if (isAdmin) return true;
+        if (isAssistant && isTournamentActive) return true;
+        return false;
+      },
       eventFormFields() {
         if (!this.match) return [];
         return [
@@ -474,7 +485,17 @@
           );
         }
       },
-
+      async fetchTourneyStatus() {
+        try {
+          const response = await apiService.get(`/tourneys/${this.tourneyId}`);
+          this.tourney = response.data; // On stocke le tournoi complet, y compris son statut
+        } catch (error) {
+          console.error(
+            'Erreur lors de la récupération du statut du tournoi :',
+            error
+          );
+        }
+      },
       /**
        * Récupère les événements du match depuis l'API.
        * @returns {Promise<void>}
@@ -505,21 +526,18 @@
 
         let currentTime = new Date();
         if (this.isPaused && this.pausedAt) {
-          currentTime = this.pausedAt;
+          currentTime = new Date(this.pausedAt);
         } else if (this.match.realEndTime) {
           currentTime = new Date(this.match.realEndTime);
         }
 
         const realStart = new Date(this.match.realStartTime);
         const totalPaused = parseInt(this.totalPausedTime, 10) || 0;
-
         const elapsedMilliseconds = currentTime - realStart - totalPaused;
 
-        if (isNaN(elapsedMilliseconds)) {
+        if (isNaN(elapsedMilliseconds) || elapsedMilliseconds < 0) {
           this.elapsedTime = 0;
-          console.error(
-            'Calcul du temps écoulé a échoué : elapsedMilliseconds est NaN'
-          );
+          console.error('Calcul du temps écoulé a échoué ou est négatif.');
         } else {
           this.elapsedTime = Math.floor(elapsedMilliseconds / 1000);
         }
@@ -529,8 +547,8 @@
        * Démarre ou reprend le timer du match.
        */
       startTimer() {
-        if (!this.isAuthorized) return;
-
+        if (!this.isAuthorized || this.actionInProgress) return;
+        this.actionInProgress = true;
         const socket = getSocket();
 
         if (!this.match.realStartTime) {
@@ -550,8 +568,9 @@
        * Met en pause le timer du match.
        */
       pauseTimer() {
-        if (!this.isAuthorized) return;
+        if (!this.isAuthorized || this.actionInProgress) return;
         if (!this.timerRunning) return;
+        this.actionInProgress = true;
 
         const socket = getSocket();
         socket.emit('pauseMatchTimer', {
@@ -642,15 +661,18 @@
             this.totalPausedTime = parseInt(data.totalPausedTime, 10) || 0;
             this.pausedAt = data.pausedAt ? new Date(data.pausedAt) : null;
             this.isPaused = data.isPaused;
-            this.timerRunning = true;
+            this.timerRunning = !data.isPaused && !this.match.realEndTime;
 
             // Mettre à jour le nom de l'assistant
             this.assistantName = data.assistant ? data.assistant : 'N/A';
-            if (!this.timer) {
+            if (this.timerRunning && !this.timer) {
               this.timer = setInterval(() => {
                 this.calculateElapsedTime();
               }, 1000);
             }
+
+            // Désactiver le verrouillage
+            this.actionInProgress = false;
           }
         });
 
@@ -666,6 +688,9 @@
 
             // Mettre à jour le nom de l'assistant
             this.assistantName = data.assistant ? data.assistant : 'N/A';
+
+            // Désactiver le verrouillage
+            this.actionInProgress = false;
           }
         });
 
@@ -675,7 +700,7 @@
             clearInterval(this.timer);
             this.timer = null;
             this.match.realEndTime = new Date(data.realEndTime);
-            this.isPaused = data.isPaused;
+            this.isPaused = false;
             this.timerRunning = false;
             this.calculateElapsedTime();
 
@@ -706,10 +731,23 @@
         // Écouter les mises à jour du statut du match
         socket.on('matchStatusUpdated', (data) => {
           if (data.matchId === this.match.id) {
+            console.log(
+              `Statut mis à jour: ${this.match.status} -> ${data.status}`
+            );
             this.match.status = data.status;
-            if (data.status === 'completed' || data.status === 'scheduled') {
+            this.isPaused = data.isPaused;
+            this.pausedAt = data.pausedAt ? new Date(data.pausedAt) : null;
+            this.totalPausedTime = data.totalPausedTime || 0;
+            console.log(
+              `isPaused: ${this.isPaused}, pausedAt: ${this.pausedAt}, totalPausedTime: ${this.totalPausedTime}`
+            );
+
+            // Si le statut est 'completed', arrêter le timer
+            if (data.status === 'completed') {
+              console.log(`Arrêt du timer pour matchId=${data.matchId}`);
               this.stopTimer();
             }
+            // Si le statut est 'in_progress', ne pas modifier le timer ici
           }
         });
 
@@ -1075,6 +1113,7 @@
       }
     },
     async mounted() {
+      await this.fetchTourneyStatus();
       await this.fetchMatchDetails();
     },
   };

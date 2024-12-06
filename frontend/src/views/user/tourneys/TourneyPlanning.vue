@@ -832,7 +832,6 @@
           const sportPoolInfo = document.createElement('div');
           const poolName = game.pool ? game.pool.name : '';
           const sportName = game.sport ? game.sport.name : '';
-          console.log('sportName', sportName); // Affiche bien le nom du sport dans la console
 
           sportPoolInfo.innerText = `${poolName} - ${sportName}`;
           sportPoolInfo.classList.add('text-xs', 'text-white');
