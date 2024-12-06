@@ -38,10 +38,10 @@
           :tourneyId="tourneyId"
           statusKey="matchStatus"
           :statusOptions="gameStatusOptions"
-          v-model="match.status"
+          :modelValue="match.status"
           label="Statut du match :"
           :hideWhenNotStarted="false"
-          :onStatusChange="onMatchStatusChange"
+          @statusChange="onMatchStatusChange"
         />
       </div>
       <!-- Afficher le statut pour les players -->
@@ -162,7 +162,6 @@
             <ul>
               <li v-for="player in teamBPlayers" :key="player.id">
                 <font-awesome-icon icon="user" class="mr-2" />
-
                 {{ player.name }}
               </li>
             </ul>
@@ -603,21 +602,39 @@
       },
 
       /**
-       * Met à jour le statut du match et arrête le timer si nécessaire.
+       * Met à jour le statut du match après validation.
+       * @param {string} newStatus - Le nouveau statut souhaité.
        */
-      updateMatchStatus() {
-        const socket = getSocket();
-        socket.emit('updateMatchStatus', {
-          matchId: this.match.id,
-          status: this.match.status,
-        });
+      async updateMatchStatus(newStatus) {
+        // Vérifier si le changement de statut est autorisé
+        if (newStatus === 'completed' && this.timerRunning) {
+          toast.error(
+            'Le match est en cours, veuillez le terminer avant de changer le statut.'
+          );
+          return;
+        }
 
-        // Si le statut est 'completed' ou 'scheduled', arrêter le timer
-        if (
-          this.match.status === 'completed' ||
-          this.match.status === 'scheduled'
-        ) {
-          this.stopTimer();
+        const socket = getSocket();
+
+        try {
+          // Émettre l'événement de mise à jour du statut au backend
+          socket.emit('updateMatchStatus', {
+            matchId: this.match.id,
+            status: newStatus,
+          });
+
+          // Si le statut est 'completed' ou 'scheduled', arrêter le timer localement
+          if (newStatus === 'completed' || newStatus === 'scheduled') {
+            this.stopTimer();
+          }
+
+          // Le statut sera mis à jour via l'événement 'matchStatusUpdated' du backend
+        } catch (error) {
+          console.error(
+            'Erreur lors de la mise à jour du statut du match :',
+            error
+          );
+          toast.error('Erreur lors de la mise à jour du statut du match.');
         }
       },
 
@@ -731,23 +748,24 @@
         // Écouter les mises à jour du statut du match
         socket.on('matchStatusUpdated', (data) => {
           if (data.matchId === this.match.id) {
-            console.log(
-              `Statut mis à jour: ${this.match.status} -> ${data.status}`
-            );
             this.match.status = data.status;
             this.isPaused = data.isPaused;
             this.pausedAt = data.pausedAt ? new Date(data.pausedAt) : null;
             this.totalPausedTime = data.totalPausedTime || 0;
-            console.log(
-              `isPaused: ${this.isPaused}, pausedAt: ${this.pausedAt}, totalPausedTime: ${this.totalPausedTime}`
-            );
 
             // Si le statut est 'completed', arrêter le timer
             if (data.status === 'completed') {
-              console.log(`Arrêt du timer pour matchId=${data.matchId}`);
               this.stopTimer();
             }
-            // Si le statut est 'in_progress', ne pas modifier le timer ici
+            // Si le statut est 'in_progress', ajuster le timer en fonction de isPaused
+            else if (data.status === 'in_progress') {
+              this.timerRunning = !this.isPaused && !this.match.realEndTime;
+              if (this.timerRunning && !this.timer) {
+                this.timer = setInterval(() => {
+                  this.calculateElapsedTime();
+                }, 1000);
+              }
+            }
           }
         });
 
@@ -1007,8 +1025,7 @@
        * @param {string} newStatus - Le nouveau statut.
        */
       onMatchStatusChange(newStatus) {
-        this.match.status = newStatus;
-        this.updateMatchStatus();
+        this.updateMatchStatus(newStatus);
       },
       /**
        * Ouvre la modale de confirmation de réinitialisation.

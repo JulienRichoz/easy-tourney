@@ -114,7 +114,6 @@ module.exports = (io) => {
                     if (game.pausedAt) {
                         const now = new Date();
                         const pauseDuration = now - game.pausedAt; // Durée en millisecondes
-                        console.log(`pauseDuration: ${pauseDuration} ms`);
                         game.totalPausedTime += pauseDuration;
                     }
                     game.pausedAt = null;
@@ -178,7 +177,6 @@ module.exports = (io) => {
                 if (!game.isPaused) {
                     game.pausedAt = new Date();
                     game.isPaused = true;
-                    console.log(`pauseMatchTimer: Paused matchId=${matchId} at ${game.pausedAt}`);
                 } else {
                     console.warn(`pauseMatchTimer: Timer already paused for matchId=${matchId}`);
                 }
@@ -323,8 +321,6 @@ module.exports = (io) => {
             if (!await isAuthorized(socket, tourneyId)) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à mettre à jour le statut du match.');
             }
-            console.log(`Changement de statut pour matchId=${matchId}: ${game.status} -> ${status}`);
-
 
             if (game.status === 'in_progress' && status === 'completed') {
                 // Arrêter le timer en définissant l'heure de fin réelle
@@ -335,8 +331,6 @@ module.exports = (io) => {
             } else if (game.status === 'completed' && status === 'in_progress') {
                 // Reprendre le timer en réinitialisant realEndTime
                 game.realEndTime = null;
-                console.log(`Match ${matchId} repris, realEndTime réinitialisé.`);
-
                 // Ne pas modifier isPaused ou pausedAt
             }
 
@@ -353,7 +347,6 @@ module.exports = (io) => {
                     pausedAt: game.pausedAt ? game.pausedAt.toISOString() : null,
                     totalPausedTime: game.totalPausedTime
                 });
-                console.log(`Statut mis à jour pour matchId=${matchId}: ${status}`);
 
             } catch (error) {
                 console.error('Erreur lors de la mise à jour du statut du match :', error);
@@ -403,8 +396,6 @@ module.exports = (io) => {
                     tourneyId,
                     gameId, // Assurez-vous que 'gameId' est inclus
                 });
-                console.log(`Événement 'deleteAllGameEvents' émis pour gameId: ${gameId}`);
-
             } catch (error) {
                 console.error('Erreur lors de la suppression de tous les événements :', error);
                 socket.emit('error', 'Erreur lors de la suppression de tous les événements.');
