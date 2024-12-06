@@ -59,7 +59,6 @@
           if (inviteToken) {
             try {
               await apiService.post(`/tourneys/join`, { token: inviteToken });
-              toast.success('Vous avez rejoint le tournoi avec succès.');
             } catch (err) {
               console.error('Erreur lors de la jonction au tournoi:', err);
               if (err.response && err.response.status === 400) {
