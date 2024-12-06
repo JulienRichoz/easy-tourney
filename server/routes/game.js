@@ -14,6 +14,7 @@ const {
   getGamesByPool,
   getNextGamesForUser,
   getGameDetails,
+  completeAllGames
 } = require('../controllers/gameController');
 const {
   isAuthenticated,
@@ -31,6 +32,7 @@ router.get('/next', isAuthenticated, authorizeTournamentAccess, getNextGamesForU
 
 router.post('/', isAuthenticated, isAdmin, createGame); // Créer un nouveau match
 router.get('/', isAuthenticated, authorizeTournamentAccess, getGamesByTourney); // Récupérer tous les matchs du tournoi
+router.put('/complete-all-games', isAuthenticated, isAdmin, completeAllGames); // Terminer tous les matchs
 router.get('/:gameId', isAuthenticated, authorizeTournamentAccess, getGameById); // Récupérer un match par ID
 router.put('/:gameId', isAuthenticated, authorizeTournamentAccess, authorizeTourneyRoles([tourneyRoles.ASSISTANT]), updateGame); // Mettre à jour un match
 router.delete('/:gameId', isAuthenticated, isAdmin, deleteGame); // Supprimer un match

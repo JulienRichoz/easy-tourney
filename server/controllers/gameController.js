@@ -1019,3 +1019,33 @@ exports.getGameDetails = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
+
+exports.completeAllGames = async (req, res) => {
+  const { tourneyId } = req.params;
+
+  try {
+    // Récupérer tous les matchs pas encore complétés
+    const games = await Game.findAll({
+      where: {
+        tourneyId,
+        status: { [Op.in]: ['scheduled', 'in_progress'] }
+      }
+    });
+
+    const now = new Date();
+    for (let game of games) {
+      game.status = 'completed';
+      // On arrête le timer proprement
+      game.realEndTime = now;
+      game.isPaused = false;
+      game.pausedAt = null;
+
+      await game.save();
+    }
+
+    return res.status(200).json({ message: "Tous les matchs ont été mis à 'completed'." });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour en masse des matchs :", error);
+    return res.status(500).json({ message: "Erreur serveur." });
+  }
+};
