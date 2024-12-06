@@ -1,6 +1,13 @@
 // server/socketHandlers/gameSockets.js
 const { Game, GameEvent, UsersTourneys, User } = require('../models');
-const tourneyRoles = require('../config/tourneyRoles');
+const { roles } = require('../config/roles');
+
+
+// fonction utilitaire pour vérifier si l'utilisateur est admin global
+function isGlobalAdmin(user) {
+    console.log("roles.ADMIN", roles.ADMIN);
+    return user && user.roleId === roles.ADMIN;
+}
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
@@ -9,7 +16,7 @@ module.exports = (io) => {
         // Rejoindre une salle spécifique pour un match
         socket.on('joinGame', async (gameId) => {
             socket.join(`game_${gameId}`);
-            console.log(`Socket ${socket.id} a rejoint la salle game_${gameId}`);
+            console.warn(`Socket ${socket.id} a rejoint la salle game_${gameId}`);
 
             // Obtenir le nombre de spectateurs dans la salle
             const room = io.sockets.adapter.rooms.get(`game_${gameId}`);
@@ -24,7 +31,7 @@ module.exports = (io) => {
         // Quitter la salle du match
         socket.on('leaveGame', (gameId) => {
             socket.leave(`game_${gameId}`);
-            console.log(`Socket ${socket.id} a quitté la salle game_${gameId}`);
+            console.warn(`Socket ${socket.id} a quitté la salle game_${gameId}`);
 
             // Obtenir le nombre de spectateurs restant dans la salle
             const room = io.sockets.adapter.rooms.get(`game_${gameId}`);
@@ -37,8 +44,15 @@ module.exports = (io) => {
         });
 
         // Fonction pour assigner l'assistant
-        const assignAssistant = async (game, userId) => {
-            // Trouver l'enregistrement UsersTourneys correspondant
+        const assignAssistant = async (game, userId, user) => {
+            // Si l'utilisateur est admin global, ne pas exiger UsersTourneys
+            if (isGlobalAdmin(user)) {
+                // Pas d'affectation d'assistant car admin global n'est pas lié à un seul tournoi
+                // Retourner éventuellement un objet assistant fictif
+                return { id: user.id, name: user.name };
+            }
+
+            // Sinon logique actuelle
             const usersTourney = await UsersTourneys.findOne({
                 where: { userId: userId, tourneyId: game.tourneyId },
             });
@@ -47,17 +61,16 @@ module.exports = (io) => {
                 throw new Error('Utilisateur non associé au tournoi.');
             }
 
-            // Assigner assistantId avec UsersTourneys.id
             game.assistantId = usersTourney.id;
             await game.save();
 
-            // Récupérer les détails de l'utilisateur
             const assistant = await User.findByPk(userId, {
                 attributes: ['id', 'name'],
             });
 
             return assistant;
         };
+
 
         // Recevoir le démarrage ou la reprise du timer
         socket.on('startMatchTimer', async (data) => {
@@ -71,10 +84,10 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
@@ -83,7 +96,7 @@ module.exports = (io) => {
 
             try {
                 // Assigner l'assistant à l'utilisateur actuel
-                const assistant = await assignAssistant(game, socket.user.id);
+                const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
                 if (game.isPaused) {
                     if (game.pausedAt) {
@@ -133,10 +146,10 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
@@ -145,7 +158,7 @@ module.exports = (io) => {
 
             try {
                 // Assigner l'assistant à l'utilisateur actuel
-                const assistant = await assignAssistant(game, socket.user.id);
+                const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
                 // Mettre à jour les champs pour la pause
                 game.pausedAt = new Date();
@@ -177,10 +190,10 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
@@ -189,7 +202,7 @@ module.exports = (io) => {
 
             try {
                 // Assigner l'assistant à l'utilisateur actuel
-                const assistant = await assignAssistant(game, socket.user.id);
+                const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
                 // Réinitialiser les champs du timer
                 game.realStartTime = null;
@@ -225,19 +238,18 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
+                    tr.role === 'assistant'
             );
-
             if (!isAuthorized) {
                 return socket.emit('error', 'Vous n\'êtes pas autorisé à arrêter le timer du match.');
             }
 
             try {
                 // Assigner l'assistant à l'utilisateur actuel
-                const assistant = await assignAssistant(game, socket.user.id);
+                const assistant = await assignAssistant(game, socket.user.id, socket.user);
 
                 // Mettre à jour l'heure de fin réelle du match et les champs du timer
                 game.realEndTime = new Date();
@@ -263,10 +275,10 @@ module.exports = (io) => {
             const { tourneyId, gameId, scoreTeamA, scoreTeamB } = data;
 
             // Vérifier si l'utilisateur est autorisé
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === tourneyRoles.ADMIN || tr.role === tourneyRoles.ASSISTANT)
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
@@ -306,10 +318,10 @@ module.exports = (io) => {
             }
 
             const tourneyId = game.tourneyId;
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === tourneyId &&
-                    (tr.role === 'admin' || tr.role === 'assistant')
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
@@ -337,10 +349,10 @@ module.exports = (io) => {
             const { tourneyId, gameId, event } = data;
 
             // Vérifier si l'utilisateur est autorisé (assistant ou admin du tournoi)
-            const isAuthorized = socket.user.tourneyRoles.some(
+            const isAuthorized = isGlobalAdmin(socket.user) || socket.user.tourneyRoles.some(
                 (tr) =>
                     tr.tourneyId === data.tourneyId &&
-                    (tr.role === 'assistant' || tr.role === 'admin')
+                    tr.role === 'assistant'
             );
 
             if (!isAuthorized) {
