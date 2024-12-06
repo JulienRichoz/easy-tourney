@@ -45,7 +45,14 @@
       async fetchUserTourneys() {
         const userId = this.$store.state.user.id;
         try {
-          const response = await apiService.get(`/users/${userId}/tourneys`);
+          let response;
+          if (this.isAdmin()) {
+            // S'il est admin global, récupérer tous les tournois
+            response = await apiService.get('/tourneys');
+          } else {
+            // Sinon, récupérer uniquement les tournois de l'utilisateur
+            response = await apiService.get(`/users/${userId}/tourneys`);
+          }
           this.userTourneys = response.data;
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
