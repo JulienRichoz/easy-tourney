@@ -171,6 +171,7 @@
   import ButtonComponent from '@/components/ButtonComponent.vue';
   import CollapsibleBox from '@/components/user/CollapsibleBox.vue';
   import { extractTeamNumber } from '@/utils/format.js';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
@@ -418,12 +419,13 @@
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/complete-all-games`
           );
+          console.log('Réponse de la fin des matchs :', response.status);
           if (response.status === 200) {
-            this.$toast.success(response.data.message);
+            toast.success(response.data.message);
           }
         } catch (error) {
           console.error('Erreur lors de la mise à jour des matchs :', error);
-          this.$toast.error('Erreur lors de la mise à jour des matchs.');
+          toast.error('Erreur lors de la mise à jour des matchs.');
         }
       },
 
