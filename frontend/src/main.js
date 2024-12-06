@@ -30,7 +30,7 @@ app.use(vue3TouchEvents);
 app.use(store);
 app.use(router);
 app.use(Vue3Toastify, {
-  autoClose: 1000,
+  autoClose: 2000,
 });
 
 app.mount('#app');
