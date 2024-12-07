@@ -42,7 +42,7 @@
       :class="{ active: $route.name === 'AdminTourneyTeams' }"
     >
       <font-awesome-icon :icon="['fas', 'user']" />
-      <span class="hidden sm:inline"> Players</span>
+      <span class="hidden sm:inline"> Inscriptions</span>
     </router-link>
 
     <!-- POOLS -->
