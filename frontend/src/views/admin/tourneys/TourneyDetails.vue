@@ -35,11 +35,25 @@
     <div class="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-start">
       <!-- Détails du tournoi et Statistiques -->
       <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8">
-        <h2
-          class="text-3xl font-bold mb-4 text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
-        >
-          {{ tourney.name }}
-        </h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2
+            class="text-3xl font-bold text-light-subMenu-activeText dark:text-dark-subMenu-activeText"
+          >
+            {{ tourney.name }}
+          </h2>
+          <StatusSelectorComponent
+            :tourneyId="tourneyId"
+            statusKey="status"
+            :statusOptions="[
+              { value: 'draft', label: 'Brouillon' },
+              { value: 'ready', label: 'Prêt' },
+              { value: 'active', label: 'En cours' },
+              { value: 'completed', label: 'Terminé' },
+            ]"
+            :modelValue="tourney.status"
+            @update:modelValue="(val) => (tourney.status = val)"
+          />
+        </div>
         <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
           <strong>Lieu :</strong> {{ tourney.location }}
         </p>
@@ -72,12 +86,6 @@
                 class="text-base text-light-form-text dark:text-dark-form-text"
               >
                 <strong>Équipes :</strong> {{ counts.teams }}
-              </p>
-              <p
-                class="text-base text-light-form-text dark:text-dark-form-text"
-              >
-                <strong>Créneaux Horaires par Pool :</strong>
-                {{ counts.timeSlotsPerPool }}
               </p>
               <p
                 class="text-base text-light-form-text dark:text-dark-form-text"
@@ -295,6 +303,7 @@
 
   // Importation des composants
   import ButtonComponent from '@/components/ButtonComponent.vue';
+  import StatusSelectorComponent from '@/components/StatusSelectorComponent.vue';
   import CompletedIcon from '@/components/icons/CompletedIcon.vue';
   import PendingIcon from '@/components/icons/PendingIcon.vue';
   import ActiveIcon from '@/components/icons/ActiveIcon.vue';
@@ -312,6 +321,7 @@
       ActiveIcon,
       DraftIcon,
       ButtonComponent,
+      StatusSelectorComponent,
     },
     data() {
       return {
@@ -333,7 +343,6 @@
           fields: 0,
           sports: 0,
           teams: 0,
-          timeSlotsPerPool: 0,
           pools: 0,
         },
       };
