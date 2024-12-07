@@ -26,12 +26,12 @@
       </li>
       <li v-if="isAdmin" class="mr-6">
         <router-link to="/admin/users" :class="getLinkClass('/admin/users')">
-          Utilisateurs
+          Users
         </router-link>
       </li>
       <li v-if="isAdmin" class="mr-6">
-        <router-link to="/tourneys" :class="getLinkClass('/users')">
-          Vue utilisateur
+        <router-link to="/tourneys" :class="getLinkClass('/tourneys')">
+          Public
         </router-link>
       </li>
     </ul>
@@ -42,7 +42,7 @@
       class="tournament-name text-lg font-bold absolute left-1/2 transform -translate-x-1/2 text-light-profileText dark:text-dark-profileText hidden sm:block"
     >
       {{ this.tournamentName }}
-      <span v-if="tournamentDate" class="hidden md:inline">
+      <span v-if="tournamentDate" class="hidden lg:inline">
         - {{ formatDate(tournamentDate) }}
       </span>
     </div>

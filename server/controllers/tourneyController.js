@@ -15,6 +15,7 @@ const {
   InviteToken,
   Pool,
   PoolSchedule,
+  Game,
 } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 const jwt = require('jsonwebtoken');
@@ -228,17 +229,76 @@ exports.updateTourney = async (req, res) => {
       return res.status(404).json({ message: 'Tournoi non trouvé.' });
     }
 
-    // Mettre à jour les autres champs
+    // Récupérer l'ancienne date du tournoi avant la mise à jour
+    const oldDate = new Date(tourney.dateTourney); // ancienne date
     await tourney.update(otherUpdates);
+    const newDate = new Date(tourney.dateTourney); // nouvelle date après update
+
+    // Calculer le décalage en millisecondes entre l'ancienne et la nouvelle date
+    const timeDiff = newDate.getTime() - oldDate.getTime();
+
+    // Si il y a un changement de date, on met à jour les entités liées
+    if (timeDiff !== 0) {
+      // Mettre à jour les PoolSchedules
+      // Pour trouver tous les PoolSchedules liés à ce tournoi, on passe par les pools
+      // car PoolSchedule a un poolId, et Pool est lié au Tourney
+      const pools = await Pool.findAll({ where: { tourneyId: tourney.id } });
+      const poolIds = pools.map(p => p.id);
+
+      const poolSchedules = await PoolSchedule.findAll({
+        where: { poolId: { [Op.in]: poolIds } }
+      });
+
+      for (const ps of poolSchedules) {
+        // ps.date est en DATEONLY (YYYY-MM-DD)
+        const psDate = new Date(ps.date);
+        const newPsDate = new Date(psDate.getTime() + timeDiff);
+
+        const yyyy = newPsDate.getFullYear();
+        const mm = String(newPsDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(newPsDate.getDate()).padStart(2, '0');
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+        await ps.update({ date: formattedDate });
+      }
+
+      // Mettre à jour les Games
+      // Les Game sont liés au tournoi via tourneyId
+      const games = await Game.findAll({ where: { tourneyId: tourney.id } });
+      for (const game of games) {
+        const updates = {};
+
+        // startTime et endTime sont des DATE complètes
+        if (game.startTime) {
+          updates.startTime = new Date(game.startTime.getTime() + timeDiff);
+        }
+        if (game.endTime) {
+          updates.endTime = new Date(game.endTime.getTime() + timeDiff);
+        }
+
+        // realStartTime et realEndTime sont optionnels
+        if (game.realStartTime) {
+          updates.realStartTime = new Date(game.realStartTime.getTime() + timeDiff);
+        }
+        if (game.realEndTime) {
+          updates.realEndTime = new Date(game.realEndTime.getTime() + timeDiff);
+        }
+
+        // pausedAt est optionnel
+        if (game.pausedAt) {
+          updates.pausedAt = new Date(game.pausedAt.getTime() + timeDiff);
+        }
+
+        await game.update(updates);
+      }
+    }
 
     let statusForced = false;
     let statusMessage = '';
 
-    // Si le statut est fourni dans la requête, gérer la transition manuellement
+    // Gérer le statut si besoin
     if (status) {
-      // Vérifier si la transition est draft -> ready
       if (tourney.status === 'draft' && status === 'ready') {
-        // Vérifier si tous les autres statuts sont en 'completed'
         const canMoveToReady =
           tourney.fieldAssignmentStatus === 'completed' &&
           tourney.sportAssignmentStatus === 'completed' &&
@@ -251,7 +311,6 @@ exports.updateTourney = async (req, res) => {
           statusMessage =
             'Le statut du tournoi a été mis à jour automatiquement en "ready".';
         } else {
-          // Permettre à l'admin de forcer le statut
           tourney.status = 'ready';
           statusForced = true;
           statusMessage =
@@ -259,7 +318,6 @@ exports.updateTourney = async (req, res) => {
         }
         await tourney.save();
       } else {
-        // Pour les autres transitions, utiliser la fonction utilitaire
         tourney.status = status;
         await tourney.save();
         statusMessage = `Le statut du tournoi a été mis à jour en "${status}".`;
