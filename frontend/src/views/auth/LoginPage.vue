@@ -77,13 +77,7 @@
           // Redirection après connexion
           const userRole = user.roleId;
           if (userRole === roles.ADMIN) {
-            this.$router.replace('/admin/tourneys').then(() => {
-              if (this.toastSuccess) {
-                toast.success(this.toastSuccess);
-              } else if (this.toastError) {
-                toast.error(this.toastError);
-              }
-            });
+            this.$router.replace('/admin/tourneys');
           } else {
             // Utiliser l'inviteToken pour la redirection
             const tourneyId = inviteToken
@@ -92,13 +86,7 @@
             if (tourneyId) {
               this.$router.replace(`/tourneys/${tourneyId}/join-team`);
             } else {
-              this.$router.replace('/tourneys').then(() => {
-                if (this.toastSuccess) {
-                  toast.success(this.toastSuccess);
-                } else if (this.toastError) {
-                  toast.error(this.toastError);
-                }
-              });
+              this.$router.replace('/tourneys');
             }
           }
         } catch (err) {
