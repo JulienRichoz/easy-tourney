@@ -325,7 +325,6 @@ module.exports = (io) => {
             if (game.status === 'in_progress' && status === 'completed') {
                 // Arrêter le timer en définissant l'heure de fin réelle
                 game.realEndTime = new Date();
-                console.log(`Match ${matchId} terminé à ${game.realEndTime}`);
 
                 // Ne pas modifier isPaused ou pausedAt
             } else if (game.status === 'completed' && status === 'in_progress') {
@@ -338,6 +337,25 @@ module.exports = (io) => {
                 // Mettre à jour le statut du match
                 game.status = status;
                 await game.save();
+
+                if (game.status === 'in_progress' && !game.realStartTime) {
+                    // On initialise le timer si le statut passe de scheduled à in_progress pour la première fois
+                    game.realStartTime = new Date();
+                    game.totalPausedTime = 0;
+                    game.pausedAt = null;
+                    game.isPaused = false;
+                    await game.save();
+
+                    // On émet l'événement startMatchTimer pour que le frontend soit synchronisé
+                    io.to(`game_${matchId}`).emit('startMatchTimer', {
+                        matchId,
+                        realStartTime: game.realStartTime,
+                        totalPausedTime: game.totalPausedTime,
+                        isPaused: game.isPaused,
+                        pausedAt: game.pausedAt,
+                        assistant: game.assistant ? game.assistant.user.name : null,
+                    });
+                }
 
                 // Diffuser la mise à jour du statut aux clients
                 io.to(`game_${matchId}`).emit('matchStatusUpdated', {
