@@ -24,7 +24,7 @@
               {{ step.label }}
             </h6>
             <p :class="['text-base', stepTextClass(step.status)]">
-              {{ stepStatusText(step.status) }}
+              {{ stepStatusText(step.status, step.label) }}
             </p>
           </div>
         </div>
@@ -162,7 +162,11 @@
       >
         Guide de configuration du tournoi
       </h3>
-
+      <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
+        Une bonne pratique pour une configuration fluide : Si N terrains, créez
+        N*4 Teams et N Pools afin d'avoir un bon tournus. Variez la taille des
+        équipes pour accueillir plus de monde.
+      </p>
       <!-- Texte explicatif de base -->
       <div v-if="!showExample">
         <p class="text-base text-light-form-text dark:text-dark-form-text mb-4">
@@ -341,6 +345,12 @@
     methods: {
       // Mapper les actions du module `tourney`
       ...mapActions('tourney', ['fetchTourneyStatuses', 'setTournamentName']),
+
+      /**
+       * Récupère les détails du tournoi depuis l'API.
+       * Le backend calcule les statistiques et les détails du tournoi.
+       * @returns {Promise<void>}
+       */
       async fetchTourneyDetails() {
         try {
           // Récupérer les statuts
@@ -438,12 +448,15 @@
        * @param {String} status - Le statut de l'étape.
        * @returns {String} - Le texte à afficher.
        */
-      stepStatusText(status) {
+      stepStatusText(status, label) {
         if (status === 'completed') {
           return 'Complété';
         } else if (status === 'active') {
           return 'En cours';
         } else if (status === 'draft') {
+          if (label === 'Inscriptions') {
+            return 'Fermées';
+          }
           return 'Brouillon';
         } else {
           return 'En attente';
