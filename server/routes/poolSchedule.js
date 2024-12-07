@@ -23,6 +23,7 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // R�
 module.exports = router;
 
 /**
+ * TODO: Timer qui ne fonctionne tjr pas quand on passe de prévu à en cours. Il faut reset le timer. Le timer passe direct en mode Pause ? sans quil avance.
  * TODO : Implémenter page websocket SCORE et page statistique (non websocket.. si page vraiment utile?)
  * TODO : IMplémenter page détail du tournoi (très facile et rapide)
  * TODO : Lors des inscriptions, donner la chance à l'utilisateur de pouvoir quitter le tournoi.
