@@ -15,6 +15,8 @@ const {
   getRegistrationStatus,
   getTourneyPoolsDetails,
   getTourneyDetails,
+  getTourneyScores,
+  getTourneyDetailsUserView,
 } = require('../controllers/tourneyController');
 
 const {
@@ -33,6 +35,7 @@ router.put('/:tourneyId', isAuthenticated, isAdmin, updateTourney); // Mettre à
 router.delete('/:tourneyId', isAuthenticated, isAdmin, deleteTourney); // Supprimer un tournoi (admin uniquement)
 router.get('/:tourneyId/statuses', isAuthenticated, getTourneyStatuses); // Récupérer tous les statuts d'un tournoi
 router.get('/:tourneyId/registration-status', isAuthenticated, authorizeTournamentAccess, getRegistrationStatus); // Récupérer le statut d'inscription pour un user
+router.get('/:tourneyId/scores', isAuthenticated, authorizeTournamentAccess, getTourneyScores); // Récupérer le classement des équipes dans un tournoi
 
 router.post('/join', isAuthenticated, joinTourneyWithToken); // Rejoindre un tournoi via un token
 
@@ -40,5 +43,7 @@ router.post('/join', isAuthenticated, joinTourneyWithToken); // Rejoindre un tou
 router.get('/:tourneyId/teams-details', isAuthenticated, authorizeTournamentAccess, getTourneyTeamsDetails); // Team Page -> get all data required in one request
 router.get('/:tourneyId/pools-details', isAuthenticated, authorizeTournamentAccess, getTourneyPoolsDetails); // Team Pool -> get all data required in one request
 router.get('/:tourneyId/details', isAuthenticated, isAdmin, getTourneyDetails); // Details Page -> get all data required in one request
+router.get('/:tourneyId/details/user-view', isAuthenticated, authorizeTournamentAccess, getTourneyDetailsUserView); // Details Page -> get all data required in one request for users
+
 
 module.exports = router;

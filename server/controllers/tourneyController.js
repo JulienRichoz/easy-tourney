@@ -74,7 +74,6 @@ exports.createTourney = async (req, res) => {
       gameDuration: 15,
       transitionPoolTime: 15,
       transitionGameTime: 5,
-      // Ajoutez d'autres champs par défaut si nécessaire
     });
 
     res.status(201).json(newTourney);
@@ -958,5 +957,260 @@ exports.getTourneyDetails = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la récupération des détails du tournoi:', error);
     res.status(500).json({ message: 'Erreur serveur.', error });
+  }
+};
+
+
+/**
+ * Récupérer le classement (scores, points, etc.) pour chaque pool du tournoi
+ */
+exports.getTourneyScores = async (req, res) => {
+  const { tourneyId } = req.params;
+  try {
+    // Vérifier que le tournoi existe
+    const tourney = await Tourney.findByPk(tourneyId, {
+      include: [
+        {
+          model: Pool,
+          as: 'pools',
+          include: [
+            {
+              model: Team,
+              as: 'teams',
+              attributes: ['id', 'teamName'],
+            },
+            {
+              model: Game,
+              as: 'games',
+              attributes: ['id', 'teamAId', 'teamBId', 'scoreTeamA', 'scoreTeamB', 'status', 'poolId'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    const resultsByPool = [];
+
+    for (const pool of tourney.pools) {
+      // Préparer une map pour stocker les stats par équipe
+      const teamStats = {};
+
+      // Initialiser les stats de chaque équipe
+      for (const team of pool.teams) {
+        teamStats[team.id] = {
+          teamId: team.id,
+          teamName: team.teamName,
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          points: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDiff: 0,
+        };
+      }
+
+      // Parcourir les matchs de la pool pour calculer les stats
+      for (const game of pool.games) {
+        // On ne compte que les matchs "completed" pour le classement final
+        if (game.status !== 'completed') continue;
+
+        const teamAStats = teamStats[game.teamAId];
+        const teamBStats = teamStats[game.teamBId];
+
+        if (!teamAStats || !teamBStats) {
+          // Une des équipes n'est pas dans la pool (logique devrait pas arriver, mais vérif)
+          continue;
+        }
+
+        const scoreA = game.scoreTeamA || 0;
+        const scoreB = game.scoreTeamB || 0;
+
+        // MàJ des buts
+        teamAStats.goalsFor += scoreA;
+        teamAStats.goalsAgainst += scoreB;
+        teamBStats.goalsFor += scoreB;
+        teamBStats.goalsAgainst += scoreA;
+
+        // MàJ goalDiff
+        teamAStats.goalDiff = teamAStats.goalsFor - teamAStats.goalsAgainst;
+        teamBStats.goalDiff = teamBStats.goalsFor - teamBStats.goalsAgainst;
+
+        // Match joué
+        teamAStats.played += 1;
+        teamBStats.played += 1;
+
+        // Déterminer le résultat
+        if (scoreA > scoreB) {
+          // A gagne
+          teamAStats.won += 1;
+          teamAStats.points += 3;
+          teamBStats.lost += 1;
+        } else if (scoreA < scoreB) {
+          // B gagne
+          teamBStats.won += 1;
+          teamBStats.points += 3;
+          teamAStats.lost += 1;
+        } else {
+          // Nul
+          teamAStats.drawn += 1;
+          teamBStats.drawn += 1;
+          teamAStats.points += 1;
+          teamBStats.points += 1;
+        }
+      }
+
+      // Transformer teamStats en array et trier
+      const standings = Object.values(teamStats).sort((a, b) => {
+        // Triage par points, puis différence de buts, puis buts marqués, puis nom
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+        if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+        return a.teamName.localeCompare(b.teamName);
+      });
+
+      resultsByPool.push({
+        poolId: pool.id,
+        poolName: pool.name,
+        standings: standings,
+      });
+    }
+
+    res.status(200).json({
+      tourneyId: parseInt(tourneyId),
+      results: resultsByPool,
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des scores du tournoi :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
+  }
+};
+
+/**
+ * Récupère les détails utiles pour la vue utilisateur du tournoi:
+ * - Tournoi: name, location, dateTourney, latitude, longitude
+ * - Sports avec règle: id, name, color, rule
+ * - UserTeam: équipe de l'utilisateur (nom, membres), nombre de matchs restants
+ * - gameDuration: durée d'une partie (en minutes) ou null si non défini
+ */
+exports.getTourneyDetailsUserView = async (req, res) => {
+  try {
+    const { tourneyId } = req.params;
+    const userId = req.user.id;
+
+    // Récupérer le tournoi
+    const tourney = await Tourney.findByPk(tourneyId, {
+      attributes: ['id', 'name', 'location', 'latitude', 'longitude', 'dateTourney'],
+    });
+
+    if (!tourney) {
+      return res.status(404).json({ message: 'Tournoi non trouvé.' });
+    }
+
+    // Récupérer la liste des sports associés au tournoi
+    // Un sport est associé au tournoi s'il existe un SportsFields lié à un Field de ce tournoi
+    const sports = await Sport.findAll({
+      include: [
+        {
+          model: SportsFields,
+          as: 'sportsFields',
+          required: true,
+          include: [
+            {
+              model: Field,
+              as: 'field',
+              where: { tourneyId },
+              attributes: [],
+            },
+          ],
+          attributes: [],
+        },
+      ],
+      attributes: ['id', 'name', 'color', 'rule'],
+      group: ['Sport.id'],
+    });
+
+    // Récupérer l'équipe de l'utilisateur pour ce tournoi
+    const userTourney = await UsersTourneys.findOne({
+      where: { userId, tourneyId },
+    });
+
+    let userTeam = {
+      teamName: 'N/A',
+      players: [],
+      remainingMatches: 0,
+    };
+
+    if (userTourney && userTourney.teamId) {
+      // L'utilisateur a une équipe
+      const teamId = userTourney.teamId;
+
+      // Récupérer l'équipe et ses joueurs
+      const team = await Team.findByPk(teamId, {
+        attributes: ['id', 'teamName'],
+        include: [
+          {
+            model: User,
+            as: 'players',
+            attributes: ['id', 'name'],
+            through: { attributes: [] }, // pas besoin des attributs de UsersTourneys ici
+          },
+        ],
+      });
+
+      if (team) {
+        userTeam.teamName = team.teamName;
+        userTeam.players = team.players || [];
+
+        // Calculer le nombre de matchs restants pour cette équipe
+        // Un match est restant s'il est "scheduled" ou "in_progress" (pas "completed")
+        const remainingMatchesCount = await Game.count({
+          where: {
+            tourneyId,
+            [Op.or]: [{ teamAId: team.id }, { teamBId: team.id }],
+            status: { [Op.ne]: 'completed' },
+          },
+        });
+        userTeam.remainingMatches = remainingMatchesCount;
+      }
+    }
+
+    // Récupérer la durée d'une partie depuis ScheduleTourney
+    const schedule = await ScheduleTourney.findOne({
+      where: { tourneyId },
+      attributes: ['gameDuration'],
+    });
+
+    const gameDuration = schedule ? schedule.gameDuration : null;
+
+    // Construire la réponse
+    const responseData = {
+      tourney: {
+        name: tourney.name,
+        location: tourney.location,
+        latitude: tourney.latitude,
+        longitude: tourney.longitude,
+        dateTourney: tourney.dateTourney,
+      },
+      sports: sports.map((sport) => ({
+        id: sport.id,
+        name: sport.name,
+        color: sport.color,
+        rules: sport.rule || null, // si le champ s'appelle rule ou rules, adapter si nécessaire
+      })),
+      userTeam,
+      gameDuration,
+    };
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération des détails du tournoi (vue utilisateur) :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
