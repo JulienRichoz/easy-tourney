@@ -112,7 +112,7 @@
           "
           class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          {{ showAllTerrains ? 'Reduce' : 'Show All Fields' }}
+          {{ showAllTerrains ? 'Reduce' : 'All Fields' }}
         </button>
 
         <!-- Bouton pour terminer tous les matchs (uniquement admin) -->
