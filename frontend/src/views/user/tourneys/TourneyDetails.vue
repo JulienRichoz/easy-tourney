@@ -235,7 +235,6 @@
           this.sports = data.sports;
           this.userTeam = data.userTeam;
           this.gameDuration = data.gameDuration;
-          console.log('Sports', this.sports);
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi (vue utilisateur) :',

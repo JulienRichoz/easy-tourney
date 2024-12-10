@@ -6,7 +6,7 @@
     <div v-if="loading" class="text-center py-4">Chargement...</div>
     <div v-else>
       <div v-for="pool in results" :key="pool.poolId" class="mb-8">
-        <h2 class="text-xl font-semibold mb-2">Pool : {{ pool.poolName }}</h2>
+        <h2 class="text-xl font-semibold mb-2">{{ pool.poolName }}</h2>
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b">
