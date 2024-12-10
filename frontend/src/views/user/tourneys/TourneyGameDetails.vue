@@ -3,52 +3,70 @@
   <div v-if="socketError" class="alert alert-warning">
     {{ socketError }}
   </div>
-  <div v-if="match" class="p-6 relative">
-    <!-- Affichage de l'assistant et des spectateurs -->
-    <div class="absolute top-0 left-0 p-4 bg-opacity-75 rounded-lg shadow-md">
-      <p class="text-lg font-semibold">
-        <font-awesome-icon icon="gavel" class="mr-2" />Arbitre:
-        {{ assistantName }}
-      </p>
-      <p class="text-lg font-semibold">
-        <font-awesome-icon icon="eye" class="mr-2" />Spectateurs:
-        {{ spectatorCount }}
-      </p>
-      <ButtonComponent
-        variant="secondary"
-        fontAwesomeIcon="arrow-left"
-        @click="goBack"
-      >
-        <span class="hidden sm:inline">Retour</span>
-      </ButtonComponent>
-    </div>
-    <div class="flex items-center justify-center mb-4 relative">
-      <div class="text-center">
-        <h2 class="text-2xl font-bold">
-          {{ match.field.name }} | {{ match.sport.name }}
-        </h2>
-        <p class="text-lg">
-          Heure : {{ formatTime(match.startTime) }} -
-          {{ formatTime(match.endTime) }}
-        </p>
-      </div>
-      <!-- Sélecteur de statut du match -->
-      <div v-if="canEdit" class="absolute right-0">
-        <StatusSelectorComponent
-          :tourneyId="tourneyId"
-          statusKey="matchStatus"
-          :statusOptions="gameStatusOptions"
-          :modelValue="match.status"
-          label="Statut du match :"
-          :hideWhenNotStarted="false"
-          @statusChange="onMatchStatusChange"
-        />
-      </div>
-      <!-- Afficher le statut pour les players -->
-      <div v-else class="absolute right-0">
-        <p class="text-lg font-semibold">
-          {{ getMatchStatusLabel(match.status, isPaused) }}
-        </p>
+  <div v-if="match" class="p-4 relative">
+    <!-- "Header" -->
+    <div v-if="match" class="relative">
+      <div class="grid grid-cols-3 items-center gap-4">
+        <!-- Colonne gauche -->
+        <div class="text-left">
+          <ButtonComponent
+            variant="secondary"
+            fontAwesomeIcon="arrow-left"
+            @click="goBack"
+            class="mb-2"
+          >
+            <span class="">Retour</span>
+          </ButtonComponent>
+          <p class="text-lg">
+            <font-awesome-icon icon="gavel" class="mr-2" />
+            <span class="hidden sm:inline">Arbitre: </span>
+            <span class="ml-1">{{
+              assistantName ? assistantName : 'N/A'
+            }}</span>
+          </p>
+          <p class="text-lg">
+            <font-awesome-icon icon="eye" class="mr-2" />
+            <span class="hidden sm:inline">Spectateurs: </span>
+            <span class="ml-1">{{ spectatorCount }}</span>
+          </p>
+        </div>
+
+        <!-- Colonne centrale -->
+        <div class="text-center">
+          <h2 class="text-2xl font-bold">
+            {{ match.field.name }} | {{ match.sport.name }}
+          </h2>
+          <p class="text-lg" v-if="match.pool">
+            {{ match.pool.name }} - ID: {{ match.id }}
+          </p>
+          <p class="text-lg">
+            <span class="hidden sm:inline">Heure: </span>
+            {{ formatTime(match.startTime) }} -
+            {{ formatTime(match.endTime) }}
+          </p>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="text-right flex justify-end items-center">
+          <!-- Sélecteur de statut du match -->
+          <StatusSelectorComponent
+            v-if="canEdit"
+            :tourneyId="tourneyId"
+            statusKey="matchStatus"
+            :statusOptions="gameStatusOptions"
+            :modelValue="match.status"
+            label="Statut: "
+            :hideWhenNotStarted="false"
+            @statusChange="onMatchStatusChange"
+          />
+
+          <!-- Afficher le statut pour les players -->
+          <div v-else>
+            <p class="text-lg font-semibold">
+              {{ getMatchStatusLabel(match.status, isPaused) }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -170,9 +188,7 @@
       </div>
 
       <!-- Indication de Match Nul -->
-      <div v-if="isDraw" class="mt-4 text-lg font-semibold text-gray-700">
-        Match Nul
-      </div>
+      <div v-if="isDraw" class="mt-4 text-lg font-semibold">Match Nul</div>
 
       <!-- Événements du match (pour les arbitres et admins) -->
       <div
@@ -256,14 +272,27 @@
                     - {{ formatElapsedTime(event.matchTime) }}
                   </span>
                 </p>
-                <!-- Bouton de suppression -->
-                <button
-                  v-if="isAuthorized && match.status === 'in_progress'"
-                  @click="deleteEvent(event.id)"
-                  class="mt-2 text-red-500 hover:text-red-700"
-                >
-                  <font-awesome-icon icon="trash" />
-                </button>
+                <!-- Boutons de suppression et d'édition -->
+                <div class="flex justify-between mt-2">
+                  <!-- Bouton de suppression -->
+                  <button
+                    v-if="isAuthorized && match.status === 'in_progress'"
+                    @click="deleteEvent(event.id)"
+                    class="text-red-500 hover:text-red-700"
+                    title="Supprimer l'événement"
+                  >
+                    <font-awesome-icon icon="trash" />
+                  </button>
+                  <!-- Bouton d'édition -->
+                  <button
+                    v-if="isAuthorized && match.status === 'in_progress'"
+                    @click="openEditEventModal(event)"
+                    class="text-yellow-500 hover:text-yellow-700"
+                    title="Modifier l'événement"
+                  >
+                    <font-awesome-icon icon="pen" />
+                  </button>
+                </div>
               </div>
             </li>
           </ul>
@@ -274,6 +303,7 @@
         :isVisible="showResetConfirmation"
         title="Confirmer la Réinitialisation"
         message="Êtes-vous sûr de vouloir réinitialiser les scores et les événements de ce match ? Cette action est irréversible."
+        textButton="Réinitialiser"
         @form-cancel="closeResetConfirmation"
         @confirm="handleResetConfirm"
       />
@@ -293,6 +323,70 @@
           @form-cancel="closeEventModal"
           :isEditable="true"
         />
+      </template>
+    </ModalComponent>
+
+    <!-- Modal édition d'événement -->
+    <ModalComponent
+      :isVisible="showEditEventModal"
+      title="Modifier l'Événement"
+      @close="closeEditEventModal"
+    >
+      <template #content>
+        <form @submit.prevent="submitEditEvent" class="space-y-4">
+          <!-- Sélecteur de Team -->
+          <div>
+            <label class="block mb-2 font-semibold">Équipe</label>
+            <select
+              v-model="editEventFormData.teamId"
+              class="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            >
+              <option :value="match.teamA.id">
+                {{ match.teamA.teamName }}
+              </option>
+              <option :value="match.teamB.id">
+                {{ match.teamB.teamName }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sélecteur de Type d'Événement -->
+          <div>
+            <label class="block mb-2 font-semibold">Type d'Événement</label>
+            <select
+              v-model="editEventFormData.type"
+              class="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            >
+              <option value="goal">But</option>
+              <option value="foul">Faute</option>
+              <option value="yellow_card">Carton Jaune</option>
+              <option value="red_card">Carton Rouge</option>
+            </select>
+          </div>
+
+          <!-- Champ Description -->
+          <div>
+            <label class="block mb-2 font-semibold">Description</label>
+            <input
+              type="text"
+              v-model="editEventFormData.description"
+              class="w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Description de l'événement"
+            />
+          </div>
+
+          <!-- Boutons de Soumission -->
+          <div class="flex justify-end space-x-2">
+            <ButtonComponent variant="secondary" @click="closeEditEventModal">
+              Annuler
+            </ButtonComponent>
+            <ButtonComponent variant="primary" type="submit">
+              Enregistrer
+            </ButtonComponent>
+          </div>
+        </form>
       </template>
     </ModalComponent>
   </div>
@@ -348,6 +442,13 @@
         spectatorCount: 0,
         assistantName: '',
         showResetConfirmation: false,
+        showEditEventModal: false,
+        editEventFormData: {
+          teamId: null,
+          type: '',
+          description: '',
+        },
+        eventBeingEdited: null,
       };
     },
     computed: {
@@ -669,6 +770,17 @@
           this.gameEvents.push(event);
         });
 
+        // Écouter les mises à jour des événements du match
+        socket.on('gameEventUpdated', (updatedEvent) => {
+          const index = this.gameEvents.findIndex(
+            (e) => e.id === updatedEvent.id
+          );
+          if (index !== -1) {
+            // Utilisez splice pour remplacer l'élément de manière réactive
+            this.gameEvents.splice(index, 1, updatedEvent);
+          }
+        });
+
         // Écouter le démarrage ou la reprise du timer
         socket.on('startMatchTimer', (data) => {
           if (data.matchId === this.match.id) {
@@ -950,7 +1062,7 @@
         }
         switch (event.type) {
           case 'goal':
-            return `${teamName} - Score marqué`;
+            return `${teamName} - Point marqué`;
           case 'foul':
             return `${teamName} - Faute commise`;
           case 'yellow_card':
@@ -1048,6 +1160,74 @@
       handleResetConfirm() {
         this.showResetConfirmation = false;
         this.resetMatch();
+      },
+
+      /**
+       * Ouvre la modale d'édition d'événement.
+       * @param event
+       */
+      openEditEventModal(event) {
+        this.eventBeingEdited = event;
+        this.editEventFormData = {
+          teamId: event.teamId || this.match.teamA.id,
+          type: event.type || 'goal',
+          description: event.description || '',
+        };
+        this.showEditEventModal = true;
+      },
+
+      /**
+       * Ferme la modale d'édition d'événement.
+       * Réinitialise les données du formulaire.
+       */
+      closeEditEventModal() {
+        this.eventBeingEdited = null;
+        this.editEventFormData = {
+          teamId: null,
+          type: '',
+          description: '',
+        };
+        this.showEditEventModal = false;
+      },
+
+      /**
+       * Soumet les modifications apportées à un événement.
+       * Met à jour l'événement via l'API.
+       * @returns {Promise<void>}
+       */
+      async submitEditEvent() {
+        if (!this.eventBeingEdited) return;
+        try {
+          const { tourneyId, gameId } = this.$route.params;
+          await apiService.put(
+            `/tourneys/${tourneyId}/games/${gameId}/events/${this.eventBeingEdited.id}`,
+            {
+              teamId: this.editEventFormData.teamId,
+              type: this.editEventFormData.type,
+              description: this.editEventFormData.description,
+            }
+          );
+
+          // Mettre à jour l'événement localement
+          const index = this.gameEvents.findIndex(
+            (e) => e.id === this.eventBeingEdited.id
+          );
+          if (index !== -1) {
+            this.gameEvents[index].teamId = this.editEventFormData.teamId;
+            this.gameEvents[index].type = this.editEventFormData.type;
+            this.gameEvents[index].description =
+              this.editEventFormData.description;
+          }
+
+          this.closeEditEventModal();
+          toast.success('Événement mis à jour avec succès');
+        } catch (error) {
+          console.error(
+            "Erreur lors de la mise à jour de l'événement :",
+            error
+          );
+          toast.error("Erreur lors de la mise à jour de l'événement.");
+        }
       },
 
       /**
