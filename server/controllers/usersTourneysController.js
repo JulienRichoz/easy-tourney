@@ -261,7 +261,7 @@ exports.getUserInfoByTourney = async (req, res) => {
         {
           model: Team,
           as: 'team',
-          attributes: ['id', 'teamName', 'type'],
+          attributes: ['id', 'teamName', 'type', 'poolId'],
           include: [
             {
               model: Pool,
