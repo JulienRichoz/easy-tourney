@@ -6,7 +6,7 @@ module.exports = {
     await queryInterface.bulkInsert('Sports', [
       {
         name: 'Basketball',
-        rule: 'Règles de basketball...',
+        rule: 'https://www.beasebasket.com/conseils-actualites/entrainement-blog/les-principales-regles-du-basketball',
         scoreSystem: 'DESC',
         color: '#FF5733',
         image: '/uploads/basketball.jpg',
@@ -15,7 +15,7 @@ module.exports = {
       },
       {
         name: 'Football',
-        rule: 'Règles de football...',
+        rule: 'https://www.monequipementsport.fr/dossier/reglement-du-football.html',
         scoreSystem: 'DESC',
         color: '#028d1c',
         image: '/uploads/football.jpg',
@@ -24,7 +24,7 @@ module.exports = {
       },
       {
         name: 'Volleyball',
-        rule: 'Règles de volleyball...',
+        rule: 'https://www.sisteronvolley.fr/les-regles-du-volley/',
         scoreSystem: 'DESC',
         color: '#FFC300',
         image: '/uploads/volleyball.jpeg',
@@ -33,7 +33,7 @@ module.exports = {
       },
       {
         name: 'Ultimate',
-        rule: 'Règles de ultimate...',
+        rule: 'https://www.ff-flyingdisc.fr/les-regles-du-jeu/',
         scoreSystem: 'DESC',
         color: '#8E44AD',
         image: '/uploads/ultimate.jpeg',
@@ -42,7 +42,7 @@ module.exports = {
       },
       {
         name: 'Badminton',
-        rule: 'Règles de badminton...',
+        rule: 'https://acgb.ch/les-regles-du-badminton/',
         scoreSystem: 'DESC',
         color: '#33A1FF',
         image: '/uploads/badminton.png',

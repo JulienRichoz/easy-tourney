@@ -129,7 +129,20 @@
             v-if="sport.rules"
             class="text-sm text-light-form-text dark:text-dark-form-text mt-1"
           >
-            <strong>Règles :</strong> {{ sport.rules }}
+            <strong>Règles: </strong>
+            <span v-if="isValidURL(sport.rules)">
+              <a
+                :href="sport.rules"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-blue-500 underline"
+              >
+                {{ sport.rules }}
+              </a>
+            </span>
+            <span v-else>
+              {{ sport.rules }}
+            </span>
           </p>
         </div>
       </div>
@@ -228,6 +241,14 @@
             'Erreur lors de la récupération des détails du tournoi (vue utilisateur) :',
             error
           );
+        }
+      },
+      isValidURL(string) {
+        try {
+          new URL(string);
+          return true;
+        } catch (_) {
+          return false;
         }
       },
       formatDate(dateString) {
