@@ -13,7 +13,7 @@
       },
       titleClass: {
         type: String,
-        default: 'text-3xl font-bold dark:bg-custom_light_1', // Classe CSS à appliquer au titre
+        default: 'text-2xl font-bold dark:bg-custom_light_1', // Classe CSS à appliquer au titre
       },
     },
   };
