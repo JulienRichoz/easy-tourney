@@ -5,7 +5,6 @@ const { roles } = require('../config/roles');
 
 // fonction utilitaire pour vérifier si l'utilisateur est admin global
 function isGlobalAdmin(user) {
-    console.log("roles.ADMIN", roles.ADMIN);
     return user && user.roleId === roles.ADMIN;
 }
 
@@ -366,6 +365,11 @@ module.exports = (io) => {
                     totalPausedTime: game.totalPausedTime
                 });
 
+                // Émettre l'événement global de mise à jour du classement seulement si le match est maintenant 'completed'
+                if (status === 'completed') {
+                    io.to(`tourney_${tourneyId}`).emit('tourneyScoresUpdated');
+                }
+
             } catch (error) {
                 console.error('Erreur lors de la mise à jour du statut du match :', error);
                 socket.emit('error', 'Erreur lors de la mise à jour du statut du match.');
@@ -397,6 +401,16 @@ module.exports = (io) => {
                 console.error('Erreur lors de l\'enregistrement de l\'événement :', error);
                 socket.emit('error', 'Erreur lors de l\'enregistrement de l\'événement.');
             }
+        });
+
+        socket.on('joinTourney', (tourneyId) => {
+            socket.join(`tourney_${tourneyId}`);
+            console.log(`Socket ${socket.id} a rejoint la salle tourney_${tourneyId}`);
+        });
+
+        socket.on('leaveTourney', (tourneyId) => {
+            socket.leave(`tourney_${tourneyId}`);
+            console.log(`Socket ${socket.id} a quitté la salle tourney_${tourneyId}`);
         });
 
         // Recevoir la suppression de tous les événements
