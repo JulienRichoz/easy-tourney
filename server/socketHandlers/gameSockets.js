@@ -2,13 +2,12 @@
 const { Game, GameEvent, UsersTourneys, User, Tourney } = require('../models');
 const { roles } = require('../config/roles');
 
-
-// fonction utilitaire pour vérifier si l'utilisateur est admin global
+// Fonction utilitaire pour vérifier si l'utilisateur est admin global
 function isGlobalAdmin(user) {
     return user && user.roleId === roles.ADMIN;
 }
 
-// utils function isAuthorized
+// Fonction utilitaire pour vérifier l'autorisation
 async function isAuthorized(socket, tourneyId) {
     const isAdminGlobal = isGlobalAdmin(socket.user);
     const isAssistant = socket.user.tourneyRoles.some(
@@ -25,6 +24,33 @@ async function isAuthorized(socket, tourneyId) {
     return isAdminGlobal || isAssistant;
 }
 
+// Fonction pour assigner l'assistant
+const assignAssistant = async (game, userId, user) => {
+    // Si l'utilisateur est admin global, ne pas exiger UsersTourneys
+    if (isGlobalAdmin(user)) {
+        // Pas d'affectation d'assistant car admin global n'est pas lié à un seul tournoi
+        // Retourner éventuellement un objet assistant fictif
+        return { id: user.id, name: user.name };
+    }
+
+    // Sinon logique actuelle
+    const usersTourney = await UsersTourneys.findOne({
+        where: { userId: userId, tourneyId: game.tourneyId },
+    });
+
+    if (!usersTourney) {
+        throw new Error('Utilisateur non associé au tournoi.');
+    }
+
+    game.assistantId = usersTourney.id;
+    await game.save();
+
+    const assistant = await User.findByPk(userId, {
+        attributes: ['id', 'name'],
+    });
+
+    return assistant;
+};
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
@@ -59,35 +85,6 @@ module.exports = (io) => {
                 count: spectatorCount,
             });
         });
-
-        // Fonction pour assigner l'assistant
-        const assignAssistant = async (game, userId, user) => {
-            // Si l'utilisateur est admin global, ne pas exiger UsersTourneys
-            if (isGlobalAdmin(user)) {
-                // Pas d'affectation d'assistant car admin global n'est pas lié à un seul tournoi
-                // Retourner éventuellement un objet assistant fictif
-                return { id: user.id, name: user.name };
-            }
-
-            // Sinon logique actuelle
-            const usersTourney = await UsersTourneys.findOne({
-                where: { userId: userId, tourneyId: game.tourneyId },
-            });
-
-            if (!usersTourney) {
-                throw new Error('Utilisateur non associé au tournoi.');
-            }
-
-            game.assistantId = usersTourney.id;
-            await game.save();
-
-            const assistant = await User.findByPk(userId, {
-                attributes: ['id', 'name'],
-            });
-
-            return assistant;
-        };
-
 
         // Recevoir le démarrage ou la reprise du timer
         socket.on('startMatchTimer', async (data) => {
@@ -145,7 +142,6 @@ module.exports = (io) => {
                 socket.emit('error', 'Erreur lors du démarrage ou de la reprise du timer.');
             }
         });
-
 
         // Recevoir la mise en pause du timer
         socket.on('pauseMatchTimer', async (data) => {
@@ -426,13 +422,14 @@ module.exports = (io) => {
                 // Informer tous les clients dans la salle
                 io.to(`game_${gameId}`).emit('deleteAllGameEvents', {
                     tourneyId,
-                    gameId, // Assurez-vous que 'gameId' est inclus
+                    gameId,
                 });
             } catch (error) {
                 console.error('Erreur lors de la suppression de tous les événements :', error);
                 socket.emit('error', 'Erreur lors de la suppression de tous les événements.');
             }
         });
+
         socket.on('disconnect', () => {
             console.log('Un utilisateur est déconnecté :', socket.id);
         });
