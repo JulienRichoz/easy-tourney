@@ -1,10 +1,8 @@
 // server/app.js
-// Purpose: Define the main application file. This file is the entry point of the application.
-
 const express = require('express');
 const cors = require('cors');
 const http = require('http'); // Nécessaire pour créer le serveur HTTP
-const socketIo = require('socket.io'); // Pour Socket.IO
+const socket = require('./socket'); // Importer le module socket.js
 require('dotenv').config();
 require('./cronJobs');
 const path = require('path');
@@ -66,11 +64,12 @@ app.use('/api/tourneys/:tourneyId/games/:gameId/events', gameEventRoutes);
 app.use('/api/tourneys/:tourneyId/schedule', scheduleTourneyRoutes);
 app.use('/api/tourneys/:tourneyId/pools/schedule', poolScheduleRoutes); // Routes pour les plannings des pools
 app.use('/api/tourneys/:tourneyId/planning', planningRoutes); // Routes pour la gestion des plannings
-// Gestion des erreurs
-app.use(errorHandler);
 
 // Route pour exporter les données d'un tournoi
 app.use('/api/tourneys/:tourneyId/export-data', exportDataRoutes);
+
+// Gestion des erreurs
+app.use(errorHandler);
 
 /**
  * WEB SOCKET
@@ -78,14 +77,8 @@ app.use('/api/tourneys/:tourneyId/export-data', exportDataRoutes);
 // Création du serveur HTTP
 const server = http.createServer(app);
 
-// Configuration de Socket.IO
-const io = socketIo(server, {
-  cors: {
-    origin: ['http://localhost:8080', 'http://192.168.1.42:8080', '*'],
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-});
+// Initialiser Socket.IO via socket.js
+const io = socket.init(server);
 
 // Middleware d'authentification pour Socket.IO
 const authenticateSocket = require('./socketHandlers/authenticateSocket');
