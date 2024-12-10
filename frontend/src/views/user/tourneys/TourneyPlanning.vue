@@ -3,18 +3,16 @@
   <div>
     <!-- Sous-menu du tournoi -->
     <SubMenuComponent :tourneyId="tourneyId" />
+
     <!-- Titre principal -->
     <h1 v-if="!isAdmin" class="text-2xl font-bold my-4 px-4">
       {{ tourney.name }}
-      <!-- Affichage du nom d'équipe et de la pool si player -->
       <span v-if="userRoleInTourney === 'player'">
         - {{ userTeam?.teamName }} - {{ userPool?.name }}
       </span>
-      <!-- Message pour les assistants -->
       <span v-if="userRoleInTourney === 'assistant'">
         - Arbitrage des matchs
       </span>
-      <!-- Message pour les guests -->
       <span v-if="userRoleInTourney === 'guest'">
         (Vous êtes invité - accès en lecture seule)
       </span>
@@ -44,6 +42,19 @@
         :searchable="true"
         label="name"
         :reduce="(field) => field.id"
+        class="w-40 flex-shrink-0"
+        style="min-width: 150px"
+      />
+
+      <!-- Filtre des Game IDs -->
+      <v-select
+        :options="gameOptions"
+        v-model="selectedGameId"
+        placeholder="All Games"
+        :clearable="true"
+        :searchable="true"
+        label="name"
+        :reduce="(game) => game.id"
         class="w-40 flex-shrink-0"
         style="min-width: 150px"
       />
@@ -148,11 +159,11 @@
     </CollapsibleBox>
 
     <!-- Calendrier avec les Terrains comme ressources -->
-    <div v-if="tourney.dateTourney && fields.length">
+    <div v-if="tourney.dateTourney && paginatedFilteredFields.length">
       <FullCalendar
         ref="fullCalendar"
         :options="calendarOptions"
-        :key="tourney.dateTourney"
+        :key="calendarKey"
       />
     </div>
   </div>
@@ -194,6 +205,7 @@
         scheduleConfig: {},
         selectedPoolId: null,
         selectedFieldId: null,
+        selectedGameId: null, // Nouveau filtre pour gameID
         useUnifiedColors: true,
         colorMap: {},
         displayMode: 'games', // 'games' ou 'pools'
@@ -203,6 +215,7 @@
         assistantMessage: '',
         userTeam: null,
         userPool: null,
+        calendarKey: 0, // Clé pour forcer le re-render de FullCalendar
       };
     },
     computed: {
@@ -235,17 +248,37 @@
         return [{ id: null, name: 'All Terrains' }, ...this.fields];
       },
 
-      generateUniqueColor() {
-        return (id) => {
-          if (!id) return '#888888';
-          if (this.colorMap[id]) {
-            return this.colorMap[id];
+      /**
+       * Retourne une liste contenant "All Games" + games du tournoi.
+       * @returns {Array} Liste des games avec option "All Games".
+       */
+      gameOptions() {
+        return [
+          { id: null, name: 'All Games' },
+          ...this.games.map((game) => ({
+            id: game.id,
+            name: `Game ${game.id} - ${game.teamA?.teamName} vs ${game.teamB?.teamName}`,
+          })),
+        ];
+      },
+
+      /**
+       * Filtre les jeux en fonction des filtres sélectionnés.
+       * @returns {Array} Liste filtrée des jeux.
+       */
+      filteredGames() {
+        return this.games.filter((game) => {
+          if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
+            return false;
           }
-          const hue = (id * 137.508) % 360;
-          const color = `hsl(${hue}, 70%, 60%)`;
-          this.colorMap[id] = color;
-          return color;
-        };
+          if (this.selectedFieldId && game.field?.id !== this.selectedFieldId) {
+            return false;
+          }
+          if (this.selectedGameId && game.id !== this.selectedGameId) {
+            return false;
+          }
+          return true;
+        });
       },
 
       /**
@@ -263,12 +296,57 @@
         const isAssistant = this.$store.getters['userTourney/isAssistant'];
         // Si userTeam existe et de type player -> player
         // Sinon guest
-        // Note: userTeam et userPool sont récupérés après fetchUserTeamAndPool
-        // On s'assure de vérifier qu'ils existent avant de conclure 'player'.
         if (isAdmin) return 'admin';
         if (isAssistant) return 'assistant';
         if (this.userTeam && this.userTeam.type === 'player') return 'player';
         return 'guest';
+      },
+
+      /**
+       * Filtre les terrains à afficher en fonction des événements filtrés.
+       * @returns {Array} Liste des terrains avec au moins un événement filtré.
+       */
+      filteredFields() {
+        const fieldIdsWithEvents = new Set();
+
+        // Ajoute les terrains des jeux filtrés
+        this.filteredGames.forEach((game) => {
+          if (game.field && game.field.id) {
+            fieldIdsWithEvents.add(game.field.id);
+          }
+        });
+
+        // Ajoute les terrains des poolSchedules filtrés
+        this.pools.forEach((pool) => {
+          if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
+            return;
+          }
+          pool.schedules.forEach((schedule) => {
+            if (
+              this.selectedFieldId &&
+              schedule.fieldId !== this.selectedFieldId
+            ) {
+              return;
+            }
+            fieldIdsWithEvents.add(schedule.fieldId);
+          });
+        });
+
+        return this.fields.filter((field) => fieldIdsWithEvents.has(field.id));
+      },
+
+      /**
+       * Retourne la liste des terrains filtrés à afficher selon la pagination.
+       * @returns {Array} Liste paginée de terrains filtrés.
+       */
+      paginatedFilteredFields() {
+        const filteredFields = this.filteredFields;
+        if (this.showAllTerrains) {
+          return filteredFields;
+        }
+        const start = (this.currentPage - 1) * this.terrainsPerPage;
+        const end = start + this.terrainsPerPage;
+        return filteredFields.slice(start, end);
       },
 
       /**
@@ -279,20 +357,15 @@
         if (this.showAllTerrains) {
           return 1; // Si tous les terrains sont affichés, une seule page
         }
-        return Math.ceil(this.fields.length / this.terrainsPerPage);
+        return Math.ceil(this.filteredFields.length / this.terrainsPerPage);
       },
 
       /**
-       * Retourne la liste des terrains à afficher selon la pagination.
-       * @returns {Array} Liste paginée de terrains.
+       * Liste des terrains paginés après filtrage.
+       * @returns {Array} Liste paginée de terrains filtrés.
        */
       paginatedFields() {
-        if (this.showAllTerrains) {
-          return this.fields; // Affiche tous les terrains si l'option est activée
-        }
-        const start = (this.currentPage - 1) * this.terrainsPerPage;
-        const end = start + this.terrainsPerPage;
-        return this.fields.slice(start, end);
+        return this.paginatedFilteredFields;
       },
 
       /**
@@ -338,7 +411,7 @@
           slotLabelInterval:
             this.displayMode === 'games' ? '00:15:00' : '01:00:00',
           allDaySlot: false,
-          resources: this.paginatedFields.map((field) => ({
+          resources: this.paginatedFilteredFields.map((field) => ({
             id: field.id.toString(),
             title: field.name,
           })),
@@ -354,12 +427,36 @@
           eventContent: this.renderEventContent,
         };
       },
+      generateUniqueColor() {
+        return (id) => {
+          if (!id) return '#888888';
+          if (this.colorMap[id]) {
+            return this.colorMap[id];
+          }
+          const hue = (id * 137.508) % 360;
+          const color = `hsl(${hue}, 70%, 60%)`;
+          this.colorMap[id] = color;
+          return color;
+        };
+      },
     },
     watch: {
       currentPage() {
         if (this.$refs.fullCalendar) {
           this.$refs.fullCalendar.getApi().refetchResources();
         }
+      },
+      selectedPoolId() {
+        this.currentPage = 1; // Réinitialiser la pagination
+        this.calendarKey += 1; // Forcer le re-render
+      },
+      selectedFieldId() {
+        this.currentPage = 1;
+        this.calendarKey += 1;
+      },
+      selectedGameId() {
+        this.currentPage = 1;
+        this.calendarKey += 1;
       },
     },
     methods: {
@@ -421,6 +518,9 @@
           );
           if (response.status === 200) {
             toast.success(response.data.message);
+            // Optionnel: Rafraîchir les données du calendrier
+            await this.fetchPlanningDetails();
+            this.calendarKey += 1; // Forcer le re-render
           }
         } catch (error) {
           console.error('Erreur lors de la mise à jour des matchs :', error);
@@ -501,6 +601,7 @@
           );
         }
       },
+
       /**
        * Ajuste le nombre de terrains par page en fonction de la largeur de l'écran.
        */
@@ -544,6 +645,12 @@
        */
       toggleDisplayMode() {
         this.displayMode = this.displayMode === 'games' ? 'pools' : 'games';
+        // Rafraîchir le calendrier
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+        // Mettre à jour la clé pour forcer le re-render
+        this.calendarKey += 1;
       },
 
       /**
@@ -552,14 +659,7 @@
        */
       addGamesToEvents(events) {
         const now = new Date();
-        this.games.forEach((game) => {
-          // Filtrer par poule et terrain
-          if (this.selectedPoolId && game.pool?.id !== this.selectedPoolId) {
-            return;
-          }
-          if (this.selectedFieldId && game.field?.id !== this.selectedFieldId) {
-            return;
-          }
+        this.filteredGames.forEach((game) => {
           if (!game.field) {
             console.warn(
               `Le match avec l'ID ${game.id} n'a pas de terrain assigné.`
@@ -609,31 +709,28 @@
           if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
             return;
           }
-          if (pool.schedules && pool.schedules.length > 0) {
-            pool.schedules.forEach((schedule) => {
-              if (
-                this.selectedFieldId &&
-                schedule.fieldId !== this.selectedFieldId
-              ) {
-                return;
-              }
-              events.push({
-                id: `pool-${pool.id}-schedule-${schedule.id}`,
-                resourceId: schedule.fieldId.toString(),
-                title: `${pool.name} - ${schedule.sport?.name}`,
-                start: `${schedule.date}T${schedule.startTime}`,
-                end: `${schedule.date}T${schedule.endTime}`,
-                backgroundColor: this.useUnifiedColors
-                  ? this.generateUniqueColor(pool.id)
-                  : schedule.sport?.color || '#3B82F6',
-                textColor: '#FFFFFF',
-                extendedProps: { poolSchedule: schedule },
-              });
+          pool.schedules.forEach((schedule) => {
+            if (
+              this.selectedFieldId &&
+              schedule.fieldId !== this.selectedFieldId
+            ) {
+              return;
+            }
+            events.push({
+              id: `pool-${pool.id}-schedule-${schedule.id}`,
+              resourceId: schedule.fieldId.toString(),
+              title: `${pool.name} - ${schedule.sport?.name}`,
+              start: `${schedule.date}T${schedule.startTime}`,
+              end: `${schedule.date}T${schedule.endTime}`,
+              backgroundColor: this.useUnifiedColors
+                ? this.generateUniqueColor(pool.id)
+                : schedule.sport?.color || '#3B82F6',
+              textColor: '#FFFFFF',
+              extendedProps: { poolSchedule: schedule },
             });
-          }
+          });
         });
       },
-
       /**
        * Ajuste l'heure de début du slot.
        * @returns {string} Heure minimale du slot.
@@ -721,7 +818,9 @@
           if (breakTime.startTime && breakTime.endTime) {
             events.push({
               id: `break-${breakTime.title}`,
-              resourceIds: this.fields.map((field) => field.id.toString()),
+              resourceIds: this.paginatedFilteredFields.map((field) =>
+                field.id.toString()
+              ),
               title: breakTime.title,
               start: `${this.tourney.dateTourney}T${breakTime.startTime}`,
               end: `${this.tourney.dateTourney}T${breakTime.endTime}`,
@@ -749,32 +848,30 @@
           if (this.selectedPoolId && pool.id !== this.selectedPoolId) {
             return;
           }
-          if (pool.schedules && pool.schedules.length > 0) {
-            pool.schedules.forEach((schedule) => {
-              const transitionStartDateTime = new Date(
-                `${schedule.date}T${schedule.endTime}`
-              );
-              const transitionEndDateTime = new Date(
-                transitionStartDateTime.getTime() + transitionDuration * 60000
-              );
+          pool.schedules.forEach((schedule) => {
+            const transitionStartDateTime = new Date(
+              `${schedule.date}T${schedule.endTime}`
+            );
+            const transitionEndDateTime = new Date(
+              transitionStartDateTime.getTime() + transitionDuration * 60000
+            );
 
-              if (
-                this.selectedFieldId &&
-                schedule.fieldId !== this.selectedFieldId
-              ) {
-                return;
-              }
-              events.push({
-                id: `transition-${pool.id}-${schedule.id}`,
-                resourceId: schedule.fieldId.toString(),
-                title: 'Transition',
-                start: transitionStartDateTime,
-                end: transitionEndDateTime,
-                backgroundColor: '#808080', // Gris moyen
-                display: 'background',
-              });
+            if (
+              this.selectedFieldId &&
+              schedule.fieldId !== this.selectedFieldId
+            ) {
+              return;
+            }
+            events.push({
+              id: `transition-${pool.id}-${schedule.id}`,
+              resourceId: schedule.fieldId.toString(),
+              title: 'Transition',
+              start: transitionStartDateTime,
+              end: transitionEndDateTime,
+              backgroundColor: '#808080', // Gris moyen
+              display: 'background',
             });
-          }
+          });
         });
       },
 
@@ -841,6 +938,7 @@
 
         return { domNodes: [container] };
       },
+
       /**
        * Formate l'heure d'un événement en HH:MM.
        * @param {Date} date
