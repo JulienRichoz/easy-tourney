@@ -453,6 +453,8 @@ exports.getGameById = async (req, res) => {
             },
           ],
         },
+        { model: Pool, as: 'pool', attributes: ['id', 'name'] },
+
       ],
     });
 
@@ -1005,6 +1007,7 @@ exports.getGameDetails = async (req, res) => {
             },
           ],
         },
+        { model: Pool, as: 'pool', attributes: ['id', 'name'] },
       ],
     });
 
