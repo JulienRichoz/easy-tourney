@@ -7,7 +7,7 @@
     <h1 v-if="!isAdmin" class="text-2xl font-bold my-4 px-4">
       {{ tourney.name }}
       <!-- Affichage du nom d'équipe et de la pool si player -->
-      <span v-if="userRoleInTourney === 'player' && userTeam && userPool">
+      <span v-if="userRoleInTourney === 'player'">
         - {{ userTeam?.teamName }} - {{ userPool?.name }}
       </span>
       <!-- Message pour les assistants -->
@@ -419,7 +419,6 @@
           const response = await apiService.put(
             `/tourneys/${this.tourneyId}/games/complete-all-games`
           );
-          console.log('Réponse de la fin des matchs :', response.status);
           if (response.status === 200) {
             toast.success(response.data.message);
           }
@@ -480,19 +479,18 @@
        * Ne doit être appelé que si l'utilisateur est player ou assistant.
        */
       async fetchUserTeamAndPool() {
-        // Si l'utilisateur n'est pas player ou assistant, on ne fait pas cette requête
-        if (
-          this.userRoleInTourney === 'admin' ||
-          this.userRoleInTourney === 'guest'
-        ) {
+        if (this.isAdmin) {
+          // L'admin n'a pas d'équipe
           return;
         }
+
         try {
           const userId = this.$store.state.user.id;
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/users/${userId}`
           );
-          // Vérifier si on a une team, sinon c'est peut-être un assistant sans team
+
+          // Vérifiez si la team et pool existent
           this.userTeam = response.data.team || null;
           this.userPool =
             this.userTeam && this.userTeam.pool ? this.userTeam.pool : null;
@@ -503,7 +501,6 @@
           );
         }
       },
-
       /**
        * Ajuste le nombre de terrains par page en fonction de la largeur de l'écran.
        */
@@ -862,16 +859,8 @@
 
       // Récupérer les données du planning
       await this.fetchPlanningDetails();
-
-      // Appeler fetchUserNextGames et fetchUserTeamAndPool
-      // seulement si l'utilisateur est player ou assistant
-      if (
-        this.userRoleInTourney === 'player' ||
-        this.userRoleInTourney === 'assistant'
-      ) {
-        await this.fetchUserNextGames();
-        await this.fetchUserTeamAndPool();
-      }
+      await this.fetchUserTeamAndPool();
+      await this.fetchUserNextGames(); // Idem, plus tard vous pouvez conditionner en fonction du role
     },
   };
 </script>
