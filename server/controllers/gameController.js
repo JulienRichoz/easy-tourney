@@ -181,7 +181,6 @@ exports.createGame = async (req, res) => {
         res.status(201).json(newGame);
       } else {
         // Permettre la création de matchs sans 'poolScheduleId' pour ce type de tournoi
-        // Vérifiez que 'fieldId' et 'sportId' sont fournis
         if (!fieldId || !sportId) {
           return res.status(400).json({
             message: "'fieldId' et 'sportId' sont requis pour ce type de tournoi.",
