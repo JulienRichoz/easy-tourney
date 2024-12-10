@@ -89,9 +89,12 @@
       >
         Show {{ displayMode === 'games' ? 'Pools' : 'Matchs' }}
       </ButtonComponent>
-
-      <!-- Pagination -->
-      <div class="flex justify-end items-center gap-2 my-2 px-4">
+      <!-- Pagination et Bouton Show All Fields -->
+      <div
+        v-if="totalPages > 1"
+        class="flex justify-end items-center gap-2 my-2 px-4"
+      >
+        <!-- Bouton Précédent -->
         <button
           v-if="currentPage > 1"
           @click="currentPage--"
@@ -99,6 +102,8 @@
         >
           &lt;
         </button>
+
+        <!-- Sélecteur de Page -->
         <select
           v-model="currentPage"
           class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
@@ -107,6 +112,8 @@
             Page {{ page }} / {{ totalPages }}
           </option>
         </select>
+
+        <!-- Bouton Suivant -->
         <button
           v-if="currentPage < totalPages"
           @click="currentPage++"
@@ -125,16 +132,6 @@
         >
           {{ showAllTerrains ? 'Reduce' : 'All Fields' }}
         </button>
-
-        <!-- Bouton pour terminer tous les matchs (uniquement admin) -->
-        <ButtonComponent
-          v-if="isAdmin"
-          variant="danger"
-          fontAwesomeIcon="ban"
-          @click="completeAllMatches"
-        >
-          Stop Games
-        </ButtonComponent>
       </div>
     </div>
 
@@ -149,9 +146,9 @@
     >
       <ul class="list-disc pl-5">
         <li v-for="game in userNextGames" :key="game.id">
-          <span class="font-semibold"
-            >{{ formatDateTimeDisplay(game.startTime) }} :</span
-          >
+          <span class="font-semibold">
+            {{ formatDateTimeDisplay(game.startTime) }} :
+          </span>
           Team: {{ game.teamANumber }} vs {{ game.teamBNumber }} sur le terrain
           {{ game.field.name }}
         </li>
@@ -231,6 +228,18 @@
       isAdmin() {
         return this.$store.state?.user && this.$store.state.user?.roleId === 1;
       },
+      generateUniqueColor() {
+        return (id) => {
+          if (!id) return '#888888';
+          if (this.colorMap[id]) {
+            return this.colorMap[id];
+          }
+          const hue = (id * 137.508) % 360;
+          const color = `hsl(${hue}, 70%, 60%)`;
+          this.colorMap[id] = color;
+          return color;
+        };
+      },
 
       /**
        * Retourne une liste contenant "All Pools" + pools du tournoi.
@@ -279,27 +288,6 @@
           }
           return true;
         });
-      },
-
-      /**
-       * Détermine le rôle de l'utilisateur dans ce tournoi.
-       * Les rôles possibles sont :
-       * - admin : si roleId === 1
-       * - assistant : si l'utilisateur a le rôle assistant sur ce tournoi (via store)
-       * - player : si l'utilisateur a une userTeam de type 'player'
-       * - guest : sinon
-       *
-       * @returns {string} 'admin', 'assistant', 'player' ou 'guest'
-       */
-      userRoleInTourney() {
-        const isAdmin = this.isAdmin;
-        const isAssistant = this.$store.getters['userTourney/isAssistant'];
-        // Si userTeam existe et de type player -> player
-        // Sinon guest
-        if (isAdmin) return 'admin';
-        if (isAssistant) return 'assistant';
-        if (this.userTeam && this.userTeam.type === 'player') return 'player';
-        return 'guest';
       },
 
       /**
@@ -369,6 +357,27 @@
       },
 
       /**
+       * Détermine le rôle de l'utilisateur dans ce tournoi.
+       * Les rôles possibles sont :
+       * - admin : si roleId === 1
+       * - assistant : si l'utilisateur a le rôle assistant sur ce tournoi (via store)
+       * - player : si l'utilisateur a une userTeam de type 'player'
+       * - guest : sinon
+       *
+       * @returns {string} 'admin', 'assistant', 'player' ou 'guest'
+       */
+      userRoleInTourney() {
+        const isAdmin = this.isAdmin;
+        const isAssistant = this.$store.getters['userTourney/isAssistant'];
+        // Si userTeam existe et de type player -> player
+        // Sinon guest
+        if (isAdmin) return 'admin';
+        if (isAssistant) return 'assistant';
+        if (this.userTeam && this.userTeam.type === 'player') return 'player';
+        return 'guest';
+      },
+
+      /**
        * Options du calendrier FullCalendar en fonction du displayMode.
        * @returns {Object} Options pour FullCalendar.
        */
@@ -427,18 +436,6 @@
           eventContent: this.renderEventContent,
         };
       },
-      generateUniqueColor() {
-        return (id) => {
-          if (!id) return '#888888';
-          if (this.colorMap[id]) {
-            return this.colorMap[id];
-          }
-          const hue = (id * 137.508) % 360;
-          const color = `hsl(${hue}, 70%, 60%)`;
-          this.colorMap[id] = color;
-          return color;
-        };
-      },
     },
     watch: {
       currentPage() {
@@ -457,6 +454,12 @@
       selectedGameId() {
         this.currentPage = 1;
         this.calendarKey += 1;
+      },
+      totalPages(newVal) {
+        if (newVal === 1) {
+          this.showAllTerrains = false;
+          this.currentPage = 1;
+        }
       },
     },
     methods: {
@@ -518,7 +521,7 @@
           );
           if (response.status === 200) {
             toast.success(response.data.message);
-            // Optionnel: Rafraîchir les données du calendrier
+            // Rafraîchir les données du calendrier
             await this.fetchPlanningDetails();
             this.calendarKey += 1; // Forcer le re-render
           }
@@ -731,6 +734,7 @@
           });
         });
       },
+
       /**
        * Ajuste l'heure de début du slot.
        * @returns {string} Heure minimale du slot.
