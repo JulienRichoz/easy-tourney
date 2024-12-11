@@ -67,7 +67,11 @@
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <transition-group
+                tag="tbody"
+                name="list"
+                class="transition-wrapper"
+              >
                 <tr
                   v-for="(team, index) in sortedStandings(pool.standings)"
                   :key="team.teamId"
@@ -87,7 +91,7 @@
                   <td class="py-2 px-2 text-center">{{ team.goalsAgainst }}</td>
                   <td class="py-2 px-2 text-center">{{ team.goalDiff }}</td>
                 </tr>
-              </tbody>
+              </transition-group>
             </table>
           </div>
         </div>
@@ -112,14 +116,16 @@
     data() {
       return {
         tourneyId: this.$route.params.tourneyId,
-        loading: false,
+        loading: true, // Initial loading state
         results: [],
         compactView: false,
       };
     },
     methods: {
-      async fetchScores() {
-        this.loading = true;
+      async fetchScores(showLoading = true) {
+        if (showLoading) {
+          this.loading = true;
+        }
         try {
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/scores`
@@ -128,7 +134,9 @@
         } catch (error) {
           console.error('Erreur lors de la récupération des scores :', error);
         } finally {
-          this.loading = false;
+          if (showLoading) {
+            this.loading = false;
+          }
         }
       },
       setupSocket() {
@@ -143,11 +151,13 @@
         socket.emit('joinTourney', this.tourneyId);
 
         socket.on('tourneyScoresUpdated', () => {
-          this.fetchScores();
+          // Fetch scores without showing loading indicator
+          this.fetchScores(false);
         });
       },
       sortedStandings(standings) {
-        return standings.sort((a, b) => {
+        // Retourner une copie triée pour éviter la mutation directe
+        return [...standings].sort((a, b) => {
           if (a.points !== b.points) return b.points - a.points;
           if (a.played !== b.played) return a.played - b.played;
           return b.goalDiff - a.goalDiff;
@@ -158,7 +168,7 @@
       },
     },
     async mounted() {
-      await this.fetchScores();
+      await this.fetchScores(); // Initial fetch with loading=true
       this.setupSocket();
     },
     beforeUnmount() {
@@ -169,4 +179,26 @@
       }
     },
   };
+  // TODO doc. https://vuejs.org/guide/built-ins/transition-group
 </script>
+
+<style scoped>
+  /* Transition styles for the list */
+  .list-enter-active,
+  .list-leave-active {
+    transition: all 0.5s ease;
+  }
+  .list-enter-from,
+  .list-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  .list-move {
+    transition: transform 0.5s;
+  }
+
+  /* Optional: To prevent layout shift during transitions */
+  .transition-wrapper {
+    display: contents;
+  }
+</style>
