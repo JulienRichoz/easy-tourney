@@ -292,14 +292,10 @@ exports.getTourneysByUser = async (req, res) => {
       ],
     });
 
-    if (!userTourneys.length) {
-      return res
-        .status(404)
-        .json({ message: 'Aucun tournoi trouvé pour cet utilisateur.' });
-    }
-
     const tourneys = userTourneys.map((ut) => ut.tourney);
-    res.json(tourneys);
+    // Renvoyer la liste de tournois (peut être vide)
+    return res.status(200).json(tourneys);
+
   } catch (error) {
     console.error(
       'Erreur lors de la récupération des tournois pour l’utilisateur:',
