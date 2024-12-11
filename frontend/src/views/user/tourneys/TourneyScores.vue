@@ -1,46 +1,96 @@
-<!-- src/views/user/tourneys/TourneyScores.vue -->
 <template>
   <SubMenuComponent :tourneyId="tourneyId" />
-  <div class="p-4">
-    <TitleComponent title="Classement du Tournoi" />
+  <div
+    class="p-4 bg-light-background dark:bg-dark-background transition-colors duration-300"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <TitleComponent title="Classement du Tournoi" />
+      <ButtonComponent @click="toggleView" class="py-2 px-4">
+        {{ compactView ? 'Vue détaillée' : 'Vue compacte' }}
+      </ButtonComponent>
+    </div>
     <div v-if="loading" class="text-center py-4">Chargement...</div>
     <div v-else>
-      <div v-for="pool in results" :key="pool.poolId" class="mb-8">
-        <h2 class="text-xl font-semibold mb-2">{{ pool.poolName }}</h2>
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b">
-              <th class="py-2">Position</th>
-              <th class="py-2">Équipe</th>
-              <th class="py-2">Points</th>
-              <th class="py-2">Joués</th>
-              <th class="py-2">Gagnés</th>
-              <th class="py-2">Nuls</th>
-              <th class="py-2">Perdus</th>
-              <th class="py-2">BM</th>
-              <th class="py-2">BE</th>
-              <th class="py-2">Diff</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(team, index) in pool.standings"
-              :key="team.teamId"
-              class="border-b"
-            >
-              <td class="py-2">{{ index + 1 }}</td>
-              <td class="py-2 font-semibold">{{ team.teamName }}</td>
-              <td class="py-2">{{ team.points }}</td>
-              <td class="py-2">{{ team.played }}</td>
-              <td class="py-2">{{ team.won }}</td>
-              <td class="py-2">{{ team.drawn }}</td>
-              <td class="py-2">{{ team.lost }}</td>
-              <td class="py-2">{{ team.goalsFor }}</td>
-              <td class="py-2">{{ team.goalsAgainst }}</td>
-              <td class="py-2">{{ team.goalDiff }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div
+        :class="[
+          'grid gap-4',
+          compactView
+            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+            : 'grid-cols-1',
+        ]"
+      >
+        <div
+          v-for="pool in results"
+          :key="pool.poolId"
+          class="p-4 rounded shadow bg-light-card dark:bg-dark-card"
+        >
+          <h2
+            class="text-xl font-semibold mb-4 text-center text-light-title dark:text-dark-title"
+          >
+            {{ pool.poolName }}
+          </h2>
+          <div>
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="border-b bg-light-details.background dark:bg-dark-details.background"
+                >
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    Pos
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    Team
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    Pts
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    J
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    G
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    N
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    P
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    BM
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    BE
+                  </th>
+                  <th class="py-2 px-2 text-light-text dark:text-dark-text">
+                    Diff
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(team, index) in sortedStandings(pool.standings)"
+                  :key="team.teamId"
+                  :class="[
+                    'border-b hover:bg-light-details.hover dark:hover:bg-dark-details.hover',
+                    compactView ? 'text-sm' : 'text-base',
+                  ]"
+                >
+                  <td class="py-2 px-2 text-center">{{ index + 1 }}</td>
+                  <td class="py-2 px-2 font-semibold">{{ team.teamName }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.points }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.played }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.won }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.drawn }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.lost }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.goalsFor }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.goalsAgainst }}</td>
+                  <td class="py-2 px-2 text-center">{{ team.goalDiff }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -51,17 +101,20 @@
   import SubMenuComponent from '@/components/user/SubMenuComponent.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
   import { getSocket } from '@/services/socketService';
+  import ButtonComponent from '@/components/ButtonComponent.vue';
 
   export default {
     components: {
       TitleComponent,
       SubMenuComponent,
+      ButtonComponent,
     },
     data() {
       return {
         tourneyId: this.$route.params.tourneyId,
         loading: false,
         results: [],
+        compactView: false,
       };
     },
     methods: {
@@ -87,13 +140,21 @@
           return;
         }
 
-        // Rejoindre la salle du tournoi
         socket.emit('joinTourney', this.tourneyId);
 
-        // Écouter l'événement de mise à jour des scores
         socket.on('tourneyScoresUpdated', () => {
           this.fetchScores();
         });
+      },
+      sortedStandings(standings) {
+        return standings.sort((a, b) => {
+          if (a.points !== b.points) return b.points - a.points;
+          if (a.played !== b.played) return a.played - b.played;
+          return b.goalDiff - a.goalDiff;
+        });
+      },
+      toggleView() {
+        this.compactView = !this.compactView;
       },
     },
     async mounted() {
@@ -103,7 +164,6 @@
     beforeUnmount() {
       const socket = getSocket();
       if (socket) {
-        // Émettre un événement pour quitter la salle du tournoi si nécessaire
         socket.emit('leaveTourney', this.tourneyId);
         socket.off('tourneyScoresUpdated');
       }
