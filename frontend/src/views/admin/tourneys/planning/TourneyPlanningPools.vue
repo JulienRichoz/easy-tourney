@@ -376,7 +376,7 @@
           poolDuration: 105,
           gameDuration: 15,
           transitionPoolTime: 15,
-          transitionGameTime: 5,
+          transitionGameTime: 0,
           introStart: '07:30:00',
           introEnd: '08:00:00',
           lunchStart: '12:00:00',

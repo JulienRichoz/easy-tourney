@@ -28,39 +28,47 @@ module.exports = (sequelize, DataTypes) => {
       startTime: {
         type: DataTypes.TIME,
         allowNull: false,
+        defaultValue: '07:30:00',
       },
       endTime: {
         type: DataTypes.TIME,
         allowNull: false,
+        defaultValue: '17:30:00',
       },
       introStart: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '07:30:00',
       },
       introEnd: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '08:00:00',
       },
       lunchStart: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '12:00:00',
       },
       lunchEnd: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '13:00:00',
       },
       outroStart: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '17:00:00',
       },
       outroEnd: {
         type: DataTypes.TIME,
         allowNull: true,
+        defaultValue: '17:30:00',
       },
       poolDuration: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 120, // Durée par défaut d'une pool en minutes
+        defaultValue: 105, // Durée par défaut d'une pool en minutes
       },
       gameDuration: {
         type: DataTypes.INTEGER,
@@ -75,7 +83,7 @@ module.exports = (sequelize, DataTypes) => {
       transitionGameTime: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 5, // Temps de transition par défaut en minutes
+        defaultValue: 0, // Temps de transition par défaut en minutes
       },
       useDefaultSettings: {
         type: DataTypes.BOOLEAN,
@@ -129,7 +137,7 @@ module.exports = (sequelize, DataTypes) => {
     // Validation des plages horaires par rapport à la période globale
     for (const pair of timePairs) {
       if (pair.start && pair.end) {
-        if (pair.start >= pair.end) {
+        if (pair.start > pair.end) {
           throw new Error(
             `L'heure de début doit être inférieure à l'heure de fin pour la section ${pair.label}.`
           );

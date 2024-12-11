@@ -139,6 +139,19 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Tourney',
+      hooks: {
+        afterCreate: async (tourney, options) => {
+          if (tourney) {
+            await sequelize.models.ScheduleTourney.create(
+              {
+                tourneyId: tourney.id,
+                useDefaultSettings: true, // Utiliser les paramètres par défaut
+              },
+              { transaction: options.transaction }
+            );
+          }
+        },
+      },
     }
   );
 

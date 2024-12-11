@@ -16,6 +16,7 @@ const {
   Pool,
   PoolSchedule,
   Game,
+  sequelize
 } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 const jwt = require('jsonwebtoken');
@@ -24,6 +25,7 @@ const jwt = require('jsonwebtoken');
  * Créer un nouveau tournoi
  */
 exports.createTourney = async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
     const {
       name,
@@ -41,47 +43,41 @@ exports.createTourney = async (req, res) => {
     } = req.body;
 
     if (!name || !location || !dateTourney) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'Les champs \'name\', \'location\' et \'dateTourney\' sont requis.',
-        });
+      await transaction.rollback();
+      return res.status(400).json({
+        message: "Les champs 'name', 'location' et 'dateTourney' sont requis.",
+      });
     }
 
-    // Créer le tournoi principal
-    const newTourney = await Tourney.create({
-      name,
-      location,
-      dateTourney,
-      emergencyDetails,
-      domain,
-      tourneyType,
-      maxNumberOfPools,
-      defaultMaxTeamPerPool,
-      defaultMinTeamPerPool,
-      status,
-      latitude,
-      longitude
-    });
+    // Créer le tournoi principal dans la transaction
+    const newTourney = await Tourney.create(
+      {
+        name,
+        location,
+        dateTourney,
+        emergencyDetails,
+        domain,
+        tourneyType,
+        maxNumberOfPools,
+        defaultMaxTeamPerPool,
+        defaultMinTeamPerPool,
+        status,
+        latitude,
+        longitude,
+      },
+      { transaction }
+    );
 
-    // Créer une configuration de planning par défaut
-    await ScheduleTourney.create({
-      tourneyId: newTourney.id,
-      startTime: '07:30:00',
-      endTime: '17:30:00',
-      poolDuration: 105,
-      gameDuration: 15,
-      transitionPoolTime: 15,
-      transitionGameTime: 5,
-    });
+    // Le ScheduleTourney est créé automatiquement par le hook afterCreate
 
+    await transaction.commit();
     res.status(201).json(newTourney);
   } catch (error) {
+    if (transaction) await transaction.rollback();
     console.error('Erreur lors de la création du tournoi :', error);
     res
       .status(500)
-      .json({ message: 'Erreur lors de la création du tournoi', error });
+      .json({ message: 'Erreur lors de la création du tournoi', error: error.message });
   }
 };
 
