@@ -7,6 +7,10 @@ export default {
     activeTourney: null,
     selectedTourney: {}, // Stocker les données d'un tournoi spécifique
     tourneyRole: null,
+    // Filter planning page:
+    selectedPoolId: null,
+    selectedFieldId: null,
+    selectedGameId: null,
   },
   mutations: {
     SET_ACTIVE_TOURNEY(state, tourney) {
@@ -17,6 +21,20 @@ export default {
     },
     SET_TOURNEY_ROLE(state, role) {
       state.tourneyRole = role;
+    },
+    SET_SELECTED_POOL(state, poolId) {
+      state.selectedPoolId = poolId;
+    },
+    SET_SELECTED_FIELD(state, fieldId) {
+      state.selectedFieldId = fieldId;
+    },
+    SET_SELECTED_GAME(state, gameId) {
+      state.selectedGameId = gameId;
+    },
+    RESET_FILTERS(state) {
+      state.selectedPoolId = null;
+      state.selectedFieldId = null;
+      state.selectedGameId = null;
     },
   },
   actions: {
@@ -70,6 +88,20 @@ export default {
         );
       }
     },
+
+    // FILTERS
+    setSelectedPool({ commit }, poolId) {
+      commit('SET_SELECTED_POOL', poolId);
+    },
+    setSelectedField({ commit }, fieldId) {
+      commit('SET_SELECTED_FIELD', fieldId);
+    },
+    setSelectedGame({ commit }, gameId) {
+      commit('SET_SELECTED_GAME', gameId);
+    },
+    resetFilters({ commit }) {
+      commit('RESET_FILTERS');
+    },
   },
   getters: {
     isAssistant(state) {
@@ -78,5 +110,10 @@ export default {
     getTourneyById: (state) => (id) => {
       return state.selectedTourney[id];
     },
+
+    // FILTERS
+    selectedPoolId: (state) => state.selectedPoolId,
+    selectedFieldId: (state) => state.selectedFieldId,
+    selectedGameId: (state) => state.selectedGameId,
   },
 };

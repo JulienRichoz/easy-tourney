@@ -89,6 +89,7 @@
       >
         Show {{ displayMode === 'games' ? 'Pools' : 'Matchs' }}
       </ButtonComponent>
+
       <!-- Pagination et Bouton Show All Fields -->
       <div
         v-if="totalPages > 1"
@@ -200,9 +201,6 @@
         sports: [],
         userNextGames: [],
         scheduleConfig: {},
-        selectedPoolId: null,
-        selectedFieldId: null,
-        selectedGameId: null, // Nouveau filtre pour gameID
         useUnifiedColors: true,
         colorMap: {},
         displayMode: 'games', // 'games' ou 'pools'
@@ -220,6 +218,39 @@
         statuses: (state) => state.statuses,
         tourneyType: (state) => state.tourneyType,
       }),
+
+      // Mapping des propriétés de Vuex avec getters et setters
+      ...mapState('userTourney', {
+        _selectedPoolId: (state) => state.selectedPoolId,
+        _selectedFieldId: (state) => state.selectedFieldId,
+        _selectedGameId: (state) => state.selectedGameId,
+      }),
+
+      // Propriétés calculées avec getters et setters
+      selectedPoolId: {
+        get() {
+          return this._selectedPoolId;
+        },
+        set(value) {
+          this.setSelectedPool(value === null ? null : parseInt(value, 10));
+        },
+      },
+      selectedFieldId: {
+        get() {
+          return this._selectedFieldId;
+        },
+        set(value) {
+          this.setSelectedField(value === null ? null : parseInt(value, 10));
+        },
+      },
+      selectedGameId: {
+        get() {
+          return this._selectedGameId;
+        },
+        set(value) {
+          this.setSelectedGame(value === null ? null : parseInt(value, 10));
+        },
+      },
 
       /**
        * Détermine le rôle global de l'utilisateur (admin global ou non).
@@ -438,27 +469,36 @@
       },
     },
     watch: {
-      currentPage() {
-        if (this.$refs.fullCalendar) {
-          this.$refs.fullCalendar.getApi().refetchResources();
-        }
-      },
+      /**
+       * Met à jour les paramètres de requête (query params) lors de la sélection des filtres.
+       */
       selectedPoolId() {
         this.currentPage = 1; // Réinitialiser la pagination
         this.calendarKey += 1; // Forcer le re-render
+        this.updateQueryParams();
       },
       selectedFieldId() {
         this.currentPage = 1;
         this.calendarKey += 1;
+        this.updateQueryParams();
       },
       selectedGameId() {
         this.currentPage = 1;
         this.calendarKey += 1;
+        this.updateQueryParams();
       },
       totalPages(newVal) {
         if (newVal === 1) {
           this.showAllTerrains = false;
           this.currentPage = 1;
+        }
+      },
+      '$route.query'() {
+        this.loadFiltersFromQuery();
+      },
+      currentPage() {
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchResources();
         }
       },
     },
@@ -469,6 +509,61 @@
         'clearTournamentName',
       ]),
 
+      ...mapActions('userTourney', [
+        'setSelectedPool',
+        'setSelectedField',
+        'setSelectedGame',
+      ]),
+
+      /**
+       * Met à jour les paramètres de requête en fonction des filtres sélectionnés.
+       */
+      updateQueryParams() {
+        this.$router.replace({
+          path: this.$route.path,
+          query: {
+            ...this.$route.query,
+            pool: this.selectedPoolId,
+            field: this.selectedFieldId,
+            game: this.selectedGameId,
+          },
+        });
+      },
+
+      /**
+       * Met à jour l'ID de la pool sélectionnée (filtre).
+       * @param poolId
+       */
+      // Ces méthodes ne sont plus nécessaires si vous utilisez des setters dans les computed
+      // Vous pouvez les supprimer ou les conserver si vous avez besoin d'une logique supplémentaire
+
+      /**
+       * Charge les filtres depuis les paramètres de requête (query params).
+       */
+      loadFiltersFromQuery() {
+        const { pool, field, game } = this.$route.query;
+
+        if (pool !== undefined && pool !== 'null') {
+          const poolId = parseInt(pool, 10);
+          this.setSelectedPool(!isNaN(poolId) ? poolId : null);
+        } else {
+          this.setSelectedPool(null);
+        }
+
+        if (field !== undefined && field !== 'null') {
+          const fieldId = parseInt(field, 10);
+          this.setSelectedField(!isNaN(fieldId) ? fieldId : null);
+        } else {
+          this.setSelectedField(null);
+        }
+
+        if (game !== undefined && game !== 'null') {
+          const gameId = parseInt(game, 10);
+          this.setSelectedGame(!isNaN(gameId) ? gameId : null);
+        } else {
+          this.setSelectedGame(null);
+        }
+      },
       /**
        * Récupère les données de planning (terrains, pools, games, sports...)
        */
@@ -963,6 +1058,9 @@
       await this.fetchPlanningDetails();
       await this.fetchUserTeamAndPool();
       await this.fetchUserNextGames(); // Idem, plus tard vous pouvez conditionner en fonction du role
+
+      // Charger les filtres depuis les query params si présents
+      this.loadFiltersFromQuery();
     },
   };
 </script>

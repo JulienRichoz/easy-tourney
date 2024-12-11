@@ -393,6 +393,7 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex';
   import apiService from '@/services/apiService';
   import { getSocket } from '@/services/socketService';
   import ModalComponent from '@/components/ModalComponent.vue';
@@ -452,11 +453,20 @@
       };
     },
     computed: {
+      ...mapState('userTourney', {
+        selectedPoolId: (state) => state.selectedPoolId,
+        selectedFieldId: (state) => state.selectedFieldId,
+        selectedGameId: (state) => state.selectedGameId,
+      }),
+
+      /**
+       * Détermine si l'utilisateur actuel peut modifier le match.
+       * @returns {boolean} - Vrai si l'utilisateur peut modifier le match.
+       */
       canEdit() {
         const isAdmin = this.$store.state.user?.roleId === 1;
         const isAssistant = this.$store.getters['userTourney/isAssistant'];
 
-        // On utilise now this.tourney, chargée via fetchTourneyStatus
         const isTournamentActive =
           this.tourney && this.tourney.status === 'active';
 
@@ -491,19 +501,39 @@
           },
         ];
       },
+
+      /**
+       * Détermine si l'utilisateur actuel peut voir les détails du match.
+       * @returns {boolean} - Vrai si l'utilisateur peut voir les détails du match.
+       */
       isAdmin() {
         return this.$store.state.user.roleId === 1;
       },
+
+      /**
+       * Détermine si l'utilisateur actuel est autorisé à effectuer des actions sur le match.
+       * @returns {boolean} - Vrai si l'utilisateur est autorisé.
+       */
       isAuthorized() {
         const isAssistant = this.$store.getters['userTourney/isAssistant'];
         const isAdmin = this.$store.state.user?.roleId === 1;
         return isAssistant || isAdmin;
       },
+
+      /**
+       * Trie les événements du match par ordre chronologique décroissant.
+       * @returns {Array} - Les événements triés.
+       */
       sortedGameEvents() {
         return [...this.gameEvents].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
       },
+
+      /**
+       * Formate le temps de match en minutes et secondes.
+       * @returns {string} - Le temps formaté.
+       */
       formattedTime() {
         const minutes = Math.floor(this.elapsedTime / 60)
           .toString()
@@ -511,18 +541,33 @@
         const seconds = (this.elapsedTime % 60).toString().padStart(2, '0');
         return `${minutes}:${seconds}`;
       },
+
+      /**
+       * Résultat de l'équipe A (gagnant, perdant ou match nul).
+       * @returns {string} - Le résultat de l'équipe A.
+       */
       teamAResult() {
         if (this.match.status !== 'completed') return null;
         if (this.scoreTeamA > this.scoreTeamB) return 'winner';
         if (this.scoreTeamA < this.scoreTeamB) return 'loser';
         return 'draw';
       },
+
+      /**
+       * Résultat de l'équipe B (gagnant, perdant ou match nul).
+       * @returns {string} - Le résultat de l'équipe B.
+       */
       teamBResult() {
         if (this.match.status !== 'completed') return null;
         if (this.scoreTeamB > this.scoreTeamA) return 'winner';
         if (this.scoreTeamB < this.scoreTeamA) return 'loser';
         return 'draw';
       },
+
+      /**
+       * Détermine si le match est un match nul.
+       * @returns {boolean} - Vrai si le match est un match nul.
+       */
       isDraw() {
         return (
           this.match.status === 'completed' &&
@@ -585,6 +630,11 @@
           );
         }
       },
+
+      /**
+       * Récupère les statuts du tournoi depuis l'API.
+       * @returns {Promise<void>}
+       */
       async fetchTourneyStatus() {
         try {
           const response = await apiService.get(`/tourneys/${this.tourneyId}`);
@@ -596,6 +646,7 @@
           );
         }
       },
+
       /**
        * Récupère les événements du match depuis l'API.
        * @returns {Promise<void>}
@@ -739,9 +790,18 @@
         }
       },
 
-      // Go back to planning
+      /**
+       * Go back to planning avec préservation des filtres
+       */
       goBack() {
-        this.$router.push(`/tourneys/${this.tourneyId}/planning`);
+        this.$router.push({
+          path: `/tourneys/${this.tourneyId}/planning`,
+          query: {
+            pool: this.selectedPoolId,
+            field: this.selectedFieldId,
+            game: this.selectedGameId,
+          },
+        });
       },
 
       /**
