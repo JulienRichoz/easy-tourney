@@ -32,7 +32,7 @@
       :class="{ active: $route.name === 'UserTourneyDetails' }"
     >
       <font-awesome-icon :icon="['fas', 'info-circle']" />
-      <span class="hidden sm:inline"> Détails</span>
+      <span class="hidden sm:inline"> Infos</span>
     </router-link>
   </div>
 </template>
