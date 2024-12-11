@@ -398,7 +398,7 @@
         :isVisible="showGenerateConfirmationModal"
         title="Confirmer la Génération des Équipes"
         message="Êtes-vous sûr de vouloir générer les équipes automatiquement ?"
-        @form-cancel="closeGenerateConfirmationModal"
+        @cancel="closeGenerateConfirmationModal"
         @confirm="confirmGenerateTeams"
       />
 
