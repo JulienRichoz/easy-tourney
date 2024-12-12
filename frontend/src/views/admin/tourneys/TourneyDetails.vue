@@ -149,8 +149,18 @@
         </l-map>
         <!-- Bouton sous la carte -->
         <div class="mt-4 flex justify-end relative z-30">
+          <!-- Bouton Télécharger Excel -->
           <ButtonComponent
-            :variant="'primary'"
+            v-if="tourney.status !== 'draft'"
+            @click="downloadExcel"
+            variant="success"
+            fontAwesomeIcon="file-excel"
+            class="flex items-center space-x-1"
+          >
+            <span>Télécharger Planning</span>
+          </ButtonComponent>
+          <ButtonComponent
+            :variant="'info'"
             fontAwesomeIcon="map-marker-alt"
             @click="openGoogleMaps"
           >
@@ -308,6 +318,7 @@
   import PendingIcon from '@/components/icons/PendingIcon.vue';
   import ActiveIcon from '@/components/icons/ActiveIcon.vue';
   import DraftIcon from '@/components/icons/DraftIcon.vue';
+  import { toast } from 'vue3-toastify';
 
   export default {
     components: {
@@ -490,6 +501,55 @@
       openGoogleMaps() {
         const url = this.googleMapsLink;
         window.open(url, '_blank');
+      },
+
+      /**
+       * Télécharge le planning du tournoi au format Excel.
+       * Utilise l'API pour récupérer le fichier Excel et le télécharger.
+       */
+      async downloadExcel() {
+        let toastId;
+        try {
+          // Afficher un toast indiquant que le téléchargement démarre
+          toastId = toast.info('Téléchargement du fichier en cours...', {
+            autoClose: false, // Empêche la fermeture automatique
+          });
+          const response = await apiService.get(
+            `/tourneys/${this.tourneyId}/export-data/excel`,
+            {
+              responseType: 'blob', // Demander un blob pour le téléchargement de fichiers
+            }
+          );
+
+          // Créer une URL temporaire pour le fichier
+          const blob = response.data; // Axios renvoie le blob dans `data`
+          const url = window.URL.createObjectURL(blob);
+
+          // Créer un lien pour déclencher le téléchargement
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tournament_${this.tourneyId}.xlsx`; // Nom du fichier
+          document.body.appendChild(a);
+          a.click();
+
+          // Nettoyer l'URL temporaire après le téléchargement
+          window.URL.revokeObjectURL(url);
+          // Mettre à jour le toast pour indiquer que le téléchargement est terminé
+          toast.update(toastId, {
+            render: 'Téléchargement terminé avec succès !',
+            type: 'success',
+            autoClose: 2000, // Fermeture automatique après 2 secondes
+          });
+        } catch (error) {
+          toast.update(toastId, {
+            render:
+              error.message ||
+              "Une erreur s'est produite lors du téléchargement.",
+            type: 'error',
+            autoClose: 2000, // Fermeture automatique après 2 secondes
+          });
+          console.error('Erreur lors du téléchargement Excel :', error);
+        }
       },
     },
     computed: {
