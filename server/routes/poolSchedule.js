@@ -23,7 +23,7 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // RÃ
 module.exports = router;
 
 /**
- * TODO : Check issue show all fields on page public/tourneys responsive mode. When clikcing nothing happens :)
+ * TODO : Fix game details page on phone. Button not working. Better management of score (if null score error in db). Better UI for score :)
  * TODO : PWA
  * TODO : Hebergement sur server
  * TODO Opt: ajouter test unitaire + test integration dans l'application (ou quand push sur main...)
