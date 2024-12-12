@@ -3,8 +3,16 @@
   <div>
     <div class="p-6">
       <!-- Titre de la page et statut des inscriptions -->
-      <div class="flex items-center mb-8 justify-between">
+      <div class="flex items-center mb-2 justify-between">
         <TitleComponent title="Equipes du tournoi"></TitleComponent>
+        <!-- Section "Quitter le Tournoi" -->
+        <div v-if="isRegistrationActive">
+          <ButtonComponent variant="danger" @click="confirmQuitTournament">
+            Quitter Tournoi
+          </ButtonComponent>
+        </div>
+      </div>
+      <div class="p-2">
         <p v-if="isRegistrationActive" class="text-green-600">
           Les inscriptions sont ouvertes. Vous pouvez rejoindre ou quitter un
           groupe.
@@ -17,12 +25,6 @@
           Les inscriptions sont terminées. Vous ne pouvez pas rejoindre ou
           quitter un groupe.
         </p>
-        <!-- Section "Quitter le Tournoi" -->
-        <div v-if="isRegistrationActive" class="mb-8">
-          <ButtonComponent variant="danger" @click="confirmQuitTournament">
-            Quitter le Tournoi
-          </ButtonComponent>
-        </div>
       </div>
 
       <!-- Section de votre équipe -->

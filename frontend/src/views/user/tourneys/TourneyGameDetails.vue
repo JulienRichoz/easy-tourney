@@ -47,7 +47,7 @@
         </div>
 
         <!-- Colonne droite -->
-        <div class="text-right flex justify-end items-center">
+        <div class="text-right flex justify-start md:justify-end items-center">
           <!-- Sélecteur de statut du match -->
           <StatusSelectorComponent
             v-if="canEdit"
