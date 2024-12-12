@@ -33,7 +33,9 @@
 
     <!-- Afficher le statut en texte -->
     <div v-if="registrationStatus" class="mb-4">
-      <span class="text-base font-medium text-gray-700 dark:text-gray-300">
+      <span
+        class="text-base font-medium text-light-form-text dark:text-dark-form-text"
+      >
         {{ statusText }}
       </span>
     </div>

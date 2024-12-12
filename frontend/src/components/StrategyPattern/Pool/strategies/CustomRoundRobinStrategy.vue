@@ -1,8 +1,8 @@
 <!-- components/StrategyPattern/Pool/strategies/CustomRoundRobinStrategy.vue -->
 <template>
   <div>
-    <p class="mb-4 text-gray-600">
-      <span class="text-red-500 dark:text-red-600 font-bold">
+    <p class="mb-4 text-light-form-text dark:text-dark-form-text">
+      <span class="text-light-form-error dark:text-dark-form-error font-bold">
         <strong>Attention :</strong> Les pools existantes et les plannings
         associés seront supprimés. Il est préférable d'effectuer cette action
         une fois les inscriptions terminées. </span
