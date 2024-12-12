@@ -5,25 +5,35 @@
 
     <!-- Avancement du Tournoi avec le stepper horizontal -->
     <div
-      class="flex items-center gap-y-6 gap-x-4 max-w-screen-lg mx-auto px-4 font-sans mt-8 overflow-x-auto flex-nowrap"
+      class="flex items-center gap-y-4 gap-x-2 sm:gap-y-6 sm:gap-x-4 max-w-screen-lg mx-auto px-4 font-sans mt-8 overflow-x-auto flex-nowrap"
     >
       <div v-for="(step, index) in statusSteps" :key="index" class="flex-1">
         <!-- Barre de progression -->
         <div
-          :class="['w-full h-1 rounded', progressBarClass(step.status)]"
+          :class="[
+            'w-full',
+            'rounded',
+            'h-0.5 sm:h-1', // Hauteur réduite sur petits écrans
+            progressBarClass(step.status),
+          ]"
         ></div>
         <!-- Informations sur l'étape -->
-        <div class="mt-2 mr-4 flex items-center">
+        <div class="mt-1 sm:mt-2 mr-2 sm:mr-4 flex items-center">
           <!-- Icône de l'étape -->
           <component
             :is="stepIconComponent(step.status)"
-            class="shrink-0 w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8"
+            class="shrink-0 w-3 h-3 sm:w-4 sm:h-4 md:w-6 md:h-6"
           />
-          <div class="ml-2">
-            <h6 :class="['text-lg font-bold', stepTextClass(step.status)]">
+          <div class="ml-1 sm:ml-2">
+            <h6
+              :class="[
+                'text-sm sm:text-lg font-bold',
+                stepTextClass(step.status),
+              ]"
+            >
               {{ step.label }}
             </h6>
-            <p :class="['text-base', stepTextClass(step.status)]">
+            <p :class="['text-xs sm:text-base', stepTextClass(step.status)]">
               {{ stepStatusText(step.status, step.label) }}
             </p>
           </div>
