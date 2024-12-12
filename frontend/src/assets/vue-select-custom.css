@@ -18,4 +18,11 @@
   --vs-border-color: #374151;
   --vs-dropdown-option--active-bg: #166534; /* Option survolée en mode sombre */
   --vs-dropdown-option--active-color: #ffffff;
+  /* Changer la couleur de la flèche du dropdown en mode sombre */
+.vs__open-indicator path {
+  fill: #cbd5e1 !important; /* Définit la couleur de la flèche en blanc */
+}
+.vs__clear svg path {
+  fill: #cbd5e1 !important; /* Définit la couleur de la croix en blanc */
+}
 }
