@@ -23,9 +23,11 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // RÃ
 module.exports = router;
 
 /**
+ * TODO : Check issue show all fields on page public/tourneys responsive mode. When clikcing nothing happens :)
  * TODO : PWA
  * TODO : Hebergement sur server
- * TODO Opt: ajouter test unitaire + test integration dans l'application
+ * TODO Opt: ajouter test unitaire + test integration dans l'application (ou quand push sur main...)
+ * TODO Opt : redefinir class css avec tailwind light/dark mode
  * 
  * AMELIORATIONS
  * Composant entre planning games et planning pools (reduction code, + clean)
