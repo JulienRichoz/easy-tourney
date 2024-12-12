@@ -93,48 +93,46 @@
       </ButtonComponent>
 
       <!-- Pagination et Bouton Show All Fields -->
-      <div
-        v-if="totalPages > 1"
-        class="flex justify-end items-center gap-2 my-2 px-4"
-      >
-        <!-- Bouton Précédent -->
-        <button
-          v-if="currentPage > 1"
-          @click="currentPage--"
-          class="text-2xl px-2 py-1 rounded navigation-button"
+      <div class="flex flex-wrap w-full items-center gap-2 sm:gap-4">
+        <!-- Contrôles de Pagination -->
+        <div
+          v-if="!showAllTerrains && totalPages > 1"
+          class="flex items-center gap-2"
         >
-          &lt;
-        </button>
-
-        <!-- Sélecteur de Page -->
-        <select
-          v-model="currentPage"
-          class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
-        >
-          <option v-for="page in totalPages" :key="page" :value="page">
-            Page {{ page }} / {{ totalPages }}
-          </option>
-        </select>
-
-        <!-- Bouton Suivant -->
-        <button
-          v-if="currentPage < totalPages"
-          @click="currentPage++"
-          class="text-2xl px-2 py-1 rounded navigation-button"
-        >
-          &gt;
-        </button>
+          <button
+            v-if="currentPage > 1"
+            @click="currentPage--"
+            class="text-2xl px-2 py-1 rounded navigation-button"
+          >
+            &lt;
+          </button>
+          <select
+            v-model="currentPage"
+            class="bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text border border-light-form-border-default dark:border-dark-form-border-default rounded-md px-2 py-1"
+          >
+            <option v-for="page in totalPages" :key="page" :value="page">
+              Page {{ page }} / {{ totalPages }}
+            </option>
+          </select>
+          <button
+            v-if="currentPage < totalPages"
+            @click="currentPage++"
+            class="text-2xl px-2 py-1 rounded navigation-button"
+          >
+            &gt;
+          </button>
+        </div>
 
         <!-- Bouton Show All Fields -->
-        <button
-          @click="
-            showAllTerrains = !showAllTerrains;
-            currentPage = 1;
-          "
-          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {{ showAllTerrains ? 'Reduce' : 'All Fields' }}
-        </button>
+        <div class="ml-auto">
+          <button
+            v-if="fields.length > terrainsPerPage"
+            @click="toggleShowAllTerrains"
+            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            {{ showAllTerrains ? 'Reduce' : 'All Fields' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -353,6 +351,11 @@
           });
         });
 
+        if (this.showAllTerrains) {
+          // Si tous les terrains sont affichés, retourner tous les terrains
+          return this.fields;
+        }
+
         return this.fields.filter((field) => fieldIdsWithEvents.has(field.id));
       },
 
@@ -361,13 +364,14 @@
        * @returns {Array} Liste paginée de terrains filtrés.
        */
       paginatedFilteredFields() {
-        const filteredFields = this.filteredFields;
         if (this.showAllTerrains) {
-          return filteredFields;
+          return this.sortedFields; // Retourne tous les terrains sans découpage
         }
-        const start = (this.currentPage - 1) * this.terrainsPerPage;
-        const end = start + this.terrainsPerPage;
-        return filteredFields.slice(start, end);
+        const filteredFields = this.filteredFields;
+        return filteredFields.slice(
+          (this.currentPage - 1) * this.terrainsPerPage,
+          this.currentPage * this.terrainsPerPage
+        );
       },
 
       /**
@@ -376,7 +380,7 @@
        */
       totalPages() {
         if (this.showAllTerrains) {
-          return 1; // Si tous les terrains sont affichés, une seule page
+          return 1; // Une seule page lorsqu'on affiche tous les terrains
         }
         return Math.ceil(this.filteredFields.length / this.terrainsPerPage);
       },
@@ -469,10 +473,40 @@
           eventContent: this.renderEventContent,
         };
       },
+      sortedFields() {
+        return [...this.fields].sort((a, b) => {
+          // Trier par nom numérique si les noms sont des nombres
+          const aNum = parseInt(a.name);
+          const bNum = parseInt(b.name);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+          }
+          // Sinon, trier alphabétiquement
+          return a.name.localeCompare(b.name);
+        });
+      },
     },
     watch: {
       /**
-       * Met à jour les paramètres de requête (query params) lors de la sélection des filtres.
+       * Met à jour le calendrier lorsque showAllTerrains change.
+       */
+      showAllTerrains() {
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchResources();
+          this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+      },
+      /**
+       * Met à jour le calendrier lorsque la page courante change.
+       */
+      currentPage() {
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchResources();
+          this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+      },
+      /**
+       * Réinitialise la pagination et met à jour les paramètres de requête lorsque les filtres changent.
        */
       selectedPoolId() {
         this.currentPage = 1; // Réinitialiser la pagination
@@ -489,18 +523,19 @@
         this.calendarKey += 1;
         this.updateQueryParams();
       },
-      totalPages(newVal) {
-        if (newVal === 1) {
-          this.showAllTerrains = false;
-          this.currentPage = 1;
-        }
-      },
+      /**
+       * Charge les filtres depuis les query params lorsque ceux-ci changent.
+       */
       '$route.query'() {
         this.loadFiltersFromQuery();
       },
-      currentPage() {
+      /**
+       * Rafraîchit les événements lorsque les couleurs unifiées changent.
+       */
+      useUnifiedColors() {
         if (this.$refs.fullCalendar) {
-          this.$refs.fullCalendar.getApi().refetchResources();
+          // Rafraîchir le calendrier pour appliquer les nouvelles couleurs
+          this.$refs.fullCalendar.getApi().refetchEvents();
         }
       },
     },
@@ -531,13 +566,17 @@
           },
         });
       },
-
       /**
-       * Met à jour l'ID de la pool sélectionnée (filtre).
-       * @param poolId
+       * Bascule l'affichage de tous les terrains.
        */
-      // Ces méthodes ne sont plus nécessaires si vous utilisez des setters dans les computed
-      // Vous pouvez les supprimer ou les conserver si vous avez besoin d'une logique supplémentaire
+      toggleShowAllTerrains() {
+        this.showAllTerrains = !this.showAllTerrains;
+        this.currentPage = 1;
+        if (this.$refs.fullCalendar) {
+          this.$refs.fullCalendar.getApi().refetchResources();
+          this.$refs.fullCalendar.getApi().refetchEvents();
+        }
+      },
 
       /**
        * Charge les filtres depuis les paramètres de requête (query params).
