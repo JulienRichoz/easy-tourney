@@ -41,14 +41,6 @@
           {{ sport.name }}
         </div>
       </div>
-
-      <!-- Sélecteur de statut aligné à droite -->
-      <StatusSelectorComponent
-        :tourneyId="tourneyId"
-        statusKey="sportAssignmentStatus"
-        :statusOptions="sportAssignmentStatusOptions"
-        v-model="currentStatus"
-      />
     </div>
 
     <!-- Si aucun terrain n'est trouvé, afficher un message d'avertissement -->
@@ -59,9 +51,9 @@
     </div>
 
     <!-- Pagination et calendrier -->
-    <div class="flex flex-wrap gap-4 my-2 px-4">
-      <!-- Pagination alignée à droite -->
-      <div class="flex items-center gap-2 ml-auto">
+    <div class="flex items-center justify-between gap-4 my-2 px-4">
+      <!-- Pagination au centre ou légèrement à gauche -->
+      <div class="flex items-center gap-2 mx-auto">
         <button
           v-if="currentPage > 1"
           @click="currentPage--"
@@ -95,6 +87,16 @@
         >
           {{ showAllTerrains ? 'Reduce' : 'All Fields' }}
         </button>
+      </div>
+
+      <!-- Sélecteur de statut complètement à droite -->
+      <div class="ml-auto">
+        <StatusSelectorComponent
+          :tourneyId="tourneyId"
+          statusKey="sportAssignmentStatus"
+          :statusOptions="sportAssignmentStatusOptions"
+          v-model="currentStatus"
+        />
       </div>
     </div>
 
