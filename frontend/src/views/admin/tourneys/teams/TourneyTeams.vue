@@ -216,7 +216,15 @@
       <!-- Message d'erreur si teamSetup n'est pas configuré -->
       <ErrorMessageComponent
         v-if="!teamSetupConfigured"
-        message="Aucune configuration d'équipe n'est définie. Veuillez cliquer sur 'Réglages' pour configurer les équipes."
+        :message="
+          fieldCount > 0
+            ? 'Aucune configuration d\'équipe n\'est définie. Cliquez sur <Config Equipes> pour configurer les équipes. Recommandation : Nombre max d\'équipes: ' +
+              fieldCount * 4 +
+              ' équipes pour ' +
+              fieldCount +
+              ' terrains.'
+            : 'Aucune configuration d\'équipe n\'est définie. Veuillez cliquer sur <Config Equipes> pour configurer les équipes.'
+        "
       ></ErrorMessageComponent>
 
       <!-- Message informant de la nécessité de créer des équipes "player" si aucune n'existe -->
@@ -363,6 +371,12 @@
       >
         <template #content>
           <!-- Formulaire de configuration des équipes -->
+          <!-- Message de recommandation basé sur le nombre de terrains -->
+          <p class="text-sm mb-4" v-if="fieldCount > 0">
+            Il y a actuellement {{ fieldCount }} terrain(s). Nous recommandons
+            de créer environ {{ fieldCount * 4 }} équipes (soit 4 équipes par
+            terrain).
+          </p>
           <FormComponent
             v-model="localTeamSetup"
             :fields="teamSetupFields"
@@ -471,6 +485,7 @@
         unassignedUsers: [], // Utilisateurs non assignés
         allUsers: [], // Tous les utilisateurs inscrits (hors admin)
         inviteLink: '', // Stocke le lien d'invitation
+        fieldCount: 0,
         showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
@@ -675,7 +690,10 @@
           const response = await apiService.get(
             `/tourneys/${this.tourneyId}/teams-details`
           );
-          const { teamSetup, teams, unassignedUsers, allUsers } = response.data;
+          const { teamSetup, teams, unassignedUsers, allUsers, fieldCount } =
+            response.data;
+
+          this.fieldCount = fieldCount || 0; // Stocker le nombre de terrains
 
           // Mise à jour de teamSetup et teamSetupConfigured
           if (
@@ -1009,9 +1027,9 @@
         } else {
           // Initialiser avec des valeurs par défaut ou vides
           this.localTeamSetup = {
-            maxTeamNumber: 1,
-            playerPerTeam: 1,
-            minPlayerPerTeam: 1,
+            maxTeamNumber: this.fieldCount * 4 || 1,
+            playerPerTeam: 4,
+            minPlayerPerTeam: 3,
           };
         }
         this.showTeamSetupModal = true;

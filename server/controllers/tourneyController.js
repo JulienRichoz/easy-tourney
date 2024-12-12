@@ -570,6 +570,9 @@ exports.getTourneyTeamsDetails = async (req, res) => {
       ],
     });
 
+    // Compter le nombre de terrains
+    const fieldCount = await Field.count({ where: { tourneyId } });
+
     // Mettre à jour les statuts après la récupération des détails du tournoi
     await checkAndUpdateStatuses(tourneyId);
 
@@ -578,6 +581,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
       teams,
       unassignedUsers,
       allUsers,
+      fieldCount,
     });
   } catch (error) {
     console.error(
