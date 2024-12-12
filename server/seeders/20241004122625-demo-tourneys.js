@@ -6,7 +6,9 @@ module.exports = {
     await queryInterface.bulkInsert('Tourneys', [
       {
         name: 'High Tournament',
-        location: 'Stadium High',
+        location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
+        latitude: 46.8166,
+        longitude: 7.15369,
         dateTourney: '2024-11-15',
         emergencyDetails: 'Contact: High Admin, Tel: 123456789',
         tourneyType: 'customRoundRobin',
@@ -24,7 +26,9 @@ module.exports = {
       },
       {
         name: 'Mid Tournament',
-        location: 'Stadium Mid',
+        location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
+        latitude: 46.8166,
+        longitude: 7.15369,
         dateTourney: '2024-11-16',
         emergencyDetails: 'Contact: Mid Admin, Tel: 987654321',
         tourneyType: 'customRoundRobin',
@@ -42,7 +46,9 @@ module.exports = {
       },
       {
         name: 'Low Tournament',
-        location: 'Stadium Low',
+        location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
+        latitude: 46.8166,
+        longitude: 7.15369,
         dateTourney: '2024-11-17',
         emergencyDetails: 'Contact: Low Admin, Tel: 555555555',
         tourneyType: 'customRoundRobin',
@@ -60,7 +66,9 @@ module.exports = {
       },
       {
         name: 'Tournoi de Printemps',
-        location: 'Complexe Sportif de la Ville',
+        location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
+        latitude: 46.8166,
+        longitude: 7.15369,
         dateTourney: '2024-11-15',
         emergencyDetails: 'Contact: John Doe, Tel: 123456789',
         tourneyType: 'customRoundRobin',
