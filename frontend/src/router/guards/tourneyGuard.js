@@ -1,4 +1,5 @@
 // src/router/tourneyGuard.js
+
 import store from '@/store';
 import { isAdmin } from '@/services/authService';
 import apiService from '@/services/apiService';
@@ -16,20 +17,29 @@ export async function checkTournamentAccess(to, from, next) {
     const response = await apiService.get(
       `/users/me/tourneys/${tourneyId}/role`
     );
-    const userRole = response.data.tourneyRole;
-    if (userRole) {
+    const userRoleInTourney = response.data.tourneyRole;
+    if (userRoleInTourney) {
       // Stocke le rôle dans le store si nécessaire
-      store.commit('userTourney/SET_TOURNEY_ROLE', userRole);
+      store.commit('userTourney/SET_TOURNEY_ROLE', userRoleInTourney);
       return next();
     } else {
-      return next('/access-denied');
+      // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laissez passer
+      if (to.path === '/tourneys') {
+        return next();
+      }
+      // Sinon, rediriger vers la liste des tournois
+      return next('/tourneys');
     }
   } catch (error) {
     console.error(
       "Erreur lors de la vérification de l'accès au tournoi:",
       error
     );
-    return next('/access-denied');
+    // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laissez passer
+    if (to.path === '/tourneys') {
+      return next();
+    }
+    return next('/tourneys'); // Redirection en cas d'erreur
   }
 }
 
@@ -49,7 +59,8 @@ export async function checkTourneyRules(to, from, next) {
     );
 
     if (!tourney) {
-      return next('/access-denied'); // Si le tournoi n'existe pas
+      // Redirection vers la liste des tournois si le tournoi n'existe pas
+      return next('/tourneys');
     }
 
     // Conditions pour accéder aux différentes pages
@@ -79,15 +90,17 @@ export async function checkTourneyRules(to, from, next) {
         return next(); // Accès autorisé pour ces pages spécifiques
       }
 
-      return next('/access-denied'); // Accès refusé pour les autres pages
+      // Redirection vers la liste des tournois au lieu de 'access-denied'
+      return next('/tourneys');
     }
 
-    return next('/access-denied'); // Par défaut, accès refusé
+    // Par défaut, redirection vers la liste des tournois
+    return next('/tourneys');
   } catch (error) {
     console.error(
       'Erreur lors de la vérification des règles du tournoi :',
       error
     );
-    return next('/access-denied');
+    return next('/tourneys'); // Redirection en cas d'erreur
   }
 }
