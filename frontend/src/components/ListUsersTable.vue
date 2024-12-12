@@ -267,8 +267,9 @@
                 :class="[
                   'border border-light-form-border dark:border-dark-form-border rounded-md p-1 w-48 sm:w-56',
                   'bg-light-form-background dark:bg-dark-form-background text-light-form-text dark:text-dark-form-text ring-indigo-500',
-                  'cursor-pointer',
+                  'cursor-pointer custom-v-select',
                 ]"
+                @update:modelValue="onTeamSelectionChange(user.id, $event)"
               />
               <!-- Bouton Assigner -->
               <ButtonComponent
@@ -650,6 +651,11 @@
         this.showDeleteModal = true;
       },
 
+      onTeamSelectionChange(userId, teamId) {
+        this.localSelectedTeamIds[userId] = teamId;
+        this.$emit('update:selectedTeamIds', { ...this.localSelectedTeamIds });
+      },
+
       /**
        * Supprime l'utilisateur après confirmation.
        */
@@ -872,11 +878,10 @@
       },
 
       selectedTeamIds: {
-        immediate: true,
-        deep: true,
         handler(newVal) {
           this.localSelectedTeamIds = { ...newVal };
         },
+        deep: true,
       },
     },
   };
@@ -888,5 +893,12 @@
   table td {
     padding: 0.5rem;
     white-space: nowrap;
+  }
+
+  .custom-v-select .vs__dropdown-toggle {
+    color: #ffffff !important;
+  }
+  .custom-v-select .vs__clear {
+    color: #ffffff !important;
   }
 </style>

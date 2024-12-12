@@ -9,7 +9,6 @@
       :enable-assign-team="true"
       :allow-assign-to-other-teams="true"
       :selected-team-ids="selectedTeamIds"
-      :team-options="teamOptions"
       :available-teams="availableTeams"
       @update:selectedTeamIds="selectedTeamIds = $event"
       @assign-team="handleAssignTeam"
@@ -80,7 +79,7 @@
           return isCurrentTeam || hasSpace;
         });
       },
-      teamOptions() {
+      /* teamOptions() {
         return this.availableTeams.map((team) => {
           const capacity = this.getTeamCapacity(team);
           return {
@@ -88,7 +87,7 @@
             teamName: `${team.teamName} (${team.usersTourneys.length}/${capacity})`,
           };
         });
-      },
+      },*/
     },
     async created() {
       await this.fetchData();
@@ -114,13 +113,6 @@
           this.teamSetup = data.teamSetup;
 
           this.selectedTeamIds = {};
-          this.unassignedUsers.forEach((user) => {
-            if (user.teamId) {
-              this.selectedTeamIds[user.id] = user.teamId;
-            }
-          });
-
-          // Initialiser selectedTeamIds
           this.unassignedUsers.forEach((user) => {
             if (user.teamId) {
               this.selectedTeamIds[user.id] = user.teamId;
@@ -178,7 +170,7 @@
       },
       async handleValidateAssignments() {
         const assignments = Object.entries(this.selectedTeamIds)
-          .filter(([teamId]) => teamId !== null && teamId !== undefined)
+          .filter(([, teamId]) => teamId !== null && teamId !== undefined)
           .map(([userId, teamId]) => ({
             userId: Number(userId),
             teamId,
