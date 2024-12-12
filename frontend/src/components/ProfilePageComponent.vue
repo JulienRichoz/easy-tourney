@@ -170,7 +170,7 @@
           <div v-if="isAdmin">
             <div class="flex items-center">
               <label
-                class="block text-lg font-medium text-gray-700 dark:text-gray-300"
+                class="block text-lg font-medium text-light-form-text dark:text-dark-form-text"
                 >Rôle</label
               >
               <SoftButtonComponent
@@ -233,7 +233,7 @@
           <!-- Assignation à un tournoi -->
           <div class="mb-4">
             <label
-              class="block text-lg font-medium text-gray-700 dark:text-gray-300"
+              class="block text-lg font-medium text-light-form-text dark:text-dark-form-text"
               >Ajouter au tournoi</label
             >
             <div class="flex items-center">

@@ -147,7 +147,9 @@
               :class="{ 'translate-x-full': useUnifiedColors }"
             ></div>
           </div>
-          <span class="ml-2 hidden md:block text-gray-700 dark:text-gray-300">
+          <span
+            class="ml-2 hidden md:block text-light-form-text dark:text-dark-form-text"
+          >
             {{ useUnifiedColors ? 'Color by Pool' : 'Color by Sport' }}
           </span>
         </label>

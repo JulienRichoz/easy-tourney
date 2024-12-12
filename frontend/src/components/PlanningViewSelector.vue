@@ -4,7 +4,7 @@
   >
     <!-- Label visible uniquement sur les écrans sm et plus grands -->
     <span
-      class="font-semibold text-gray-700 dark:text-gray-300 hidden sm:inline"
+      class="font-semibold text-light-form-text dark:text-dark-form-text hidden sm:inline"
     >
       Planification des :
     </span>

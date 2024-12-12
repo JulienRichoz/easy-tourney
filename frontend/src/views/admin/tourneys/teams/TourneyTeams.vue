@@ -155,7 +155,7 @@
                         style="max-width: 100%"
                       />
                     </div>
-                    <p class="text-gray-700 dark:text-gray-300">
+                    <p class="text-light-form-text dark:text-dark-form-text">
                       Expire le :
                       {{ new Date(token.expiresAt).toLocaleDateString() }}
                     </p>

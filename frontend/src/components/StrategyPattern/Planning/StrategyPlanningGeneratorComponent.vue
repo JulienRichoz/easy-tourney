@@ -13,7 +13,7 @@
             v-model="localRandomMode"
             class="form-checkbox h-5 w-5 text-blue-600"
           />
-          <span class="text-gray-700 dark:text-gray-300">
+          <span class="text-light-form-text dark:text-dark-form-text">
             Génération aléatoire (erreurs plus probables)
           </span>
         </label>

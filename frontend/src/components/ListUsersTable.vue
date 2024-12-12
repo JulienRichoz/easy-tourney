@@ -76,7 +76,7 @@
             v-model="filterNoTournament"
             class="form-checkbox h-5 w-5 text-indigo-600"
           />
-          <span class="ml-2 text-gray-700 dark:text-gray-300">
+          <span class="ml-2 text-light-form-text dark:text-dark-form-text">
             Sans tournoi
           </span>
         </label>

@@ -85,9 +85,10 @@
             <div>
               <span class="font-semibold">{{ message.title }} :</span>
               <span>{{ message.description }}</span>
-              <span class="block mt-1 text-gray-500 dark:text-gray-300">{{
-                message.recommendation
-              }}</span>
+              <span
+                class="block mt-1 text-light-form-text dark:text-dark-form-text"
+                >{{ message.recommendation }}</span
+              >
             </div>
           </li>
         </ul>
