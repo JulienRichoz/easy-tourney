@@ -36,22 +36,30 @@ jobs:
           root-password: ${{ secrets.DB_PASSWORD }}
           database: ${{ secrets.DB_NAME }}
 
-      # Étape 5 : Attendre que MySQL démarre
-      - name: Wait for MySQL
+      # Étape 5 : Créer le fichier .env
+      - name: Create .env File
         run: |
-          echo "Attente de MySQL..."
-          sleep 10
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> ./server/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> ./server/.env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> ./server/.env
+          echo "DB_HOST=127.0.0.1" >> ./server/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ./server/.env
+          echo "PORT=3000" >> ./server/.env
 
-      # Étape 5 : Démarrer le backend
+      # Étape 6 : Attendre que MySQL démarre
+      - name: Wait for MySQL
+        run: sleep 10
+
+      # Étape 7 : Démarrer le backend
       - name: Start Backend Server
         run: npm run serve &
         working-directory: ./server
 
-      # Étape 6 : Installer Newman pour exécuter les tests Postman
+      # Étape 8 : Installer Newman pour exécuter les tests Postman
       - name: Install Newman
         run: npm install -g newman
 
-      # Étape 7 : Exécuter les tests Postman
+      # Étape 9 : Exécuter les tests Postman
       - name: Run Postman Tests
         run: |
           newman run ./server/tests/collection.json \
