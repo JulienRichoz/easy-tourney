@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Stop default MySQL
+        run: sudo service mysql stop
+
       # Étape 3 : Installer les dépendances backend
       - name: Install Backend Dependencies
         run: npm ci
@@ -30,10 +33,10 @@ jobs:
 
       # Étape 4 : Configurer MySQL
       - name: Setup MySQL
-        uses: mirromutth/mysql-action@v1
+        uses: mirromutth/mysql-action@v1.1
         with:
           mysql version: '8.0'
-          mysql database: ${{ secrets.DB_NAME }}
+          mysql database: mytestdb
           mysql user: root
           mysql password: root
 
@@ -48,15 +51,25 @@ jobs:
           echo "PORT=3000" >> ./server/.env
 
       # Étape 6 : Attendre que MySQL démarre complètement
-      - name: Wait for MySQL
-        run: sleep 90
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysql -h127.0.0.1 -P3306 -uroot -proot -e "SELECT 1;" > /dev/null 2>&1; then
+              echo "MySQL is ready!"
+              exit 0
+            fi
+            echo "MySQL not ready yet..."
+            sleep 2
+          done
+          echo "MySQL did not become ready in time."
+          exit 1
 
-      # Étape 7 : Effectuer les migrations et seed
       - name: Test MySQL Connection
         run: mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW DATABASES;"
 
+      # Étape 7 : Effectuer les migrations et seed
       - name: Run migrations
-        run: npx sequelize-cli db:migrate --debug
+        run: npx sequelize-cli db:migrate
         working-directory: ./server
 
       - name: Run seeds
