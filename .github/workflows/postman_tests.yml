@@ -38,7 +38,7 @@ jobs:
 
       # Étape 5 : Démarrer le backend
       - name: Start Backend Server
-        run: npm start &
+        run: npm run serve &
         working-directory: ./server
 
       # Étape 6 : Installer Newman pour exécuter les tests Postman
