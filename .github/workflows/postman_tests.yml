@@ -1,0 +1,52 @@
+name: Test Backend with Postman
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Cloner le code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Configurer Node.js pour le backend
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # Étape 3 : Installer les dépendances backend
+      - name: Install Backend Dependencies
+        run: npm ci
+        working-directory: ./server
+
+      # Étape 4 : Configurer MySQL
+      - name: Setup MySQL
+        uses: mirromutth/mysql-action@v1
+        with:
+          mysql-version: '8.0'
+          root-password: ${{ secrets.MYSQL_PASSWORD }}
+          database: ${{ secrets.DB_NAME }}
+
+      # Étape 5 : Démarrer le backend
+      - name: Start Backend Server
+        run: npm start &
+        working-directory: ./server
+
+      # Étape 6 : Installer Newman pour exécuter les tests Postman
+      - name: Install Newman
+        run: npm install -g newman
+
+      # Étape 7 : Exécuter les tests Postman
+      - name: Run Postman Tests
+        run: |
+          newman run ./server/tests/collection.json \
+          --environment ./server/tests/environment.json
