@@ -24,7 +24,6 @@ jobs:
           node-version: '20.x'
 
       # Étape 3 : Installer les dépendances backend
-      # Assurez-vous que votre package.json dans ./server contient bien "sequelize", "sequelize-cli" et "mysql2".
       - name: Install Backend Dependencies
         run: npm ci
         working-directory: ./server
@@ -50,7 +49,7 @@ jobs:
 
       # Étape 6 : Attendre que MySQL démarre complètement
       - name: Wait for MySQL
-        run: sleep 20
+        run: sleep 60
 
       # Étape 7 : Effectuer les migrations et seed
       - name: Run migrations
