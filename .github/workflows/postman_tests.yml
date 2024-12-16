@@ -21,9 +21,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: '20.x'
 
       # Étape 3 : Installer les dépendances backend
+      # Assurez-vous que votre package.json dans ./server contient bien "sequelize", "sequelize-cli" et "mysql2".
       - name: Install Backend Dependencies
         run: npm ci
         working-directory: ./server
@@ -47,29 +48,33 @@ jobs:
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ./server/.env
           echo "PORT=3000" >> ./server/.env
 
-      # Étape 6 : Attendre que MySQL démarre
+      # Étape 6 : Attendre que MySQL démarre complètement
       - name: Wait for MySQL
         run: sleep 20
 
-      # Étape 7 : Démarrer le backend avec migration et seeder
+      # Étape 7 : Effectuer les migrations et seed
       - name: Run migrations
         run: npx sequelize-cli db:migrate
-        
+        working-directory: ./server
+
       - name: Run seeds
         run: npx sequelize-cli db:seed:all
-        
+        working-directory: ./server
+
+      # Étape 8 : Démarrer le serveur backend
       - name: Start Backend Server
         run: npm run serve &
         working-directory: ./server
 
+      # Attendre que le serveur démarre
       - name: Wait for server to start
         run: sleep 10
 
-      # Étape 8 : Installer Newman pour exécuter les tests Postman
+      # Étape 9 : Installer Newman pour exécuter les tests Postman
       - name: Install Newman
         run: npm install -g newman
 
-      # Étape 9 : Exécuter les tests Postman
+      # Étape 10 : Exécuter les tests Postman
       - name: Run Postman Tests
         run: |
           newman run ./server/tests/collection.json \
