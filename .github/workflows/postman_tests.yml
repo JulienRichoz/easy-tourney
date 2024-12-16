@@ -34,14 +34,14 @@ jobs:
         with:
           mysql version: '8.0'
           mysql database: ${{ secrets.DB_NAME }}
-          mysql user: ${{ secrets.DB_USERNAME }}
-          mysql password: ${{ secrets.DB_PASSWORD }}
+          mysql user: root
+          mysql password: root
 
       # Étape 5 : Créer le fichier .env
       - name: Create .env File
         run: |
           echo "DB_USERNAME=root" >> ./server/.env
-          echo "DB_PASSWORD=" >> ./server/.env
+          echo "DB_PASSWORD=root" >> ./server/.env
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> ./server/.env
           echo "DB_HOST=127.0.0.1" >> ./server/.env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ./server/.env
@@ -53,8 +53,7 @@ jobs:
 
       # Étape 7 : Effectuer les migrations et seed
       - name: Test MySQL Connection
-        run: |
-          mysql -h127.0.0.1 -P3306 -u"${{ secrets.DB_USERNAME }}" -p"${{ secrets.DB_PASSWORD }}" -e "SHOW DATABASES;"
+        run: mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW DATABASES;"
 
       - name: Run migrations
         run: npx sequelize-cli db:migrate --debug
