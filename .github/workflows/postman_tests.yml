@@ -33,8 +33,14 @@ jobs:
         uses: mirromutth/mysql-action@v1
         with:
           mysql-version: '8.0'
-          root-password: ${{ secrets.MYSQL_PASSWORD }}
+          root-password: ${{ secrets.DB_PASSWORD }}
           database: ${{ secrets.DB_NAME }}
+
+      # Étape 5 : Attendre que MySQL démarre
+      - name: Wait for MySQL
+        run: |
+          echo "Attente de MySQL..."
+          sleep 10
 
       # Étape 5 : Démarrer le backend
       - name: Start Backend Server
