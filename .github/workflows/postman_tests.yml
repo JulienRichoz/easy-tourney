@@ -32,9 +32,10 @@ jobs:
       - name: Setup MySQL
         uses: mirromutth/mysql-action@v1
         with:
-          mysql-version: '8.0'
-          root-password: ${{ secrets.DB_PASSWORD }}
-          database: ${{ secrets.DB_NAME }}
+          mysql version: '8.0'
+          mysql database: ${{ secrets.DB_NAME }}
+          mysql user: ${{ secrets.DB_USERNAME }}
+          mysql password: ${{ secrets.DB_PASSWORD }}
 
       # Étape 5 : Créer le fichier .env
       - name: Create .env File
@@ -54,6 +55,9 @@ jobs:
       - name: Start Backend Server
         run: npm run serve &
         working-directory: ./server
+
+      - name: Wait for server to start
+        run: sleep 10
 
       # Étape 8 : Installer Newman pour exécuter les tests Postman
       - name: Install Newman
