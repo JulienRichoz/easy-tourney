@@ -49,11 +49,11 @@ module.exports = {
       }
 
       // Insérer les données dans sportsFields
-      await queryInterface.bulkInsert('sportsFields', sportsFields);
+      await queryInterface.bulkInsert('SportsFields', sportsFields);
     }
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('sportsFields', null, {});
+    await queryInterface.bulkDelete('SportsFields', null, {});
   },
 };
