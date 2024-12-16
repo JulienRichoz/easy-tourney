@@ -108,9 +108,25 @@
             response = await apiService.get(`/users/${userId}/tourneys`);
           }
           this.userTourneys = response.data;
+
+          // Sauvegarder les tournois dans le localStorage
+          localStorage.setItem(
+            'userTourneys',
+            JSON.stringify(this.userTourneys)
+          );
         } catch (error) {
           console.error('Erreur lors de la récupération des tournois:', error);
           toast.error('Erreur lors de la récupération des tournois!');
+
+          // Charger les données du localStorage en mode hors ligne
+          if (!navigator.onLine) {
+            const storedTourneys = localStorage.getItem('userTourneys');
+            if (storedTourneys) {
+              this.userTourneys = JSON.parse(storedTourneys);
+            } else {
+              console.warn('Aucun tournoi trouvé en cache local.');
+            }
+          }
         }
       },
       isAdmin() {

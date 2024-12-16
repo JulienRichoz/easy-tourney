@@ -4,6 +4,9 @@
     id="app"
     class="min-h-screen bg-light-background dark:bg-dark-background text-light-title dark:text-dark-title font-sans antialiased"
   >
+    <div v-if="!isOnline" class="offline-indicator">
+      Vous êtes hors ligne. Certaines fonctionnalités peuvent être limitées.
+    </div>
     <Menu />
     <div :class="{ 'overflow-hidden max-h-screen': isModalOpen }">
       <router-view />
@@ -24,6 +27,7 @@
     data() {
       return {
         isModalOpen: false,
+        isOnline: navigator.onLine,
       };
     },
     methods: {
@@ -40,6 +44,11 @@
         this.tokenWatcher = setInterval(() => {
           this.checkTokenExpiration();
         }, this.getCheckInterval());
+      },
+
+      // Check if the user is online
+      updateOnlineStatus() {
+        this.isOnline = navigator.onLine;
       },
 
       checkTokenExpiration() {
@@ -102,12 +111,16 @@
       // Écoute les événements `modal-open` et `modal-close`
       window.addEventListener('modal-open', this.handleModalOpen);
       window.addEventListener('modal-close', this.handleModalClose);
+      window.addEventListener('online', this.updateOnlineStatus);
+      window.addEventListener('offline', this.updateOnlineStatus);
     },
 
     beforeUnmount() {
       clearInterval(this.tokenWatcher); // Nettoyage lors du démontage du composant
       window.removeEventListener('modal-open', this.handleModalOpen);
       window.removeEventListener('modal-close', this.handleModalClose);
+      window.removeEventListener('online', this.updateOnlineStatus);
+      window.removeEventListener('offline', this.updateOnlineStatus);
     },
   };
 </script>
@@ -120,5 +133,13 @@
   body {
     @apply bg-dark-menu;
     height: 100%;
+  }
+
+  .offline-indicator {
+    background: #ff9800;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    font-weight: bold;
   }
 </style>

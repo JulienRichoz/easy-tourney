@@ -136,33 +136,43 @@
       </div>
     </div>
 
-    <!-- Affichage des prochains matchs de l'utilisateur (uniquement si player ou assistant) -->
-    <CollapsibleBox
-      v-if="
-        userRoleInTourney !== 'admin' &&
-        userRoleInTourney !== 'guest' &&
-        userNextGames.length
-      "
-      title="Mes prochains matchs :"
-    >
-      <ul class="list-disc pl-5">
-        <li v-for="game in userNextGames" :key="game.id">
-          <span class="font-semibold">
-            {{ formatDateTimeDisplay(game.startTime) }} :
-          </span>
-          Team: {{ game.teamANumber }} vs {{ game.teamBNumber }} sur le terrain
-          {{ game.field.name }}
-        </li>
-      </ul>
-    </CollapsibleBox>
+    <!-- Affichage si les données sont chargées -->
+    <div v-if="fields.length && pools.length && games.length">
+      <!-- Affichage des prochains matchs de l'utilisateur (uniquement si player ou assistant) -->
+      <CollapsibleBox
+        v-if="
+          userRoleInTourney !== 'admin' &&
+          userRoleInTourney !== 'guest' &&
+          userNextGames.length
+        "
+        title="Mes prochains matchs :"
+      >
+        <ul class="list-disc pl-5">
+          <li v-for="game in userNextGames" :key="game.id">
+            <span class="font-semibold">
+              {{ formatDateTimeDisplay(game.startTime) }} :
+            </span>
+            Team: {{ game.teamANumber }} vs {{ game.teamBNumber }} sur le
+            terrain
+            {{ game.field.name }}
+          </li>
+        </ul>
+      </CollapsibleBox>
 
-    <!-- Calendrier avec les Terrains comme ressources -->
-    <div v-if="tourney.dateTourney && paginatedFilteredFields.length">
-      <FullCalendar
-        ref="fullCalendar"
-        :options="calendarOptions"
-        :key="calendarKey"
-      />
+      <!-- Calendrier avec les Terrains comme ressources -->
+      <div v-if="tourney.dateTourney && paginatedFilteredFields.length">
+        <FullCalendar
+          ref="fullCalendar"
+          :options="calendarOptions"
+          :key="calendarKey"
+        />
+      </div>
+    </div>
+    <div v-else>
+      <p>
+        Aucune donnée hors ligne. Veuillez accéder à cette page une première
+        fois en ligne.
+      </p>
     </div>
   </div>
 </template>
@@ -605,6 +615,24 @@
           this.setSelectedGame(null);
         }
       },
+
+      /**
+       * Recupère toutes les données nécessaires pour le planning.
+       * Gestion PWA
+       */
+      async fetchAllData() {
+        try {
+          await this.fetchPlanningDetails();
+          await this.fetchUserTeamAndPool();
+          await this.fetchUserNextGames();
+
+          this.saveAllToLocalStorage(); // Sauvegarder toutes les données dans localStorage
+        } catch (error) {
+          console.error('Erreur lors de la récupération des données :', error);
+          this.loadAllFromLocalStorage();
+        }
+      },
+
       /**
        * Récupère les données de planning (terrains, pools, games, sports...)
        */
@@ -643,6 +671,41 @@
           console.error(
             'Erreur lors de la récupération des détails du planning:',
             error
+          );
+        }
+      },
+      saveAllToLocalStorage() {
+        localStorage.setItem(
+          `planning-${this.tourneyId}`,
+          JSON.stringify({
+            fields: this.fields,
+            pools: this.pools,
+            games: this.games,
+            scheduleConfig: this.scheduleConfig,
+            userTeam: this.userTeam,
+            userPool: this.userPool,
+            userNextGames: this.userNextGames,
+            tourney: this.tourney,
+          })
+        );
+      },
+
+      loadAllFromLocalStorage() {
+        const savedData = localStorage.getItem(`planning-${this.tourneyId}`);
+        if (savedData) {
+          const data = JSON.parse(savedData);
+
+          this.fields = data.fields || [];
+          this.pools = data.pools || [];
+          this.games = data.games || [];
+          this.scheduleConfig = data.scheduleConfig || {};
+          this.userTeam = data.userTeam || {};
+          this.userPool = data.userPool || null;
+          this.userNextGames = data.userNextGames || [];
+          this.tourney = data.tourney || {};
+        } else {
+          console.warn(
+            'Aucune donnée sauvegardée trouvée dans le localStorage.'
           );
         }
       },
@@ -1095,12 +1158,13 @@
       this.adjustTerrainsPerPage();
       window.addEventListener('resize', this.adjustTerrainsPerPage);
 
-      // Récupérer les données du planning
-      await this.fetchPlanningDetails();
-      await this.fetchUserTeamAndPool();
-      await this.fetchUserNextGames(); // Idem, plus tard vous pouvez conditionner en fonction du role
+      if (navigator.onLine) {
+        await this.fetchAllData(); // En ligne : récupérer toutes les données
+      } else {
+        this.loadAllFromLocalStorage(); // Hors ligne : charger les données sauvegardées
+        console.warn('Vous êtes hors ligne. Chargement des données locales.');
+      }
 
-      // Charger les filtres depuis les query params si présents
       this.loadFiltersFromQuery();
     },
   };

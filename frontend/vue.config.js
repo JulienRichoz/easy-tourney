@@ -1,5 +1,6 @@
 module.exports = {
   pwa: {
+    id: '/',
     name: 'Easy Tourney',
     themeColor: '#4CAF50', // Couleur principale
     msTileColor: '#FFFFFF', // Couleur pour Windows
@@ -26,7 +27,7 @@ module.exports = {
       navigateFallback: '/index.html',
       runtimeCaching: [
         {
-          urlPattern: new RegExp('^https://your-api-domain.com/'),
+          urlPattern: new RegExp('^' + process.env.VUE_APP_API_URL),
           handler: 'NetworkFirst',
           options: {
             cacheName: 'api-cache',
