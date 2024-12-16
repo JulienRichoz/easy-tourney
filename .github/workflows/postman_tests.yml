@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "DB_USERNAME=root" >> ./server/.env
           echo "DB_PASSWORD=root" >> ./server/.env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> ./server/.env
+          echo "DB_NAME=mytestdb" >> ./server/.env
           echo "DB_HOST=127.0.0.1" >> ./server/.env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ./server/.env
           echo "PORT=3000" >> ./server/.env
