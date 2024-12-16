@@ -1,0 +1,165 @@
+{
+	"id": "e308019b-bd83-4319-b7c2-63f7b6e74cfc",
+	"name": "Development",
+	"values": [
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "teamId_B",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "sportId_1",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "sportId_2",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "sportId_3",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "userId_1",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "userId_2",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "userId_3",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "userId_4",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "userId_5",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "teamId_2",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "teamId_3",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "tokenId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "poolId_1",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "poolId_2",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "scheduleId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "gameEventId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "poolScheduleId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "gameId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "assistant1_token",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "tourneyId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "fieldId_1",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "fieldId_2",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "fieldId_3",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "teamId_1",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2024-12-16T13:19:48.220Z",
+	"_postman_exported_using": "Postman/11.22.2-241209-1418"
+}
