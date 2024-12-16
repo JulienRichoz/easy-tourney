@@ -80,8 +80,12 @@ router.beforeEach(async (to, from, next) => {
       if (to.path.startsWith('/tourneys')) {
         console.warn('Mode hors ligne : accès autorisé pour /tourneys.');
         return next();
+      } else if (to.path.startsWith('/admin') && isAuthenticated) {
+        console.warn('Mode hors ligne : accès admin possible avec données en cache.');
+        // Laissez passer sans redirection vers login
+        return next();
       } else {
-        console.warn('Mode hors ligne : redirection vers login pour /admin.');
+        console.warn('Mode hors ligne : non admin ou non authentifié, redirection login.');
         return next('/login');
       }
     }
