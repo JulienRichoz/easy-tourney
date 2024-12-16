@@ -49,9 +49,15 @@ jobs:
 
       # Étape 6 : Attendre que MySQL démarre
       - name: Wait for MySQL
-        run: sleep 10
+        run: sleep 20
 
-      # Étape 7 : Démarrer le backend
+      # Étape 7 : Démarrer le backend avec migration et seeder
+      - name: Run migrations
+        run: npx sequelize-cli db:migrate
+        
+      - name: Run seeds
+        run: npx sequelize-cli db:seed:all
+        
       - name: Start Backend Server
         run: npm run serve &
         working-directory: ./server
