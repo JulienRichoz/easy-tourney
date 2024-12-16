@@ -37,8 +37,7 @@ jobs:
         with:
           mysql version: '8.0'
           mysql database: mytestdb
-          mysql user: root
-          mysql password: root
+          mysql root password: root
 
       # Étape 5 : Créer le fichier .env
       - name: Create .env File
