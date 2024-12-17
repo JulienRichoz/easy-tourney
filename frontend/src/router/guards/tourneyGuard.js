@@ -5,11 +5,25 @@ import { isAdmin } from '@/services/authService';
 import apiService from '@/services/apiService';
 
 export async function checkTournamentAccess(to, from, next) {
+  const isOffline = !navigator.onLine;
   const userRole = store.getters['auth/userRole'];
   const tourneyId = to.params.tourneyId;
 
   if (isAdmin(userRole)) {
     return next(); // Les admins ont accès libre
+  }
+
+  // Si hors ligne
+  if (isOffline) {
+    // Vérifier si on a des données en cache pour ce tournoi
+    const cachedData = localStorage.getItem(`planning-${tourneyId}`);
+    if (cachedData) {
+      // On a des données locales, on autorise la navigation
+      return next();
+    } else {
+      // Pas de données, retour à /tourneys
+      return next('/tourneys');
+    }
   }
 
   try {
@@ -44,11 +58,25 @@ export async function checkTournamentAccess(to, from, next) {
 }
 
 export async function checkTourneyRules(to, from, next) {
+  const isOffline = !navigator.onLine;
   const userRole = store.getters['auth/userRole'];
   const tourneyId = to.params.tourneyId;
 
   if (isAdmin(userRole)) {
     return next(); // Les admins ont toujours accès
+  }
+
+  // Si hors ligne
+  if (isOffline) {
+    // Vérifier si on a des données en cache pour ce tournoi
+    const cachedData = localStorage.getItem(`planning-${tourneyId}`);
+    if (cachedData) {
+      // On a des données locales, on autorise la navigation
+      return next();
+    } else {
+      // Pas de données, retour à /tourneys
+      return next('/tourneys');
+    }
   }
 
   try {
