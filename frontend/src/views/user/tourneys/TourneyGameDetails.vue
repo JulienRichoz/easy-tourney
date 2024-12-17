@@ -759,7 +759,10 @@
        */
       async updateMatchStatus(newStatus) {
         // Vérifier si le changement de statut est autorisé
-        if (newStatus === 'completed' && this.timerRunning) {
+        if (
+          (newStatus === 'completed' || newStatus === 'scheduled') &&
+          this.timerRunning
+        ) {
           toast.error(
             'Le match est en cours, veuillez le terminer avant de changer le statut.'
           );
@@ -779,8 +782,6 @@
           if (newStatus === 'completed' || newStatus === 'scheduled') {
             this.stopTimer();
           }
-
-          // Le statut sera mis à jour via l'événement 'matchStatusUpdated' du backend
         } catch (error) {
           console.error(
             'Erreur lors de la mise à jour du statut du match :',
