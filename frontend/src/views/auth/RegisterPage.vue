@@ -1,4 +1,4 @@
-<!-- src/views/RegisterPage.vue -->
+<!-- src/views/auth/RegisterPage.vue -->
 <template>
   <AuthComponentForm
     mode="register"
@@ -37,6 +37,7 @@
             name: formData.name,
             email: formData.email,
             password: formData.password,
+            confirmPassword: formData.confirmPassword,
           });
 
           const token = response.data.token;
