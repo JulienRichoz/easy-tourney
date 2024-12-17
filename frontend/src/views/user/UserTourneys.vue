@@ -31,7 +31,18 @@
         :registration-status="tourney.registrationStatus"
         :title-color="getTitleColor(tourney)"
         @click="viewTourneyDetails(tourney)"
-      />
+      >
+        <template #button-actions>
+          <ButtonComponent
+            v-if="tourney.status !== 'draft'"
+            variant="primary"
+            fontAwesomeIcon="info-circle"
+            @click.stop="goToInfo(tourney)"
+          >
+            Infos
+          </ButtonComponent>
+        </template>
+      </CardEditComponent>
     </div>
   </div>
 </template>
@@ -39,6 +50,7 @@
 <script>
   import apiService from '@/services/apiService';
   import CardEditComponent from '@/components/CardEditComponent.vue';
+  import ButtonComponent from '@/components/ButtonComponent.vue';
   import TitleComponent from '@/components/TitleComponent.vue';
   import FilterComponent from '@/components/FilterComponent.vue';
   import { toast } from 'vue3-toastify';
@@ -48,6 +60,7 @@
       CardEditComponent,
       TitleComponent,
       FilterComponent,
+      ButtonComponent,
     },
     data() {
       return {
@@ -158,6 +171,10 @@
           }
         }
       },
+      goToInfo(tourney) {
+        this.$router.push(`/tourneys/${tourney.id}/infos`);
+      },
+
       viewTourneyDetails(tourney) {
         if (!this.isCardClickable(tourney)) {
           return; // Ne pas rediriger si la carte n'est pas cliquable
