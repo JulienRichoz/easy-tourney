@@ -100,7 +100,7 @@
 
         <!-- Score et chronomètre -->
         <div class="flex flex-col items-center mx-8">
-          <div class="flex items-center">
+          <div class="flex items-center whitespace-nowrap">
             <!-- Pour les assistants/admins : inputs modifiables -->
             <div v-if="canEdit && match.status === 'in_progress'">
               <input
@@ -129,32 +129,35 @@
             {{ formattedTime }}
           </div>
           <!-- Boutons de contrôle du timer -->
-          <div class="mt-2" v-if="canEdit && match.status === 'in_progress'">
+          <div
+            class="mt-2 flex items-center justify-center space-x-2 flex-wrap"
+            v-if="canEdit && match.status === 'in_progress'"
+          >
             <button
               v-if="!timerRunning && !isPaused"
               @click="startTimer"
-              class="px-4 py-2 bg-green-500 text-white rounded"
+              class="px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded"
             >
               Démarrer
             </button>
             <button
               v-else-if="timerRunning && !isPaused"
               @click="pauseTimer"
-              class="px-4 py-2 bg-yellow-500 text-white rounded"
+              class="px-4 py-2 bg-yellow-500 dark:bg-yellow-600 text-white rounded"
             >
               Pause
             </button>
             <button
               v-else-if="isPaused"
               @click="startTimer"
-              class="px-4 py-2 bg-green-500 text-white rounded"
+              class="px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded"
             >
               Reprendre
             </button>
             <!-- Bouton Reset -->
             <button
               @click="openResetConfirmation"
-              class="px-4 py-2 bg-red-500 text-white rounded ml-2"
+              class="px-4 py-2 bg-red-500 dark:bg-red-600 text-white rounded ml-2"
             >
               Réinitialiser
             </button>
@@ -1036,6 +1039,17 @@
         if (!this.isAuthorized) return;
         const { tourneyId } = this.$route.params;
         const socket = getSocket();
+
+        // Convertir les valeurs en nombre, 0 par défaut
+        let scoreA = parseInt(this.scoreTeamA, 10);
+        let scoreB = parseInt(this.scoreTeamB, 10);
+
+        if (isNaN(scoreA)) scoreA = 0;
+        if (isNaN(scoreB)) scoreB = 0;
+
+        this.scoreTeamA = scoreA;
+        this.scoreTeamB = scoreB;
+
         socket.emit('updateScore', {
           tourneyId: parseInt(tourneyId),
           gameId: this.match.id,
