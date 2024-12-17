@@ -76,4 +76,12 @@ export default [
     meta: { requiresAuth: true, permission: 'viewUserPage' },
     beforeEnter: [checkTournamentAccess, checkTourneyRules],
   },
+
+  {
+    path: '/tourneys/:tourneyId/infos',
+    name: 'UserTourneyInfos',
+    component: TourneyDetails,
+    meta: { requiresAuth: true, permission: 'viewUserPage' },
+    beforeEnter: [checkTournamentAccess],
+  },
 ];

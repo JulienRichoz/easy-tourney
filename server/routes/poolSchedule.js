@@ -23,10 +23,8 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // R�
 module.exports = router;
 
 /**
- * TODO : Fix game details page on phone. Button not working. Better management of score (if null score error in db). Better UI for score :)
- * TODO : PWA
+ * TODO : Better pwd security + mailer pour récupération de mot de passe
  * TODO : Hebergement sur server
- * TODO Opt: ajouter test unitaire + test integration dans l'application (ou quand push sur main...)
  * TODO Opt : redefinir class css avec tailwind light/dark mode
  * 
  * AMELIORATIONS

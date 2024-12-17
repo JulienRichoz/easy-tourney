@@ -35,7 +35,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ['http://localhost:8080', 'http://192.168.1.42:8080', 'http://172.20.10.2:8080'],
+    origin: ['http://localhost:8080', 'http://192.168.1.42:8080', 'http://172.20.10.2:8080', 'http://192.168.1.7:8080'],
     credentials: true, // gestion cookie authentification
   })
 );
