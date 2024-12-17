@@ -1,8 +1,11 @@
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
-    <SubMenuComponent :tourneyId="tourneyId" @selectTab="selectTab" />
-
+    <SubMenuComponent
+      v-if="$route.name !== 'UserTourneyInfos'"
+      :tourneyId="tourneyId"
+      @selectTab="selectTab"
+    />
     <!-- Contenu principal avec deux colonnes -->
     <div class="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-start">
       <!-- Détails du tournoi, Équipe Utilisateur, Statistiques -->
