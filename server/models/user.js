@@ -66,6 +66,10 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id',
         },
       },
+      resetToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       sequelize,
