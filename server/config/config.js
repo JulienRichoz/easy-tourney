@@ -21,8 +21,10 @@ module.exports = {
   production: {
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    database: 'database_production',
+    database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
+    dialect: 'mysql',
+    logging: false, // Désactive les logs SQL en production
   },
 };
