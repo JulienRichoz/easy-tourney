@@ -46,7 +46,7 @@ function addMinutesToTime(timeStr, minutesToAdd) {
 function combineDateAndTime(dateStr, timeStr) {
     // Assure que le format de timeStr est "HH:MM:SS"
     const normalizedTimeStr = timeStr.length === 5 ? `${timeStr}:00` : timeStr;
-    return new Date(`${dateStr}T${normalizedTimeStr}`);
+    return new Date(`${dateStr}T${normalizedTimeStr}Z`); // 'Z' force UTC
 }
 
 /**
