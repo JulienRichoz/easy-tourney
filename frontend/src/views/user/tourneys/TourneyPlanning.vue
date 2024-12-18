@@ -453,7 +453,7 @@
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
           initialView: 'resourceTimeGridDay',
-          timeZone: 'local',
+          timeZone: 'UTC',
           initialDate: this.tourney.dateTourney,
           editable: false,
           droppable: false,
@@ -869,9 +869,10 @@
             return;
           }
 
-          const gameStart = new Date(game.startTime);
-          const gameEnd = new Date(game.endTime);
-          const isCurrentGame = now >= gameStart && now <= gameEnd;
+          const gameStart = new Date(game.startTime).toISOString(); // Garde l'heure en UTC
+          const gameEnd = new Date(game.endTime).toISOString(); // Garde l'heure en UTC
+          const isCurrentGame =
+            now >= new Date(gameStart) && now <= new Date(gameEnd);
 
           const teamATeamName = game.teamA?.teamName || 'Équipe A';
           const teamBTeamName = game.teamB?.teamName || 'Équipe B';
@@ -889,8 +890,8 @@
             title: `${
               game.pool?.name || 'Team'
             }: ${teamANumber} vs ${teamBNumber}`,
-            start: gameStart,
-            end: gameEnd,
+            start: gameStart, // Utilise `toISOString` pour éviter toute conversion
+            end: gameEnd, // Utilise `toISOString` pour éviter toute conversion
             backgroundColor: isCurrentGame
               ? '#FF0000' // Rouge pour le match en cours
               : this.useUnifiedColors
@@ -901,7 +902,6 @@
           });
         });
       },
-
       /**
        * Ajoute les poolSchedules en tant qu'événements dans le calendrier.
        * @param {Array} events Tableau d'événements
@@ -1148,9 +1148,14 @@
        * @returns {string} Heure formatée
        */
       formatDisplayTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const d = new Date(date); // Utilise toujours UTC
+        if (isNaN(d.getTime())) {
+          return ''; // Gérer les dates invalides
+        }
+
+        const hours = d.getUTCHours().toString().padStart(2, '0'); // Heure UTC
+        const minutes = d.getUTCMinutes().toString().padStart(2, '0'); // Minute UTC
+
         return `${hours}:${minutes}`;
       },
     },
