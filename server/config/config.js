@@ -10,7 +10,6 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT || 'mysql',
-    timezone: '+00:00', // Définit le fuseau horaire sur UTC
   },
   test: {
     username: process.env.DB_USERNAME,
@@ -27,6 +26,5 @@ module.exports = {
     dialect: process.env.DB_DIALECT,
     dialect: 'mysql',
     logging: false, // Désactive les logs SQL en production
-    timezone: '+00:00',
   },
 };
