@@ -55,7 +55,6 @@ const assignAssistant = async (game, userId, user) => {
 module.exports = (io) => {
     io.on('connection', (socket) => {
         console.log('Nouvelle connexion WebSocket :', socket.id);
-
         // Rejoindre une salle spécifique pour un match
         socket.on('joinGame', async (gameId) => {
             socket.join(`game_${gameId}`);
