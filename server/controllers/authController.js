@@ -3,11 +3,32 @@
 const { User, Role } = require('../models');
 const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
+const crypto = require("crypto");
+const mailerService = require("../services/mailerService");
 
 // Inscription
 exports.register = async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, phone, password, confirmPassword } = req.body;
 
+  // Tester les regex pour l'email et le mot de passe
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Email valide
+  const passwordRegex = /^(?=.*[A-Z]).{8,}$/; // Au moins 8 caractères et une majuscule
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Adresse email invalide." });
+  }
+
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message: "Le mot de passe doit contenir au moins 8 caractères et une majuscule.",
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: "Les mots de passe ne correspondent pas." });
+  }
+
+  // Vérifier si l'email est déjà utilisé
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
@@ -34,7 +55,7 @@ exports.register = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      roleId: userRole.id, // Attribuer le rôle 'User'
+      roleId: userRole.id,
     });
 
     const token = authService.generateToken(newUser);
@@ -141,5 +162,79 @@ exports.getProfile = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable." });
+    }
+
+    // Générer un token de réinitialisation
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    // Enregistrer le token temporairement (champ resetToken)
+    user.resetToken = resetToken;
+    await user.save();
+
+    // Envoyer l'email
+    await mailerService.sendPasswordReset(email, resetLink);
+
+    res.json({ message: 'Un lien de réinitialisation a été envoyé.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur." });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, password, confirmPassword } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: 'Token de réinitialisation manquant.' });
+  }
+
+  if (!password || !confirmPassword) {
+    return res.status(400).json({ message: 'Le mot de passe et sa confirmation sont requis.' });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Les mots de passe ne correspondent pas.' });
+  }
+
+  // Valider le format du mot de passe
+  const passwordRegex = /^(?=.*[A-Z]).{8,}$/; // Au moins 8 caractères et une majuscule
+
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message:
+        'Le mot de passe doit contenir au moins 8 caractères et une majuscule.',
+    });
+  }
+
+  try {
+    // Rechercher l'utilisateur par le resetToken
+    const user = await User.findOne({ where: { resetToken: token } });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Token de réinitialisation invalide ou expiré.' });
+    }
+
+    // Hasher le nouveau mot de passe
+    const hashedPassword = await authService.hashPassword(password);
+
+    // Mettre à jour le mot de passe et supprimer le resetToken
+    user.password = hashedPassword;
+    user.resetToken = null;
+    await user.save();
+
+    res.json({ message: 'Mot de passe réinitialisé avec succès.' });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe :', error);
+    res.status(500).json({ message: 'Erreur serveur.' });
   }
 };

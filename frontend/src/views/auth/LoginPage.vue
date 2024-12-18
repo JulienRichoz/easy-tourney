@@ -1,4 +1,4 @@
-<!-- src/views/LoginPage.vue -->
+<!-- src/views/auth/LoginPage.vue -->
 <template>
   <AuthComponentForm
     mode="login"

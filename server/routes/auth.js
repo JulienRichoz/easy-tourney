@@ -3,11 +3,13 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeUserOrAdmin } = require('../middlewares'); // Middleware d'authentification
+const { authenticateToken } = require('../middlewares'); // Middleware d'authentification
 const {
   register,
   login,
   refreshToken,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 
 // Routes d'authentification
@@ -16,5 +18,8 @@ const {
 router.post('/register', register);
 router.post('/login', login);
 router.post('/refresh-token', authenticateToken, refreshToken);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
+
 
 module.exports = router;

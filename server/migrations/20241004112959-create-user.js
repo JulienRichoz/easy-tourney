@@ -42,6 +42,12 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+
+      // Token de réinitialisation de mail
+      resetToken: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
