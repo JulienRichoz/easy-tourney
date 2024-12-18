@@ -1,0 +1,1 @@
+web: npx serve -s frontend/dist -l $PORT
