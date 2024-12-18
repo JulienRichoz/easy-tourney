@@ -594,8 +594,8 @@
             id: game.id.toString(),
             resourceId: game.field.id.toString(),
             title: `${teamATeamName} vs ${teamBTeamName}`,
-            start: new Date(game.startTime),
-            end: new Date(game.endTime),
+            start: new Date(game.startTime).toISOString(),
+            end: new Date(game.endTime).toISOString(),
             backgroundColor: this.useUnifiedColors
               ? this.generateUniqueColor(game.pool?.id)
               : game.sport?.color || '#3B82F6',
@@ -631,7 +631,7 @@
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial (https://fullcalendar.io/license)
           initialView: 'resourceTimeGridDay',
-          timeZone: 'local',
+          timeZone: 'UTC', // Stockage et manipulation en UTC
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
           droppable: true, // Permet de déposer les éléments
@@ -656,6 +656,7 @@
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'local', // Affiche dans le fuseau local de l'utilisateur
           },
           headerToolbar: false,
           eventDrop: this.handleEventDrop,
@@ -1157,12 +1158,14 @@
         if (isNaN(d.getTime())) {
           return null;
         }
-        const year = d.getFullYear().toString().padStart(4, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
-        const day = d.getDate().toString().padStart(2, '0');
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        return d.toISOString().slice(0, 16); // Renvoie 'YYYY-MM-DDTHH:MM'
+
+        /* TODO : CHECK IF TIME NOT WORKINGconst year = d.getFullYear().toString().padStart(4, '0');
+          const month = (d.getMonth() + 1).toString().padStart(2, '0');
+          const day = d.getDate().toString().padStart(2, '0');
+          const hours = d.getHours().toString().padStart(2, '0');
+          const minutes = d.getMinutes().toString().padStart(2, '0');
+          return `${year}-${month}-${day}T${hours}:${minutes}`;*/
       },
 
       /**
@@ -1516,9 +1519,15 @@
        * @returns {string} - The formatted time.
        */
       formatDisplayTime(date) {
-        const d = new Date(date);
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const d = new Date(date); // La date est en UTC
+        if (isNaN(d.getTime())) {
+          return ''; // Gérer les dates invalides
+        }
+
+        // Extraire l'heure et les minutes directement à partir de l'heure UTC
+        const hours = d.getUTCHours().toString().padStart(2, '0');
+        const minutes = d.getUTCMinutes().toString().padStart(2, '0');
+
         return `${hours}:${minutes}`;
       },
 

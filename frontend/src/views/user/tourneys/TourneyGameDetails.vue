@@ -1169,9 +1169,12 @@
        */
       formatTime(timestamp) {
         if (!timestamp) return 'N/A';
+
         const date = new Date(timestamp);
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
+
+        // Vérifie si le timestamp contient une heure UTC ou locale
+        const hours = date.getUTCHours().toString().padStart(2, '0'); // Remplace getHours par getUTCHours si nécessaire
+        const minutes = date.getUTCMinutes().toString().padStart(2, '0'); // Assure que les minutes sont en UTC
         return `${hours}:${minutes}`;
       },
 
