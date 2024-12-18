@@ -1,3 +1,4 @@
+// seeders/demo-users.js
 'use strict';
 
 const authService = require('../services/authService');
@@ -5,13 +6,18 @@ const authService = require('../services/authService');
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [];
-    const password = await authService.hashPassword('password'); // Faille sécurité car tjr meme password encrypté affiché mais allege generation seeder.. (0.2 seconde vs 14 secondes)
-    // Admin
+    const adminPassword = process.env.ADMIN_PASSWORD || 'a';
+    const userPassword = process.env.USER_PASSWORD || 'password';
+
+    // Hache les mots de passe à l'avance pour optimiser le temps d'exécution
+    const hashedAdminPassword = await authService.hashPassword(adminPassword);
+    const hashedUserPassword = await authService.hashPassword(userPassword);
+
     users.push({
       id: 1,
       name: 'a',
       email: 'a@a.a',
-      password: await authService.hashPassword('a'),
+      password: hashedAdminPassword,
       roleId: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -22,7 +28,7 @@ module.exports = {
       id: 1000,
       name: 'b',
       email: 'b@b.b',
-      password: await authService.hashPassword('b'),
+      password: hashedUserPassword,
       roleId: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -33,7 +39,7 @@ module.exports = {
       id: 2,
       name: 'High Assistant',
       email: 'highassistant@example.com',
-      password: password,
+      password: hashedUserPassword,
       roleId: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -42,7 +48,7 @@ module.exports = {
       id: 3,
       name: 'Mid Assistant',
       email: 'midassistant@example.com',
-      password: password,
+      password: hashedUserPassword,
       roleId: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -51,7 +57,7 @@ module.exports = {
       id: 4,
       name: 'Low Assistant',
       email: 'lowassistant@example.com',
-      password: password,
+      password: hashedUserPassword,
       roleId: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -65,7 +71,7 @@ module.exports = {
         id: userId++,
         name: `High User ${i}`,
         email: `highuser${i}@example.com`,
-        password: password,
+        password: hashedUserPassword,
         roleId: 2,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -78,7 +84,7 @@ module.exports = {
         id: userId++,
         name: `Mid User ${i}`,
         email: `miduser${i}@example.com`,
-        password: password,
+        password: hashedUserPassword,
         roleId: 2,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -91,7 +97,7 @@ module.exports = {
         id: userId++,
         name: `Low User ${i}`,
         email: `lowuser${i}@example.com`,
-        password: password,
+        password: hashedUserPassword,
         roleId: 2,
         createdAt: new Date(),
         updatedAt: new Date(),
