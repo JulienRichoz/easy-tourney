@@ -135,7 +135,7 @@
         <ButtonComponent
           variant="primary"
           nativeType="submit"
-          class="w-full ml0 mr-0 sm:ml-0 sm:mr-0 px-2 sm:px-4 py-2"
+          class="w-full ml-0 mr-0 sm:ml-0 sm:mr-0 px-2 sm:px-0 mx-0"
           :disabled="isSubmitting"
         >
           {{ submitButtonText }}
