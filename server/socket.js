@@ -1,4 +1,6 @@
 // server/socket.js
+const socketIo = require('socket.io');
+
 let ioInstance;
 
 module.exports = {
@@ -8,9 +10,10 @@ module.exports = {
      * @returns {SocketIO.Server} - L'instance de Socket.IO.
      */
     init: (server) => {
-        ioInstance = require('socket.io')(server, {
+        const socketOrigins = process.env.SOCKET_ORIGINS ? process.env.SOCKET_ORIGINS.split(',') : [];
+        ioInstance = socketIo(server, {
             cors: {
-                origin: ['http://localhost:8080', 'http://192.168.1.42:8080', 'http://172.20.10.2:8080', 'http://192.168.1.7:8080'],
+                origin: socketOrigins,
                 methods: ['GET', 'POST'],
                 credentials: true,
             },
