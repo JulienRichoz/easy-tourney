@@ -37,7 +37,7 @@ export async function checkTournamentAccess(to, from, next) {
       store.commit('userTourney/SET_TOURNEY_ROLE', userRoleInTourney);
       return next();
     } else {
-      // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laissez passer
+      // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laisser passer
       if (to.path === '/tourneys') {
         return next();
       }
@@ -49,7 +49,7 @@ export async function checkTournamentAccess(to, from, next) {
       "Erreur lors de la vérification de l'accès au tournoi:",
       error
     );
-    // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laissez passer
+    // Si l'utilisateur essaie déjà d'accéder à '/tourneys', laisser passer
     if (to.path === '/tourneys') {
       return next();
     }
