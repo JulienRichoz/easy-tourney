@@ -464,7 +464,7 @@ class CustomRoundRobinGamePlanning extends GameStrategy {
                         // Planifier le match
                         // ... (votre code pour planifier le match)
                         matchScheduled = true;
-                        // Mettre à jour lastTeamsPlayed (ou pas, selon votre préférence)
+                        // Mettre à jour lastTeamsPlayed
                         lastTeamsPlayed = new Set([teamA.id, teamB.id]);
                         break;
                     }
