@@ -1,3 +1,5 @@
+const Dotenv = require('dotenv-webpack');
+
 module.exports = {
   pwa: {
     id: '/',
@@ -39,5 +41,12 @@ module.exports = {
         },
       ],
     },
+  },
+  configureWebpack: {
+    plugins: [
+      new Dotenv({
+        systemvars: true, // Inclut les variables système (comme celles de Heroku)
+      }),
+    ],
   },
 };
