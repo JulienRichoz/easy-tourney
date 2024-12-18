@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const API_URL = process.env.VUE_APP_API_URL || 'https://easy-tourney-backend-6cdfc7a64550.herokuapp.com/api';
-export const BASE_URL = process.env.VUE_APP_BASE_URL || 'https://easy-tourney-frontend-899109fd59ab.herokuapp.com';
+const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+export const BASE_URL = process.env.VUE_APP_BASE_URL || 'http://localhost:8080';
+console.log(process.env);
 
 const apiService = axios.create({
   baseURL: API_URL,

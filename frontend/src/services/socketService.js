@@ -11,7 +11,7 @@ export function getSocket() {
             // Ne pas créer de socket si l'utilisateur n'est pas authentifié
             return null;
         }
-        socket = io(process.env.VUE_APP_IMAGE_URL || 'https://easy-tourney-backend-6cdfc7a64550.herokuapp.com', {
+        socket = io(process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000', {
             auth: {
                 token,
             },
