@@ -180,7 +180,8 @@
 
       getImageUrl(imagePath) {
         const baseUrl =
-          process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000';
+          process.env.VUE_APP_IMAGE_URL ||
+          'https://easy-tourney-backend-6cdfc7a64550.herokuapp.com';
         return `${baseUrl}${imagePath}`;
       },
       getFileName(filePath) {

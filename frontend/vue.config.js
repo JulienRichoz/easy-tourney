@@ -29,7 +29,7 @@ module.exports = {
       navigateFallback: '/index.html',
       runtimeCaching: [
         {
-          urlPattern: new RegExp('^' + process.env.VUE_APP_API_URL),
+          urlPattern: new RegExp('^' + process.env.VUE_APP_API_URL || 'https://easy-tourney-backend-6cdfc7a64550.herokuapp.com/api'),
           handler: 'NetworkFirst',
           options: {
             cacheName: 'api-cache',
