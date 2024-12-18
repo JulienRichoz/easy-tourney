@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "start": "npx serve -s dist -l $PORT",
     "serve": "vue-cli-service serve --port 8080 --host localhost",
     "build": "vue-cli-service build",
     "dev": "npm run serve",
