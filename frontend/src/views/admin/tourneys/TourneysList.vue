@@ -167,7 +167,6 @@
             label: 'Lieu',
             type: 'location', // Type personnalisé pour utiliser AutocompleteAddress
             required: true,
-            tooltip: 'Entrez l’adresse précise du tournoi.',
           },
           {
             name: 'dateTourney',
