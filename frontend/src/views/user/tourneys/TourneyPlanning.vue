@@ -860,7 +860,9 @@
        * @param {Array} events Tableau d'événements
        */
       addGamesToEvents(events) {
-        const now = new Date();
+        const now = new Date(
+          Date.now() - new Date().getTimezoneOffset() * 60000
+        );
         this.filteredGames.forEach((game) => {
           if (!game.field) {
             console.warn(
