@@ -489,7 +489,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
       attributes: ['maxTeamNumber', 'playerPerTeam', 'minPlayerPerTeam'],
     });
 
-    // Récupérer toutes les équipes avec leurs utilisateurs via UsersTourneys, en excluant les admins
+    // Récupérer toutes les équipes avec leurs utilisateurs via UsersTourneys
     const teams = await Team.findAll({
       where: { tourneyId },
       attributes: ['id', 'teamName', 'type'],
@@ -502,9 +502,6 @@ exports.getTourneyTeamsDetails = async (req, res) => {
               model: User,
               as: 'user',
               attributes: ['id', 'name', 'email', 'phone'],
-              where: {
-                roleId: { [Op.ne]: 1 }, // Exclure les admins
-              },
               include: [
                 {
                   model: Role,
@@ -518,7 +515,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
       ],
     });
 
-    // Récupérer les utilisateurs non assignés à une équipe, en excluant les admins
+    // Récupérer les utilisateurs non assignés à une équipe
     const unassignedUsers = await UsersTourneys.findAll({
       where: {
         tourneyId,
@@ -529,9 +526,6 @@ exports.getTourneyTeamsDetails = async (req, res) => {
           model: User,
           as: 'user',
           attributes: ['id', 'name', 'email', 'phone'],
-          where: {
-            roleId: { [Op.ne]: 1 }, // Exclure les admins
-          },
           include: [
             {
               model: Role,
@@ -543,7 +537,7 @@ exports.getTourneyTeamsDetails = async (req, res) => {
       ],
     });
 
-    // Récupérer tous les utilisateurs inscrits au tournoi, en excluant les admins
+    // Récupérer tous les utilisateurs inscrits au tournoi
     const allUsers = await UsersTourneys.findAll({
       where: { tourneyId },
       include: [
@@ -551,9 +545,6 @@ exports.getTourneyTeamsDetails = async (req, res) => {
           model: User,
           as: 'user',
           attributes: ['id', 'name', 'email', 'phone'],
-          where: {
-            roleId: { [Op.ne]: 1 }, // Exclure les admins
-          },
           include: [
             {
               model: Role,
@@ -809,9 +800,6 @@ exports.getTourneyPoolsDetails = async (req, res) => {
               model: User,
               as: 'user',
               attributes: ['id', 'name', 'email'],
-              where: {
-                roleId: { [Op.ne]: 1 }, // Exclure les admins
-              },
               include: [
                 {
                   model: Role,
@@ -869,14 +857,13 @@ exports.getTourneyDetails = async (req, res) => {
       timeSlotsCount,
       poolsCount,
     ] = await Promise.all([
-      // a. Nombre d'utilisateurs inscrits (excluant les admins)
+      // a. Nombre d'utilisateurs inscrits
       UsersTourneys.count({
         where: { tourneyId },
         include: [
           {
             model: User,
             as: 'user',
-            where: { roleId: { [Op.ne]: 1 } }, // Exclure les administrateurs (roleId = 1)
             attributes: [],
           },
         ],
