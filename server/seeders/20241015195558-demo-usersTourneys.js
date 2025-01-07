@@ -18,7 +18,7 @@ module.exports = {
 
     // Assistant
     usersTourneys.push({
-      userId: 1000, // High Assistant
+      userId: 280, // High Assistant
       tourneyId: 1,
       teamId: 1,
       tourneyRole: 'assistant',

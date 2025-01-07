@@ -25,7 +25,7 @@ module.exports = {
 
     // User Assistant tournoi 1
     users.push({
-      id: 1000,
+      id: 280, // manual assignment,.. to simplify future seeder with assignment via id
       name: 'b',
       email: 'b@b.b',
       password: hashedUserPassword,
