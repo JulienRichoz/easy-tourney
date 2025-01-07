@@ -631,7 +631,7 @@
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial (https://fullcalendar.io/license)
           initialView: 'resourceTimeGridDay',
-          timeZone: 'UTC', // Stockage et manipulation en UTC
+          timeZone: 'local', // Stockage et manipulation en UTC
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
           droppable: true, // Permet de déposer les éléments
@@ -1154,6 +1154,17 @@
        * @returns {string} - The formatted date string.
        */
       formatDateTime(date) {
+        const d = new Date(date); // date locale
+        if (isNaN(d.getTime())) {
+          return '';
+        }
+        const year = d.getFullYear().toString().padStart(4, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, '0');
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        /*
         const d = new Date(date);
         if (isNaN(d.getTime())) {
           return null;
@@ -1187,8 +1198,8 @@
           const data = {
             teamAId: this.createFormData.teamAId,
             teamBId: this.createFormData.teamBId,
-            startTime: this.createFormData.startTime.replace('T', ' ') + ':00',
-            endTime: this.createFormData.endTime.replace('T', ' ') + ':00',
+            startTime: new Date(this.createFormData.startTime).toISOString(),
+            endTime: new Date(this.createFormData.endTime).toISOString(),
           };
 
           if (this.createFormData.poolScheduleId) {
@@ -1228,6 +1239,7 @@
           this.games.push(newGame);
           this.refreshCalendarEvents();
           this.showCreateModal = false;
+          toast.success(`Match créé avec succès !`);
         } catch (error) {
           console.error('Erreur lors de la création du match :', error);
           toast.error('Erreur lors de la création du match.');
@@ -1514,23 +1526,22 @@
       },
 
       /**
-       * Formats date for display in events.
+       * Formats date for display in events (en heure locale).
        * @param {Date} date - The date to format.
-       * @returns {string} - The formatted time.
+       * @returns {string} - The formatted time (HH:MM local).
        */
       formatDisplayTime(date) {
-        const d = new Date(date); // La date est en UTC
+        const d = new Date(date); // Date locale
         if (isNaN(d.getTime())) {
-          return ''; // Gérer les dates invalides
+          return '';
         }
 
-        // Extraire l'heure et les minutes directement à partir de l'heure UTC
-        const hours = d.getUTCHours().toString().padStart(2, '0');
-        const minutes = d.getUTCMinutes().toString().padStart(2, '0');
+        // On utilise getHours() / getMinutes() (locale)
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
 
         return `${hours}:${minutes}`;
       },
-
       /**
        * Formats date to 'YYYY-MM-DD HH:MM:SS' format.
        * @param {Date} date - The date to format.
