@@ -280,7 +280,7 @@
           }
         }
 
-        // d) Assigner les utilisateurs restants à l'équipe 'assistant' si nécessaire
+        // d) Assigner les utilisateurs restants à l'équipe 'assistant'
         if (unassignedUsers.length > 0) {
           if (!assistantTeam) {
             toast.error(

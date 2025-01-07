@@ -245,7 +245,7 @@ exports.deleteTeam = async (req, res) => {
 exports.assignUserToTeam = async (req, res) => {
   const { teamId, tourneyId } = req.params;
   const { userId } = req.body;
-  const isAdmin = req.user && req.user.isAdmin; // Vérifiez si l'utilisateur est admin
+  const isAdmin = req.user && req.user.isAdmin; // Vérifie si l'utilisateur est admin
 
   try {
     // Vérifier le statut des inscriptions si l'utilisateur n'est pas admin
@@ -309,7 +309,7 @@ exports.assignUserToTeam = async (req, res) => {
 // Supprimer un utilisateur d'une équipe
 exports.removeUserFromTeam = async (req, res) => {
   const { teamId, userId, tourneyId } = req.params;
-  const isAdmin = req.user && req.user.isAdmin; // Vérifiez si l'utilisateur est admin
+  const isAdmin = req.user && req.user.isAdmin; // Vérifie si l'utilisateur est admin
 
   try {
     // Vérifier le statut des inscriptions si l'utilisateur n'est pas admin

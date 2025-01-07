@@ -95,7 +95,7 @@
         editingSportId: null,
         selectedFile: null,
         isFormValid: false,
-        formErrors: {}, // Ajout de cette propriété pour les erreurs du formulaire
+        formErrors: {}, // Gérer les erreurs du formualire
       };
     },
     computed: {

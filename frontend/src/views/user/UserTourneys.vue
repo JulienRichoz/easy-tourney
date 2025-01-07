@@ -220,6 +220,4 @@
   };
 </script>
 
-<style scoped>
-  /* Ajouter des styles personnalisés si nécessaire */
-</style>
+<style scoped></style>

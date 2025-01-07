@@ -136,7 +136,7 @@
             ],
           },
         ],
-        formErrors: {}, // Ajouter cette ligne
+        formErrors: {},
       };
     },
     computed: {

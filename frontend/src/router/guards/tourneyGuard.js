@@ -33,7 +33,7 @@ export async function checkTournamentAccess(to, from, next) {
     );
     const userRoleInTourney = response.data.tourneyRole;
     if (userRoleInTourney) {
-      // Stocke le rôle dans le store si nécessaire
+      // Stocke le rôle dans le store
       store.commit('userTourney/SET_TOURNEY_ROLE', userRoleInTourney);
       return next();
     } else {

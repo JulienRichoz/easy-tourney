@@ -30,7 +30,7 @@ const updateGlobalStatus = async (tourney) => {
     newStatus = 'ready';
   }
 
-  // Mettre à jour le statut global si nécessaire
+  // Mettre à jour le statut global
   if (tourney.status !== newStatus) {
     tourney.status = newStatus;
     await tourney.save();

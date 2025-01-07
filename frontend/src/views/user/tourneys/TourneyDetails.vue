@@ -303,7 +303,6 @@
     async mounted() {
       await this.fetchTourneyDetails();
       this.mapIsReady = true;
-      console.log('Role: ', this.userTeam.role);
     },
     methods: {
       selectTab(tab) {

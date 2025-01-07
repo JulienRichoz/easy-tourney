@@ -641,7 +641,7 @@ exports.updateGame = async (req, res) => {
           });
         }
 
-        // Mettre à jour poolScheduleId si nécessaire
+        // Mettre à jour poolScheduleId
         updates.poolScheduleId = poolSchedule.id;
       }
     }

@@ -489,7 +489,7 @@
         showUnassignedModal: false,
         showModal: false,
         showDeleteConfirmation: false,
-        showGenerateConfirmationModal: false, // Ajouté
+        showGenerateConfirmationModal: false,
         showTeamSetupModal: false,
         showModalResetTeams: false,
         confirmedDeleteTeamId: null,

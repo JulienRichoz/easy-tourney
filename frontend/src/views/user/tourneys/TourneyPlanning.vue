@@ -792,7 +792,7 @@
             `/tourneys/${this.tourneyId}/users/${userId}`
           );
 
-          // Vérifiez si la team et pool existent
+          // Vérifie si la team et pool existent
           this.userTeam = response.data.team || null;
           this.userPool =
             this.userTeam && this.userTeam.pool ? this.userTeam.pool : null;

@@ -1206,7 +1206,7 @@ exports.getTourneyDetailsUserView = async (req, res) => {
         id: sport.id,
         name: sport.name,
         color: sport.color,
-        rules: sport.rule || null, // si le champ s'appelle rule ou rules, adapter si nécessaire
+        rules: sport.rule || null,
       })),
       userTeam,
       gameDuration,

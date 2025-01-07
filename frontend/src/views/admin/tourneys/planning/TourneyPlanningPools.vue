@@ -1451,7 +1451,7 @@
           this.showScheduleConfigModal = false;
           // Mettre à jour les détails du planning
           await this.fetchPlanningDetails();
-          this.initializeExternalEvents(); // Ré-initialiser les événements externes si nécessaire
+          this.initializeExternalEvents(); // Ré-initialiser les événements externes
           toast.success(successMessage);
         } catch (error) {
           console.error(
@@ -1504,7 +1504,7 @@
       },
 
       /**
-       * Vérifie et ajoute des avertissements si nécessaire
+       * Vérifie et ajoute des avertissements
        */
       checkWarnings() {
         // Réinitialiser les warnings

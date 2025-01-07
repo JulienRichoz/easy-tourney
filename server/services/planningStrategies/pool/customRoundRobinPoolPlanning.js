@@ -422,7 +422,7 @@ class CustomRoundRobinPoolPlanning extends PlanningStrategy {
   }
 
   /**
-   * Équilibre les sessions entre les pools en assignant des sessions supplémentaires si nécessaire.
+   * Équilibre les sessions entre les pools en assignant des sessions supplémentaires
    * @param {Array} pools - Liste des pools.
    * @param {Array} planning - Liste des créneaux horaires.
    * @param {Array} fields - Liste des terrains disponibles.

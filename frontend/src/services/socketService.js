@@ -26,7 +26,6 @@ export function getSocket() {
 
         socket.on('disconnect', (reason) => {
             console.warn('Socket déconnecté :', reason);
-            // Si nécessaire, gérer la reconnexion
         });
     }
     return socket;

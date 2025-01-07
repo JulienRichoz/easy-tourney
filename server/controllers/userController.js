@@ -222,7 +222,7 @@ exports.addUserToTourney = async (req, res) => {
     await UsersTourneys.create({
       userId,
       tourneyId,
-      tourneyRole: 'guest', // Vous pouvez ajuster le rôle selon vos besoins
+      tourneyRole: 'guest',
     });
 
     res

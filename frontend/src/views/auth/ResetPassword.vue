@@ -30,7 +30,7 @@
           const token = this.$route.params.token; // Token récupéré dans l'URL
 
           await apiService.post('/auth/reset-password', {
-            token, // Ajout du token ici
+            token,
             password: formData.password,
             confirmPassword: formData.confirmPassword,
           });

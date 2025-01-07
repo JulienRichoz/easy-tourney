@@ -1164,19 +1164,6 @@
         const hours = d.getHours().toString().padStart(2, '0');
         const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
-        /*
-        const d = new Date(date);
-        if (isNaN(d.getTime())) {
-          return null;
-        }
-        return d.toISOString().slice(0, 16); // Renvoie 'YYYY-MM-DDTHH:MM'
-
-        /* TODO : CHECK IF TIME NOT WORKINGconst year = d.getFullYear().toString().padStart(4, '0');
-          const month = (d.getMonth() + 1).toString().padStart(2, '0');
-          const day = d.getDate().toString().padStart(2, '0');
-          const hours = d.getHours().toString().padStart(2, '0');
-          const minutes = d.getMinutes().toString().padStart(2, '0');
-          return `${year}-${month}-${day}T${hours}:${minutes}`;*/
       },
 
       /**

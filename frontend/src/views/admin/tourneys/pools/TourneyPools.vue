@@ -427,7 +427,7 @@
             ],
           },
         ],
-        showWarnings: true, // Ajouté pour gérer l'affichage des avertissements
+        showWarnings: true,
       };
     },
     computed: {

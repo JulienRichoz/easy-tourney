@@ -306,7 +306,7 @@
       },
       getTeamCapacity(team) {
         if (team.type === 'assistant') {
-          // Capacité spécifique pour les équipes d'assistants si nécessaire
+          // Capacité spécifique pour les équipes d'assistants
           return (
             this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber ||
             'Infinity'

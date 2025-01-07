@@ -23,15 +23,10 @@ router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // R�
 module.exports = router;
 
 /**
- * TODO : Better pwd security + mailer pour récupération de mot de passe
- * TODO : Hebergement sur server
- * TODO Opt : redefinir class css avec tailwind light/dark mode
- * 
  * AMELIORATIONS
  * Composant entre planning games et planning pools (reduction code, + clean)
  * Utiliser nom des routes pour les requetes axios
  * Refactor composant entre composant custom et composant de base
  * Ajouter test unitaire
- * Ajouter test intégration (deja sur postman)
  */
 

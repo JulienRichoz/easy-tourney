@@ -32,6 +32,4 @@
   };
 </script>
 
-<style scoped>
-  /* Styles personnalisés si nécessaire */
-</style>
+<style scoped></style>

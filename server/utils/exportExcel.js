@@ -557,7 +557,7 @@ async function generateExcelFile(data, tourneyId) {
     });
 
     // Feuille 5: Planning des Pools
-    const poolsSheet = workbook.addWorksheet('Planning des Pools'); // Déclaré ici
+    const poolsSheet = workbook.addWorksheet('Planning des Pools');
     poolsSheet.columns = [
         { header: "Terrain", key: "field", width: 20 },
         { header: "Pool", key: "pool", width: 15 },
@@ -664,7 +664,7 @@ async function generateExcelFile(data, tourneyId) {
             });
         });
 
-        // Ajuster les styles si nécessaire
+        // Ajuster les styles
         fieldSheet.getRow(1).font = { bold: true };
         fieldSheet.getRow(1).alignment = { horizontal: 'center' };
         fieldSheet.columns.forEach(column => {

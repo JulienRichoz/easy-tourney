@@ -200,7 +200,7 @@
         if (!this.newUser.password && !this.editingUser) {
           errors.password = 'Le mot de passe est obligatoire.';
         }
-        // ... autres validations si nécessaire ...
+        // ... autres validations
         this.formErrors = errors;
         this.isFormValid = Object.keys(errors).length === 0;
         return errors;

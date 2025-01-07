@@ -401,7 +401,7 @@
             'Erreur lors de la récupération des détails du tournoi:',
             error
           );
-          // Afficher un message d'erreur à l'utilisateur si nécessaire
+          // Afficher un message d'erreur à l'utilisateur
         }
       },
       /**
@@ -414,7 +414,7 @@
         return new Date(dateString).toLocaleDateString(undefined, options);
       },
       /**
-       * Gère le changement d'onglet si nécessaire.
+       * Gère le changement d'onglet
        * @param {String} tab - L'onglet sélectionné.
        */
       selectTab(tab) {
