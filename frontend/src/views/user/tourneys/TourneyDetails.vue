@@ -6,9 +6,10 @@
       :tourneyId="tourneyId"
       @selectTab="selectTab"
     />
+
     <!-- Contenu principal avec deux colonnes -->
-    <div class="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-start">
-      <!-- Détails du tournoi, Équipe Utilisateur, Statistiques -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+      <!-- Détails du tournoi et Statistiques -->
       <div class="bg-light-card dark:bg-dark-card rounded-lg shadow-lg p-8">
         <!-- Nom du tournoi -->
         <div class="flex items-center justify-between mb-4">
@@ -19,50 +20,126 @@
           </h2>
         </div>
 
-        <!-- Lieu et Date -->
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
-          <strong>Lieu :</strong> {{ tourney.location }}
-        </p>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
-          <strong>Date :</strong> {{ formatDate(tourney.dateTourney) }}
-        </p>
-        <p class="text-base text-light-form-text dark:text-dark-form-text mb-2">
-          <strong>Durée d'une partie :</strong> {{ gameDurationText }}
-        </p>
+        <!-- Divisée en 2 colonnes pour les informations -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Colonne 1 : Informations principales -->
+          <div>
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              <strong>Lieu :</strong> {{ tourney.location }}
+            </p>
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              <strong>Date :</strong> {{ formatDate(tourney.dateTourney) }}
+            </p>
+            <div class="flex flex-wrap gap-4 mb-2">
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Début :</strong> {{ formatTime(startTime) }}
+              </p>
+              <p
+                class="text-base text-light-form-text dark:text-dark-form-text"
+              >
+                <strong>Fin :</strong> {{ formatTime(endTime) }}
+              </p>
+            </div>
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              <strong>Durée d'une partie :</strong> {{ gameDurationText }}
+            </p>
+          </div>
 
-        <!-- Informations sur l'équipe de l'utilisateur -->
+          <!-- Colonne 2 : Contacts et infos -->
+          <div>
+            <h3
+              class="text-xl font-semibold text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              Contacts et infos :
+            </h3>
+            <p
+              v-if="tourney.emergencyDetails"
+              class="text-base text-light-form-text dark:text-dark-form-text"
+              v-html="formatEmergencyDetails(tourney.emergencyDetails)"
+            ></p>
+            <p
+              v-else
+              class="text-base text-light-form-text dark:text-dark-form-text italic"
+            >
+              Aucune information d'urgence disponible.
+            </p>
+          </div>
+        </div>
+
+        <!-- Informations spécifiques au rôle -->
         <div class="mt-6">
           <h3
             class="text-2xl font-semibold mb-2 text-light-form-text dark:text-dark-form-text"
           >
-            Mon Équipe
+            Mon Rôle
           </h3>
-          <p
-            class="text-base text-light-form-text dark:text-dark-form-text mb-2"
-          >
-            <strong>Nom de l'équipe :</strong> {{ userTeam.teamName }}
-          </p>
-          <p
-            class="text-base text-light-form-text dark:text-dark-form-text mb-2"
-          >
-            <strong>Matchs restants :</strong> {{ userTeam.remainingMatches }}
-          </p>
-          <div class="mt-2">
-            <h4
-              class="text-xl font-semibold text-light-form-text dark:text-dark-form-text"
+          <template v-if="userTeam.role === 'Assistant'">
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
             >
-              Membres :
-            </h4>
-            <ul class="list-disc list-inside mt-2">
-              <li
-                v-for="player in userTeam.players"
-                :key="player.id"
-                class="text-base text-light-form-text dark:text-dark-form-text"
+              Vous êtes un <strong>Assistant</strong>. Votre mission consiste à
+              aider à l'organisation des matchs.
+            </p>
+            <div class="mt-2">
+              <h4
+                class="text-xl font-semibold text-light-form-text dark:text-dark-form-text"
               >
-                {{ player.name }}
-              </li>
-            </ul>
-          </div>
+                Membres de l'équipe d'assistants :
+              </h4>
+              <div class="mt-2 max-h-40 overflow-y-auto grid grid-cols-2 gap-4">
+                <div
+                  v-for="assistant in userTeam.players"
+                  :key="assistant.id"
+                  class="text-base text-light-form-text dark:text-dark-form-text"
+                >
+                  {{ assistant.name }}
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-else-if="userTeam.role === 'Player'">
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              <strong>Nom de l'équipe :</strong> {{ userTeam.teamName }}
+            </p>
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              <strong>Matchs restants :</strong> {{ userTeam.remainingMatches }}
+            </p>
+            <div class="mt-2">
+              <h4
+                class="text-xl font-semibold text-light-form-text dark:text-dark-form-text"
+              >
+                Membres :
+              </h4>
+              <div class="mt-2 max-h-40 overflow-y-auto grid grid-cols-2 gap-4">
+                <div
+                  v-for="player in userTeam.players"
+                  :key="player.id"
+                  class="text-base text-light-form-text dark:text-dark-form-text"
+                >
+                  {{ player.name }}
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <p
+              class="text-base text-light-form-text dark:text-dark-form-text mb-2"
+            >
+              Vous n'êtes pas dans une équipe.
+            </p>
+          </template>
         </div>
       </div>
 
@@ -178,8 +255,11 @@
           teamName: '',
           players: [],
           remainingMatches: 0,
+          role: '',
         },
         gameDuration: null,
+        startTime: null,
+        endTime: null,
         mapIsReady: false,
       };
     },
@@ -236,14 +316,22 @@
           const data = response.data;
           this.tourney = data.tourney;
           this.sports = data.sports;
-          this.userTeam = data.userTeam;
+          this.userTeam = {
+            ...data.userTeam,
+            role: data.userTeam.teamName || 'guest', // Définir le rôle en guest si non défini (pas d'équipe)
+          };
           this.gameDuration = data.gameDuration;
+          this.startTime = data.startTime;
+          this.endTime = data.endTime;
         } catch (error) {
           console.error(
             'Erreur lors de la récupération des détails du tournoi (vue utilisateur) :',
             error
           );
         }
+      },
+      formatEmergencyDetails(details) {
+        return details.replace(/\n/g, '<br>');
       },
       isValidURL(string) {
         try {
@@ -257,19 +345,14 @@
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
       },
+      formatTime(timeString) {
+        if (!timeString) return 'N/A'; // Si aucune heure n'est fournie
+        const [hours, minutes] = timeString.split(':'); // Séparer l'heure et les minutes
+        return `${parseInt(hours, 10)}h${minutes}`; // Retourner le format souhaité
+      },
       openGoogleMaps() {
         window.open(this.googleMapsLink, '_blank');
       },
     },
   };
 </script>
-
-<style scoped>
-  .l-map {
-    height: 100%;
-    width: 100%;
-  }
-  .dark .leaflet-container {
-    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-  }
-</style>

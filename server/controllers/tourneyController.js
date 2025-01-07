@@ -1105,7 +1105,7 @@ exports.getTourneyDetailsUserView = async (req, res) => {
 
     // Récupérer le tournoi
     const tourney = await Tourney.findByPk(tourneyId, {
-      attributes: ['id', 'name', 'location', 'latitude', 'longitude', 'dateTourney'],
+      attributes: ['id', 'name', 'location', 'latitude', 'longitude', 'dateTourney', 'emergencyDetails'],
     });
 
     if (!tourney) {
@@ -1183,10 +1183,12 @@ exports.getTourneyDetailsUserView = async (req, res) => {
     // Récupérer la durée d'une partie depuis ScheduleTourney
     const schedule = await ScheduleTourney.findOne({
       where: { tourneyId },
-      attributes: ['gameDuration'],
+      attributes: ['startTime', 'endTime', 'gameDuration'],
     });
 
     const gameDuration = schedule ? schedule.gameDuration : null;
+    const startTime = schedule ? schedule.startTime : null;
+    const endTime = schedule ? schedule.endTime : null;
 
     // Construire la réponse
     const responseData = {
@@ -1196,6 +1198,7 @@ exports.getTourneyDetailsUserView = async (req, res) => {
         latitude: tourney.latitude,
         longitude: tourney.longitude,
         dateTourney: tourney.dateTourney,
+        emergencyDetails: tourney.emergencyDetails || '',
       },
       sports: sports.map((sport) => ({
         id: sport.id,
@@ -1205,6 +1208,8 @@ exports.getTourneyDetailsUserView = async (req, res) => {
       })),
       userTeam,
       gameDuration,
+      startTime,
+      endTime,
     };
 
     res.status(200).json(responseData);
