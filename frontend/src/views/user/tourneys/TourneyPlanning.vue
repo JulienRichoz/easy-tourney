@@ -860,9 +860,7 @@
        * @param {Array} events Tableau d'événements
        */
       addGamesToEvents(events) {
-        const now = new Date(
-          Date.now() - new Date().getTimezoneOffset() * 60000
-        );
+        const now = new Date();
         this.filteredGames.forEach((game) => {
           if (!game.field) {
             console.warn(
@@ -871,8 +869,8 @@
             return;
           }
 
-          const gameStart = new Date(game.startTime).toISOString(); // Garde l'heure en UTC
-          const gameEnd = new Date(game.endTime).toISOString(); // Garde l'heure en UTC
+          const gameStart = new Date(game.startTime);
+          const gameEnd = new Date(game.endTime);
           const isCurrentGame =
             now >= new Date(gameStart) && now <= new Date(gameEnd);
 
@@ -1150,7 +1148,7 @@
        * @returns {string} Heure formatée
        */
       formatDisplayTime(date) {
-        const d = new Date(date); // Utilise toujours UTC
+        const d = new Date(date);
         if (isNaN(d.getTime())) {
           return ''; // Gérer les dates invalides
         }

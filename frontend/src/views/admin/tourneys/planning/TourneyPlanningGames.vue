@@ -631,7 +631,7 @@
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial (https://fullcalendar.io/license)
           initialView: 'resourceTimeGridDay',
-          timeZone: 'local', // Stockage et manipulation en UTC
+          timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: this.isEditable,
           droppable: true, // Permet de déposer les éléments
