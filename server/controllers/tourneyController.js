@@ -1138,12 +1138,14 @@ exports.getTourneyDetailsUserView = async (req, res) => {
     // Récupérer l'équipe de l'utilisateur pour ce tournoi
     const userTourney = await UsersTourneys.findOne({
       where: { userId, tourneyId },
+      attributes: ['teamId', 'tourneyRole'],
     });
 
     let userTeam = {
       teamName: 'N/A',
       players: [],
       remainingMatches: 0,
+      role: userTourney?.tourneyRole || 'guest', // Utiliser le rôle de l'utilisateur ou 'guest'
     };
 
     if (userTourney && userTourney.teamId) {

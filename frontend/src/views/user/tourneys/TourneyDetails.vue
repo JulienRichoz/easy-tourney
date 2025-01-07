@@ -81,7 +81,7 @@
           >
             Mon Rôle
           </h3>
-          <template v-if="userTeam.role === 'Assistant'">
+          <template v-if="userTeam.role === 'assistant'">
             <p
               class="text-base text-light-form-text dark:text-dark-form-text mb-2"
             >
@@ -105,7 +105,7 @@
               </div>
             </div>
           </template>
-          <template v-else-if="userTeam.role === 'Player'">
+          <template v-else-if="userTeam.role === 'player'">
             <p
               class="text-base text-light-form-text dark:text-dark-form-text mb-2"
             >
@@ -114,7 +114,7 @@
             <p
               class="text-base text-light-form-text dark:text-dark-form-text mb-2"
             >
-              <strong>Matchs restants :</strong> {{ userTeam.remainingMatches }}
+              <strong>Nb. Matchs :</strong> {{ userTeam.remainingMatches }}
             </p>
             <div class="mt-2">
               <h4
@@ -303,6 +303,7 @@
     async mounted() {
       await this.fetchTourneyDetails();
       this.mapIsReady = true;
+      console.log('Role: ', this.userTeam.role);
     },
     methods: {
       selectTab(tab) {
@@ -318,7 +319,7 @@
           this.sports = data.sports;
           this.userTeam = {
             ...data.userTeam,
-            role: data.userTeam.teamName || 'guest', // Définir le rôle en guest si non défini (pas d'équipe)
+            role: data.userTeam.role, // Définir le rôle en guest si non défini (pas d'équipe)
           };
           this.gameDuration = data.gameDuration;
           this.startTime = data.startTime;
