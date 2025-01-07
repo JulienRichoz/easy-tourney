@@ -453,7 +453,7 @@
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
           initialView: 'resourceTimeGridDay',
-          timeZone: 'UTC',
+          timeZone: 'local',
           initialDate: this.tourney.dateTourney,
           editable: false,
           droppable: false,
@@ -1155,8 +1155,8 @@
           return ''; // Gérer les dates invalides
         }
 
-        const hours = d.getUTCHours().toString().padStart(2, '0'); // Heure UTC
-        const minutes = d.getUTCMinutes().toString().padStart(2, '0'); // Minute UTC
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
 
         return `${hours}:${minutes}`;
       },
