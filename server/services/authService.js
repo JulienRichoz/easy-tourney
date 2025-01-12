@@ -43,8 +43,11 @@ exports.isAuthenticated = (token) => {
   }
 
   try {
-    const decoded = jwtDecode(token);
-    return decoded && Date.now() <= decoded.exp * 1000; // Vérifie l'expiration
+    // Vérifier la signature et décoder le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Vérifier l'expiration du token
+    return decoded && Date.now() <= decoded.exp * 1000;
   } catch (error) {
     console.error('Erreur lors de la vérification du token:', error);
     return false;
