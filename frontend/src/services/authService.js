@@ -1,3 +1,5 @@
+// frontend/src/services/authService.js
+
 import { permissions, roles } from './permissions';
 import apiService from './apiService';
 import store from '../store';
