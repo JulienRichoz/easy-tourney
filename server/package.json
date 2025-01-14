@@ -6,8 +6,8 @@
     "start": "node app.js",
     "serve": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node app.js",
-    "db:hard-reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node app.js",
+    "db:reset": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node utils/cleanupUploads.js && node app.js",
+    "db:hard-reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node utils/cleanupUploads.js && node app.js",
     "format": "prettier --write .",
     "lint": "eslint ."
   },

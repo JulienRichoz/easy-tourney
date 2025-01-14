@@ -173,7 +173,6 @@ module.exports = {
         rule: 'https://www.mobilesport.ch/unihockey-fr/unihockey-fairplay-de-la-tete-aux-pieds/',
         scoreSystem: 'DESC',
         color: '#FF69B4',
-        image: '/uploads/unihockey.jpg',
         createdAt: now,
         updatedAt: now,
       },
