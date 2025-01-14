@@ -84,23 +84,32 @@ exports.login = async (req, res) => {
 
   try {
     const user = await User.findOne({ where: { email } });
+    console.log('Utilisateur trouvé :', user); // Log utilisateur trouvé
 
     if (!user) {
       return res.status(401).json({ message: 'Utilisateur non trouvé' });
     }
 
     const isMatch = await authService.comparePassword(password, user.password);
+    console.log('Mot de passe correct :', isMatch); // Log si le mot de passe est correct
 
     if (!isMatch) {
       return res.status(401).json({ message: 'Mot de passe incorrect' });
     }
 
     const token = authService.generateToken(user);
-    const decodedToken = jwt.decode(token); // Décoder le token pour récupérer l'expiration
+    console.log('Token généré :', token); // Log du token généré
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // 'lax' pour le développement
+      maxAge: 60 * 60 * 1000,
+    });
+    console.log('Cookie défini pour le token');
 
     return res.json({
-      token,
-      expiresIn: decodedToken.exp, // Expiration en timestamp UNIX
+      message: 'Authentifié avec succès',
       user: {
         id: user.id,
         name: user.name,
@@ -115,39 +124,40 @@ exports.login = async (req, res) => {
   }
 };
 
+
 // Rafraîchir le token
 exports.refreshToken = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Utilisateur non authentifié.' });
+    const token = req.cookies.token; // Lire le token depuis le cookie
+
+    if (!token) {
+      return res.status(401).json({ message: 'Non authentifié.' });
     }
 
-    const userId = req.user.id;
-    const roleId = req.user.roleId;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const newToken = authService.generateToken({
-      id: userId,
-      roleId,
-      name: req.user.name,
+      id: decoded.id,
+      roleId: decoded.roleId,
+      name: decoded.name,
     });
-    const decodedToken = jwt.decode(newToken);
 
-    return res.json({
-      token: newToken,
-      expiresIn: decodedToken.exp, // Renvoie également le nouveau timestamp d'expiration
+    // Mettre à jour le cookie
+    res.cookie('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // 'lax' pour le développement
+      maxAge: 60 * 60 * 1000,
     });
+
+
+    res.status(200).json({ message: 'Token rafraîchi.' });
   } catch (error) {
-    console.error(
-      'Erreur lors de la création du token de rafraîchissement:',
-      error
-    );
-    return res
-      .status(500)
-      .json({
-        message: 'Erreur lors de la création du token de rafraîchissement',
-      });
+    console.error('Erreur lors du rafraîchissement du token:', error);
+    res.status(403).json({ message: 'Token invalide.' });
   }
 };
+
 
 // Récupérer le profil de l'utilisateur
 exports.getProfile = async (req, res) => {

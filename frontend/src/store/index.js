@@ -1,6 +1,7 @@
+// frontend/src/store/index.js
+
 import { createStore } from 'vuex';
 import apiService from '@/services/apiService';
-import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
 import tourney from './modules/tourney';
 import userTourney from './modules/userTourney';
 import { getSocket } from '@/services/socketService';
@@ -11,36 +12,49 @@ export default createStore({
     userTourney,
   },
   state: {
-    isAuthenticated: !!localStorage.getItem('token'), // On vérifie si un token est déjà présent
+    // Booleen d'auth
+    isAuthenticated: false,
+    // Objet représentant l'utilisateur connecté
     user: null,
-    tokenExpiration: null,
-    inviteToken: localStorage.getItem('inviteToken') || null, // vérifier si un token d'invitation est présent
+    // Token d'invitation (si tu en as besoin côté front)
+    inviteToken: localStorage.getItem('inviteToken') || null,
   },
   mutations: {
+    // Mettre à jour l'état d'auth
     SET_AUTH(state, payload) {
       state.isAuthenticated = payload.isAuthenticated;
-      state.user = payload.user;
-      state.tokenExpiration = payload.tokenExpiration;
+      state.user = payload.user || null;
     },
+
+    // Déconnecter localement
     LOGOUT(state) {
       state.isAuthenticated = false;
       state.user = null;
-      state.tokenExpiration = null;
-      state.inviteToken = null; // Reset du token d'invitation lors du logout
-      localStorage.removeItem('inviteToken');
+      state.inviteToken = null;
+      // On peut aussi forcer la suppression du cookie côté client
+      // (si le domaine/chemin match) :
+      document.cookie = 'token=; Max-Age=0; path=/';
+
+      // On réinitialise si besoin le module "tourney"
       this.commit('tourney/RESET_TOURNEY_STATE');
     },
+
+    // Gérer un message d'alerte (optionnel)
     SET_ALERT_MESSAGE(state, message) {
       state.alertMessage = message;
     },
     CLEAR_ALERT_MESSAGE(state) {
       state.alertMessage = null;
     },
+
+    // Exemple de mise à jour du username dans l'état
     UPDATE_USER_NAME(state, newName) {
       if (state.user) {
         state.user.name = newName;
       }
     },
+
+    // Gestion du token d'invitation
     SET_INVITE_TOKEN(state, token) {
       state.inviteToken = token;
       localStorage.setItem('inviteToken', token);
@@ -51,81 +65,89 @@ export default createStore({
     },
   },
   actions: {
+    /**
+     * Action de login
+     * 1) POST /auth/login => le serveur place le cookie httpOnly
+     * 2) GET /users/me => récupérer le user
+     * 3) commit SET_AUTH
+     */
     async login({ commit }, { email, password }) {
       try {
-        const response = await apiService.post('/auth/login', {
-          email,
-          password,
-        });
-        const { token, expiresIn } = response.data;
+        // 1) Login
+        await apiService.post('/auth/login', { email, password });
+        // => le cookie est maintenant défini côté navigateur (httpOnly)
 
-        localStorage.setItem('token', token);
-        apiService.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        // Récupérer les informations de l'utilisateur depuis le serveur
+        // 2) Récupérer l'utilisateur
         const userResponse = await apiService.get('/users/me');
-        const user = userResponse.data;
+        console.log('[login] /users/me =>', userResponse.data);
 
-        commit('SET_AUTH', { isAuthenticated: true, user, expiresIn });
+        // 3) Mettre à jour le store
+        commit('SET_AUTH', {
+          isAuthenticated: true,
+          user: userResponse.data,
+        });
       } catch (error) {
-        console.error('Erreur de connexion:', error);
+        console.error('[login] Erreur de connexion:', error);
         throw error;
       }
     },
-    logout({ commit }) {
-      localStorage.removeItem('token'); // Supprime le token de localStorage
-      // Déconnecter le socket
-      let socket = getSocket();
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-      delete apiService.defaults.headers.common['Authorization']; // Supprime l'en-tête d'autorisation
 
-      commit('LOGOUT'); // Réinitialise l'état
+    /**
+     * Action de logout
+     * 1) Facultatif: requête POST /auth/logout => backend supprime/expirie le cookie
+     * 2) commit('LOGOUT') local
+     */
+    async logout({ commit }) {
+      try {
+        // (Optionnel) appel backend si tu veux un endpoint de déconnexion
+        await apiService.post('/auth/logout');
+        // => le backend peut faire res.clearCookie('token') etc.
+
+        // Déconnecter le socket
+        let socket = getSocket();
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+
+        // 2) Déconnexion locale
+        commit('LOGOUT');
+      } catch (error) {
+        console.error('[logout] Erreur lors du logout:', error);
+      }
     },
+
+    // Sauvegarder un token d'invitation
     saveInviteToken({ commit }, token) {
       commit('SET_INVITE_TOKEN', token);
     },
+
+    // Nettoyer le token d'invitation
     clearInviteToken({ commit }) {
       commit('CLEAR_INVITE_TOKEN');
     },
-    /*
-     * Initialiser l'authentification
-     * Vérifie si un token est présent dans le localStorage
-     * Si le token est valide, le decoder et mettre à jour l'état de l'authentification
+
+    /**
+     * initializeAuth()
+     * Appelée au démarrage de l'app (ex: dans App.vue ou main.js)
+     * -> Vérifie si on est déjà authentifié
+     *    en appelant /users/me (ou un endpoint similaire)
      */
     async initializeAuth({ commit }) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          const currentTime = Math.floor(Date.now() / 1000); // Temps actuel en secondes
+      try {
+        // 1) On demande au backend si on a un cookie valide
+        const response = await apiService.get('/users/me');
+        console.log('[initializeAuth] /users/me =>', response.data);
 
-          if (decoded.exp && currentTime < decoded.exp) {
-            // Si le token n'est pas expiré
-            apiService.defaults.headers.common[
-              'Authorization'
-            ] = `Bearer ${token}`;
-            // Récupérer les informations de l'utilisateur depuis le serveur
-            const response = await apiService.get('/users/me');
-            const user = response.data;
-
-            commit('SET_AUTH', {
-              isAuthenticated: true,
-              user,
-              tokenExpiration: decoded.exp, // On récupère l'expiration
-            });
-          } else {
-            // Si le token est expiré, effectuer un logout
-            commit('LOGOUT');
-            localStorage.removeItem('token');
-          }
-        } catch (error) {
-          console.error('Erreur lors du décodage du token:', error);
-          commit('LOGOUT');
-          localStorage.removeItem('token');
-        }
+        // 2) Si 200 => user connecté
+        commit('SET_AUTH', {
+          isAuthenticated: true,
+          user: response.data,
+        });
+      } catch (error) {
+        // 3) Si 401 ou autre => pas connecté
+        console.warn('[initializeAuth] Non authentifié ou erreur => LOGOUT');
+        commit('LOGOUT');
       }
     },
   },

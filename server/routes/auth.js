@@ -20,6 +20,9 @@ router.post('/login', login);
 router.post('/refresh-token', authenticateToken, refreshToken);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.post('/logout', (req, res) => {
+  res.clearCookie('token').json({ message: 'Déconnexion réussie.' });
+});
 
 
 module.exports = router;

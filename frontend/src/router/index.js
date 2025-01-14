@@ -1,14 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store';
-import {
-  refreshToken,
-  hasPermission,
-  isTokenExpired,
-  handleTokenExpiration,
-} from '@/services/authService';
-import { jwtDecode } from 'jwt-decode';
 import apiService from '@/services/apiService';
-
+import { hasPermission } from '@/services/authService'; // Si tu utilises encore cette fonction
 // Importation des fichiers de routes
 import authRoutes from './authRoutes';
 import adminRoutes from './adminRoutes';
@@ -23,37 +16,38 @@ const router = createRouter({
   routes,
 });
 
-// Gestion des événements avant chaque navigation
+/**
+ * Vérifie si l'app est hors-ligne.
+ */
+function isOffline() {
+  return !navigator.onLine;
+}
+
+// Avant chaque navigation
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token'); // Récupération du token JWT
-  const isAuthenticated = !!token; // Vérifie si l'utilisateur est authentifié
+  // Raccourcis pour l'état d'authentification
+  const isAuthenticated = store.state.isAuthenticated;
+  const userRole = store.state.user?.roleId;
 
-  // Vérifier si l'application est hors ligne
-  const isOffline = !navigator.onLine;
+  console.log('[router.beforeEach] isAuthenticated =', isAuthenticated);
+  console.log('[router.beforeEach] userRole =', userRole);
 
-  // Sauvegarder le inviteToken s'il est présent
-  if (to.query.inviteToken) {
-    store.dispatch('saveInviteToken', to.query.inviteToken);
-  }
-
-  // Gestion des routes publiques (sans authentification requise)
+  // 1) Si la route N'EXIGE PAS d'auth (ex: Login, Register, ou routes publiques)
   if (to.meta.requiresAuth === false) {
+    // Si déjà connecté, on redirige vers /admin ou /tourneys selon le rôle
     if (isAuthenticated) {
-      const decoded = jwtDecode(token);
-      const userRole = decoded.roleId;
       if (userRole === 1) {
         return next('/admin/tourneys');
       } else {
         return next('/tourneys');
       }
     }
+    // Sinon, on laisse passer
     return next();
   }
 
-  // Gestion des pages de connexion et d'inscription
+  // 2) Si on se trouve sur la page Login/Register et qu'on est déjà authentifié
   if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
-    const decoded = jwtDecode(token);
-    const userRole = decoded.roleId;
     if (userRole === 1) {
       return next('/admin/tourneys');
     } else {
@@ -61,105 +55,81 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // Gestion des routes protégées
+  // 3) Si la route EXIGE une authentification
   if (to.meta.requiresAuth) {
-    // Si l'utilisateur n'est pas authentifié
+    // a) Vérifier l'authentification
     if (!isAuthenticated) {
-      store.dispatch('logout');
+      // Non connecté => on redirige vers /login
+      store.dispatch('logout'); // au cas où on voudrait “nettoyer” le store
       return next('/login');
     }
 
-    // Si le token est expiré
-    if (isTokenExpired()) {
-      handleTokenExpiration();
-      return next('/login');
-    }
-
-    // Gestion des pages accessibles hors ligne (/tourneys uniquement)
-    if (isOffline) {
+    // b) Gérer le mode hors-ligne
+    if (isOffline()) {
+      // Si on est offline, on autorise /tourneys et /admin/tourneys
       if (to.path.startsWith('/tourneys')) {
         console.warn('Mode hors ligne : accès autorisé pour /tourneys.');
         return next();
-      } else if (to.path.startsWith('/admin') && isAuthenticated) {
-        console.warn('Mode hors ligne : accès admin possible avec données en cache.');
-        // Laisser passer sans redirection vers login
+      } else if (to.path.startsWith('/admin') && userRole === 1) {
+        console.warn('Mode hors ligne : accès admin possible (données en cache).');
         return next();
       } else {
-        console.warn('Mode hors ligne : non admin ou non authentifié, redirection login.');
+        console.warn('Mode hors ligne : route non autorisée => redirection /login.');
         return next('/login');
       }
     }
 
-    // Rafraîchissement du token et gestion des permissions
-    try {
-      const newToken = await refreshToken();
-      localStorage.setItem('token', newToken);
-      apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    // c) Vérifier les permissions spécifiques (si tu utilises `to.meta.permission`)
+    if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
+      return next('/access-denied');
+    }
 
-      // Récupérer l'utilisateur
-      const userResponse = await apiService.get('/users/me');
-      const user = userResponse.data;
-      const decoded = jwtDecode(newToken);
+    // d) Gestion du token d'invitation (inviteToken)
+    const inviteToken = store.state.inviteToken;
+    if (inviteToken) {
+      try {
+        // Le backend se charge de vérifier le token d'invitation
+        // (Attention : ne pas confondre token d'invitation et JWT d'auth)
+        const response = await apiService.post('/tourneys/join', { token: inviteToken });
+        // Imaginons que le backend renvoie { tourneyId: X } 
+        const { tourneyId } = response.data;
 
-      store.commit('SET_AUTH', {
-        isAuthenticated: true,
-        user,
-        tokenExpiration: decoded.exp,
-      });
-
-      const userRole = user.roleId;
-
-      // Vérification des permissions d'accès à la route
-      if (to.meta.permission && !hasPermission(userRole, to.meta.permission)) {
-        return next('/access-denied');
-      }
-
-      // Gestion des tokens d'invitation
-      const inviteToken = store.state.inviteToken;
-      if (inviteToken) {
-        try {
-          await apiService.post('/tourneys/join', { token: inviteToken });
-          const decodedInvite = jwtDecode(inviteToken);
-          const tourneyId = decodedInvite.tourneyId;
-          store.dispatch('clearInviteToken');
-          return next(`/tourneys/${tourneyId}/join-team`);
-        } catch (err) {
-          console.error('Erreur lors de la jonction au tournoi:', err);
-        }
+        // Nettoyer l'inviteToken côté store
         store.dispatch('clearInviteToken');
-        return next();
+
+        // Rediriger vers la page join-team
+        return next(`/tourneys/${tourneyId}/join-team`);
+      } catch (err) {
+        console.error('Erreur lors de la jonction au tournoi:', err);
+        // Si erreur => on nettoie l'inviteToken et on continue
+        store.dispatch('clearInviteToken');
       }
+    }
 
-      // Récupération des données spécifiques aux tournois
-      const isTournamentRoute =
-        (to.path.startsWith('/tourneys/') ||
-          to.path.startsWith('/admin/tourneys/')) &&
-        to.params.tourneyId;
+    // e) Récupération/MAJ des données spécifiques aux tournois
+    const isTournamentRoute =
+      (to.path.startsWith('/tourneys/') || to.path.startsWith('/admin/tourneys/')) &&
+      to.params.tourneyId;
 
-      if (isTournamentRoute) {
-        try {
-          const tourneyId = to.params.tourneyId;
-          await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
-        } catch (error) {
-          console.error('Erreur lors de la récupération du tournoi:', error);
-          if (error.response && error.response.status === 404) {
-            return next({ name: 'NotFoundPage' });
-          } else {
-            await store.dispatch('tourney/clearTournamentName');
-          }
+    if (isTournamentRoute) {
+      try {
+        const tourneyId = to.params.tourneyId;
+        await store.dispatch('tourney/fetchTourneyStatuses', tourneyId);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du tournoi:', error);
+        if (error.response && error.response.status === 404) {
+          return next({ name: 'NotFoundPage' });
+        } else {
+          await store.dispatch('tourney/clearTournamentName');
         }
-      } else {
-        store.dispatch('tourney/clearTournamentName');
       }
-
-      return next();
-    } catch (error) {
-      console.error('Erreur lors du rafraîchissement du token:', error);
-      store.dispatch('logout');
-      return next('/login');
+    } else {
+      // Nettoyer si on quitte une route de tournoi
+      store.dispatch('tourney/clearTournamentName');
     }
   }
 
+  // 4) Si aucune condition particulière => next() par défaut
   return next();
 });
 

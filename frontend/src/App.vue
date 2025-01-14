@@ -4,10 +4,15 @@
     id="app"
     class="min-h-screen bg-light-background dark:bg-dark-background text-light-title dark:text-dark-title font-sans antialiased"
   >
+    <!-- Indicateur offline -->
     <div v-if="!isOnline" class="offline-indicator">
       Vous êtes hors ligne. Certaines fonctionnalités peuvent être limitées.
     </div>
+
+    <!-- Menu principal -->
     <Menu />
+
+    <!-- Contenu principal -->
     <div :class="{ 'overflow-hidden max-h-screen': isModalOpen }">
       <router-view />
     </div>
@@ -17,7 +22,6 @@
 <script>
   import Menu from './components/MenuComponent';
   import { mapActions } from 'vuex';
-  import { isTokenExpired } from '@/services/authService';
 
   export default {
     name: 'App',
@@ -26,97 +30,51 @@
     },
     data() {
       return {
-        isModalOpen: false,
-        isOnline: navigator.onLine,
+        isModalOpen: false, // Gère l'état d'ouverture d'une éventuelle modale
+        isOnline: navigator.onLine, // Gère l'état hors-ligne
       };
     },
     methods: {
-      ...mapActions(['logout']),
+      ...mapActions(['logout', 'initializeAuth']),
 
-      startTokenExpirationWatcher() {
-        if (this.tokenWatcher) {
-          clearInterval(this.tokenWatcher);
-        }
-
-        this.checkTokenExpiration(); // Première vérification
-
-        // Configurer un intervalle dynamique en fonction du temps restant sur le token
-        this.tokenWatcher = setInterval(() => {
-          this.checkTokenExpiration();
-        }, this.getCheckInterval());
-      },
-
-      // Check if the user is online
+      // Gestion de l'état "online/offline"
       updateOnlineStatus() {
         this.isOnline = navigator.onLine;
       },
 
-      checkTokenExpiration() {
-        if (isTokenExpired()) {
-          // Token expiré, on déconnecte l'utilisateur
-          this.logout(); // Effectuer la déconnexion via Vuex
-
-          // Rediriger vers la page de login uniquement si l'utilisateur n'y est pas déjà
-          if (this.$route.path !== '/login') {
-            this.$router.push('/login');
-          }
-
-          // Arrêter l'intervalle après déconnexion
-          clearInterval(this.tokenWatcher);
-        }
-      },
-
-      getCheckInterval() {
-        const tokenExpiration = this.$store.state.tokenExpiration;
-        const currentTime = Math.floor(Date.now() / 1000);
-
-        if (tokenExpiration) {
-          const timeLeft = tokenExpiration - currentTime;
-          // Retourner l'intervalle en fonction du temps restant sur le token
-          return timeLeft > 10 ? (timeLeft / 2) * 1000 : 5000;
-        }
-        return 5000; // Valeur par défaut
-      },
+      // Gestion de l'ouverture/fermeture modale
       handleModalOpen() {
         document.body.classList.add('modal-open');
+        this.isModalOpen = true;
       },
       handleModalClose() {
         document.body.classList.remove('modal-open');
+        this.isModalOpen = false;
       },
     },
 
-    mounted() {
-      const token = localStorage.getItem('token');
-      const isAuthenticated = !!token;
-
-      if (isAuthenticated && !isTokenExpired()) {
-        // Démarrer la surveillance uniquement si l'utilisateur est authentifié et que le token n'est pas expiré
-        this.startTokenExpirationWatcher();
+    async mounted() {
+      // Au montage, on tente de récupérer l'utilisateur courant
+      // (si le serveur renvoie 200, on est déjà loggué ; sinon 401 => non loggué)
+      try {
+        await this.initializeAuth();
+      } catch (error) {
+        // On peut ignorer ou logger l'erreur,
+        // car si l'utilisateur n'est pas logué => 401 => store.LOGOUT
+        console.warn('initializeAuth error:', error);
       }
 
-      // Réagir aux changements de l'état d'authentification
-      this.$watch(
-        () => this.$store.state.isAuthenticated,
-        (newVal) => {
-          if (newVal) {
-            // Redémarrer la surveillance après reconnexion
-            this.startTokenExpirationWatcher();
-          } else {
-            // Arrêter la surveillance si déconnexion
-            clearInterval(this.tokenWatcher);
-          }
-        }
-      );
-
-      // Écoute les événements `modal-open` et `modal-close`
+      // Écoute l'ouverture/fermeture modale (si tu l'utilises quelque part)
       window.addEventListener('modal-open', this.handleModalOpen);
       window.addEventListener('modal-close', this.handleModalClose);
+
+      // Écoute l'état offline/online
       window.addEventListener('online', this.updateOnlineStatus);
       window.addEventListener('offline', this.updateOnlineStatus);
     },
 
     beforeUnmount() {
-      clearInterval(this.tokenWatcher); // Nettoyage lors du démontage du composant
+      // Nettoyages
       window.removeEventListener('modal-open', this.handleModalOpen);
       window.removeEventListener('modal-close', this.handleModalClose);
       window.removeEventListener('online', this.updateOnlineStatus);
@@ -129,6 +87,7 @@
   body.modal-open {
     overflow: hidden;
   }
+
   html,
   body {
     @apply bg-dark-menu;

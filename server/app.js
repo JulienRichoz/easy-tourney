@@ -27,14 +27,14 @@ const scheduleTourneyRoutes = require('./routes/scheduleTourney');
 const poolScheduleRoutes = require('./routes/poolSchedule');
 const planningRoutes = require('./routes/planning');
 const exportDataRoutes = require('./routes/exportData');
-
 const { errorHandler, limiter } = require('./middlewares');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
 // Parser les origines autorisées depuis l'environnement
 const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
-
+app.use(cookieParser());
 // Middleware
 app.use(
   cors({

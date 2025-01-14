@@ -119,7 +119,7 @@
     },
     methods: {
       logout() {
-        localStorage.removeItem('token');
+        document.cookie = 'token=; Max-Age=0; path=/;'; // Supprimer le cookie token
         this.$store.dispatch('logout');
         this.$router.push('/login');
       },

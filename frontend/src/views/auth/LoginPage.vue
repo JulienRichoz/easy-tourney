@@ -13,7 +13,11 @@
   import apiService from '@/services/apiService';
   import { roles } from '@/services/permissions';
   import { toast } from 'vue3-toastify';
-  import { jwtDecode } from 'jwt-decode';
+  // On supprime import { jwtDecode } from 'jwt-decode' pour le token d'auth
+  // (inutile en cookie httpOnly).
+  // On peut le garder si on veut décoder l'inviteToken, voir plus bas.
+
+  import { jwtDecode } from 'jwt-decode'; // <= On le garde UNIQUEMENT si on veut décoder l'inviteToken.
 
   export default {
     name: 'LoginPage',
@@ -29,78 +33,67 @@
     methods: {
       async handleLogin(formData) {
         this.error = '';
-        this.toastSuccess = null;
-        this.toastError = null;
         this.isSubmitting = true;
 
         try {
-          const response = await apiService.post('/auth/login', {
+          // 1) Appel /auth/login -> le serveur place le cookie httpOnly
+          await apiService.post('/auth/login', {
             email: formData.email,
             password: formData.password,
           });
 
-          const token = response.data.token;
-          // Stocker le token
-          localStorage.setItem('token', token);
-          apiService.defaults.headers.common[
-            'Authorization'
-          ] = `Bearer ${token}`;
-
-          // Mettre à jour le store avec les informations utilisateur
+          // 2) On récupère l'utilisateur depuis /users/me
           const userResponse = await apiService.get('/users/me');
           const user = userResponse.data;
+
+          // 3) Mettre à jour le store Vuex
           this.$store.commit('SET_AUTH', {
             isAuthenticated: true,
-            user,
+            user, // On stocke juste l'utilisateur, pas le token
           });
 
-          // Vérifier si un token d’invitation est présent dans le store Vuex
+          // 4) Vérifier si on a un inviteToken (distinct du JWT auth)
           const inviteToken = this.$store.state.inviteToken;
           if (inviteToken) {
-            try {
-              await apiService.post(`/tourneys/join`, { token: inviteToken });
-            } catch (err) {
-              console.error('Erreur lors de la jonction au tournoi:', err);
-              if (err.response && err.response.status === 400) {
-                toast.error(
-                  err.response.data.message ||
-                    'Impossible de rejoindre le tournoi.'
-                );
-              } else {
-                toast.error('Erreur lors de la jonction au tournoi.');
+            // Décoder l'inviteToken pour en extraire le tourneyId
+            // (Sauf si c’est un simple string, on peut le gérer autrement)
+            const decodedInvite = jwtDecode(inviteToken);
+            if (!decodedInvite || !decodedInvite.tourneyId) {
+              toast.error('Token d’invitation invalide.');
+              this.$store.dispatch('clearInviteToken');
+            } else {
+              // Joindre le tournoi
+              try {
+                await apiService.post(`/tourneys/join`, { token: inviteToken });
+              } catch (err) {
+                console.error('Erreur lors de la jonction au tournoi:', err);
+                toast.error('Impossible de rejoindre le tournoi.');
+              } finally {
+                this.$store.dispatch('clearInviteToken'); // Nettoyer le token après usage
               }
-            } finally {
-              this.$store.dispatch('clearInviteToken'); // Nettoyer le token après usage
             }
           }
 
-          // Redirection après connexion
+          // 5) Redirection selon le rôle
           const userRole = user.roleId;
           if (userRole === roles.ADMIN) {
             this.$router.replace('/admin/tourneys');
           } else {
-            // Utiliser l'inviteToken pour la redirection
-            const tourneyId = inviteToken
-              ? jwtDecode(inviteToken).tourneyId
-              : null;
-            if (tourneyId) {
-              this.$router.replace(`/tourneys/${tourneyId}/join-team`);
-            } else {
-              this.$router.replace('/tourneys');
-            }
+            // S’il y avait un inviteToken, on essaye de rediriger vers /join-team
+            // (Mais on l’a peut-être déjà fait si on a un code au-dessus)
+            // Donc tu peux juste envoyer vers "/tourneys"
+            this.$router.replace('/tourneys');
           }
         } catch (err) {
           console.error('Erreur lors de la connexion:', err);
 
+          // Gestion des messages d'erreur
           if (err.code === 'ERR_NETWORK' || !err.response) {
-            // Erreur réseau
             this.error =
-              'Le serveur de connexion est injoignable. Veuillez ressayer plus tard.';
+              'Le serveur de connexion est injoignable. Veuillez réessayer plus tard.';
           } else if (err.response && err.response.status === 401) {
-            // Identifiants incorrects
             this.error = 'Identifiant ou mot de passe incorrect.';
           } else {
-            // Autres erreurs
             this.error = 'Une erreur est survenue. Veuillez réessayer.';
           }
         } finally {
@@ -112,5 +105,5 @@
 </script>
 
 <style scoped>
-  /* Les styles sont gérés via Tailwind CSS */
+  /* Tailwind CSS ou tes styles custom */
 </style>

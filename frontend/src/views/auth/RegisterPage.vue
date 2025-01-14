@@ -11,9 +11,9 @@
 <script>
   import AuthComponentForm from '@/components/AuthComponentForm.vue';
   import apiService from '@/services/apiService';
-  import { jwtDecode } from 'jwt-decode';
   import { roles } from '@/services/permissions';
   import { toast } from 'vue3-toastify';
+  import { jwtDecode } from 'jwt-decode'; // On ne l'utilise que pour l'inviteToken, si besoin
 
   export default {
     name: 'RegisterPage',
@@ -32,30 +32,25 @@
         this.isSubmitting = true;
 
         try {
-          // Créer le nouvel utilisateur
-          const response = await apiService.post('/auth/register', {
+          // 1) Créer le nouvel utilisateur (POST /auth/register)
+          await apiService.post('/auth/register', {
             name: formData.name,
             email: formData.email,
             password: formData.password,
             confirmPassword: formData.confirmPassword,
           });
 
-          const token = response.data.token;
-          // Stocker le token dans le localStorage
-          localStorage.setItem('token', token);
-          apiService.defaults.headers.common[
-            'Authorization'
-          ] = `Bearer ${token}`;
-
-          // Mettre à jour le store Vuex avec les informations utilisateur
+          // 2) Récupérer l'utilisateur via /users/me
           const userResponse = await apiService.get('/users/me');
           const user = userResponse.data;
+
+          // 3) On met à jour le store
           this.$store.commit('SET_AUTH', {
             isAuthenticated: true,
-            user,
+            user, // Pas de token, juste l'user
           });
 
-          // Vérifier si un token d’invitation est présent dans le store Vuex
+          // 4) Gestion de l'inviteToken
           const inviteToken = this.$store.state.inviteToken;
           if (inviteToken) {
             try {
@@ -74,29 +69,31 @@
                 toast.error('Erreur lors de la jonction au tournoi.');
               }
             } finally {
-              this.$store.dispatch('clearInviteToken'); // Nettoyer le token d'invitation après usage
+              this.$store.dispatch('clearInviteToken');
             }
           }
 
-          // Redirection après inscription
+          // 5) Redirection selon le rôle
           const userRole = user.roleId;
           if (userRole === roles.ADMIN) {
-            this.$router.replace('/tourneys'); // Admin vers tournois
+            this.$router.replace('/admin/tourneys'); // Admin => /admin
           } else {
-            // Utiliser l'inviteToken pour la redirection
+            // Sinon => /profile (ou /tourneys)
+            // Si tu veux gérer l'inviteToken (et un possible tourneyId)
+            // tu peux faire un decode sur inviteToken si besoin
             const tourneyId = inviteToken
               ? jwtDecode(inviteToken).tourneyId
               : null;
             if (tourneyId) {
-              this.$router.replace(`/tourneys/${tourneyId}/join-team`); // (`/tourneys/${tourneyId}`);
+              this.$router.replace(`/tourneys/${tourneyId}/join-team`);
             } else {
-              this.$router.replace('/profile'); // Autres utilisateurs vers page user par défaut
+              this.$router.replace('/profile');
             }
           }
         } catch (err) {
           console.error("Erreur lors de l'inscription:", err);
           if (err.response && err.response.data && err.response.data.message) {
-            this.error = err.response.data.message; // Utilise le message d'erreur renvoyé par le serveur
+            this.error = err.response.data.message;
           } else {
             this.error =
               "Erreur lors de l'inscription. Veuillez vérifier vos informations.";
@@ -110,5 +107,5 @@
 </script>
 
 <style scoped>
-  /* Les styles sont gérés via Tailwind CSS */
+  /* Tailwind CSS ou tes styles custom */
 </style>

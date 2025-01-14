@@ -15,13 +15,10 @@ const {
 
 // Middleware pour authentifier le token
 const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = req.cookies.token; // Lire le token depuis le cookie
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ message: 'Accès refusé. Aucun token fourni.' });
+    return res.status(401).json({ message: 'Accès refusé. Aucun token fourni.' });
   }
 
   try {
@@ -31,14 +28,9 @@ const authenticateToken = async (req, res, next) => {
     // Vérifier si l'utilisateur existe toujours dans la base de données
     const user = await User.findByPk(req.user.id);
     if (!user) {
-      return res
-        .status(401)
-        .json({
-          message: 'Utilisateur non trouvé. Veuillez vous reconnecter.',
-        });
+      return res.status(401).json({ message: 'Utilisateur non trouvé.' });
     }
 
-    // Définir isAdmin sur la base du roleId
     req.user.isAdmin = req.user.roleId === roles.ADMIN;
     next();
   } catch (error) {
@@ -46,6 +38,18 @@ const authenticateToken = async (req, res, next) => {
     res.status(403).json({ message: 'Token invalide.' });
   }
 };
+
+const csrfProtection = (req, res, next) => {
+  const csrfToken = req.cookies.csrfToken;
+  const csrfHeader = req.headers['x-csrf-token'];
+
+  if (!csrfHeader || csrfHeader !== csrfToken) {
+    return res.status(403).json({ message: 'Token CSRF invalide.' });
+  }
+
+  next();
+};
+
 
 // Middleware pour gérer les erreurs
 const errorHandler = (err, req, res, next) => {
@@ -144,6 +148,7 @@ module.exports = {
   // Auth Middleware
   isAuthenticated: authenticateToken, // Alias pour authenticateToken
   authenticateToken,
+  csrfProtection,
   errorHandler,
   limiter,
   isAdmin,
