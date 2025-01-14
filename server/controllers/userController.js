@@ -337,6 +337,8 @@ exports.getUserById = async (req, res) => {
       req.user.id !== parseInt(userId, 10) &&
       req.user.roleId !== roles.ADMIN
     ) {
+      // todo : check if user exists before and send error 404 then hadnle this error
+      // todo: check routes order globally to handle better error redirection
       return res.status(403).json({ message: 'Accès interdit.' });
     }
 
