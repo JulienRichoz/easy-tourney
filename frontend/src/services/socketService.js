@@ -1,9 +1,14 @@
 // src/services/socketService.js
+// Description: Ce fichier contient une fonction pour initialiser une connexion Socket.IO avec le serveur.
 
 import { io } from 'socket.io-client';
 
 let socket = null;
 
+/**
+ * Récupère une instance de socket.io-client pour communiquer avec
+ * @returns socket.io-client instance
+ */
 export function getSocket() {
     if (!socket) {
         const token = localStorage.getItem('token');

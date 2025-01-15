@@ -1,4 +1,7 @@
 <!-- StatusSelectorComponent.vue -->
+<!-- Ce composant permet de sélectionner un statut pour un tournoi. -->
+<!-- Il prend en paramètre un identifiant de tournoi, une clé de statut, des options de statut et un label. -->
+
 <template>
   <div v-if="shouldShow" class="flex items-center ml-4 sm:ml-8 w-1/2 sm:w-auto">
     <label

@@ -1,3 +1,6 @@
+<!-- src/views/user/tourneys/TourneyScores.vue -->
+<!-- Page de classement d'un tournois et scores. -->
+
 <template>
   <SubMenuComponent :tourneyId="tourneyId" />
   <div
@@ -122,6 +125,10 @@
       };
     },
     methods: {
+      /**
+       * Fetch scores for the current tourney
+       * @param {boolean} showLoading - Whether to show loading indicator
+       */
       async fetchScores(showLoading = true) {
         if (showLoading) {
           this.loading = true;
@@ -139,6 +146,10 @@
           }
         }
       },
+
+      /**
+       * Setup socket connection to receive live updates
+       */
       setupSocket() {
         const socket = getSocket();
         if (!socket) {
@@ -155,6 +166,12 @@
           this.fetchScores(false);
         });
       },
+
+      /**
+       * Sort standings by points, played matches and goal difference
+       * @param {Array} standings - The standings to sort
+       * @returns {Array} - The sorted standings
+       */
       sortedStandings(standings) {
         // Retourner une copie triée pour éviter la mutation directe
         return [...standings].sort((a, b) => {
@@ -171,6 +188,10 @@
       await this.fetchScores(); // Initial fetch with loading=true
       this.setupSocket();
     },
+
+    /**
+     * Leave the tourney and disconnect socket when leaving the page
+     */
     beforeUnmount() {
       const socket = getSocket();
       if (socket) {

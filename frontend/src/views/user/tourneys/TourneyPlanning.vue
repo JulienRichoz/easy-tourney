@@ -1,4 +1,7 @@
 <!-- src/views/user/tourneys/TourneyPlanning.vue -->
+<!-- Page de planning d'un tournoi pour les utilisateurs. -->
+<!-- Gère un mode hors ligne -->
+
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -674,6 +677,11 @@
           );
         }
       },
+
+      /**
+       * Ajoute les matchs aux événements du calendrier pour le mode hors ligne.
+       * @param {Array} events - Liste des événements à remplir.
+       */
       saveAllToLocalStorage() {
         localStorage.setItem(
           `planning-${this.tourneyId}`,
@@ -690,6 +698,9 @@
         );
       },
 
+      /**
+       * Charge les données du planning depuis le localStorage.
+       */
       loadAllFromLocalStorage() {
         const savedData = localStorage.getItem(`planning-${this.tourneyId}`);
         if (savedData) {

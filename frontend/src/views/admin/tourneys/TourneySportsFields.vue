@@ -1,3 +1,6 @@
+<!-- src/views/admin/tourneys/TourneySportsFields.vue -->
+<!-- Page pour assigner des sports aux terrains d'un tournoi. -->
+
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -146,10 +149,13 @@
         showAllTerrains: false,
       };
     },
+
     computed: {
       ...mapState('tourney', {
         statuses: (state) => state.statuses,
       }),
+
+      // Vérifier si le statut du tournoi permet l'édition
       isEditable() {
         return this.statuses.sportAssignmentStatus !== 'completed';
       },
@@ -166,12 +172,16 @@
           });
         },
       },
+
+      // Nombre total de pages pour la pagination
       totalPages() {
         if (this.showAllTerrains) {
           return 1; // Si tous les terrains sont affichés, une seule "page"
         }
         return Math.ceil(this.fields.length / this.terrainsPerPage);
       },
+
+      // Terrains paginés
       paginatedFields() {
         if (this.showAllTerrains) {
           return this.fields; // Affiche tous les terrains si l'option est activée
@@ -211,6 +221,7 @@
           }
         });
 
+        // Retourner les options du calendrier
         return {
           plugins: [timeGridPlugin, interactionPlugin, resourceTimeGridPlugin],
           schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // Clé pour usage non-commercial
@@ -243,6 +254,7 @@
       },
     },
     watch: {
+      // Observer les changements de la page actuelle pour recharger le calendrier
       currentPage() {
         if (this.$refs.fullCalendar) {
           const calendarApi = this.$refs.fullCalendar.getApi();
@@ -250,6 +262,7 @@
         }
       },
     },
+    // Détruire l'instance Draggable avant de démonter le composant
     beforeUnmount() {
       if (this.externalDraggableInstance) {
         this.externalDraggableInstance.destroy();
@@ -354,12 +367,14 @@
           'items-center'
         );
 
+        // Titre de l'événement
         const title = document.createElement('span');
         title.innerText = arg.event.title;
         title.classList.add('font-semibold', 'text-white');
 
         headerContainer.appendChild(title);
 
+        // Bouton de suppression si éditable
         if (this.isEditable) {
           const deleteIcon = document.createElement('span');
           deleteIcon.innerHTML = '&#10060;';
@@ -374,6 +389,7 @@
             this.deleteEvent(arg.event);
           });
 
+          // Gestion du clic long pour la suppression sur mobile
           let pressTimer;
           deleteIcon.addEventListener('touchstart', (e) => {
             e.stopPropagation();
@@ -388,6 +404,7 @@
           headerContainer.appendChild(deleteIcon);
         }
 
+        // Plage horaire de l'événement
         const startTime = this.formatDisplayTime(arg.event.start);
         const endTime = this.formatDisplayTime(arg.event.end);
         const timeRange = document.createElement('div');
@@ -400,8 +417,10 @@
         return { domNodes: [container] };
       },
 
-      // Les méthodes handleEventReceive, handleEventDrop, handleEventResize, deleteEvent sont celles modifiées précédemment
-
+      /**
+       * Gère l'événement de réception d'un sport sur un terrain.
+       * @param info
+       */
       async handleEventReceive(info) {
         if (!this.isEditable) {
           info.revert();
@@ -449,6 +468,10 @@
         }
       },
 
+      /**
+       * Gère l'événement de déplacement d'un sport sur un terrain.
+       * @param info
+       */
       async handleEventDrop(info) {
         if (!this.isEditable) {
           info.revert();
@@ -486,6 +509,10 @@
         }
       },
 
+      /**
+       * Gère l'événement de redimensionnement d'un sport sur un terrain.
+       * @param info
+       */
       async handleEventResize(info) {
         if (!this.isEditable) {
           info.revert();
@@ -534,6 +561,10 @@
         return `${hours}:${minutes}`;
       },
 
+      /**
+       * Supprime un sport d'un terrain.
+       * @param {Object} event - L'événement à supprimer
+       */
       async deleteEvent(event) {
         if (!this.isEditable) return;
         try {

@@ -1,3 +1,6 @@
+<!-- Page d'accueil de l'utilisateur -->
+<!-- TODO: artifact à supprimer? -->
+
 <template>
   <div>
     <h1>Bienvenue Utilisateur {{ userName }}</h1>

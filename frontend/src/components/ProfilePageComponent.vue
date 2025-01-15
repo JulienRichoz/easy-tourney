@@ -1,3 +1,10 @@
+<!-- ProfilePageComponent.vue -->
+<!-- Ce composant affiche les informations d'un utilisateur et permet de les modifier. -->
+<!-- Il permet également aux administrateurs de gérer les tournois auxquels l'utilisateur est inscrit. -->
+<!-- Il permet aux administrateurs de modifier le rôle de l'utilisateur et de le supprimer. -->
+<!-- Il permet aux utilisateurs de modifier leur nom, email, téléphone et mot de passe. -->
+<!-- Il est utilisé dans les pages de profil utilisateur. -->
+
 <template>
   <div class="max-w-5xl mx-auto p-4">
     <h1 class="text-3xl font-bold mb-6">{{ pageTitle }}</h1>
@@ -367,6 +374,7 @@
         // Pour permettre aux utilisateurs de modifier leur email, changer cette valeur
         return this.isAdmin;
       },
+
       currentUserId() {
         return this.$store.state.user ? this.$store.state.user.id : null;
       },

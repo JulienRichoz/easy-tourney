@@ -1,3 +1,6 @@
+<!-- src/views/shared/NotFound.vue -->
+<!-- Page d'erreur 404 Not Found. -->
+
 <template>
   <div class="flex h-dvh bg-gray-100">
     <!-- Partie gauche avec un texte -->

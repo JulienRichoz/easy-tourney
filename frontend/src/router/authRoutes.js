@@ -1,4 +1,5 @@
 // router/authRoutes.js
+// Description: Ce fichier contient les routes pour les pages d'authentification.
 import LoginPage from '@/views/auth/LoginPage.vue';
 import RegisterPage from '@/views/auth/RegisterPage.vue';
 import AccessDenied from '@/views/shared/AccessDenied.vue';

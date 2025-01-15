@@ -1,4 +1,5 @@
 <!-- src/views/auth/LoginPage.vue -->
+<!-- Page de connexion. -->
 <template>
   <AuthComponentForm
     mode="login"
@@ -27,12 +28,16 @@
       };
     },
     methods: {
+      /**
+       * Connecte l'utilisateur.
+       * @param {Object} formData - Les données du formulaire.
+       */
       async handleLogin(formData) {
         this.error = '';
         this.toastSuccess = null;
         this.toastError = null;
         this.isSubmitting = true;
-
+        // Appel à l'API pour la connexion
         try {
           const response = await apiService.post('/auth/login', {
             email: formData.email,

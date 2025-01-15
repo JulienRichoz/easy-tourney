@@ -1,3 +1,4 @@
+<!-- TODO: Artifact, a supprimer -->
 <template>
   <div>
     <h1>Bienvenue Admin</h1>

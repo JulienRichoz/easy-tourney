@@ -9,8 +9,10 @@ file-selected: Lorsqu'un fichier est sélectionné.
 <template>
   <form @submit.prevent="handleSubmit">
     <div :class="gridClass">
+      <!-- Boucle sur les champs pour afficher les éléments du formulaire -->
       <div v-for="field in fields" :key="field.name" class="mb-4">
         <component :is="$slots[field.name] ? 'slot' : 'div'" :name="field.name">
+          <!-- Utilisation du slot pour les champs personnalisés -->
           <template v-if="!$slots[field.name]">
             <label
               :for="field.name"
@@ -76,7 +78,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
               @input="validateField(field)"
               :placeholder="field.placeholder"
             />
-
+            <!-- Champs textArea -->
             <textarea
               v-if="field.type === 'textarea'"
               :id="field.name"
@@ -122,6 +124,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
               class="w-full p-2 rounded-md bg-light-form-background dark:bg-dark-form-background border border-light-form-border-default dark:border-dark-form-border-default text-light-form-text dark:text-dark-form-text"
             />
 
+            <!-- Choisir la couleur -->
             <div v-if="field.type === 'color'" class="flex items-center">
               <input
                 type="color"
@@ -137,6 +140,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
               ></div>
             </div>
 
+            <!-- afficher les erreurs -->
             <p
               v-if="errors[field.name]"
               class="text-light-form-error dark:text-dark-form-error text-sm mt-1"
@@ -220,12 +224,13 @@ file-selected: Lorsqu'un fichier est sélectionné.
     },
     data() {
       return {
-        errors: {},
-        visibleTooltip: null,
+        errors: {}, // Stocker les erreurs de validation
+        visibleTooltip: null, // Champ actuellement survolé
       };
     },
     computed: {
       formData: {
+        // Utiliser un getter/setter pour la liaison bidirectionnelle
         get() {
           return this.modelValue;
         },
@@ -233,11 +238,16 @@ file-selected: Lorsqu'un fichier est sélectionné.
           this.$emit('update:modelValue', value);
         },
       },
+
+      // Classe CSS pour la grille de formulaire
       gridClass() {
         return `grid grid-cols-1 sm:grid-cols-${this.columns} gap-4`;
       },
+
+      // Vérifier si le formulaire est valide
       isFormValid() {
         return (
+          // Vérifier si tous les champs requis sont remplis
           Object.keys(this.errors).length === 0 &&
           this.fields.every(
             (field) =>
@@ -250,13 +260,16 @@ file-selected: Lorsqu'un fichier est sélectionné.
       },
     },
     watch: {
+      // Écouter les changements de modèle pour valider les champs
       isFormValid(newVal) {
         this.$emit('update-validation', newVal);
       },
     },
     methods: {
+      // Valider un champ de formulaire
       validateField(field) {
         if (field.name === 'location' && field.required) {
+          // Valider l'adresse si le champ est requis
           if (
             !this.formData.location ||
             !this.formData.location.address ||
@@ -268,6 +281,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
             delete this.errors.location;
           }
         }
+        //Vérifier si le champ terrain  est requis et vide
         if (
           field.required &&
           (this.formData[field.name] === null ||
@@ -275,11 +289,14 @@ file-selected: Lorsqu'un fichier est sélectionné.
             this.formData[field.name] === '')
         ) {
           this.errors[field.name] = 'Ce champ est obligatoire';
+
+          // Vérifier si le champ est de type date'
         } else if (field.type === 'date') {
           const dateValue = new Date(this.formData[field.name]);
           const minDate = this.minDate ? new Date(this.minDate) : null;
           const maxDate = this.maxDate ? new Date(this.maxDate) : null;
 
+          // Vérifier si la date est valide
           if (minDate && dateValue < minDate) {
             this.errors[
               field.name
@@ -298,10 +315,14 @@ file-selected: Lorsqu'un fichier est sélectionné.
         // Emit validation update
         this.$emit('update-validation', this.isFormValid);
       },
+
+      // Afficher/masquer le tooltip
       toggleTooltip(fieldName) {
         this.visibleTooltip =
           this.visibleTooltip === fieldName ? null : fieldName;
       },
+
+      // Gérer la sélection de fichier
       handleFileChange(event) {
         const file = event.target.files[0] || null;
         if (file) {
@@ -325,6 +346,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
         event.stopPropagation();
       },
 
+      // Soumettre le formulaire
       handleSubmit() {
         if (!this.isEditable) return; // Empêcher la soumission si non éditable
 
@@ -350,6 +372,7 @@ file-selected: Lorsqu'un fichier est sélectionné.
         }
       },
 
+      // Annuler l'édition
       handleCancel() {
         this.$emit('form-cancel');
       },

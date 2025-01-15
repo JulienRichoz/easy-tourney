@@ -1,4 +1,8 @@
 <!-- ListUsersTable.vue -->
+<!-- Ce composant affiche une liste d'utilisateurs avec des fonctionnalités d'édition, suppression, assignation d'équipe et de tournoi. -->
+<!-- Il permet également de filtrer les utilisateurs par tournoi et de rechercher par nom ou email. -->
+<!-- Il est utilisé dans plusieurs pages de l'application (User, UnassignedUsers, List des player par pool etc.). -->
+<!-- !!! Attention au changement => Composant très complexe !!! -->
 <template>
   <div
     class="p-4 bg-light-background dark:bg-dark-background rounded-md shadow-lg"
@@ -346,11 +350,15 @@
         type: String,
         default: 'Liste des utilisateurs',
       },
+
+      // Données des utilisateurs
       users: {
         type: Array,
         required: true,
         default: () => [],
       },
+
+      // Données des équipes
       teams: {
         type: Array,
         required: false,
@@ -365,6 +373,7 @@
         type: Boolean,
         default: true,
       },
+
       allowAssignToOtherTeams: {
         type: Boolean,
         default: true,
@@ -555,6 +564,10 @@
 
         return filtered;
       },
+
+      /**
+       * Form fields pour l'édition d'un utilisateur.
+       */
       userFormFields() {
         return [
           {
@@ -651,6 +664,11 @@
         this.showDeleteModal = true;
       },
 
+      /**
+       * Emets l'événement pour mettre à jour l'équipe sélectionnée.
+       * @param userId
+       * @param teamId
+       */
       onTeamSelectionChange(userId, teamId) {
         this.localSelectedTeamIds[userId] = teamId;
         this.$emit('update:selectedTeamIds', { ...this.localSelectedTeamIds });
@@ -718,6 +736,9 @@
         this.$router.push(`/admin/users/${userId}`);
       },
 
+      /**
+       * Valide les assignations d'équipe.
+       */
       validateAssignments() {
         const assignments = Object.entries(this.selectedTeamIds)
           .filter(([teamId]) => teamId !== null && teamId !== undefined)
@@ -729,6 +750,12 @@
         this.isAutoFilled = false;
         this.initialSelectedTeamIds = {};
       },
+
+      /**
+       * Met à jour l'équipe sélectionnée pour un utilisateur.
+       * @param userId
+       * @param teamId
+       */
       updateSelectedTeamId(userId, teamId) {
         this.localSelectedTeamIds = {
           ...this.localSelectedTeamIds,
@@ -796,6 +823,9 @@
         }
       },
 
+      /**
+       * Ferme la modale de retrait d'un utilisateur d'un tournoi.
+       */
       closeRemoveFromTourneyModal() {
         this.showRemoveFromTourneyModal = false;
         this.userIdToRemoveFromTourney = null;
@@ -813,6 +843,9 @@
         this.isFormValid = true;
       },
 
+      /**
+       * Ferme la modale d'édition d'un utilisateur.
+       */
       closeEditUserModal() {
         this.showEditUserModal = false;
         this.editingUser = null;
@@ -823,6 +856,9 @@
         };
       },
 
+      /**
+       * Valide le formulaire d'édition d'un utilisateur.
+       */
       validateUserForm() {
         const errors = {};
         if (!this.newUser.name) {
@@ -836,10 +872,13 @@
         return errors;
       },
 
+      /**
+       * Met à jour les informations de l'utilisateur.
+       */
       async handleUserFormSubmit() {
         this.validateUserForm();
         if (!this.isFormValid) return;
-
+        // Update user au serveur
         try {
           await apiService.put(`/users/${this.editingUser.id}`, this.newUser);
           toast.success('Utilisateur mis à jour avec succès!');
@@ -877,6 +916,9 @@
         immediate: true,
       },
 
+      /**
+       * Surveille les changements dans les équipes sélectionnées.
+       */
       selectedTeamIds: {
         handler(newVal) {
           this.localSelectedTeamIds = { ...newVal };

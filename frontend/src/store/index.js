@@ -1,3 +1,7 @@
+// src/store/index.js
+// Description: Ce fichier contient la configuration du store Vuex de l'application.
+// Il gère l'état global de l'application, les mutations et les actions pour l'authentification et d'autres fonctionnalités.
+
 import { createStore } from 'vuex';
 import apiService from '@/services/apiService';
 import { jwtDecode } from 'jwt-decode'; // Import the 'jwtDecode' function
@@ -10,6 +14,8 @@ export default createStore({
     tourney,
     userTourney,
   },
+
+  // Initial state
   state: {
     isAuthenticated: !!localStorage.getItem('token'), // On vérifie si un token est déjà présent
     user: null,
@@ -17,11 +23,13 @@ export default createStore({
     inviteToken: localStorage.getItem('inviteToken') || null, // vérifier si un token d'invitation est présent
   },
   mutations: {
+    // Authentification
     SET_AUTH(state, payload) {
       state.isAuthenticated = payload.isAuthenticated;
       state.user = payload.user;
       state.tokenExpiration = payload.tokenExpiration;
     },
+    // Déconnexion
     LOGOUT(state) {
       state.isAuthenticated = false;
       state.user = null;
@@ -51,6 +59,11 @@ export default createStore({
     },
   },
   actions: {
+    /**
+     * Login action pour l'authentification de l'utilisateur
+     * @param {*} param0 
+     * @param {*} param1 
+     */
     async login({ commit }, { email, password }) {
       try {
         const response = await apiService.post('/auth/login', {
@@ -72,6 +85,8 @@ export default createStore({
         throw error;
       }
     },
+
+    // Déconnexion
     logout({ commit }) {
       localStorage.removeItem('token'); // Supprime le token de localStorage
       // Déconnecter le socket
@@ -84,9 +99,13 @@ export default createStore({
 
       commit('LOGOUT'); // Réinitialise l'état
     },
+
+    // Enregistrer le token d'invitation
     saveInviteToken({ commit }, token) {
       commit('SET_INVITE_TOKEN', token);
     },
+
+    // Effacer le token d'invitation
     clearInviteToken({ commit }) {
       commit('CLEAR_INVITE_TOKEN');
     },

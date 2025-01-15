@@ -1,4 +1,6 @@
 <!-- TourneySubMenu(Component).vue -->
+<!-- Ce composant affiche un sous-menu pour la gestion d'un tournoi. -->
+<!-- Il permet de naviguer entre les différentes sections de gestion d'un tournoi. -->
 
 <template>
   <div

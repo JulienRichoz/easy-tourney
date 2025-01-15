@@ -1,4 +1,7 @@
 <!-- src/views/admin/TourneyUnassignedUsers.vue -->
+<!-- Page pour afficher les utilisateurs non assignés d'un tournoi. -->
+<!-- Permet d'assigner les utilisateurs à des équipes et d'effectuer une assignation automatique ou manuelle. -->
+
 <template>
   <!-- Conteneur principal avec des marges automatiques et un padding de 4 unités -->
   <div class="mx-auto p-4">

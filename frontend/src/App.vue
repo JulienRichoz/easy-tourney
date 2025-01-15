@@ -1,12 +1,15 @@
 <!-- src/App.vue -->
+<!-- Fichier principal de l'application. -->
 <template>
   <div
     id="app"
     class="min-h-screen bg-light-background dark:bg-dark-background text-light-title dark:text-dark-title font-sans antialiased"
   >
+    <!-- Vérifier si l'utilisateur est hors ligne -->
     <div v-if="!isOnline" class="offline-indicator">
       Vous êtes hors ligne. Certaines fonctionnalités peuvent être limitées.
     </div>
+    <!-- Menu de navigation -->
     <Menu />
     <div :class="{ 'overflow-hidden max-h-screen': isModalOpen }">
       <router-view />
@@ -26,13 +29,16 @@
     },
     data() {
       return {
-        isModalOpen: false,
-        isOnline: navigator.onLine,
+        isModalOpen: false, // Indicateur de modal ouverte
+        isOnline: navigator.onLine, // Indicateur de connexion
       };
     },
     methods: {
-      ...mapActions(['logout']),
+      ...mapActions(['logout']), // Injecter l'action de déconnexion
 
+      /**
+       * Démarrer la surveillance de l'expiration du token.
+       */
       startTokenExpirationWatcher() {
         if (this.tokenWatcher) {
           clearInterval(this.tokenWatcher);
@@ -51,6 +57,9 @@
         this.isOnline = navigator.onLine;
       },
 
+      /**
+       * Vérifier si le token est expiré.
+       */
       checkTokenExpiration() {
         if (isTokenExpired()) {
           // Token expiré, on déconnecte l'utilisateur
@@ -66,6 +75,10 @@
         }
       },
 
+      /**
+       * Obtenir l'intervalle de vérification en fonction du temps restant sur le token.
+       * @returns {number} - L'intervalle de vérification en millisecondes.
+       */
       getCheckInterval() {
         const tokenExpiration = this.$store.state.tokenExpiration;
         const currentTime = Math.floor(Date.now() / 1000);
@@ -115,6 +128,9 @@
       window.addEventListener('offline', this.updateOnlineStatus);
     },
 
+    /**
+     * Nettoyage lors du démontage du composant.
+     */
     beforeUnmount() {
       clearInterval(this.tokenWatcher); // Nettoyage lors du démontage du composant
       window.removeEventListener('modal-open', this.handleModalOpen);

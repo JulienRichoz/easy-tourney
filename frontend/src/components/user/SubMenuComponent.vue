@@ -1,3 +1,6 @@
+<!-- user/SubMenuComponent.vue -->
+<!-- Ce composant affiche un sous-menu lors d'un tournoi en cours. -->
+<!-- Il permet de naviguer entre les différentes sections tels que Planning, score et info. -->
 <template>
   <div
     :class="['tourney-nav', isNavVisible ? 'visible' : 'hidden']"

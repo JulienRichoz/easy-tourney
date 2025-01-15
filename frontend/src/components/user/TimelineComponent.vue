@@ -1,4 +1,10 @@
 <!-- components/user/TimelineComponent.vue -->
+<!-- Affiche une timeline lors d'un match détail -->
+<!-- Il prend en paramètre la position du composant et l'icône à afficher -->
+<!-- Il affiche un cercle coloré avec une icône et un contenu -->
+<!-- Le contenu est centré, aligné à gauche ou à droite -->
+<!-- Le cercle est positionné au centre du contenu -->
+
 <template>
   <li class="relative flex items-center">
     <div

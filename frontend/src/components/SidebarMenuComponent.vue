@@ -1,3 +1,4 @@
+<!-- TODO: A supprimer si pas utiliser -->
 <template>
   <div>
     <!-- Bouton pour ouvrir/fermer le menu -->

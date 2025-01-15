@@ -1,4 +1,5 @@
 <!-- src/views/user/TourneyTeamDetails.vue -->
+<!-- Page de détails d'une équipe d'un tournoi. -->
 <template>
   <div class="p-6">
     <div v-if="team">
@@ -45,6 +46,9 @@
       };
     },
     methods: {
+      /**
+       * Récupère les détails de l'équipe.
+       */
       async fetchTeamDetails() {
         try {
           const response = await apiService.get(

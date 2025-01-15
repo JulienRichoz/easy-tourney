@@ -1,3 +1,9 @@
+<!-- SoftButtonComponent.vue -->
+<!-- Ce composant affiche un bouton avec une icône. -->
+<!-- Il prend en paramètre une icône, une couleur, une taille et un état désactivé. -->
+<!-- Il peut afficher une icône FontAwesome ou HeroIcons. -->
+<!-- Lorsqu'on clique dessus, il émet un événement. -->
+
 <template>
   <span
     :class="[

@@ -1,4 +1,5 @@
 <!-- src/views/auth/ForgotPassword.vue -->
+<!-- Page pour demander un lien de réinitialisation du mot de passe. -->
 <template>
   <AuthComponentForm
     mode="forgot-password"
@@ -23,6 +24,10 @@
       };
     },
     methods: {
+      /**
+       * Demande un lien de réinitialisation du mot de passe.
+       * @param {Object} formData - Les données du formulaire.
+       */
       async handleForgotPassword(formData) {
         this.error = '';
         this.isSubmitting = true;

@@ -1,4 +1,5 @@
 <!-- TourneyTeams.vue -->
+<!-- Page de gestion des équipes d'un tournoi -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -578,9 +579,11 @@
           });
         },
       },
+      // Vérifier si le tournoi est éditable
       isEditable() {
         return this.statuses.registrationStatus !== 'completed';
       },
+      // Vérifier si les inscriptions sont actives
       isRegistrationActive() {
         return this.statuses.registrationStatus === 'active';
       },
@@ -662,6 +665,8 @@
           },
         ];
       },
+
+      // Récupérer les tokens d'invitation valides et triés
       filteredSortedInviteTokens() {
         let tokens = this.inviteTokens;
 
@@ -721,6 +726,10 @@
           toast.error('Erreur lors de la récupération des détails du tournoi.');
         }
       },
+
+      /**
+       * Générer les équipes manquantes selon la configuration
+       */
       async generateTeams() {
         try {
           await apiService.post(
@@ -734,6 +743,10 @@
           toast.error('Erreur lors de la génération des équipes.');
         }
       },
+
+      /**
+       * Reset les équipes
+       */
       async resetTeams() {
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/teams/reset`);
@@ -748,13 +761,19 @@
        * GESTION TOKEN INVITATION
        */
 
+      // Ouvrir le modal pour générer un token d'invitation
       openInviteTokenModal() {
         this.showInviteTokenModal = true;
       },
+      // Fermer le modal pour générer un token d'invitation
       closeInviteTokenModal() {
         this.showInviteTokenModal = false;
         this.showAddTokenForm = false; // Réinitialiser le formulaire
       },
+
+      /**
+       * Générer un token d'invitation
+       */
       async handleGenerateInviteToken() {
         try {
           const response = await apiService.post(
@@ -774,6 +793,9 @@
         }
       },
 
+      /**
+       * Méthode pour invalider un token d'invitation
+       */
       async invalidateToken(tokenId) {
         try {
           await apiService.patch(
@@ -786,6 +808,11 @@
           toast.error("Erreur lors de l'invalidation du token.");
         }
       },
+
+      /**
+       * Valider un token d'invitation
+       * @param tokenId
+       */
       async validateToken(tokenId) {
         try {
           await apiService.patch(
@@ -799,6 +826,9 @@
         }
       },
 
+      /**
+       * Récupérer les tokens d'invitation
+       */
       async fetchInviteTokens() {
         try {
           const response = await apiService.get(
@@ -810,6 +840,8 @@
           toast.error('Erreur lors de la récupération des tokens.');
         }
       },
+
+      // Copier le lien d'invitation dans le presse-papiers
       copyToClipboard(token) {
         navigator.clipboard.writeText(
           `${BASE_URL}/register?inviteToken=${token}`
@@ -826,6 +858,11 @@
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
+
+      /**
+       * Récupérer la couleur de pastille en fonction de l'état de l'équipe
+       * @param team
+       */
       getStatusColor(team) {
         if (!this.teamSetupConfigured) return 'gray';
 
@@ -854,6 +891,7 @@
       /*
        * GESTION DES POP UP
        */
+      // Ouvrir le modal pour ajouter une équipe
       openAddTeamModal() {
         this.editingTeamId = null;
         this.newTeam = {
@@ -863,6 +901,7 @@
         };
         this.showModal = true;
       },
+
       editTeam(team) {
         this.editingTeamId = team.id;
         this.newTeam = { ...team };
@@ -877,6 +916,11 @@
         this.confirmedDeleteTeamId = id;
         this.showDeleteConfirmation = true;
       },
+
+      /**
+       * Supprimer une équipe
+       * @param id
+       */
       async deleteTeam(id) {
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/teams/${id}`);
@@ -1037,6 +1081,8 @@
       closeTeamSetupModal() {
         this.showTeamSetupModal = false;
       },
+
+      // Soumettre le formulaire pour ajouter ou modifier une équipe
       async handleFormSubmit() {
         if (this.isSubmitting) return;
         this.isSubmitting = true;

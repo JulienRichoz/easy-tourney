@@ -1,4 +1,5 @@
 <!-- src/views/admin/TourneyUnassignedTeams.vue -->
+<!-- Page pour gérer les équipes sans pool -->
 <template>
   <div class="mx-auto p-4">
     <div
@@ -160,6 +161,11 @@
           toast.error('Erreur lors de la récupération des données.');
         }
       },
+
+      /**
+       * Assign a team to a pool.
+       * @param {number} teamId - The ID of the team to assign.
+       */
       async handleAssignPool(teamId) {
         const poolId = this.selectedPoolIds[teamId];
         if (poolId) {

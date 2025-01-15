@@ -1,4 +1,6 @@
 <!-- components/StrategyPattern/Pool/strategies/CustomRoundRobinStrategy.vue -->
+<!-- Concrete strategy for generating pools with a custom round robin algorithm -->
+
 <template>
   <div>
     <p class="mb-4 text-light-form-text dark:text-dark-form-text">

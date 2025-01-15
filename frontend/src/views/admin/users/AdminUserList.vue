@@ -1,4 +1,5 @@
 <!-- src/views/admin/AdminUsers.vue -->
+<!-- Page pour afficher et gérer les utilisateurs. -->
 <template>
   <div class="mx-auto p-4">
     <ListUsersTable
@@ -242,6 +243,11 @@
           toast.error("Erreur lors de la création de l'utilisateur!");
         }
       },
+
+      /**
+       * Assigner un utilisateur à un tournoi.
+       * @param {Object} payload - Les données de l'utilisateur et du tournoi.
+       */
       async handleAssignTourney({ userId, tourneyId }) {
         try {
           await apiService.post(`/users/${userId}/tourneys/${tourneyId}`);
@@ -254,6 +260,11 @@
           );
         }
       },
+
+      /**
+       * Retirer un utilisateur d'un tournoi.
+       * @param {Object} payload - Les données de l'utilisateur et du tournoi.
+       */
       async handleRemoveUserFromTourney({ userId, tourneyId }) {
         try {
           await apiService.delete(`/users/${userId}/tourneys/${tourneyId}`);
@@ -266,6 +277,11 @@
           );
         }
       },
+
+      /**
+       * Supprimer un utilisateur.
+       * @param {number} userId - L'ID de l'utilisateur à supprimer.
+       */
       async handleDeleteUser(userId) {
         try {
           await apiService.delete(`/users/${userId}`);

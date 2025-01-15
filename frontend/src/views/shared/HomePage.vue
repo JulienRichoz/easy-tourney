@@ -1,3 +1,6 @@
+<!-- src/views/shared/HomePage.vue -->
+<!-- Page d'accueil de l'application. -->
+<!-- TODO: Artifact a supprimer? -->
 <template>
   <div class="home-container">
     <h1>Bienvenue sur EasyTourney</h1>

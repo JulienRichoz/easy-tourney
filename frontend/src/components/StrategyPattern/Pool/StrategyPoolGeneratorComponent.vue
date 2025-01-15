@@ -1,4 +1,6 @@
 <!-- components/StrategyPattern/Pool/StrategyPoolGeneratorComponent.vue -->
+<!-- Générateur de formulaire de stratégie de pool -->
+
 <template>
   <ModalComponent
     :isVisible="isVisible"

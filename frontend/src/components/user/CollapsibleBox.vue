@@ -1,4 +1,7 @@
 <!-- CollapsibleBox.vue -->
+<!-- Ce composant affiche des informations utilisateurs en bleu. -->
+<!-- Il prend en paramètre un titre. -->
+<!-- Lorsqu'on clique sur le titre, le contenu est affiché ou caché. -->
 <template>
   <div class="mb-4">
     <button

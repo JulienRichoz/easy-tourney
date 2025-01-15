@@ -1,6 +1,9 @@
 <!-- AutocompleteAddress.vue -->
 <!-- https://nominatim.openstreetmap.org/ui/search.html -->
+<!-- Pour les suggestions d'adresses -->
+
 <template>
+  <!-- div pour l'input et la liste des suggestions -->
   <div>
     <input
       v-model="inputValue"
@@ -29,6 +32,7 @@
   export default {
     name: 'AutocompleteAddress',
     props: {
+      // Modèle de l'adresse complète avec les coordonnées
       modelValue: {
         type: Object, // { address: '', latitude: null, longitude: null }
         default: () => ({ address: '', latitude: null, longitude: null }),
@@ -45,13 +49,14 @@
     data() {
       return {
         inputValue: this.modelValue.address || '',
-        suggestions: [],
-        query: '',
-        timeout: null,
+        suggestions: [], // Liste des suggestions d'adresses
+        query: '', // Recherche en cours
+        timeout: null, // Timeout pour la recherche
       };
     },
     watch: {
       modelValue: {
+        // Mettre à jour l'input si le modèle change
         handler(newVal) {
           if (newVal.address !== this.inputValue) {
             this.inputValue = newVal.address || '';
@@ -61,6 +66,7 @@
       },
     },
     methods: {
+      // Gestion de l'input onInput
       onInput(event) {
         const value = event.target.value;
         this.inputValue = value;
@@ -83,6 +89,8 @@
           longitude: null,
         });
       },
+
+      // Récupérer les suggestions d'adresses
       async fetchSuggestions() {
         try {
           const response = await fetch(
@@ -104,6 +112,8 @@
           );
         }
       },
+
+      // Sélectionner une suggestion
       selectSuggestion(suggestion) {
         const selected = {
           address: suggestion.display_name,

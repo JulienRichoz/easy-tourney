@@ -1,4 +1,6 @@
 <!-- StrategyPlanningGeneratorComponent.vue -->
+<!-- Ce composant est un générateur de formulaire pour afficher des formualires selon le type de tournoi -->
+<!-- Il prend en paramètre un ID de tournoi, le type de tournoi, les pools, les terrains, le planning du tournoi, -->
 <template>
   <ModalComponent
     :isVisible="isVisible"

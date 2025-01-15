@@ -1,4 +1,6 @@
 <!-- src/views/user/tourneys/TourneyGameDetails.vue -->
+<!-- Détails d'un match dans un tournoi. -->
+<!-- Page pour les arbitres et les admins, ou player pour visualiser -->
 <template>
   <div v-if="socketError" class="alert alert-warning">
     {{ socketError }}
@@ -477,6 +479,8 @@
         if (isAssistant && isTournamentActive) return true;
         return false;
       },
+
+      // Données du formulaire pour les événements
       eventFormFields() {
         if (!this.match) return [];
         return [

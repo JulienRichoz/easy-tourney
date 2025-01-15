@@ -1,4 +1,5 @@
 // router/userRoutes.js
+// Description: Ce fichier contient les routes pour les pages utilisateur.
 
 import UserDashboard from '@/views/user/UserDashboard.vue';
 import UserProfile from '@/views/user/UserProfile.vue';

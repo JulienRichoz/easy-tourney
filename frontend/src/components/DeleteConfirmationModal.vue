@@ -1,4 +1,7 @@
 <!-- DeleteConfirmationModal(Component).vue -->
+<!-- Modal de confirmation pour la suppression d'un élément. -->
+<!-- Il affiche un message de confirmation et un formulaire pour confirmer. -->
+<!-- Hard-delete possible avec un champ de confirmation supplémentaire. -->
 
 <template>
   <div
@@ -108,6 +111,8 @@
         default: 'Supprimer',
       },
     },
+
+    // Setup pour initialiser les variables
     setup(props, { emit }) {
       const modalContainer = ref(null);
 
@@ -139,6 +144,7 @@
         }
       };
 
+      // Focus sur le modal à l'ouverture
       watch(
         () => props.isVisible,
         (newVal) => {

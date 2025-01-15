@@ -1,3 +1,6 @@
+<!-- views/admin/tourneys/TourneyDetails.vue -->
+<!-- Page de détails d'un tournoi pour les administrateurs -->
+
 <template>
   <div>
     <!-- Sous-menu du tournoi -->

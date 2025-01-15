@@ -1,4 +1,5 @@
 <!-- TourneysList.vue -->
+<!-- Affiche la liste de tous les tournois -->
 <template>
   <div class="p-6">
     <div
@@ -202,6 +203,9 @@
       },
     },
     methods: {
+      /**
+       * Récupérer la liste des tournois depuis l'API
+       */
       async fetchTourneys() {
         try {
           const response = await apiService.get('/tourneys');
@@ -211,14 +215,20 @@
           toast.error('Erreur lors de la récupération des tournois!');
         }
       },
+
+      /**
+       * Mettre à jour les filtres sélectionnés
+       * @param filter
+       */
       handleFilterChange(filter) {
-        // Mettre à jour les filtres sélectionnés
         if (filter.label === 'Filtrer par statut') {
           this.filterStatus = filter.value;
         } else if (filter.label === 'Filtrer par date') {
           this.filterDate = filter.value;
         }
       },
+
+      // Ouvrir la modale pour ajouter un nouveau tournoi
       openAddTourneyModal() {
         this.editingTourneyId = null;
         this.newTourney = {
@@ -235,6 +245,7 @@
         this.formErrors = {}; // Réinitialiser les erreurs
         this.showModal = true;
       },
+      // Ouvrir la modale pour modifier un tournoi
       editTourney(tourney) {
         this.editingTourneyId = tourney.id;
         this.newTourney = {
@@ -249,6 +260,11 @@
         this.formErrors = {}; // Réinitialiser les erreurs
         this.showModal = true;
       },
+
+      /**
+       * Gère la soumission du formulaire pour ajouter/modifier un tournoi
+       * @param formData
+       */
       async handleFormSubmit(formData) {
         this.isSaving = true;
         try {
@@ -277,6 +293,7 @@
         }
       },
 
+      // Valider le formulaire
       validateForm() {
         const { name, location, dateTourney } = this.newTourney;
         const trimmedName = name.trim();
@@ -319,10 +336,17 @@
         this.isFormValid = Object.keys(errors).length === 0;
         return errors;
       },
+
+      // Confirmer la suppression d'un tournoi
       confirmDeleteTourney(id) {
         this.confirmedDeleteTourneyId = id;
         this.showDeleteConfirmation = true;
       },
+
+      /**
+       * Supprimer un tournoi au serveur
+       * @param id
+       */
       async deleteTourney(id) {
         try {
           await apiService.delete(`/tourneys/${id}`);
@@ -333,18 +357,26 @@
           toast.error('Erreur lors de la suppression du tournoi!');
         }
       },
+
+      // Rediriger vers la page de détails du tournoi
       viewTourneyDetails(tourneyId) {
         this.$router.push(`/admin/tourneys/${tourneyId}`);
       },
+
+      // Fermer la modale
       closeModal() {
         this.showModal = false;
         this.isSaving = false;
       },
+
+      // Fermer la confirmation de suppression
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteTourneyId = null;
       },
     },
+
+    // Vérifier si le formulaire est valide à chaque changement
     watch: {
       newTourney: {
         handler() {
@@ -354,7 +386,7 @@
       },
     },
     mounted() {
-      this.fetchTourneys();
+      this.fetchTourneys(); // Récupérer les tournois au chargement
     },
   };
 </script>

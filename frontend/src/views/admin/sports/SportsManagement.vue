@@ -1,4 +1,7 @@
 <!-- Gestion des Sports -->
+<!-- Path: src/views/admin/sports/SportsManagement.vue -->
+<!-- Cette page permet de gérer les sports. -->
+
 <template>
   <div class="p-6">
     <div class="flex items-center mb-8">
@@ -142,6 +145,10 @@
     },
 
     methods: {
+      /**
+       * Valider le formulaire de création/modification d'un sport.
+       * @returns {Object} Les erreurs du formulaire.
+       */
       validateForm() {
         const { name, rule } = this.newSport;
         const trimmedName = name.trim(); // Supprime les espaces en début et fin
@@ -178,17 +185,31 @@
         return errors;
       },
 
+      /**
+       * Récupérer l'URL complète d'une image.
+       * @param {string} imagePath - Le chemin de l'image.
+       * @returns {string} L'URL complète de l'image.
+       */
       getImageUrl(imagePath) {
         const baseUrl =
           process.env.VUE_APP_IMAGE_URL || 'http://localhost:3000';
         return `${baseUrl}${imagePath}`;
       },
+
+      /**
+       * Récupérer le nom du fichier à partir du chemin complet.
+       * @param {string} filePath - Le chemin complet du fichier.
+       * @returns {string} Le nom du fichier.
+       */
       getFileName(filePath) {
         if (!filePath) return '';
         const parts = filePath.split('/');
         return parts[parts.length - 1];
       },
 
+      /**
+       * Récupérer la liste des sports depuis l'API.
+       */
       async fetchSports() {
         try {
           const response = await apiService.get('/sports');
@@ -198,12 +219,16 @@
         }
       },
 
+      /**
+       * Gérer le téléchargement d'un fichier.
+       * @param {File} file - Le fichier téléchargé.
+       */
       handleFileUpload(file) {
         if (file === null) {
           this.selectedFile = null;
           return;
         }
-
+        // Vérifier la taille du fichier
         if (file) {
           const maxSizeInMB = 10;
           const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
@@ -222,7 +247,7 @@
         }
         this.validateForm();
       },
-
+      // Ouvrir la modale pour ajouter un nouveau sport
       openAddSportModal() {
         this.editingSportId = null;
         this.newSport = {
@@ -237,7 +262,7 @@
         this.formErrors = {};
         this.showModal = true;
       },
-
+      // Ouvrir la modale pour modifier un sport
       editSport(sport) {
         this.editingSportId = sport.id;
         this.newSport = { ...sport };
@@ -247,16 +272,19 @@
         this.showModal = true;
       },
 
+      // Gérer la soumission du formulaire
       async handleFormSubmit() {
         this.validateForm();
         if (!this.isFormValid) return;
 
+        // Créer un objet FormData pour envoyer les données
         const formData = new FormData();
         formData.append('name', this.newSport.name);
         formData.append('rule', this.newSport.rule);
         formData.append('scoreSystem', this.newSport.scoreSystem);
         formData.append('color', this.newSport.color);
 
+        // Ajouter l'image si elle a été sélectionnée
         if (this.newSport.image instanceof File) {
           formData.append('image', this.newSport.image);
         } else if (this.newSport.image) {
@@ -264,6 +292,7 @@
           formData.append('image', this.getFileName(this.newSport.image));
         }
 
+        // Envoyer la requête
         try {
           if (this.editingSportId) {
             // Requête PUT pour mettre à jour le sport existant
@@ -286,11 +315,16 @@
         }
       },
 
+      // Confirmer la suppression d'un sport
       confirmDeleteSport(id) {
         this.confirmedDeleteSportId = id;
         this.showDeleteConfirmation = true;
       },
 
+      /**
+       * Supprimer un sport.
+       * @param {number} id - L'ID du sport à supprimer.
+       */
       async deleteSport(id) {
         try {
           await apiService.delete(`/sports/${id}`);
@@ -302,10 +336,12 @@
         }
       },
 
+      // Fermer la modale
       closeModal() {
         this.showModal = false;
       },
 
+      // Fermer la confirmation de suppression
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteSportId = null;

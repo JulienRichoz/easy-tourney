@@ -1,5 +1,7 @@
 <!-- ModalComponent.vue -->
-
+<!-- Ce composant affiche une modal. -->
+<!-- Il prend en paramètre un titre et un état pour savoir s'il doit être affiché. -->
+<!-- C'est un socle pour afficher dedans un formulaire par exemple. -->
 <template>
   <div
     v-if="isVisible"
@@ -34,6 +36,7 @@
       },
     },
     watch: {
+      // Écoute les changements de la propriété isVisible
       isVisible(newVal) {
         if (newVal) {
           // Modal ouverte
@@ -45,6 +48,7 @@
       },
     },
     methods: {
+      // Émet un événement pour indiquer au parent de fermer la modal
       close() {
         this.$emit('close'); // Émet un événement pour indiquer au parent de cacher la modal
       },

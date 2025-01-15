@@ -1,4 +1,5 @@
 <!-- TourneyPoolDetails.vue -->
+<!-- Page pour afficher les détails d'une Pool d'un tournoi -->
 <template>
   <div class="p-6" v-if="pool">
     <div class="flex items-center mb-4 relative">
@@ -295,6 +296,10 @@
     },
     methods: {
       ...mapActions('tourney', ['fetchTourneyStatuses']),
+
+      /**
+       * Récupérer les détails de la Pool et les équipes assignées
+       */
       async fetchPoolDetails() {
         try {
           // Récupérer les détails de la pool, incluant les équipes assignées
@@ -324,6 +329,10 @@
           toast.error('Erreur lors de la récupération des détails de la Pool.');
         }
       },
+
+      /**
+       * Gérer la sélection de toutes les équipes non assignées
+       */
       toggleSelectAllUnassigned() {
         if (this.selectAllUnassigned) {
           this.selectedUnassignedTeams = this.unassignedTeams.map(
@@ -333,6 +342,10 @@
           this.selectedUnassignedTeams = [];
         }
       },
+
+      /**
+       * Gérer la sélection de toutes les équipes assignées
+       */
       toggleSelectAllAssigned() {
         if (this.selectAllAssigned) {
           this.selectedAssignedTeams = this.assignedTeams.map(
@@ -342,6 +355,10 @@
           this.selectedAssignedTeams = [];
         }
       },
+
+      /**
+       * Assigner les équipes sélectionnées à la Pool
+       */
       async assignSelectedTeams() {
         try {
           // Vérifier si l'ajout des équipes ne dépasse pas la capacité maximale
@@ -359,6 +376,7 @@
             return;
           }
 
+          // Assigner les équipes sélectionnées
           await apiService.post(
             `/tourneys/${this.tourneyId}/pools/${this.poolId}/assign-teams`,
             {
@@ -375,6 +393,10 @@
         }
       },
 
+      /**
+       * Retirer une équipe de la Pool
+       * @param {number} teamId
+       */
       async removeTeam(teamId) {
         try {
           await apiService.post(
@@ -391,6 +413,9 @@
         }
       },
 
+      /**
+       * Retirer les équipes sélectionnées de la Pool
+       */
       async removeSelectedTeams() {
         try {
           await apiService.post(
@@ -408,6 +433,11 @@
           toast.error('Erreur lors du retrait des équipes.');
         }
       },
+
+      /**
+       * Basculer la sélection d'une équipe non assignée
+       * @param {number} teamId
+       */
       toggleTeamSelection(teamId) {
         if (this.selectedUnassignedTeams.includes(teamId)) {
           this.selectedUnassignedTeams = this.selectedUnassignedTeams.filter(
@@ -418,6 +448,10 @@
         }
       },
 
+      /**
+       * Basculer la sélection d'une équipe assignée
+       * @param {number} teamId
+       */
       toggleRemoveTeamSelection(teamId) {
         if (this.selectedAssignedTeams.includes(teamId)) {
           this.selectedAssignedTeams = this.selectedAssignedTeams.filter(
@@ -427,6 +461,8 @@
           this.selectedAssignedTeams.push(teamId);
         }
       },
+
+      // Retourner à la liste des Pools
       goBackToPools() {
         this.$router.push(
           `/admin/tourneys/${this.$route.params.tourneyId}/pools`

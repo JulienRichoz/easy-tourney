@@ -1,4 +1,5 @@
 <!-- CustomRoundRobinPoolPlanningStrategy.vue -->
+<!-- Envoie une requête pour générer le planning des pools en utilisant l'algorithme 'Custom Round Robin'. -->
 <template>
   <div>
     <p class="mb-4">

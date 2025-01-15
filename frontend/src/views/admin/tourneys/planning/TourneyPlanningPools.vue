@@ -1,4 +1,6 @@
-<!-- views/admin/TourneyPlanningPools.vue -->
+<!-- TourneyPlanningPools.vue -->
+<!-- Ce composant affiche le planning des pools d'un tournoi. -->
+<!-- Il permet de configurer les horaires, de générer et de valider le planning, manuellement ou automatiquement. -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->

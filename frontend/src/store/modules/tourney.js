@@ -1,4 +1,5 @@
 // store/modules/tourney.js
+// Description: Ce fichier contient le module Vuex pour la gestion des tournois.
 
 import apiService from '@/services/apiService';
 export default {
@@ -50,6 +51,7 @@ export default {
     },
   },
   actions: {
+    // Récupère les statuts du tournoi
     async fetchTourneyStatuses({ commit }, tourneyId) {
       try {
         const response = await apiService.get(
@@ -72,6 +74,8 @@ export default {
         throw error;
       }
     },
+
+    // Met à jour le statut du tournoi
     async updateStatus({ commit }, { tourneyId, key, value }) {
       try {
         await apiService.put(`/tourneys/${tourneyId}`, { [key]: value });
@@ -80,9 +84,12 @@ export default {
         console.error('Erreur lors de la mise à jour du statut:', error);
       }
     },
+
+    // Definit le nom du tournoi
     setTournamentName({ commit }, name) {
       commit('SET_TOURNAMENT_NAME', name);
     },
+    // Efface le nom du tournoi
     clearTournamentName({ commit }) {
       commit('CLEAR_TOURNAMENT_NAME');
     },

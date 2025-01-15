@@ -51,6 +51,7 @@
       },
     },
     computed: {
+      // Classes CSS selon la variante du bouton avec tailwind et darkmode
       variantClasses() {
         const variants = {
           primary:

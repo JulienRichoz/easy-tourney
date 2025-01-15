@@ -1,3 +1,7 @@
+/**
+ * Contient les rôles et les permissions associées.
+ */
+
 const roles = {
   ADMIN: 1,
   USER: 2,

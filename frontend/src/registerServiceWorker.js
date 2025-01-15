@@ -1,5 +1,8 @@
 // src/registerServiceWorker.js
 /* eslint-disable no-console */
+// Description: Ce fichier contient le code pour enregistrer le service worker.
+// Il est utilisé pour gérer la mise en cache des ressources de l'application (PWA).
+// Il est également utilisé pour gérer les mises à jour de contenu et les notifications hors ligne.
 
 import { register } from 'register-service-worker';
 

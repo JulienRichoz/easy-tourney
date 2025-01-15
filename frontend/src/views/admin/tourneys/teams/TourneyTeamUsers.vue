@@ -1,4 +1,5 @@
 <!-- src/views/admin/TourneyTeamUsers.vue -->
+<!-- Page pour afficher les utilisateurs d'une équipe de tournoi. -->
 <template>
   <div class="mx-auto p-4" v-if="team">
     <!-- Composant ListUsersTable -->
@@ -152,6 +153,9 @@
       await this.fetchData();
     },
     methods: {
+      /**
+       * Récupère les données du tournoi et des équipes.
+       */
       async fetchData() {
         const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
@@ -206,6 +210,10 @@
         }
       },
 
+      /**
+       * Récupère la capacité de l'équipe.
+       * @param team
+       */
       getTeamCapacity(team) {
         if (team.type === 'assistant') {
           return this.teamSetup.playerPerTeam * this.teamSetup.maxTeamNumber;
@@ -231,6 +239,10 @@
         }
       },
 
+      /**
+       * Supprime un utilisateur de l'équipe.
+       * @param userId
+       */
       async handleRemoveUser(userId) {
         const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
@@ -252,6 +264,9 @@
         }
       },
 
+      /**
+       * Assigner un utilisateur non assigné à l'équipe.
+       */
       async assignUnassignedUserToTeam() {
         const tourneyId = this.$route.params.tourneyId;
         const teamId = this.$route.params.teamId;
@@ -276,6 +291,7 @@
         }
       },
 
+      // Retourner à la liste des équipes
       goBackToTeams() {
         this.$router.push(
           `/admin/tourneys/${this.$route.params.tourneyId}/teams`

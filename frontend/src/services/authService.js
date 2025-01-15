@@ -1,3 +1,6 @@
+// src/services/authService.js
+// Description: Ce fichier contient les fonctions de service pour l'authentification et l'autorisation des utilisateurs.
+
 import { permissions, roles } from './permissions';
 import apiService from './apiService';
 import store from '../store';
@@ -19,6 +22,9 @@ export function hasPermission(userRole, permission) {
   return hasPerm;
 }
 
+/**
+ * Déconnecte l'utilisateur en supprimant le token du localStorage et en le retirant de l'en-tête des requêtes.
+ */
 export const logout = () => {
   // Supprimer le token du localStorage
   localStorage.removeItem('token');
@@ -30,6 +36,10 @@ export const logout = () => {
   //router.push({ name: 'Login' });
 };
 
+/**
+ * Vérifie si le token JWT est expiré.
+ * @returns true si le token est expiré, false sinon
+ */
 export const isTokenExpired = () => {
   const token = localStorage.getItem('token');
   if (!token) return true;
@@ -43,7 +53,9 @@ export const isTokenExpired = () => {
   }
 };
 
-// Logout s'il est expiré
+/**
+ * Gère l'expiration du token en déconnectant l'utilisateur si le token est expiré.
+ */
 export const handleTokenExpiration = () => {
   if (isTokenExpired()) {
     logout();
@@ -61,6 +73,11 @@ export function isAdmin() {
   return store.state.user?.roleId === roles.ADMIN;
 }
 
+/**
+ * Décode un token JWT et retourne les données de l'utilisateur.
+ * @param {*} token 
+ * @returns 
+ */
 export function decodeToken(token) {
   try {
     return jwtDecode(token);

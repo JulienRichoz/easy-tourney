@@ -1,3 +1,8 @@
+// src/main.js
+// Description: Ce fichier est le point d'entrée de l'application Vue.js.
+// Il configure les plugins et les composants globaux utilisés dans l'application.
+// Il initialise également le store Vuex, le router et d'autres configurations nécessaires.
+
 import { createApp } from 'vue';
 import App from './App.vue';
 

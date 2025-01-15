@@ -1,4 +1,6 @@
 // store/modules/userTourney.js
+// Description: Ce fichier contient le module Vuex pour la gestion des utilisateurs dans un tournoi.
+// Filtres, rôles et données spécifiques à un tournoi sont gérés ici.
 
 import apiService from '@/services/apiService';
 export default {
@@ -38,6 +40,7 @@ export default {
     },
   },
   actions: {
+    //Récupérer les données du tournoi par id
     async fetchTourneyById({ state, commit }, tourneyId) {
       if (state.selectedTourney[tourneyId]) {
         return state.selectedTourney[tourneyId]; // Retourne les données si déjà chargées
@@ -52,6 +55,8 @@ export default {
         throw error;
       }
     },
+
+    // Récupère les tournois de l'utilisateur
     async fetchActiveTourney({ commit, dispatch }) {
       try {
         const response = await apiService.get('/users/active-tourney');
@@ -75,6 +80,8 @@ export default {
         );
       }
     },
+
+    // récupère le role de l'utilisateur dans le tournoi
     async fetchTourneyRole({ commit }, tourneyId) {
       try {
         const response = await apiService.get(
@@ -89,7 +96,7 @@ export default {
       }
     },
 
-    // FILTERS
+    // Se souvenir des filtres de la page de planification
     setSelectedPool({ commit }, poolId) {
       commit('SET_SELECTED_POOL', poolId);
     },

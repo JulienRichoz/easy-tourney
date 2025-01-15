@@ -1,3 +1,7 @@
+<!-- PlanningViewSelector.vue -->
+<!-- Ce composant permet de sélectionner la vue de la planification d'un tournoi. -->
+<!-- Il permet de basculer entre les vues "Pools" et "Matchs". -->
+<!-- Il est utilisé dans les pages de planification des tournois. -->
 <template>
   <div
     class="planning-view-selector my-4 flex items-center justify-center space-x-4"
@@ -52,6 +56,7 @@
       };
     },
     methods: {
+      // Retourne la vue actuelle en fonction de l'URL
       getCurrentView() {
         if (this.$route.name === 'AdminTourneyPlanningPools') {
           return 'pools';
@@ -60,6 +65,8 @@
         }
         return 'pools'; // Valeur par défaut
       },
+
+      // Navigue vers la vue spécifiée
       navigateTo(view) {
         if (view === 'pools') {
           this.$router.push(`/admin/tourneys/${this.tourneyId}/planning/pools`);
@@ -68,6 +75,8 @@
         }
       },
     },
+
+    // Mettre à jour la vue actuelle si l'URL change
     watch: {
       '$route.name'() {
         this.currentView = this.getCurrentView();

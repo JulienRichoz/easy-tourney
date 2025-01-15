@@ -1,3 +1,5 @@
+<!-- frontend/src/components/AuthComponentForm.vue -->
+<!-- Formulaire d'authentification réutilisable pour la connexion, l'inscription, la réinitialisation du mot de passe et l'envoi de lien de réinitialisation -->
 <template>
   <div
     class="flex justify-center items-center h-full bg-light-background dark:bg-dark-background p-8"
@@ -199,6 +201,7 @@
 <script>
   import ButtonComponent from '@/components/ButtonComponent.vue';
 
+  // Composant de formulaire d'authentification réutilisable
   export default {
     name: 'AuthComponentForm',
     components: {
@@ -218,7 +221,7 @@
         default: false,
       },
     },
-    emits: ['submit'],
+    emits: ['submit'], // Événement émis lors de la soumission du formulaire
     data() {
       return {
         formData: {
@@ -231,9 +234,16 @@
       };
     },
     computed: {
+      /**
+       * Déterminer si le champ Email doit être affiché
+       */
       showEmailField() {
         return this.mode !== 'reset-password';
       },
+
+      /**
+       * Déterminer si le champsde mot de passe doivent être affichés
+       */
       showPasswordFields() {
         return (
           this.mode === 'login' ||
@@ -241,9 +251,13 @@
           this.mode === 'reset-password'
         );
       },
+
+      // Déterminer si le champ de confirmation du mot de passe doit être affiché
       showConfirmPasswordField() {
         return this.mode === 'register' || this.mode === 'reset-password';
       },
+
+      // Titre du formulaire en fonction du mode
       title() {
         switch (this.mode) {
           case 'login':
@@ -258,6 +272,8 @@
             return 'Authentification';
         }
       },
+
+      // Texte du bouton de soumission en fonction du mode
       submitButtonText() {
         switch (this.mode) {
           case 'login':
@@ -274,6 +290,7 @@
       },
     },
     methods: {
+      // Gestion de la soumission du formulaire
       handleSubmit() {
         this.errors = {};
 
@@ -288,6 +305,7 @@
           this.validateResetPassword();
         }
 
+        // Vérifier s'il y a des erreurs
         if (Object.keys(this.errors).length === 0) {
           // Émission des données appropriées en fonction du mode
           let payload = {};
@@ -301,10 +319,11 @@
               confirmPassword: this.formData.confirmPassword,
             };
           }
-
           this.$emit('submit', payload);
         }
       },
+
+      // Validation des champs pour l'inscription
       validateRegister() {
         if (!this.formData.name) {
           this.errors.name = 'Le nom est obligatoire.';
@@ -334,6 +353,10 @@
             'Les mots de passe ne correspondent pas.';
         }
       },
+
+      /**
+       * Validation des champs pour la connexion
+       */
       validateLogin() {
         if (!this.formData.email) {
           this.errors.email = "L'email est obligatoire.";
@@ -345,6 +368,8 @@
           this.errors.password = 'Le mot de passe est obligatoire.';
         }
       },
+
+      // Validation des champs pour l'envoi de lien de réinitialisation
       validateForgotPassword() {
         if (!this.formData.email) {
           this.errors.email = "L'email est obligatoire.";
@@ -352,6 +377,8 @@
           this.errors.email = 'Veuillez entrer un email valide.';
         }
       },
+
+      // Validation des champs pour la réinitialisation du mot de passe
       validateResetPassword() {
         if (!this.formData.password) {
           this.errors.password = 'Le mot de passe est obligatoire.';
@@ -363,6 +390,7 @@
           }
         }
 
+        // Vérifier si le mot de passe et la confirmation du mot de passe correspondent
         if (!this.formData.confirmPassword) {
           this.errors.confirmPassword =
             'Veuillez confirmer votre mot de passe.';
@@ -371,12 +399,15 @@
             'Les mots de passe ne correspondent pas.';
         }
       },
+
+      // Validation de l'email
       validateEmail(email) {
         // Regex simple pour valider l'email
         const re = /\S+@\S+\.\S+/;
         return re.test(email);
       },
     },
+
     watch: {
       mode() {
         // Réinitialiser les données du formulaire lorsque le mode change

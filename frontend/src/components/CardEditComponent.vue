@@ -1,4 +1,7 @@
 <!-- src/components/CardEditComponent.vue -->
+<!-- Composant pour lire les informations dans une card et y faire des actions (clique, modifier()) -->
+<!-- Lorsqu'on clique dessus, il émet un événement divers (ouvrir modal, redirection, param). -->
+<!-- !!! Attention au changement => Utilisé dans de nombreuses pages. !!! -->
 <template>
   <div
     class="cursor-pointer bg-light-card dark:bg-dark-card p-4 rounded-lg shadow-md hover:bg-light-subMenu-hoverBackground dark:hover:bg-dark-subMenu-hoverBackground transition-transform transform hover:scale-105 flex flex-col justify-between h-auto min-h-[200px]"
@@ -163,12 +166,15 @@
       cornerCount: String,
     },
     computed: {
+      // Formate la date en format local
       formattedDate() {
         if (this.date) {
           return new Date(this.date).toLocaleDateString();
         }
         return '';
       },
+
+      // Texte du statut du tournoi
       statusText() {
         if (this.status === 'active') {
           return 'Tournoi en cours';
@@ -192,12 +198,17 @@
       },
     },
     methods: {
+      // Émettre un événement pour supprimer
       onDelete() {
         this.$emit('delete');
       },
+
+      // Émettre un événement pour modifier
       onEdit() {
         this.$emit('edit');
       },
+
+      // Récupérer la classe CSS selon le statut
       getStatusClass(status) {
         switch (status) {
           case 'draft':
@@ -212,6 +223,8 @@
             return 'bg-light-form-border-default dark:bg-dark-form-border-default text-light-form-text dark:text-dark-form-text';
         }
       },
+
+      // Récupérer le texte du statut
       getStatusLabel(status) {
         switch (status) {
           case 'draft':

@@ -1,3 +1,5 @@
+<!-- src/views/user/tourneys/TourneyDetails.vue -->
+<!-- Détails d'un tournoi pour un utilisateur. -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -264,6 +266,9 @@
       };
     },
     computed: {
+      /**
+       * Vérifie si les coordonnées du tournoi sont valides.
+       */
       coordinatesAreValid() {
         const lat = this.tourney.latitude;
         const lng = this.tourney.longitude;
@@ -278,12 +283,14 @@
           lng <= 180
         );
       },
+      // Latitude et longitude du tournoi
       mapLatitude() {
         return this.coordinatesAreValid ? this.tourney.latitude : 46.8065;
       },
       mapLongitude() {
         return this.coordinatesAreValid ? this.tourney.longitude : 7.1619;
       },
+      // Lien Google Maps
       googleMapsLink() {
         if (this.coordinatesAreValid) {
           const lat = this.tourney.latitude;
@@ -293,6 +300,8 @@
           return 'https://www.google.com/maps/dir/?api=1&destination=46.8065,7.1619';
         }
       },
+
+      // Durée d'une partie
       gameDurationText() {
         if (this.gameDuration === null || this.gameDuration === undefined) {
           return 'N/A';
@@ -300,14 +309,19 @@
         return `${this.gameDuration} minutes`;
       },
     },
+    // Récupérer les détails du tournoi
     async mounted() {
       await this.fetchTourneyDetails();
       this.mapIsReady = true;
     },
     methods: {
+      // Sélectionner un onglet
       selectTab(tab) {
         this.activeTab = tab;
       },
+      /**
+       * Récupère les détails du tournoi.
+       */
       async fetchTourneyDetails() {
         try {
           const response = await apiService.get(
@@ -330,9 +344,13 @@
           );
         }
       },
+
+      // Formater les détails d'urgence (retour a la ligne)
       formatEmergencyDetails(details) {
         return details.replace(/\n/g, '<br>');
       },
+
+      // Vérifier si une URL est valide
       isValidURL(string) {
         try {
           new URL(string);
@@ -341,6 +359,8 @@
           return false;
         }
       },
+
+      // Formater la date et l'heure
       formatDate(dateString) {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
@@ -350,6 +370,8 @@
         const [hours, minutes] = timeString.split(':'); // Séparer l'heure et les minutes
         return `${parseInt(hours, 10)}h${minutes}`; // Retourner le format souhaité
       },
+
+      // Ouvrir Google Maps
       openGoogleMaps() {
         window.open(this.googleMapsLink, '_blank');
       },

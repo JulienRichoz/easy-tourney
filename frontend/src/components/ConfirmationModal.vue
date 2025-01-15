@@ -1,4 +1,6 @@
 <!-- components/ConfirmationModal.vue -->
+<!-- Composant pour afficher une fenêtre de confirmation. -->
+<!-- Il affiche un titre, un message et deux boutons pour confirmer ou annuler. -->
 <template>
   <div
     v-if="isVisible"
@@ -49,9 +51,12 @@
       },
     },
     methods: {
+      // Émettre un événement pour annuler la confirmation
       handleCancel() {
         this.$emit('cancel');
       },
+
+      // Émettre un événement pour confirmer la confirmation
       handleConfirm() {
         this.$emit('confirm');
       },

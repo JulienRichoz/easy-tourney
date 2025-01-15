@@ -1,4 +1,5 @@
 <!-- src/views/auth/RegisterPage.vue -->
+<!-- Page d'inscription. -->
 <template>
   <AuthComponentForm
     mode="register"
@@ -27,6 +28,10 @@
       };
     },
     methods: {
+      /**
+       * Enregistre un nouvel utilisateur.
+       * @param {Object} formData - Les données du formulaire.
+       */
       async handleRegister(formData) {
         this.error = '';
         this.isSubmitting = true;

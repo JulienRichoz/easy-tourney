@@ -1,4 +1,5 @@
 <!-- TourneyPools.vue -->
+<!-- Page de gestion des pools d'un tournoi -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -440,6 +441,7 @@
         get() {
           return this.statuses.poolStatus;
         },
+        // Mettre à jour le statut de la pool
         set(newStatus) {
           this.$store.dispatch('tourney/updateStatus', {
             tourneyId: this.tourneyId,
@@ -451,6 +453,8 @@
       isEditable() {
         return this.statuses.poolStatus !== 'completed';
       },
+
+      // Vérifier si toutes les pools sont complètes
       allPoolsComplete() {
         return this.pools.every((pool) => {
           const maxTeams =
@@ -458,6 +462,8 @@
           return pool.teams.length >= maxTeams;
         });
       },
+
+      //Retourner les pools invalides
       invalidPools() {
         return this.pools.filter((pool) => {
           const minTeams =
@@ -472,20 +478,28 @@
           return pool.teams.length < minTeams || pool.teams.length > maxTeams;
         });
       },
+
+      // Retourner les équipes non assignées
       unassignedTeams() {
         return this.teams.filter((team) => !team.poolId);
       },
+
+      // Le nombre recommandé de pools est le nombre de terrains disponibles
       recommendedPools() {
-        // Le nombre recommandé de pools est le nombre de terrains disponibles
         return this.availableFields;
       },
+
+      // Vérifier si le nombre de pools dépasse le nombre de terrains disponibles
       isPoolCountExceedingFields() {
         return this.pools.length > this.availableFields;
       },
+
+      // Vérifier si le nombre de terrains disponibles est supérieur au nombre de pools
       shouldShowFieldWarning() {
         const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
         return this.availableFields > maxNumberOfPools;
       },
+
       canAddMorePools() {
         const maxNumberOfPools = this.tourneySetup?.maxNumberOfPools || 0;
         return this.pools.length < maxNumberOfPools;
@@ -493,13 +507,15 @@
       teamsAssignedToPools() {
         return this.teams.filter((team) => team.poolId);
       },
+
+      // Retourner les pools filtrées
       filteredPools() {
         return this.pools.filter((pool) => {
           const minTeams =
             pool.minTeamPerPool ||
             this.tourneySetup?.defaultMinTeamPerPool ||
             0;
-
+          // Filtrer les pools selon le statut
           if (this.filters[0].value === 'valid') {
             return pool.teams.length >= minTeams;
           }
@@ -517,7 +533,7 @@
       },
       warningMessages() {
         const messages = [];
-
+        // Vérifier les pools invalides
         if (this.invalidPools.length > 0) {
           messages.push({
             id: 1,
@@ -528,7 +544,7 @@
               'Veuillez vérifier les pools et corriger les erreurs.',
           });
         }
-
+        // Vérifier les équipes non assignées
         if (this.unassignedTeams.length > 0) {
           messages.push({
             id: 2,
@@ -538,7 +554,7 @@
             recommendation: 'Veuillez assigner les équipes aux pools.',
           });
         }
-
+        // Vérifier si le nombre de pools dépasse le nombre de terrains disponibles
         if (this.isPoolCountExceedingFields) {
           messages.push({
             id: 3,
@@ -549,7 +565,7 @@
               'Veuillez ajouter des terrains pour garantir un tournus fluide.',
           });
         }
-
+        // Vérifier si le nombre de terrains disponibles est supérieur au nombre de pools
         if (this.shouldShowFieldWarning) {
           messages.push({
             id: 4,
@@ -560,7 +576,7 @@
               'Vous pouvez augmenter le nombre de pools pour optimiser l’utilisation des terrains.',
           });
         }
-
+        // Vérifier si le nombre de pools est inférieur au nombre recommandé
         if (this.pools.length < this.availableFields) {
           messages.push({
             id: 6,
@@ -598,6 +614,10 @@
           toast.error('Erreur lors de la récupération des détails des pools.');
         }
       },
+
+      /**
+       * Récupérer les terrains disponibles pour le tournoi
+       */
       async fetchAvailableFields() {
         try {
           const response = await apiService.get(
@@ -611,6 +631,9 @@
         }
       },
 
+      /**
+       * Générer les pools manquant pour le tournoi
+       */
       async generateMissingPools() {
         try {
           const response = await apiService.post(
@@ -629,13 +652,17 @@
           toast.error('Erreur lors de la génération des pools manquantes.');
         }
       },
+
+      // Ouvrir la modale de génération des pools
       openConfirmationModal() {
         this.showConfirmationModal = true; // Affiche le modal
       },
+      // Fermer la modale de génération des pools
       closeConfirmationModal() {
         this.showConfirmationModal = false; // Cache le modal
       },
 
+      // Peupler les pools avec les équipes non assignées
       async populatePoolsWithUnassignedTeams() {
         this.showConfirmationModal = false; // Cache le modal
         try {
@@ -659,9 +686,11 @@
       dismissWarnings() {
         this.showWarnings = false;
       },
+      // Gérer le filtre des pools
       handleFilterChange(filter) {
         this.filters[0].value = filter.value;
       },
+
       openAddPoolModal() {
         this.editingPoolId = null;
         this.newPool = {
@@ -691,6 +720,11 @@
         this.showModal = false;
         this.editingPoolId = null;
       },
+
+      /**
+       * Supprimer une pool
+       * @param id Identifiant de la pool à supprimer
+       */
       async deletePool(id) {
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/pools/${id}`);
@@ -701,6 +735,10 @@
           toast.error('Erreur lors de la suppression de la pool.');
         }
       },
+
+      /*
+       * Gérer la soumission du formulaire d'ajout/modification d'une pool
+       */
       async handleFormSubmit() {
         if (this.isSubmitting) return;
         this.isSubmitting = true;
@@ -714,11 +752,13 @@
             minTeamPerPool: this.newPool.minTeamPerPool,
           };
 
+          // Mettre a jour la pool si on l'edite
           if (this.editingPoolId) {
             await apiService.put(
               `/tourneys/${this.tourneyId}/pools/${this.editingPoolId}`,
               payload
             );
+            // Sinon la crééer
           } else {
             await apiService.post(`/tourneys/${this.tourneyId}/pools`, payload);
           }
@@ -743,6 +783,9 @@
         this.showRemoveTeamsConfirmation = false;
       },
 
+      /**
+       * Retirer toutes les équipes des pools
+       */
       async removeAllTeamsFromPools() {
         try {
           await apiService.delete(
@@ -766,6 +809,10 @@
       closeDeleteAllConfirmation() {
         this.showDeleteAllConfirmation = false;
       },
+
+      /**
+       * Supprimer toutes les pools
+       */
       async deleteAllPools() {
         try {
           await apiService.delete(`/tourneys/${this.tourneyId}/pools/reset`);
@@ -791,6 +838,10 @@
       closePoolSetupModal() {
         this.showPoolSetupModal = false;
       },
+
+      /**
+       * Mettre à jour les réglages des pools
+       */
       async handlePoolSetupSubmit() {
         try {
           await apiService.put(
@@ -810,6 +861,7 @@
         }
       },
 
+      // Validation personnalisée pour les réglages des pools
       customPoolSetupValidation() {
         const errors = {};
         const { defaultMinTeamPerPool, defaultMaxTeamPerPool } =
@@ -822,8 +874,9 @@
 
         return errors;
       },
+
+      // Naviguer vers la page pour assigner les équipes aux pools
       navigateToAssignTeams() {
-        // Rediriger vers la page pour assigner les équipes aux pools
         this.$router.push(
           `/admin/tourneys/${this.tourneyId}/pools/unassigned-teams`
         );
@@ -849,6 +902,8 @@
       closeGeneratePoolsModal() {
         this.showGeneratePoolsModal = false;
       },
+
+      // Générer les pools
       async generatePools() {
         if (!this.desiredPoolCount || this.desiredPoolCount < 1) {
           return toast.error('Veuillez entrer un nombre valide de pools.');

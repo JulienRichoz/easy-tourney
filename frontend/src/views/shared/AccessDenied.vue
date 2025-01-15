@@ -1,3 +1,5 @@
+<!-- src/views/shared/AccessDenied.vue -->
+<!-- Page d'erreur 403 Access Denied. -->
 <template>
   <div class="flex h-dvh bg-gray-100">
     <!-- Partie gauche avec un texte -->

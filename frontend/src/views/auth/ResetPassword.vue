@@ -1,4 +1,5 @@
 <!-- src/views/auth/ResetPassword.vue -->
+<!-- Page pour réinitialiser le mot de passe. -->
 <template>
   <AuthComponentForm
     mode="reset-password"
@@ -22,10 +23,15 @@
       };
     },
     methods: {
+      /**
+       * Réinitialise le mot de passe.
+       * @param {Object} formData - Les données du formulaire.
+       */
       async handleResetPassword(formData) {
         this.error = '';
         this.isSubmitting = true;
 
+        // Appel à l'API pour réinitialiser le mot de passe
         try {
           const token = this.$route.params.token; // Token récupéré dans l'URL
 

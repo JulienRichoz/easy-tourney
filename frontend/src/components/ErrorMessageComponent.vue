@@ -1,4 +1,6 @@
 <!-- ErrorMessageComponent.vue -->
+<!-- Ce composant affiche un message d'erreur. -->
+<!-- Il prend en paramètre un message et une classe CSS. -->
 
 <template>
   <div v-if="message" :class="errorClass">

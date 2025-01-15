@@ -1,4 +1,5 @@
 <!-- TitleComponent.vue -->
+<!-- Ce composant affiche un titre. -->
 
 <template>
   <h1 :class="titleClass">{{ title }}</h1>

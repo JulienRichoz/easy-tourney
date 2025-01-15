@@ -1,4 +1,5 @@
 <!-- TourneyFields.vue -->
+<!-- Gère la gestion des terrains pour un tournoi -->
 <template>
   <div>
     <!-- Sous-menu du tournoi -->
@@ -257,12 +258,18 @@
           );
         }
       },
+
+      // Ouvrir la modale pour supprimer tous les terrains
       openDeleteAllFieldsModal() {
         this.showDeleteAllFieldsModal = true;
       },
+
+      // Fermer la modale pour supprimer tous les terrains
       closeDeleteAllFieldsModal() {
         this.showDeleteAllFieldsModal = false;
       },
+
+      // Supprimer tous les terrains
       async handleDeleteAllFieldsSubmit() {
         if (this.isDeleting) return;
         this.isDeleting = true;
@@ -282,14 +289,20 @@
           this.isDeleting = false;
         }
       },
+
+      // Ouvrir la modale de confirmation de suppression
       confirmDeleteField(id) {
         this.confirmedDeleteFieldId = id;
         this.showDeleteConfirmation = true;
       },
+
+      // Fermer la modale de confirmation de suppression
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
         this.confirmedDeleteFieldId = null;
       },
+
+      // Supprimer un terrain
       async deleteField(id) {
         if (this.isDeleting) return;
         this.isDeleting = true;
@@ -306,17 +319,24 @@
           this.isDeleting = false;
         }
       },
+
+      // Ouvrir la modale pour ajouter plusieurs terrains
       openAddMultipleFieldsModal() {
         this.multipleFieldsData.numberOfFields = 1;
         this.showMultipleFieldsModal = true;
       },
+
+      // Fermer la modale pour ajouter plusieurs terrains
       closeMultipleFieldsModal() {
         this.showMultipleFieldsModal = false;
       },
+
+      // Créer plusieurs terrains
       async handleMultipleFieldsSubmit() {
         if (this.isSubmitting) return;
         this.isSubmitting = true;
 
+        // Vérifier le nombre de terrains à créer
         try {
           const numberOfFields = this.multipleFieldsData.numberOfFields;
 
@@ -342,6 +362,8 @@
           this.isSubmitting = false;
         }
       },
+
+      // Ouvrir la modale pour ajouter/modifier un terrain
       openAddFieldModal() {
         this.editingFieldId = null;
         this.newField = {
@@ -352,22 +374,29 @@
         this.isFormValid = false;
         this.showModal = true;
       },
+
+      // Ouvrir la modale pour modifier un terrain
       editField(field) {
         this.editingFieldId = field.id;
         this.newField = { ...field };
         this.isFormValid = true;
         this.showModal = true;
       },
+
+      // Valider le formulaire
       validateForm() {
         this.isFormValid = !!this.newField.name;
       },
 
+      // Gérer la soumission du formulaire
       handleFormSubmit() {
         this.validateForm();
         if (!this.isFormValid) return;
         this.isSubmitting = true;
         this.saveField();
       },
+
+      // Enregistrer un terrain
       async saveField() {
         try {
           if (this.editingFieldId) {
@@ -394,12 +423,15 @@
           this.isSubmitting = false;
         }
       },
+
+      // Fermer la modale
       closeModal() {
         this.showModal = false;
         this.isSubmitting = false;
       },
     },
     watch: {
+      // Observer les changements du formulaire pour valider
       newField: {
         handler() {
           this.validateForm();
@@ -408,7 +440,7 @@
       },
     },
     mounted() {
-      this.fetchFieldDetails();
+      this.fetchFieldDetails(); // Charger les détails des terrains
     },
   };
 </script>

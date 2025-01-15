@@ -1,4 +1,9 @@
 <!-- src/components/MenuComponent.vue -->
+<!-- Barre de navigation de l'application. -->
+<!-- Elle affiche les liens de navigation en fonction du rôle de l'utilisateur. -->
+<!-- Elle permet de basculer entre le mode sombre et le mode clair. -->
+<!-- Elle affiche le nom du tournoi en cours si on est sur une page de tournoi. -->
+<!-- Affiche le nom de l'utilisateur connecté, acces au profil et un bouton de déconnexion. -->
 <template>
   <nav
     class="navbar bg-light-menu dark:bg-dark-menu p-4 shadow-md flex items-center justify-between"
@@ -109,6 +114,8 @@
           tournamentDate: (state) => state.dateTourney,
         }),
       }),
+
+      // Affiche le nom du tournoi si on est sur une page de tournoi
       showTournamentName() {
         return (
           (this.$route.path.startsWith('/tourneys/') ||
@@ -118,15 +125,19 @@
       },
     },
     methods: {
+      // Déconnexion de l'utilisateur
       logout() {
         localStorage.removeItem('token');
         this.$store.dispatch('logout');
         this.$router.push('/login');
       },
+      // Formater une date en format lisible pour le tournoi
       formatDate(date) {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(date).toLocaleDateString(undefined, options);
       },
+
+      // Basculer entre le mode sombre et le mode clair
       toggleDarkMode() {
         this.isDarkMode = !this.isDarkMode;
 
@@ -138,6 +149,8 @@
           localStorage.setItem('theme', 'light');
         }
       },
+
+      // Récupérer la classe CSS pour les liens de navigation
       getLinkClass(path) {
         const isActive = this.$route.path === path;
         return [
@@ -150,12 +163,15 @@
         ];
       },
     },
+
+    // Vérifie au demarrage si le mode sombre est activé
     mounted() {
       const isDark =
         localStorage.getItem('theme') === 'dark' ||
         (!('theme' in localStorage) &&
           window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+      // Appliquer le mode sombre si nécessaire
       this.isDarkMode = isDark;
       if (isDark) {
         document.documentElement.classList.add('dark');

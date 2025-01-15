@@ -1,3 +1,7 @@
+// src/router/index.js
+// Description: Ce fichier contient la configuration du routeur de l'application.
+// Il redirige les utilisateurs vers les pages appropriées en fonction de leur rôle et de leur statut d'authentification.
+
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store';
 import {

@@ -1,4 +1,5 @@
 <!-- src/views/user/UserTourneys.vue -->
+<!-- Page des tournois de l'utilisateur. -->
 <template>
   <div class="p-6">
     <div
@@ -109,6 +110,9 @@
       },
     },
     methods: {
+      /**
+       * Récupérer les tournois de l'utilisateur.
+       */
       async fetchUserTourneys() {
         const userId = this.$store.state.user.id;
         try {
@@ -142,6 +146,7 @@
           }
         }
       },
+      // Vérifier si l'utilisateur est un administrateur
       isAdmin() {
         return this.$store.state.user?.roleId === 1;
       },
@@ -171,10 +176,15 @@
           }
         }
       },
+      // Rediriger vers la page des informations du tournoi
       goToInfo(tourney) {
         this.$router.push(`/tourneys/${tourney.id}/infos`);
       },
 
+      /**
+       * Rediriger au bon endroit en fonction du statut du tournoi.
+       * @param {Object} tourney - Le tournoi à afficher.
+       */
       viewTourneyDetails(tourney) {
         if (!this.isCardClickable(tourney)) {
           return; // Ne pas rediriger si la carte n'est pas cliquable
@@ -198,6 +208,12 @@
           return; // Ne pas rediriger si le statut est inconnu
         }
       },
+
+      /**
+       * Vérifie si la carte du tournoi est cliquable.
+       * @param {Object} tourney - Le tournoi à vérifier.
+       * @returns {Boolean} - True si la carte est cliquable, sinon false.
+       */
       isCardClickable(tourney) {
         if (this.isAdmin()) {
           return true; // Toujours cliquable pour un administrateur

@@ -1,4 +1,9 @@
 <!-- src/components/FilterComponent.vue -->
+<!-- Composant pour afficher des filtres sous forme de selects. -->
+<!-- Il affiche une liste de filtres avec des options. -->
+<!-- Lorsqu'on change un filtre, il émet un événement vers le parent. -->
+<!-- !!! Attention au changement => Utilisé dans de nombreuses pages. !!! -->
+
 <template>
   <div class="flex flex-wrap items-center gap-4">
     <div

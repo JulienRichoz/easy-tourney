@@ -1,3 +1,5 @@
+<!-- src/views/user/UserProfile.vue -->
+<!-- Page de profil utilisateur. -->
 <template>
   <div v-if="userId !== null">
     <ProfilePageComponent :userId="userId" :isAdmin="isAdmin" />

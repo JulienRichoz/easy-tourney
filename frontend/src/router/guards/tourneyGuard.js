@@ -1,9 +1,17 @@
 // src/router/tourneyGuard.js
+// Description: Ce fichier contient les fonctions de garde d'accès aux routes pour les tournois.
 
 import store from '@/store';
 import { isAdmin } from '@/services/authService';
 import apiService from '@/services/apiService';
 
+/**
+ * Vérifie si l'utilisateur a accès à un tournoi spécifique.
+ * @param {*} to - Route vers laquelle l'utilisateur souhaite accéder.
+ * @param {*} from - Route depuis laquelle l'utilisateur souhaite accéder.
+ * @param {*} next - Fonction qui permet de passer à la route suivante.
+ * @returns - Redirection vers la liste des tournois si l'utilisateur n'a pas accès au tournoi ou le tournoi sinon
+ */
 export async function checkTournamentAccess(to, from, next) {
   const isOffline = !navigator.onLine;
   const userRole = store.getters['auth/userRole'];
@@ -57,6 +65,13 @@ export async function checkTournamentAccess(to, from, next) {
   }
 }
 
+/**
+ * Vérifier l'accès a un tournoi selon son état (En cours, terminé, etc.)
+ * @param {*} to 
+ * @param {*} from 
+ * @param {*} next 
+ * @returns 
+ */
 export async function checkTourneyRules(to, from, next) {
   const isOffline = !navigator.onLine;
   const userRole = store.getters['auth/userRole'];

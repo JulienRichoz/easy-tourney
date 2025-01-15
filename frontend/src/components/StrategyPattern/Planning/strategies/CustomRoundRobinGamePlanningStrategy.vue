@@ -1,4 +1,5 @@
 <!-- CustomRoundRobinGamePlanningStrategy.vue -->
+<!-- Envoie une requête pour générer le planning des match en utilisant l'algorithme 'Custom Round Robin'. -->
 <template>
   <div>
     <p class="mb-4">

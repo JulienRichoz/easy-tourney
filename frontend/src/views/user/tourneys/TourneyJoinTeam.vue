@@ -1,4 +1,5 @@
 <!-- src/views/user/TourneyJoinTeam.vue -->
+<!-- Page pour rejoindre une équipe dans un tournoi. -->
 <template>
   <div>
     <div class="p-6">
@@ -190,6 +191,7 @@
       };
     },
     computed: {
+      // Vérifier le statut d'inscription pour afficher les messages appropriés
       isRegistrationActive() {
         return this.registrationStatus === 'active';
       },
@@ -202,12 +204,18 @@
       currentUserId() {
         return this.$store.state.user ? this.$store.state.user.id : null;
       },
+
+      // Calculer les équipes autres que celle de l'utilisateur
       otherTeams() {
         if (this.userTeam) {
           return this.teams.filter((team) => team.id !== this.userTeam.id);
         }
         return this.teams;
       },
+      /**
+       * Filtrer les équipes en fonction de la recherche et des filtres.
+       * @returns {Array} Les équipes filtrées.
+       */
       filteredTeams() {
         let teams = this.otherTeams;
 
@@ -288,6 +296,10 @@
           toast.error('Erreur lors de la récupération des données.');
         }
       },
+
+      /**
+       * Récupérer le statut d'inscription.
+       */
       async fetchRegistrationStatus() {
         try {
           const response = await apiService.get(
@@ -304,6 +316,12 @@
           );
         }
       },
+
+      /**
+       * Récupérer la capacité de l'équipe.
+       * @param {Object} team - L'équipe pour laquelle récupérer la capacité.
+       * @returns {Number} La capacité de l'équipe.
+       */
       getTeamCapacity(team) {
         if (team.type === 'assistant') {
           // Capacité spécifique pour les équipes d'assistants
@@ -314,6 +332,12 @@
         }
         return this.teamSetup ? this.teamSetup.playerPerTeam : 0;
       },
+
+      /**
+       * Récupérer la couleur du statut de l'équipe.
+       * @param {Object} team - L'équipe pour laquelle récupérer la couleur.
+       * @returns {String} La couleur du statut de l'équipe.
+       */
       getStatusColor(team) {
         // Vérifier si usersTourneys est défini avant d'accéder à sa propriété length
         const teamSize = team.usersTourneys ? team.usersTourneys.length : 0;
@@ -331,6 +355,11 @@
           return 'gray'; // Équipe vide
         }
       },
+
+      /**
+       * Rejoindre une équipe.
+       * @param {Number} teamId - L'ID de l'équipe à rejoindre.
+       */
       async joinTeam(teamId) {
         this.showDeleteConfirmation = false;
         try {
@@ -366,12 +395,17 @@
           }
         }
       },
+
       confirmLeaveTeam() {
         this.showDeleteConfirmation = true;
       },
       closeDeleteConfirmation() {
         this.showDeleteConfirmation = false;
       },
+
+      /**
+       * Quitter une équipe.
+       */
       async leaveTeam() {
         try {
           if (!this.userTeam) {
@@ -405,6 +439,10 @@
       closeQuitConfirmation() {
         this.showQuitConfirmation = false;
       },
+
+      /**
+       * Quitter le tournoi. (seulement quand les inscriptions sont ouvertes)
+       */
       async leaveTournament() {
         try {
           await apiService.delete(
