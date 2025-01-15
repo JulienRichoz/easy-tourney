@@ -1,4 +1,5 @@
 // server/middlewares/statusMiddleware.js
+// Middleware pour vérifier les statuts des pages de tournooi
 const { Tourney } = require('../models');
 
 /**

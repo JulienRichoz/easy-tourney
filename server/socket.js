@@ -1,3 +1,6 @@
+// socket.js
+// Gestion de l'initialisation de Socket.IO
+
 const socketIo = require('socket.io');
 let ioInstance;
 

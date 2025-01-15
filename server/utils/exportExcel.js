@@ -1,4 +1,5 @@
 // utils/exportExcel.js
+// Utilitaires pour exporter les données du tournoi au format Excel
 const ExcelJS = require('exceljs');
 const path = require('path');
 

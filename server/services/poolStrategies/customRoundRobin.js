@@ -1,6 +1,13 @@
+// src/services/poolStrategies/customRoundRobin.js
+
 const PoolStrategy = require('./poolStrategy');
 const { Pool, Team, Field, Tourney } = require('../../models');
 const { Op } = require('sequelize');
+
+/**
+ * Stratégie de génération de pools personnalisée.
+ * Crée des pools en utilisant une approche de round-robin personnalisée.
+ */
 
 class CustomRoundRobin extends PoolStrategy {
   /**

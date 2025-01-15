@@ -1,5 +1,4 @@
 // controllers/exportDataController.js
-
 const {
     Tourney,
     SportsFields,
@@ -18,7 +17,17 @@ const {
 const fs = require('fs');
 const generateExcelFile = require('../utils/exportExcel');
 
+/**
+ * DESCRIPTION Controller pour exporter toutes les données d'un tournoi.
+ */
 
+
+/**
+ * Récupérer toutes les données du tournoi pour l'exportation.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns les données du tournoi pour l'exportation
+ */
 exports.getFullExportData = async (req, res) => {
     try {
         const { tourneyId } = req.params;
@@ -113,6 +122,11 @@ exports.getFullExportData = async (req, res) => {
     }
 };
 
+/**
+ * Récupérer toutes les données du tournoi pour l'exportation en format Excel.
+ * @param {*} tourneyId 
+ * @returns 
+ */
 exports.getFullExportDataForExcel = async (tourneyId) => {
     try {
         // Récupérer les informations du tournoi

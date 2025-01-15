@@ -1,13 +1,24 @@
 // server/socketHandlers/gameSockets.js
+// Gestion des websockets pour les matchs
 const { Game, GameEvent, UsersTourneys, User, Tourney } = require('../models');
 const { roles } = require('../config/roles');
 
-// Fonction utilitaire pour vérifier si l'utilisateur est admin global
+/**
+ * Fonction utilitaire pour vérifier si l'utilisateur est un administrateur global
+ * @param {*} user - Utilisateur
+ * @returns {boolean}- true si l'utilisateur est un administrateur global, sinon false
+ */
 function isGlobalAdmin(user) {
     return user && user.roleId === roles.ADMIN;
 }
 
-// Fonction utilitaire pour vérifier l'autorisation
+
+/**
+ * Vérifier si l'utilisateur est autorisé à effectuer des actions sur un match
+ * @param {*} socket - Socket.IO
+ * @param {*} tourneyId - ID du tournoi
+ * @returns {boolean} - true si l'utilisateur est autorisé, sinon false
+ */
 async function isAuthorized(socket, tourneyId) {
     const isAdminGlobal = isGlobalAdmin(socket.user);
     const isAssistant = socket.user.tourneyRoles.some(
@@ -24,7 +35,13 @@ async function isAuthorized(socket, tourneyId) {
     return isAdminGlobal || isAssistant;
 }
 
-// Fonction pour assigner l'assistant
+/**
+ * Assigner l'assistant à un match
+ * @param {*} game - Match 
+ * @param {*} userId - ID de l'utilisateur
+ * @param {*} user - Utilisateur
+ * @returns - Assistant assigné
+ */
 const assignAssistant = async (game, userId, user) => {
     // Si l'utilisateur est admin global, ne pas exiger UsersTourneys
     if (isGlobalAdmin(user)) {
@@ -52,9 +69,15 @@ const assignAssistant = async (game, userId, user) => {
     return assistant;
 };
 
+/**
+ * Gestion des websockets pour les matchs
+ * @param {*} io 
+ */
 module.exports = (io) => {
+    // Gestion des connexions
     io.on('connection', (socket) => {
         console.log('Nouvelle connexion WebSocket :', socket.id);
+
         // Rejoindre une salle spécifique pour un match
         socket.on('joinGame', async (gameId) => {
             socket.join(`game_${gameId}`);
@@ -398,11 +421,13 @@ module.exports = (io) => {
             }
         });
 
+        // Rejoindre une salle de tournoi
         socket.on('joinTourney', (tourneyId) => {
             socket.join(`tourney_${tourneyId}`);
             console.log(`Socket ${socket.id} a rejoint la salle tourney_${tourneyId}`);
         });
 
+        // Quitter une salle de tournoi
         socket.on('leaveTourney', (tourneyId) => {
             socket.leave(`tourney_${tourneyId}`);
             console.log(`Socket ${socket.id} a quitté la salle tourney_${tourneyId}`);
@@ -429,6 +454,7 @@ module.exports = (io) => {
             }
         });
 
+        // Gestion des déconnexions
         socket.on('disconnect', () => {
             console.log('Un utilisateur est déconnecté :', socket.id);
         });

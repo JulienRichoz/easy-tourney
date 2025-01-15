@@ -1,9 +1,12 @@
 // controllers/inviteTokenController.js
+// DESCRIPTION - Contrôleur pour gérer les tokens d'invitation
 
 const { InviteToken, Tourney } = require('../models');
 const authService = require('../services/authService');
 
-// Générer un token d'invitation
+/** 
+ * Générer un token d'invitation pour un tournoi
+*/
 exports.generateInviteToken = async (req, res) => {
   const { tourneyId } = req.params;
   const { expiresInDays } = req.body; // Durée de validité du token en jours
@@ -44,7 +47,12 @@ exports.generateInviteToken = async (req, res) => {
   }
 };
 
-// Récupérer tous les tokens d'invitation pour un tournoi
+/**
+ * Récupérer tous les tokens d'invitation d'un tournoi
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns res - Réponse HTTP JSON
+ */
 exports.getAllInviteTokens = async (req, res) => {
   const { tourneyId } = req.params;
 
@@ -72,7 +80,12 @@ exports.getAllInviteTokens = async (req, res) => {
   }
 };
 
-// Récupérer un token spécifique
+/**
+ * Réccupérer un token d'invitation spécifique
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getInviteToken = async (req, res) => {
   const { tokenId } = req.params;
 
@@ -100,7 +113,12 @@ exports.getInviteToken = async (req, res) => {
   }
 };
 
-// Invalider un token spécifique
+/**
+ * Invalidé un token d'invitation spécifique
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.invalidateInviteToken = async (req, res) => {
   const { tokenId } = req.params; // ID du token passé en paramètre de route
 
@@ -122,7 +140,12 @@ exports.invalidateInviteToken = async (req, res) => {
   }
 };
 
-// Valider un token spécifique
+/**
+ * Valider un token d'invitation spécifique
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.validateInviteToken = async (req, res) => {
   const { tokenId } = req.params; // ID du token passé en paramètre de route
 
@@ -144,7 +167,12 @@ exports.validateInviteToken = async (req, res) => {
   }
 };
 
-// Rendre Invalide tous les tokens d'invitation d'un tournoi
+/**
+ * Invalidé tous les tokens d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.invalidateAllInviteTokens = async (req, res) => {
   const { tourneyId } = req.params;
   try {
@@ -167,7 +195,12 @@ exports.invalidateAllInviteTokens = async (req, res) => {
   }
 };
 
-// Rendre valide tous les tokens d'un tournoi
+/**
+ * Rendre valide tous les tokens d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.validateAllInviteTokens = async (req, res) => {
   const { tourneyId } = req.params;
   try {

@@ -1,7 +1,13 @@
 // services/gameStrategies/gameStrategy.js
 
 /**
- * Classe abstraite représentant une stratégie de planification de matchs.
+ * Interface représentant une stratégie de planification pour les matchs.
+ * Les classes concrètes doivent hériter de cette interface et implémenter les méthodes :
+ * - generateGames() : Génère les matchs basés sur les règles définies par la stratégie.
+ * - validateGames() : Valide les matchs générés pour vérifier qu'ils respectent les contraintes.
+ * 
+ * Cette "interface" est simulée en JavaScript, car le langage ne supporte pas les interfaces
+ * nativement. Pour imposer un contrat, les méthodes lèvent une erreur si elles ne sont pas implémentées.
  */
 class GameStrategy {
     constructor(tourneyId) {

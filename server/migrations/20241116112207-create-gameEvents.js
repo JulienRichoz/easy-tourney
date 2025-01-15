@@ -1,3 +1,4 @@
+// migrations/20241116112207-create-gameEvents.js
 'use strict';
 
 module.exports = {

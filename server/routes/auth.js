@@ -15,11 +15,10 @@ const {
 // Routes d'authentification
 // http://localhost:3000/api/auth
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/refresh-token', authenticateToken, refreshToken);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
-
+router.post('/register', register); // Route pour l'inscription
+router.post('/login', login); // Route pour la connexion
+router.post('/refresh-token', authenticateToken, refreshToken); // Route pour le rafraîchissement du token
+router.post('/forgot-password', forgotPassword); // Route si l'utilisateur a oublié son mot de passe
+router.post('/reset-password', resetPassword); // Route pour la réinitialisation du mot de passe
 
 module.exports = router;

@@ -6,7 +6,14 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 
-// Configuration de multer pour la gestion des fichiers
+/**
+ * Configuration de multer pour l'upload d'images
+ * Fonctionnement de multer :
+ * - destination : dossier de destination des fichiers
+ * - filename : nom du fichier
+ * - fileFilter : filtre les fichiers acceptés
+ * - limits : limite la taille des fichiers
+ */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -33,7 +40,12 @@ const upload = multer({
   },
 });
 
-// Créer un sport
+/**
+ * Créer un sport
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns {JSON} - Sport créé
+ */
 exports.createSport = async (req, res) => {
   try {
     const { name, rule, scoreSystem, color } = req.body;
@@ -65,7 +77,11 @@ exports.createSport = async (req, res) => {
   }
 };
 
-// Récupérer tous les sports
+/**
+ * Réupérer la liste des sports
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getSports = async (req, res) => {
   try {
     const sports = await Sport.findAll();
@@ -78,7 +94,12 @@ exports.getSports = async (req, res) => {
   }
 };
 
-// Récupérer un sport par son ID
+/**
+ * Réupérer un sport par son ID
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getSportById = async (req, res) => {
   try {
     const sport = await Sport.findByPk(req.params.sportId);
@@ -94,7 +115,12 @@ exports.getSportById = async (req, res) => {
   }
 };
 
-// Mettre à jour un sport
+/**
+ * Mettre à jour un sport
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateSport = async (req, res) => {
   try {
     const sport = await Sport.findByPk(req.params.sportId);
@@ -102,6 +128,7 @@ exports.updateSport = async (req, res) => {
       return res.status(404).json({ message: 'Sport non trouvé' });
     }
 
+    // Récupérer les données du formulaire
     const { name, rule, scoreSystem, color } = req.body;
     let imagePath = sport.image;
     if (req.file) {
@@ -116,7 +143,7 @@ exports.updateSport = async (req, res) => {
           }
         });
       }
-      imagePath = `/uploads/${req.file.filename}`;
+      imagePath = `/uploads/${req.file.filename}`; // Mettre à jour le chemin de l'image
     }
 
     await sport.update({
@@ -134,7 +161,7 @@ exports.updateSport = async (req, res) => {
   }
 };
 
-// Liste des images à protéger (à ne pas supprimer)
+// Liste des images à protéger (à ne pas supprimer pour les seeders)
 const protectedImages = [
   'badminton.png',
   'basketball.jpg',
@@ -142,7 +169,13 @@ const protectedImages = [
   'ultimate.jpeg',
   'volleyball.jpeg',
 ];
-// Supprimer un sport
+
+/**
+ * Supprimer un sport
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteSport = async (req, res) => {
   try {
     const sport = await Sport.findByPk(req.params.sportId);
@@ -175,5 +208,6 @@ exports.deleteSport = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la suppression du sport' });
   }
 };
+
 // Exporter multer pour les routes
 exports.upload = upload.single('image');

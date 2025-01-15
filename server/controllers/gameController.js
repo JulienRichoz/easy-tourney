@@ -1,4 +1,5 @@
 // server/controllers/gameController.js
+// DESCRIPTION: Contrôleur pour gérer les matchs d'un tournoi
 const {
   Game,
   Team,
@@ -15,7 +16,10 @@ const tourneyTypes = require('../config/tourneyTypes');
 const { Op } = require('sequelize');
 
 /**
- * Créer un nouveau match
+ * Créer un match
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP 
+ * @returns 
  */
 exports.createGame = async (req, res) => {
   try {
@@ -47,6 +51,7 @@ exports.createGame = async (req, res) => {
     const teamA = await Team.findByPk(teamAId);
     const teamB = await Team.findByPk(teamBId);
 
+    // Vérifier que les équipes existent
     if (!teamA || !teamB) {
       return res
         .status(404)
@@ -60,6 +65,7 @@ exports.createGame = async (req, res) => {
         .json({ message: 'Les équipes doivent être de type "player".' });
     }
 
+    // Vérifier que les équipes sont différentes
     if (teamAId === teamBId) {
       return res.status(400).json({
         message: "L'équipe A et l'équipe B doivent être différentes.",
@@ -129,6 +135,7 @@ exports.createGame = async (req, res) => {
           },
         });
 
+        // Vérifier si teamA ou teamB est déjà engagée dans un autre match au même créneau horaire
         if (overlappingGamesA) {
           return res.status(400).json({
             message: `L'équipe A (${teamA.teamName}) est déjà engagée dans un autre match pendant ce créneau horaire.`,
@@ -352,6 +359,9 @@ exports.createGame = async (req, res) => {
 
 /**
  * Récupérer tous les matchs d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
  */
 exports.getGamesByTourney = async (req, res) => {
   try {
@@ -395,7 +405,10 @@ exports.getGamesByTourney = async (req, res) => {
 };
 
 /**
- * Récupérer un match par ID
+ * Réccupérer un match par son ID
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
  */
 exports.getGameById = async (req, res) => {
   try {
@@ -472,6 +485,9 @@ exports.getGameById = async (req, res) => {
 
 /**
  * Récupérer les matchs par PoolSchedule
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
  */
 exports.getGamesByPoolSchedule = async (req, res) => {
   try {
@@ -525,6 +541,9 @@ exports.getGamesByPoolSchedule = async (req, res) => {
 
 /**
  * Récupérer les matchs par Pool
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
  */
 exports.getGamesByPool = async (req, res) => {
   try {
@@ -572,6 +591,9 @@ exports.getGamesByPool = async (req, res) => {
 
 /**
  * Mettre à jour un match
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
  */
 exports.updateGame = async (req, res) => {
   try {
@@ -1022,6 +1044,11 @@ exports.getGameDetails = async (req, res) => {
   }
 };
 
+
+/**
+ * Completer tous les matchs d'un tournoi
+ * Aide l'admin à terminer tous les matchs en masse pour actualiser les scores
+ */
 exports.completeAllGames = async (req, res) => {
   const { tourneyId } = req.params;
 

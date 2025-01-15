@@ -64,9 +64,6 @@ exports.getGameEvents = async (req, res) => {
 /**
  * Mettre à jour un événement
  */
-/**
- * Mettre à jour un événement
- */
 exports.updateGameEvent = async (req, res) => {
   try {
     const { eventId } = req.params;

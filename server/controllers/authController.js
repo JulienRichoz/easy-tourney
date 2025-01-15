@@ -6,7 +6,12 @@ const jwt = require('jsonwebtoken');
 const crypto = require("crypto");
 const mailerService = require("../services/mailerService");
 
-// Inscription
+/**
+ * Inscription d'un nouvel utilisateur.
+ * @param {*} req - La requête HTTP.
+ * @param {*} res - La réponse HTTP.
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.register = async (req, res) => {
   const { name, email, phone, password, confirmPassword } = req.body;
 
@@ -78,7 +83,12 @@ exports.register = async (req, res) => {
   }
 };
 
-// Connexion
+/**
+ * Connexion d'un utilisateur existant.
+ * @param {*} req - La requête HTTP.
+ * @param {*} res - La réponse HTTP. 
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -115,7 +125,12 @@ exports.login = async (req, res) => {
   }
 };
 
-// Rafraîchir le token
+/**
+ * Rafraîchir le token d'authentification.
+ * @param {*} req - La requête HTTP.
+ * @param {*} res - La réponse HTTP.
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.refreshToken = async (req, res) => {
   try {
     if (!req.user) {
@@ -149,7 +164,12 @@ exports.refreshToken = async (req, res) => {
   }
 };
 
-// Récupérer le profil de l'utilisateur
+/**
+ * Récupérer le profil de l'utilisateur connecté.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -165,6 +185,12 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+/**
+ * Oubli du mot de passe : envoi d'un email de réinitialisation.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
@@ -191,6 +217,12 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
+/**
+ * Réinitialisation du mot de passe.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns res - La réponse HTTP en JSON
+ */
 exports.resetPassword = async (req, res) => {
   const { token, password, confirmPassword } = req.body;
 
@@ -216,6 +248,7 @@ exports.resetPassword = async (req, res) => {
     });
   }
 
+  // Réinitialiser le mot de passe
   try {
     // Rechercher l'utilisateur par le resetToken
     const user = await User.findOne({ where: { resetToken: token } });

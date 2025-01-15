@@ -1,5 +1,5 @@
 // server/middlewares/index.js
-// Middleware reteamées pour l'authentification, la gestion des erreurs, les limites de requêtes et les rôles
+// Middleware pour l'authentification, la gestion des erreurs, les limites de requêtes et les rôles
 
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
@@ -13,7 +13,13 @@ const {
   verifyPlanningStatus,
 } = require('./statusMiddleware');
 
-// Middleware pour authentifier le token
+/**
+ * Middleware pour vérifier et authentifier le token d'auth
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @param {*} next - Prochain middleware
+ * @returns {JSON} - Message d'erreur ou passe au prochain middleware
+ */
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -47,7 +53,13 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware pour gérer les erreurs
+/**
+ * Middleware pour gérer les erreurs
+ * @param {*} err - Erreur
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @param {*} next - Prochain middleware
+ */
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -62,7 +74,13 @@ const limiter = rateLimit({
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
 });
 
-// Middleware pour vérifier si l'utilisateur est admin
+/**
+ * Middleware pour vérifier si l'utilisateur est admin
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 const isAdmin = (req, res, next) => {
   const user = req.user; // Utilisateur doit être défini après la vérification du token
   if (user && user.roleId === roles.ADMIN) {
@@ -73,7 +91,11 @@ const isAdmin = (req, res, next) => {
     .json({ message: 'Accès interdit. Réservé aux administrateurs.' });
 };
 
-// Middleware générique pour vérifier les rôles de l'utilisateur
+/**
+ * Middleware pour vérifier le rôle de l'utilisateur
+ * @param  {...any} roles 
+ * @returns 
+ */
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.roleId)) {

@@ -1,17 +1,29 @@
-/* POOL STRAGEY PATTERN
-Le Strategy Pattern est un patron de conception comportemental qui permet de définir une famille d'algorithmes, 
-de les encapsuler individuellement et de les rendre interchangeables. 
-Il permet de choisir dynamiquement l'algorithme approprié à exécuter au moment de l'exécution.
+// src/services/poolStrategies/poolStrategy.js
 
-Mise en place d'iune interface que toutes les stratégies d'algorithmes implémenteront
-*/
+/**
+ * "Interface" représentant une stratégie de génération de pools.
+ * Les classes concrètes doivent hériter de cette interface et implémenter la méthode :
+ * - generatePools() : Génère les pools basés sur les règles définies par la stratégie.
+ * 
+ * Cette "interface" est simulée en JavaScript, car le langage ne supporte pas les interfaces
+ * nativement. Pour imposer un contrat, la méthode lève une erreur si elle n'est pas implémentée.
+ */
 
 // services/poolStrategies/poolStrategy.js
 class PoolStrategy {
+  /**
+   * Constructeur de l'interface de stratégie.
+   * @param {*} tourneyId - L'identifiant unique du tournoi.
+   */
   constructor(tourneyId) {
     this.tourneyId = tourneyId;
   }
 
+  /**
+   * Méthode abstraite pour générer les pools.
+   * Les classes concrètes doivent fournir leur propre implémentation.
+   * @throws {Error} Si la méthode n'est pas implémentée.
+   */
   async generatePools() {
     throw new Error(
       'generatePools() doit être implémenté par la stratégie concrète.'

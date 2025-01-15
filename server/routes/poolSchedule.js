@@ -1,3 +1,4 @@
+// routes/poolSchedule.js
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const {
@@ -21,12 +22,4 @@ router.get('/', isAuthenticated, getPoolSchedulesByTourney); // Récupérer tous
 router.get('/:poolId/schedules', isAuthenticated, getPoolSchedulesByPool); // Récupérer les plannings d'une pool spécifique
 
 module.exports = router;
-
-/**
- * AMELIORATIONS
- * Composant entre planning games et planning pools (reduction code, + clean)
- * Utiliser nom des routes pour les requetes axios
- * Refactor composant entre composant custom et composant de base
- * Ajouter test unitaire
- */
 

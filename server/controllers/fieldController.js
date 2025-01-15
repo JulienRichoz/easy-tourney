@@ -1,8 +1,16 @@
 // server/controllers/fieldController.js
+
 const { Field, Tourney } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
 
-// Créer un terrain pour un tournoi
+// DESCRIPTION: Contrôleur pour gérer les terrains d'un tournoi
+
+/**
+ * Créer un terrain pour un tournoi
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns res - Réponse HTTP JSON
+ */
 exports.createField = async (req, res) => {
   const { name, description } = req.body;
   const { tourneyId } = req.params;
@@ -25,11 +33,17 @@ exports.createField = async (req, res) => {
   }
 };
 
-// Créer plusieurs terrains pour un tournoi
+/**
+ * Créer plusieurs terrains pour un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.createMultipleFields = async (req, res) => {
   const { tourneyId } = req.params;
   const { numberOfFields } = req.body; // Récupérer le nombre de terrains à créer
 
+  // Vérifier que le nombre de terrains est valide
   if (!numberOfFields || numberOfFields < 1) {
     return res
       .status(400)
@@ -38,6 +52,7 @@ exports.createMultipleFields = async (req, res) => {
       });
   }
 
+  // Vérifier que le tournoi existe
   try {
     const tourney = await Tourney.findByPk(tourneyId);
     if (!tourney) {
@@ -74,7 +89,11 @@ exports.createMultipleFields = async (req, res) => {
   }
 };
 
-// Récupérer tous les terrains d'un tournoi
+/**
+ * Réccupérer les terrains d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getFieldsByTourneyId = async (req, res) => {
   const { tourneyId } = req.params;
 
@@ -89,10 +108,16 @@ exports.getFieldsByTourneyId = async (req, res) => {
   }
 };
 
-// Récupérer un terrain par son ID
+/**
+ * Réccupérer un terrain par son ID
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getFieldById = async (req, res) => {
   const { fieldId } = req.params;
 
+  // Vérifier que le terrain existe
   try {
     const field = await Field.findByPk(fieldId, {
       include: [{ model: Tourney, as: 'tourney' }],
@@ -110,8 +135,12 @@ exports.getFieldById = async (req, res) => {
       .json({ error: 'Erreur lors de la récupération du terrain' });
   }
 };
-
-// Mettre à jour un terrain
+/**
+ * Mettre à jour un terrain
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateField = async (req, res) => {
   const { fieldId } = req.params;
   const { name, description } = req.body;
@@ -129,8 +158,12 @@ exports.updateField = async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la mise à jour du terrain' });
   }
 };
-
-// Supprimer un terrain
+/**
+ * Supprimer un terrain
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteField = async (req, res) => {
   const { fieldId, tourneyId } = req.params;
 
@@ -152,7 +185,11 @@ exports.deleteField = async (req, res) => {
   }
 };
 
-// Supprimer tous les terrains d'un tournoi
+/**
+ * Supprimer tous les terrains d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.deleteAllTourneyFields = async (req, res) => {
   const { tourneyId } = req.params;
 

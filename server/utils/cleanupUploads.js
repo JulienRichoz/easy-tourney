@@ -1,4 +1,5 @@
 // cleanupUploads.js
+// Script pour supprimer les fichiers (images) non protégés dans le dossier uploads
 const fs = require('fs');
 const path = require('path');
 

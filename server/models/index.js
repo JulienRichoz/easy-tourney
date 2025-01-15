@@ -1,4 +1,4 @@
-// server/models/index.js
+// models/index.js
 // Purpose: This file is used to import all the models in the models folder and associate them with each other.
 
 'use strict';

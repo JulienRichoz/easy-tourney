@@ -1,3 +1,5 @@
+// routes/usersTourneys.js
+
 const express = require('express');
 const router = express.Router({ mergeParams: true }); // mergeParams pour accéder à tourneyId
 const {

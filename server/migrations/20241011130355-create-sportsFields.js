@@ -1,4 +1,4 @@
-// --- backend/migrations/xxxx-create-sportsFields.js ---
+// migrations/xxxx-create-sportsFields.js ---
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {

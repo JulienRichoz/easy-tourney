@@ -49,6 +49,11 @@ const {
 } = require('../../../utils/dateUtils');
 
 class CustomRoundRobinPoolPlanning extends PlanningStrategy {
+  /**
+   * Constructeur du générateur de planning personnalisé en Round Robin.
+   * @param {*} tourneyId - Identifiant du tournoi.
+   * @param {*} options  - Options suppl (random mode)
+   */
   constructor(tourneyId, options = {}) {
     super(tourneyId);
     // Ajout de la variable randomMode avec une valeur par défaut false

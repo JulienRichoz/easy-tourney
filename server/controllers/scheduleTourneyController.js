@@ -1,4 +1,5 @@
-// controllers/scheduleTourney.js
+// src/controllers/scheduleTourneyController.js
+// Controller pour les plannings de tournoi
 const { ScheduleTourney, Tourney, sequelize } = require('../models');
 
 /**

@@ -1,4 +1,4 @@
-// migrations/20241030120000-create-usersTourneys.js
+// migrations/XXX-create-usersTourneys.js
 'use strict';
 
 module.exports = {

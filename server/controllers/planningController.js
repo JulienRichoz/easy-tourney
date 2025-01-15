@@ -1,5 +1,4 @@
 // server/controllers/planningController.js
-
 const {
   Tourney,
   Field,
@@ -20,6 +19,8 @@ const {
   timeDifferenceInMinutes,
 } = require('../utils/dateUtils');
 
+
+// Récupérer les détails du planning complet (sport, pools, terrains, matchs etc.
 exports.getPlanningDetails = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -120,6 +121,7 @@ exports.getPlanningDetails = async (req, res) => {
   }
 };
 
+// Générer le planning des pools via un Strategy Pattern
 exports.generatePoolPlanning = async (req, res) => {
   const tourneyId = req.params.tourneyId;
   const { randomMode } = req.query; // Extraction du paramaetre ?randomMode=bool
@@ -150,6 +152,7 @@ exports.generatePoolPlanning = async (req, res) => {
   }
 };
 
+// Vérifier si le planning des pools est valide via un Strategy Pattern
 exports.validatePoolPlanning = async (req, res) => {
   const tourneyId = req.params.tourneyId;
 
@@ -181,6 +184,7 @@ exports.validatePoolPlanning = async (req, res) => {
   }
 };
 
+// Réinitialiser le planning des pools
 exports.resetPoolPlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -222,6 +226,7 @@ exports.resetPoolPlanning = async (req, res) => {
 /**
  * GESTION DES GAMES (MATCHS)
  */
+// Générer le planning des matchs via un Strategy Pattern
 exports.generateGamePlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -243,6 +248,7 @@ exports.generateGamePlanning = async (req, res) => {
   }
 };
 
+// Valider le planning des matchs via un Strategy Pattern
 exports.validateGamePlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -269,6 +275,7 @@ exports.validateGamePlanning = async (req, res) => {
   }
 };
 
+// Réinitialiser le planning des matchs
 exports.resetGamePlanning = async (req, res) => {
   try {
     const { tourneyId } = req.params;
@@ -284,8 +291,7 @@ exports.resetGamePlanning = async (req, res) => {
   }
 };
 
-// server/controllers/planningController.js
-
+// Générer des conseils pour le planning
 exports.getPlanningAdvice = async (req, res) => {
   try {
     const { tourneyId } = req.params;

@@ -1,4 +1,5 @@
 // server/controllers/userController.js
+// Controller pour les utilisateurs
 const {
   User,
   Tourney,
@@ -66,6 +67,12 @@ exports.getAllUsersWithDetails = async (req, res) => {
   }
 };
 
+/**
+ * Récupérer les informations de l'utilisateur actuel
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getOwnData = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -91,6 +98,12 @@ exports.getOwnData = async (req, res) => {
   }
 };
 
+/**
+ * Créer un utilisateur
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.createUser = async (req, res) => {
   // Vérifier que l'utilisateur est admin
   if (req.user.roleId !== roles.ADMIN) {
@@ -187,6 +200,12 @@ exports.createUser = async (req, res) => {
   }
 };
 
+/**
+ * Ajouter un utilisateur à un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.addUserToTourney = async (req, res) => {
   const { userId, tourneyId } = req.params;
 
@@ -237,6 +256,12 @@ exports.addUserToTourney = async (req, res) => {
   }
 };
 
+/**
+ * Retirer un utilisateur d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.removeUserFromTourney = async (req, res) => {
   const { userId, tourneyId } = req.params;
 
@@ -268,7 +293,12 @@ exports.removeUserFromTourney = async (req, res) => {
   }
 };
 
-// Récupérer tous les tournois auxquels un utilisateur participe
+/**
+ * Rleve un utilisateur d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getTourneysByUser = async (req, res) => {
   const { userId } = req.params;
 
@@ -305,7 +335,12 @@ exports.getTourneysByUser = async (req, res) => {
   }
 };
 
-// Récupérer tous les utilisateurs (admin seulement)
+/**
+ * Récupérer tous les utilisateurs
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getAllUsers = async (req, res) => {
   try {
     // Vérifier que l'utilisateur est admin avant de continuer
@@ -328,7 +363,12 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Récupérer un utilisateur par ID (soi-même ou admin)
+/**
+ * Récupérer un utilisateur par son ID
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getUserById = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -375,7 +415,12 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Mettre à jour un utilisateur (admin ou soi-même)
+/**
+ * Mettre à jour les informations de l'utilisateur
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateUser = async (req, res) => {
   const { userId } = req.params;
   const { name, email, phone, password, roleId } = req.body;
@@ -458,7 +503,12 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Supprimer un utilisateur (admin seulement)
+/**
+ * Supprimer un utilisateur
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteUser = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -495,7 +545,12 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-
+/**
+ * Récupérer les tournois actifs de l'utilisateur
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getActiveTourney = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -527,6 +582,12 @@ exports.getActiveTourney = async (req, res) => {
   }
 };
 
+/**
+ * Récupérer le rôle de l'utilisateur dans un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getUserRoleInTourney = async (req, res) => {
   try {
     const userId = req.user.id;

@@ -3,6 +3,12 @@
 const { UsersTourneys } = require('../models');
 const authService = require('../services/authService');
 
+/**
+ * Authentifier un utilisateur via un token JWT pour les connexions Socket.IO
+ * @param {*} socket - Socket.IO
+ * @param {*} next - Prochain middleware ou action
+ * @returns - Prochain middleware ou action
+ */
 module.exports = async (socket, next) => {
     try {
         // Récupérer le token depuis l'authentification Socket.IO

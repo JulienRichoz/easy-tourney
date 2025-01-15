@@ -6,7 +6,11 @@ const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 const { jwtDecode } = require('jwt-decode');
 
-// Fonction pour générer un token JWT avec une durée d'expiration variable
+/**
+ * Fonction pour générer un token JWT avec une durée d'expiration
+ * @param {*} user - Utilisateur pour lequel générer le token
+ * @returns - Token JWT
+ */
 exports.generateToken = (user) => {
   return jwt.sign(
     { id: user.id, roleId: user.roleId, name: user.name },
@@ -15,28 +19,45 @@ exports.generateToken = (user) => {
   );
 };
 
-// Fonction pour comparer les mots de passe
+/**
+ * Comparer deux mots de passe
+ * @param {*} plainPassword 
+ * @param {*} hashedPassword 
+ * @returns - Vrai si les mots de passe correspondent, faux sinon
+ */
 exports.comparePassword = async (plainPassword, hashedPassword) => {
   try {
     return await argon2.verify(hashedPassword, plainPassword);
   } catch (error) {
     console.error('Erreur lors de la vérification du mot de passe:', error);
-    return false; // Retourne `false` en cas d'échec
+    return false;
   }
 };
-
-// Fonction pour hasher un mot de passe
+/**
+ * Hasher un mot de passe avec Argon2
+ * @param {*} plainPassword
+ * @returns - Mot de passe hashé
+ */
 exports.hashPassword = async (plainPassword) => {
   return await argon2.hash(plainPassword);
 };
 
-// Vérifier les permissions basées sur le rôle
+/**
+ * Vérifier les permissions selon le rôle
+ * @param {*} roleId - ID du rôle
+ * @param {*} permission - Permission à vérifier
+ * @returns - Vrai si le rôle a la permission, faux sinon
+ */
 exports.hasPermission = (roleId, permission) => {
   const roleKey = Object.keys(roles).find((key) => roles[key] === roleId);
   return permissions[roleKey] && permissions[roleKey].includes(permission);
 };
 
-// Vérifier si l'utilisateur est authentifié
+/**
+ * Vérifier si un utilisateur est authentifié
+ * @param {*} token - Token JWT
+ * @returns -vrai si le token est valide et non expiré, faux sinon
+ */
 exports.isAuthenticated = (token) => {
   if (!token) {
     return false;
@@ -54,14 +75,22 @@ exports.isAuthenticated = (token) => {
   }
 };
 
-// Fonction pour générer un token d'invitation
+/**
+ * Générer un token d'invitation pour un tournoi
+ * @param {*} tourneyId - ID du tournoi
+ * @returns - Token d'invitation
+ */
 exports.generateInviteToken = (tourneyId) => {
   return jwt.sign({ tourneyId, type: 'invite' }, process.env.JWT_SECRET, {
     expiresIn: process.env.INVITE_TOKEN_EXPIRATION || '2w',
   });
 };
 
-// Fonction pour vérifier et décoder un token JWT
+/**
+ * Vérifier un token d'invitation pour un tournoi
+ * @param {*} token - Token d'invitation
+ * @returns - token décodé ou null si invalide 
+ */
 exports.verifyToken = (token) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

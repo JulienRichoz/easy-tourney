@@ -1,7 +1,15 @@
+// src/controllers/teamSetupController.js
+// Controller pour la configuration des équipes
+
 const { TeamSetup, Tourney } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
 
-// Créer une nouvelle configuration de team
+/**
+ * Créer une configuration de team pour un tournoi
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns {JSON} - Configuration de team créée
+ */
 exports.createTeamSetup = async (req, res) => {
   const {
     maxTeamNumber,
@@ -45,6 +53,7 @@ exports.createTeamSetup = async (req, res) => {
       maxTeamPerPool,
     });
 
+    // Mettre à jour les statuts après la création de la configuration de team
     await checkAndUpdateStatuses(tourneyId);
 
     res.status(201).json(teamSetup);
@@ -57,7 +66,12 @@ exports.createTeamSetup = async (req, res) => {
   }
 };
 
-// Mettre à jour une configuration de team existante
+/**
+ * Mettre à jour une configuration de team
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateTeamSetup = async (req, res) => {
   const {
     maxTeamNumber,
@@ -112,7 +126,12 @@ exports.updateTeamSetup = async (req, res) => {
   }
 };
 
-// Obtenir la configuration de team
+/**
+ * Obtenir la configuration de team d'un tournoi
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getTeamSetup = async (req, res) => {
   const { tourneyId } = req.params;
 

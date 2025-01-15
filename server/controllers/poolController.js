@@ -1,4 +1,5 @@
 // server/controllers/poolController.js
+// Controller pour les pools
 const { Tourney, Pool, Team } = require('../models');
 const { Op } = require('sequelize');
 const PoolStrategyManager = require('../services/poolStrategies/poolStrategyManager');

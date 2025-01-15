@@ -35,13 +35,14 @@ const app = express();
 // Parser les origines autorisées depuis l'environnement
 const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [];
 
-// Middleware
+// CORS
 app.use(
   cors({
     origin: corsOrigins,
     credentials: true, // Gestion des cookies d'authentification
   })
 );
+
 app.use(express.json());
 app.use(limiter);
 app.use('/public', express.static(path.join(__dirname, 'public')));

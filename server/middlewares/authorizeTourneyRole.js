@@ -1,9 +1,14 @@
 // server/middlewares/authorizeTourneyRole.js
+// Middleware pour autoriser les rôles dans un tournoi
 
 const { UsersTourneys } = require('../models');
 const { roles } = require('../config/roles'); // Rôles globaux
-const tourneyRoles = require('../config/tourneyRoles');
 
+/**
+ * Autoriser les rôles dans un tournoi
+ * @param {*} allowedRoles - Les rôles autorisés
+ * @returns 
+ */
 exports.authorizeTourneyRoles = (allowedRoles) => {
     return async (req, res, next) => {
         try {

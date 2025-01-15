@@ -1,5 +1,8 @@
+// services/mailerService.js
+// Service pour l'envoi de mails (reset password avec nodemailer)
 const nodemailer = require('nodemailer');
 
+// Créer un transporteur pour envoyer des mails avec gmail
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -8,6 +11,11 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+/**
+ * Envoyer un mail pour réinitialiser le mot de passe
+ * @param {*} email - Email de l'utilisateur
+ * @param {*} resetLink - Lien de réinitialisation du mot de passe
+ */
 exports.sendPasswordReset = async (email, resetLink) => {
     const mailOptions = {
         from: process.env.MAILER_USER,

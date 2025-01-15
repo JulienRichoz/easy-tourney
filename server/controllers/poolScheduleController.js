@@ -1,3 +1,6 @@
+// src/controllers/poolScheduleController.js
+// Controller pour les assignations de pool à un terrain
+
 const { Pool, PoolSchedule, Field, SportsFields, Sport } = require('../models');
 const { Op } = require('sequelize');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils');
@@ -227,6 +230,9 @@ exports.getPoolSchedulesByTourney = async (req, res) => {
   }
 };
 
+/**
+ * Récupérer tous les plannings d'une pool
+ */
 exports.getPoolSchedulesByPool = async (req, res) => {
   try {
     const { poolId } = req.params;

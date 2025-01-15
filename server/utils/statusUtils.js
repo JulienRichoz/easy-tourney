@@ -1,5 +1,5 @@
 // server/utils/statusUtils.js
-
+// Utilitaires pour la gestion des statuts des composants du tournoi.
 const {
   Tourney,
   Field,

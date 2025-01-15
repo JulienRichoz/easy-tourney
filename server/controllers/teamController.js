@@ -1,4 +1,5 @@
 // server/controllers/teamController.js
+// Controller pour les équipes
 const {
   Team,
   TeamSetup,
@@ -23,17 +24,24 @@ const getRoleByTeamType = (type) => {
   return 'guest'; // Default
 };
 
-// Créer une équipe
+/**
+ * Créer une équipe pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.createTeam = async (req, res) => {
   const { teamName, type } = req.body;
   const { tourneyId } = req.params;
 
+  // Vérifier si le tournoi existe
   try {
     const tourney = await Tourney.findByPk(tourneyId);
     if (!tourney) {
       return res.status(404).json({ message: 'Tournoi non trouvé' });
     }
 
+    // Vérifier si le type d'équipe est valide
     if (!['player', 'assistant'].includes(type)) {
       return res
         .status(400)
@@ -58,10 +66,15 @@ exports.createTeam = async (req, res) => {
   }
 };
 
-// Obtenir toutes les équipes d'un tournoi avec les utilisateurs associés via UsersTourneys
+/**
+ * Obtenir toutes les équipes d'un tournoi avec les utilisateurs associés via UsersTourneys
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getTeamsByTourney = async (req, res) => {
   const { tourneyId } = req.params;
 
+  // Récupérer les équipes avec les utilisateurs associés via UsersTourneys
   try {
     const teams = await Team.findAll({
       where: { tourneyId },
@@ -89,7 +102,12 @@ exports.getTeamsByTourney = async (req, res) => {
   }
 };
 
-// Récupérer les détails d'une équipe, y compris les utilisateurs associés via UsersTourneys
+/**
+ * Récupérer une équipe par son ID avec les utilisateurs associés via UsersTourneys
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getTeamById = async (req, res) => {
   const { teamId, tourneyId } = req.params;
 
@@ -130,11 +148,17 @@ exports.getTeamById = async (req, res) => {
   }
 };
 
-// Mettre à jour une équipe et ajuster les rôles des utilisateurs associés si le type de l'équipe change
+/**
+ * Mettre à jour une équipe pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateTeam = async (req, res) => {
   const { teamId, tourneyId } = req.params;
   const { teamName, type } = req.body;
 
+  // Vérifier si l'équipe existe
   try {
     const team = await Team.findOne({
       where: { id: teamId, tourneyId },
@@ -150,6 +174,7 @@ exports.updateTeam = async (req, res) => {
       return res.status(404).json({ message: 'Équipe non trouvée' });
     }
 
+    // Vérifier si le type d'équipe est valide
     if (type && !['player', 'assistant'].includes(type)) {
       return res
         .status(400)
@@ -159,6 +184,7 @@ exports.updateTeam = async (req, res) => {
         });
     }
 
+    // Mettre à jour les champs de l'équipe
     const oldType = team.type;
     team.teamName = teamName || team.teamName;
     team.type = type || team.type;
@@ -183,7 +209,12 @@ exports.updateTeam = async (req, res) => {
   }
 };
 
-// Supprimer une équipe et réassigner ses utilisateurs à "Guest" via UsersTourneys
+/**
+ * Supprimer une équipe pour un tournoi et réassigner les utilisateurs à "Guest" via UsersTourneys.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteTeam = async (req, res) => {
   const { teamId, tourneyId } = req.params;
 
@@ -241,7 +272,12 @@ exports.deleteTeam = async (req, res) => {
   }
 };
 
-// Assigner un utilisateur à une équipe via UsersTourneys
+/**
+ * Assigner un utilisateur à une équipe pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.assignUserToTeam = async (req, res) => {
   const { teamId, tourneyId } = req.params;
   const { userId } = req.body;
@@ -306,7 +342,12 @@ exports.assignUserToTeam = async (req, res) => {
   }
 };
 
-// Supprimer un utilisateur d'une équipe
+/**
+ * Supprimer un utilisateur d'une équipe pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.removeUserFromTeam = async (req, res) => {
   const { teamId, userId, tourneyId } = req.params;
   const isAdmin = req.user && req.user.isAdmin; // Vérifie si l'utilisateur est admin
@@ -358,7 +399,12 @@ exports.removeUserFromTeam = async (req, res) => {
   }
 };
 
-// Générer des équipes pour un tournoi
+/**
+ * Générer des équipes pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.generateTeams = async (req, res) => {
   const { tourneyId } = req.params;
 
@@ -441,7 +487,11 @@ exports.generateTeams = async (req, res) => {
   }
 };
 
-// Réinitialiser les équipes et réassigner les utilisateurs à "Guest" via UsersTourneys
+/**
+ * Réinitialiser les équipes et réassigner les utilisateurs à "Guest" via UsersTourneys
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.resetTeamsAndReassignUsers = async (req, res) => {
   const { tourneyId } = req.params;
 
@@ -489,7 +539,11 @@ exports.resetTeamsAndReassignUsers = async (req, res) => {
   }
 };
 
-// Assigner plusieurs utilisateurs à des équipes via UsersTourneys
+/**
+ * Assigner plusieurs utilisateurs à des équipes pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.autoFillTeams = async (req, res) => {
   const { tourneyId } = req.params;
   const { assignments } = req.body;
@@ -538,7 +592,12 @@ exports.autoFillTeams = async (req, res) => {
   }
 };
 
-// Mettre à jour une configuration de team existante
+/**
+ * Met à jour la configuration de team pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateTeamSetup = async (req, res) => {
   const { maxTeamNumber, playerPerTeam, minPlayerPerTeam } = req.body;
   const { tourneyId } = req.params;
@@ -576,7 +635,12 @@ exports.updateTeamSetup = async (req, res) => {
   }
 };
 
-// Obtenir la configuration de team
+/**
+ * Réupérer la configuration de team pour un tournoi.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getTeamSetup = async (req, res) => {
   const { tourneyId } = req.params;
 
@@ -646,7 +710,12 @@ exports.getUnassignedTeams = async (req, res) => {
   }
 };
 
-// Supprimer toutes les équipes invalides d'un tournoi et réassigner leurs utilisateurs à "Guest"
+/**
+ * Supprimer toutes les équipes invalides et réassigner les utilisateurs à "Guest".
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteInvalidTeams = async (req, res) => {
   const { tourneyId } = req.params;
 

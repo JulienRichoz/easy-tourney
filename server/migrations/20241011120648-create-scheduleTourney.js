@@ -1,3 +1,4 @@
+// migrations/20241011120648-create-scheduleTourney.js
 'use strict';
 
 module.exports = {

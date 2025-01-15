@@ -1,5 +1,5 @@
 // server/controllers/tourneyController.js
-
+// Controller pour les tournois
 const { Op } = require('sequelize');
 const {
   Tourney,
@@ -23,6 +23,9 @@ const jwt = require('jsonwebtoken');
 
 /**
  * Créer un nouveau tournoi
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns {JSON} - Nouveau tournoi créé
  */
 exports.createTourney = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -68,8 +71,7 @@ exports.createTourney = async (req, res) => {
       { transaction }
     );
 
-    // Le ScheduleTourney est créé automatiquement par le hook afterCreate
-
+    // Le ScheduleTourney est créé automatiquement par le hook afterCreate dans le modèle Tourney
     await transaction.commit();
     res.status(201).json(newTourney);
   } catch (error) {

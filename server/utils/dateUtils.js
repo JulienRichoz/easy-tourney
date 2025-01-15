@@ -1,4 +1,5 @@
 // utils/dateUtils.js
+// Utilitaires pour les dates et heures
 
 /**
  * Calcule la différence en minutes entre deux heures au format "HH:MM:SS".

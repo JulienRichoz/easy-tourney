@@ -4,7 +4,12 @@
 const { Field, Sport, SportsFields } = require('../models');
 const { checkAndUpdateStatuses } = require('../utils/statusUtils'); // Importer l'utilitaire
 
-// Créer une association sportsFields
+/**
+ * Créer une association sport-terrain
+ * @param {*} req - Requête HTTP
+ * @param {*} res - Réponse HTTP
+ * @returns {JSON} - Association sport-terrain créée
+ */
 exports.createSportsFields = async (req, res) => {
   try {
     const tourneyId = req.params.tourneyId;
@@ -57,7 +62,11 @@ exports.createSportsFields = async (req, res) => {
   }
 };
 
-// Récupérer les sports associés à un tournoi, avec la possibilité de filtrer par terrain
+/**
+ * Récupérer les terrains avec les sports associés
+ * @param {*} req 
+ * @param {*} res 
+ */
 exports.getSportsFieldsByTourney = async (req, res) => {
   try {
     const tourneyId = req.params.tourneyId;
@@ -94,7 +103,12 @@ exports.getSportsFieldsByTourney = async (req, res) => {
   }
 };
 
-// Récupérer les sports associés à un terrain spécifique
+/**
+ * Récupérer les sports associés à un terrain
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.getSportsByField = async (req, res) => {
   try {
     const { fieldId } = req.params;
@@ -128,7 +142,12 @@ exports.getSportsByField = async (req, res) => {
   }
 };
 
-// Mettre à jour une association sport-terrain
+/**
+ * Mettre à jour les informations du sport associé au terrain
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.updateSportsFields = async (req, res) => {
   try {
     const { sportsFieldsId } = req.params;
@@ -158,7 +177,12 @@ exports.updateSportsFields = async (req, res) => {
   }
 };
 
-// Supprimer une association sport-terrain
+/**
+ * Supprimer une association sport-terrain
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 exports.deleteSportsFields = async (req, res) => {
   try {
     const { sportsFieldsId, tourneyId } = req.params;
