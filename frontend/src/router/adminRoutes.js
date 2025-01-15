@@ -1,4 +1,5 @@
 // router/adminRoutes.js
+// Description: Ce fichier contient les routes pour les pages d'administration.
 import AdminDashboard from '@/views/admin/dashboard/AdminDashboard.vue';
 import TourneysList from '@/views/admin/tourneys/TourneysList.vue';
 import TourneyDetails from '@/views/admin/tourneys/TourneyDetails.vue';
