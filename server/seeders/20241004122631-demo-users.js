@@ -6,6 +6,8 @@ const authService = require('../services/authService');
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [];
+
+    // !!! Laisser le 'a' et 'password' pour les tests Postman
     const adminPassword = process.env.ADMIN_PASSWORD || 'a';
     const userPassword = process.env.USER_PASSWORD || 'password';
 
