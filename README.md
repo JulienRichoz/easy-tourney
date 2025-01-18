@@ -2,7 +2,10 @@
 
 **Easy Tourney** is a web application designed to simplify the management and scheduling of sports tournaments in school and university environments. Built using Vue.js, Node.js, Express.js, MySQL via Sequelize, and adhering to MVC principles.
 
-![EasyTourney](.github/main.png)
+<figure align="center">
+  <img src=".github/main.png" alt="EasyTourney" width="95%" />
+  <figcaption>Pools Management in DarkMode and Planning in LightMode</figcaption>
+</figure>
 
 ## Installation
 ### Prerequisites
