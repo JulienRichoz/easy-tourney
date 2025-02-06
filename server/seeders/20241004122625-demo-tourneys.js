@@ -3,13 +3,16 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+
+    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+
     await queryInterface.bulkInsert('Tourneys', [
       {
         name: 'High Tournament',
         location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
         latitude: 46.8166,
         longitude: 7.15369,
-        dateTourney: '2024-11-15',
+        dateTourney: today || '2024-11-15',
         emergencyDetails: 'Contact: High Admin, Tel: 123456789',
         tourneyType: 'customRoundRobin',
         status: 'draft',
@@ -29,7 +32,7 @@ module.exports = {
         location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
         latitude: 46.8166,
         longitude: 7.15369,
-        dateTourney: '2024-11-16',
+        dateTourney: today || '2024-11-16',
         emergencyDetails: 'Contact: Mid Admin, Tel: 987654321',
         tourneyType: 'customRoundRobin',
         status: 'draft',
@@ -49,7 +52,7 @@ module.exports = {
         location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
         latitude: 46.8166,
         longitude: 7.15369,
-        dateTourney: '2024-11-17',
+        dateTourney: today || '2024-11-17',
         emergencyDetails: 'Contact: Low Admin, Tel: 555555555',
         tourneyType: 'customRoundRobin',
         status: 'draft',
@@ -69,7 +72,7 @@ module.exports = {
         location: "Chem. de l'Abbé-Freeley 6, 1700 Fribourg",
         latitude: 46.8166,
         longitude: 7.15369,
-        dateTourney: '2024-11-15',
+        dateTourney: today || '2024-11-15',
         emergencyDetails: 'Contact: John Doe, Tel: 123456789',
         tourneyType: 'customRoundRobin',
         status: 'draft',
